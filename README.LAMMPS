@@ -1,0 +1,41 @@
+To compile the LAMMPS-MDCORE interface do the following:
+
+1. In your the build directory do
+
+    make -f <Makefile> factories
+    make -f <Makefile> mdcore
+
+   Here <Makefile> is some makefile configured for the current environment.
+   Example makefiles for the Intel and GNU compilers are provided. This should
+   generate the file "libmdcore.a".
+
+2. Copy "pair_mdcore.cpp" and "pair_mdcore.h" from the "src/lammps/pair_style"
+   directory to the LAMMPS "src" directory.
+
+3. Modify your LAMMPS Makefile to link "libmdcore.a" created by step 1.
+   Compile LAMMPS. The "src/lammps/MAKE" subdirectory contains sample
+   makefiles.
+
+
+MDCORE potentials are available under the "mdcore" pair style. A typical LAMMPS
+script looks like
+
+  ...
+  units metal
+  ...
+  pair_style mdcore Tersoff   # Tersoff potential
+  pair_coeff * * Si           # LAMMPS atom id 1 is Silicon
+  ...
+
+If you need to modify the potential parameters create an MDCORE parameter file.
+
+  Tersoff {
+    A = "1000, 1000, 1000";
+  };
+
+In the LAMMPS control file use:
+
+  pair_style mdcore Tersoff params.dat
+  pair_coeff * * Si
+
+where "params.dat" is the above file.

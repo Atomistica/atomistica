@@ -1,0 +1,132 @@
+#
+# *** Paths
+# 
+# MDCORE
+#
+SRCDIR   = ../src
+
+
+#
+# *** Compilers and parallelization
+#
+# Serial / OpenMP execution (Intel)
+#
+FC        = ifort
+F90C      = ifort
+CC        = icc
+CXX       = icpc
+LD        = ifort
+MPI_FLAGS =
+#
+# OpenMP parallelization or hybrid MPI/OpenMP
+#
+OMP_FLAGS = 
+#OMP_FLAGS = -openmp -openmp-report2
+
+
+#
+# *** Extra includes and libraries
+#
+# - For NetCDF, generally add
+#   EXTRA_INCLUDE = `nc-config --fflags`
+#   EXTRA_LIB = `nc-config --flibs`
+# - For FFTW3 as installed by pas on joe1, add
+#   EXTRA_INCLUDE = -I/j1a/pas/applications/fftw-3.3/include
+#   EXTRA_LIB = -L/j1a/pas/applications/fftw-3.3/lib -lfftw3
+# - cxxlib is required to link to the C++ runtime 
+#
+EXTRA_INCLUDE += `nc-config --fflags` -I/usr/mpi/intel/openmpi-1.4.3/include
+EXTRA_LIB += `nc-config --flibs` -cxxlib
+#
+# *** LAPACK and BLAS link options here.
+#
+# Intel MKL
+#
+EXTRA_LIB += -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_lapack -lmkl_core -liomp5
+
+#
+# *** Other settings that rarely need to be touched
+#
+LIBTOOL  = ar r
+#
+# * Optimization
+#
+# Normal (Intel)
+#
+OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -no-prec-div \
+	-no-prec-sqrt
+#
+# Debug (Intel)
+#
+#OPTFLAGS = -g -O0 -check bounds
+
+#
+# * Defines
+#
+#   -DLAMMPS                   Compute LAMMPS specific stuff
+#
+#   LAMMPS needs to be specified
+#
+#   -DHAVE_IFPORT              Compiler is Intel Fortran and the ifport module
+#                              is present (switches writing of a restart file
+#                              upon SIGTERM, i.e. if wallclock time is reached)
+# 
+# * libAtoms defines
+#
+#   -DGETENV_F2003             Fortran 2003 getenv is present (define if you
+#                              get undefined references to _getenv_)
+#   -DGETARG_F2003             Fortran 2003 getarg is present (define if you
+#                              get undefined references to _getarg_)
+#
+#
+#   -DQUIP_ARCH=\"MDCORE\"     libAtoms/QUIP internal versioning
+#   -DSIZEOF_FORTRAN_T=8       for libAtoms/QUIP C interoperability
+#
+DEFINES  = \
+	-DPTR=8 \
+	-DMKL \
+	-DHAVE_NETCDF \
+	-DHAVE_IFPORT \
+	-DQUIP_ARCH=\"MDCORE\" \
+	-DLAMMPS \
+	-DHAVE_MKL \
+	-DSIZEOF_FORTRAN_T=8 \
+	-D_MPI
+
+
+#
+# *** Compilation and linking flags
+#     (settings should be made mainly above, not here)
+#
+# * CFLAGS = -DCONFIG_TRAILING_UNDERSCORE, -DCONFIG_LEADING_UNDERSCORE
+#
+#   If the use of iso_c_binding for config is disabled (-DBROKEN_ISO_C_BINDING
+#   above), then the Fortran compiler might add an underscore before or after
+#   the subroutine names. The exact names that are used can be obtained from
+#   "nm config_stub.o". Add a -DCONFIG_TRAILING_UNDERSCORE or
+#   -DCONFIG_LEADING_UNDERSCORE to CFLAGS accordingly. No define is need if
+#   iso_c_binding works.
+#
+GFFLAGS  = \
+	-I$(SRCDIR) \
+	-I$(SRCDIR)/potentials \
+	-I$(SRCDIR)/standalone \
+	-I$(SRCDIR)/libAtoms \
+	$(DEFINES) \
+	$(OPTFLAGS) \
+	$(MPI_FLAGS) \
+	$(OMP_FLAGS)
+#
+# Intel
+#
+GFFLAGS += -fpp -warn unused -fPIC -traceback
+FFLAGS   = $(GFFLAGS)
+F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE)
+CFLAGS   = -O3 -fPIC $(DEFINES) -I/usr/site/cuda/include
+CUFLAGS  = -O3 -arch=sm_20 $(DEFINES)
+
+LDFLAGS  = 
+LIBS     = $(EXTRA_LIB)
+
+include $(SRCDIR)/makefile.inc
+

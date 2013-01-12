@@ -1,0 +1,15 @@
+REBO2(+S) LAMMPS MODULE
+=======================
+
+Installation instructions.
+
+Run in the (current) source directory:
+
+make copy
+make
+
+This should create a librebo2.a. Now copy pair_rebo2.cpp and pair_rebo2.h
+to the LAMMPS src directory. Modify the LAMMPS Makefile to link to librebo2.a,
+some LAPACK library and the fortran runtime (-lifcore -lifport for ifort,
+-lgfortran for gfortran).
+

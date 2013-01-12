@@ -1,0 +1,3 @@
+quench.py will carry out a series of amorphous carbon quenches and compute
+the hybridization. hyb.out will contain the hybridization as a function of
+density.

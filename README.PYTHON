@@ -1,0 +1,51 @@
+To compile, use and test the Python interface do the following:
+
+1. ANNOYANCE: Patch your numpy distutils. Edit
+ 
+     <path-to-python-site-packages>/numpy/distutils/command/build_clib.py
+
+   and change the line after "if f_sources or fmodule_sources:" to
+
+     extra_postargs = build_info.get('extra_fcompiler_args') or []
+
+   This should become automatic at some point.
+
+2. ANNOYANCE: Edit setup.py. Change lib_fextra to whether you'll be using 
+   Intel Fortran or GNU Fortran. This should become automatic at some point.
+
+3. Type
+
+     python setup.py build [--compiler=intel --fcompiler=intelem]
+
+   This will build all Fortran and C sources required for the Python
+   interface. The above line uses the Intel compiler on x86_64 platforms.
+
+   Note: You will need to
+
+     python setup.py clean
+     - or -
+     python setup.py build --force [--compiler=intel --fcompiler=intelem]
+
+   if the source has changed. Unfortunately, the current numpy distutils
+   won't relink the module even if the library has been recompiled.
+
+   To see a list of available C and Fortran compilers to
+
+     python setup.py build --help-compiler
+     python setup.py build --help-fcompiler
+
+4. To use the Python interface type
+
+     source <path-to-mdcore>/env.sh
+
+   which sets up the environment. To test do
+
+     python -c "import mdcore"
+
+   If this worked then do
+
+     cd <path-to-mdcore>/test_suite/ase
+     python run_tests.py
+
+5. Run "tests/run_tests.py". Each test can also be run directly. This will
+   produce more diagnostic output.

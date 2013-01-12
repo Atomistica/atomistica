@@ -1,0 +1,27 @@
+MDCORE is a library of interatomic potentials. It currently supports the
+potentials described in the following publication:
+
+  Lars Pastewka, Andreas Klemenz, Peter Gumbsch, Michael Moseler
+  Screened empirical bond-order potential for Si-C
+  arXiv:1301.2142
+
+MDCORE can be used in two distinct manners:
+
+1. From Python using the Atomistic Simulation Environment
+   (ASE - see https://wiki.fysik.dtu.dk/ase/)
+   * Build instructions are in README.PYTHON
+   * Examples are in examples/ASE
+
+2. From within LAMMPS as a separate pair style
+   (LAMMPS - see https://lammps.sandia.gov/)
+   * Build instructions are in README.LAMMPS
+   * Examples are in examples/LAMMPS
+
+You need the following packages:
+
+* Python 2.4.0 or greater (even if you do not compile the Python interface)
+  (Some parts of the Python interface could rely on features from Python 2.6.0)
+
+* MDCORE relies on the libAtoms library (see http://www.libatoms.org). The
+  source relevant to MDCORE resides in src/libAtoms and is included in this
+  package.
