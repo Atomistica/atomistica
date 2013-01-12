@@ -9,12 +9,12 @@
 !! See the LICENSE file in the top-level MDCORE directory.
 !! ======================================================================
 
-  public :: ALBE_BOP_MAX_REF, ALBE_BOP_MAX_EL, ALBE_BOP_MAX_PAIRS
+  public :: BRENNER_MAX_REF, BRENNER_MAX_EL, BRENNER_MAX_PAIRS
 
-  integer, parameter  :: ALBE_BOP_MAX_REF    = 1000
+  integer, parameter  :: BRENNER_MAX_REF    = 1000
 
-  integer, parameter  :: ALBE_BOP_MAX_EL     = 2
-  integer, parameter  :: ALBE_BOP_MAX_PAIRS  = PAIR_INDEX(ALBE_BOP_MAX_EL, ALBE_BOP_MAX_EL, ALBE_BOP_MAX_EL)
+  integer, parameter  :: BRENNER_MAX_EL     = 2
+  integer, parameter  :: BRENNER_MAX_PAIRS  = PAIR_INDEX(BRENNER_MAX_EL, BRENNER_MAX_EL, BRENNER_MAX_EL)
 
 
   !>
@@ -30,32 +30,32 @@
      integer   :: nor1, nor2, nbor1, nbor2, nCmin, nCmax
 #endif
 
-     character(ALBE_BOP_MAX_REF)  :: ref = "*"
+     character(BRENNER_MAX_REF)  :: ref = "*"
 
-     character  :: el(2, ALBE_BOP_MAX_EL)
+     character  :: el(2, BRENNER_MAX_EL)
 
-     real(DP)  :: D0(ALBE_BOP_MAX_PAIRS)        !< Binding energy of the dimer
-     real(DP)  :: r0(ALBE_BOP_MAX_PAIRS)        !< Dimer bond distance
-     real(DP)  :: S(ALBE_BOP_MAX_PAIRS)         !< Slope of Pauling plot
-     real(DP)  :: beta(ALBE_BOP_MAX_PAIRS)      !< Dimer stiffness, i.e. vibrational frequency
-     real(DP)  :: gamma(ALBE_BOP_MAX_PAIRS)     !< Scaling factor for the bond-order
-     real(DP)  :: c(ALBE_BOP_MAX_PAIRS)         !< Angular parameters
-     real(DP)  :: d(ALBE_BOP_MAX_PAIRS)         !< Angular parameters
-     real(DP)  :: h(ALBE_BOP_MAX_PAIRS)         !< Angular parameters
-     real(DP)  :: mu(ALBE_BOP_MAX_PAIRS)        !< Exponential bond-order contribution
-     real(DP)  :: n(ALBE_BOP_MAX_PAIRS)         !< Bond-order given by ( 1 + zij ** n )
-     integer   :: m(ALBE_BOP_MAX_PAIRS)         !< Distance dependent part of bo given by exp(2(mu*dr)**m)
-     real(DP)  :: r1(ALBE_BOP_MAX_PAIRS)        !< Cut-off start (inner cut-off if screening is enabled)
-     real(DP)  :: r2(ALBE_BOP_MAX_PAIRS)        !< Cut-off end (inner cut-off if screening is enabled)
+     real(DP)  :: D0(BRENNER_MAX_PAIRS)        !< Binding energy of the dimer
+     real(DP)  :: r0(BRENNER_MAX_PAIRS)        !< Dimer bond distance
+     real(DP)  :: S(BRENNER_MAX_PAIRS)         !< Slope of Pauling plot
+     real(DP)  :: beta(BRENNER_MAX_PAIRS)      !< Dimer stiffness, i.e. vibrational frequency
+     real(DP)  :: gamma(BRENNER_MAX_PAIRS)     !< Scaling factor for the bond-order
+     real(DP)  :: c(BRENNER_MAX_PAIRS)         !< Angular parameters
+     real(DP)  :: d(BRENNER_MAX_PAIRS)         !< Angular parameters
+     real(DP)  :: h(BRENNER_MAX_PAIRS)         !< Angular parameters
+     real(DP)  :: mu(BRENNER_MAX_PAIRS)        !< Exponential bond-order contribution
+     real(DP)  :: n(BRENNER_MAX_PAIRS)         !< Bond-order given by ( 1 + zij ** n )
+     integer   :: m(BRENNER_MAX_PAIRS)         !< Distance dependent part of bo given by exp(2(mu*dr)**m)
+     real(DP)  :: r1(BRENNER_MAX_PAIRS)        !< Cut-off start (inner cut-off if screening is enabled)
+     real(DP)  :: r2(BRENNER_MAX_PAIRS)        !< Cut-off end (inner cut-off if screening is enabled)
 #ifdef SCREENING
-     real(DP)  :: or1(ALBE_BOP_MAX_PAIRS)       !< Outer cut-off start
-     real(DP)  :: or2(ALBE_BOP_MAX_PAIRS)       !< Outer cut-off end
+     real(DP)  :: or1(BRENNER_MAX_PAIRS)       !< Outer cut-off start
+     real(DP)  :: or2(BRENNER_MAX_PAIRS)       !< Outer cut-off end
 
-     real(DP)  :: bor1(ALBE_BOP_MAX_PAIRS)      !< Bond-order cut-off start
-     real(DP)  :: bor2(ALBE_BOP_MAX_PAIRS)      !< Bond-order cut-off end
+     real(DP)  :: bor1(BRENNER_MAX_PAIRS)      !< Bond-order cut-off start
+     real(DP)  :: bor2(BRENNER_MAX_PAIRS)      !< Bond-order cut-off end
 
-     real(DP)  :: Cmin(ALBE_BOP_MAX_PAIRS)      !< Inner screening parameter
-     real(DP)  :: Cmax(ALBE_BOP_MAX_PAIRS)      !< Outer screening parameter
+     real(DP)  :: Cmin(BRENNER_MAX_PAIRS)      !< Inner screening parameter
+     real(DP)  :: Cmax(BRENNER_MAX_PAIRS)      !< Outer screening parameter
 #endif
 
   endtype BOP_DB_TYPE
@@ -68,7 +68,7 @@
 #endif
        "Erhart P., Albe K., Phys. Rev. B 71, 035211 (2005)", &     ! ref
        reshape( (/  "C"," ",  "S","i", " "," " /), &
-                (/ 2, ALBE_BOP_MAX_EL /)), &                       ! el
+                (/ 2, BRENNER_MAX_EL /)), &                       ! el
        (/  6.00_DP,      4.36_DP,       3.24_DP      /), &         ! D0
        (/  1.4276_DP,    1.79_DP,       2.232_DP     /), &         ! r0
        (/  2.167_DP,     1.847_DP,      1.842_DP     /), &         ! S
@@ -105,7 +105,7 @@
 #endif
        "Albe K., Nordlund K., Averback R. S., Phys. Rev. B 65, 195124 (2002)", &     ! ref
        reshape( (/  "P","t",  "C"," ", " "," " /), &
-                (/ 2, ALBE_BOP_MAX_EL /)), &                       ! el
+                (/ 2, BRENNER_MAX_EL /)), &                       ! el
        (/  3.683_DP,      5.3_DP,     6.0_DP         /), &         ! D0
        (/  2.384_DP,      1.84_DP,    1.39_DP        /), &         ! r0
        (/  2.24297_DP,    1.1965_DP,  1.22_DP        /), &         ! S
@@ -140,7 +140,7 @@
        "Henriksson K.O.E., Nordlund K., Phys. Rev. B 79, 144107 (2009)", & ! ref
        reshape( &
        (/  "F","e",  "C"," ", " "," " /), &
-       (/ 2, ALBE_BOP_MAX_EL /)), &                       ! el
+       (/ 2, BRENNER_MAX_EL /)), &                       ! el
        (/  1.5_DP,         4.82645134_DP,   6.0_DP           /), &  ! D0
        (/  2.29_DP,        1.47736510_DP,   1.39_DP          /), &  ! r0
        (/  2.0693109_DP,   1.43134755_DP,   1.22_DP          /), &  ! S
@@ -177,7 +177,7 @@
 #endif
        "Kioseoglou J., Komninou Ph., Karakostas Th., Phys. Stat. Sol. (b) 245, 1118 (2008)", &
        reshape( (/  "N"," ",  "A","l", " "," " /), &
-                (/ 2, ALBE_BOP_MAX_EL /) ), &                      ! el
+                (/ 2, BRENNER_MAX_EL /) ), &                      ! el
        (/  9.9100_DP,     3.3407_DP,     1.5000_DP   /), &         ! D0
        (/  1.1100_DP,     1.8616_DP,     2.4660_DP   /), &         ! r0
        (/  1.4922_DP,     1.7269_DP,     2.7876_DP   /), &         ! S
@@ -211,7 +211,7 @@
 #endif
        "Klemenz A. (2011)", &     ! ref
        reshape( (/  "C"," ",  "S","i", " "," " /), &
-                (/ 2, ALBE_BOP_MAX_EL /)), &                                        ! el
+                (/ 2, BRENNER_MAX_EL /)), &                                        ! el
        (/  9.18655066_DP,      3.74012106_DP,      2.44699407_DP      /), &         ! D0
        (/  1.31756335_DP,      1.83432402_DP,      2.33202404_DP      /), &         ! r0
        (/  2.00832275_DP,      1.65091787_DP,      2.03923608_DP      /), &         ! S

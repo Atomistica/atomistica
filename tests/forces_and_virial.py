@@ -24,17 +24,17 @@ dev_thres  = 1e-4
 ###
 
 tests  = [
-    ( AlbeBOP,   Erhart_PRB_71_035211_SiC,
+    ( Brenner,   Erhart_PRB_71_035211_SiC,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
         ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
                           size=[sx,sx,sx]) ) ] ),
-    ( AlbeBOPScr, Erhart_PRB_71_035211_SiC__Scr,
+    ( BrennerScr, Erhart_PRB_71_035211_SiC__Scr,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
         ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
                           size=[sx,sx,sx]) ) ] ),
-    ( AlbeBOP,   Henriksson_PRB_79_114107_FeC,
+    ( Brenner,   Henriksson_PRB_79_114107_FeC,
       [ dict( name='dia-C', struct=Diamond('C', size=[sx,sx,sx]) ),
         dict( name='bcc-Fe',
               struct=BodyCenteredCubic('Fe', size=[sx,sx,sx]) ),

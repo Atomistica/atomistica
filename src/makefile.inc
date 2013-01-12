@@ -28,7 +28,7 @@ VPATH = \
 	$(SRCDIR)/lammps \
 	$(SRCDIR)/potentials \
         $(SRCDIR)/potentials/bop \
-        $(SRCDIR)/potentials/bop/albe_bop \
+        $(SRCDIR)/potentials/bop/brenner \
         $(SRCDIR)/potentials/bop/kumagai \
         $(SRCDIR)/potentials/bop/tersoff \
 	$(SRCDIR)/support \

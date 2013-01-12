@@ -444,24 +444,24 @@ Brenner_PRB_42_9458_C_II = {
     "r2":       [  2.00         ]
     }
 
-if hasattr(_mdcore, 'AlbeBOP'):
-    class AlbeBOP(MDCore):
+if hasattr(_mdcore, 'Brenner'):
+    class Brenner(MDCore):
         """Karsten Albe-type bond order potential.
            (This is actually the same form used by Brenner, maybe rename.)
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.AlbeBOP, 100,), kwargs)
+            apply(MDCore.__init__, (self, _mdcore.Brenner, 100,), kwargs)
 
 
-if hasattr(_mdcore, 'AlbeBOPScr'):
-    class AlbeBOPScr(MDCore):
+if hasattr(_mdcore, 'BrennerScr'):
+    class BrennerScr(MDCore):
         """Karsten Albe-type bond order potential.
            (This is actually the same form used by Brenner, maybe rename.)
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.AlbeBOPScr, 1000,), kwargs)
+            apply(MDCore.__init__, (self, _mdcore.BrennerScr, 1000,), kwargs)
 
 
 # Kumagai's Si potential

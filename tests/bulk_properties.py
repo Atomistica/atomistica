@@ -30,17 +30,17 @@ dev_thres = 5
 k0 = ase.units.GPa
 
 tests  = [
-    ( AlbeBOP,   Brenner_PRB_42_9458_C_I,
+    ( Brenner,   Brenner_PRB_42_9458_C_I,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]),
           # Ec    a0     C11   C12   C44   B    Cp
           None,   None,  None, None, None, None, None ),
         ] ),
-    ( AlbeBOP,   Brenner_PRB_42_9458_C_II,
+    ( Brenner,   Brenner_PRB_42_9458_C_II,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]),
           # Ec          a0     C11   C12  C44  B    Cp
           7.376-0.0524, 3.558, 621,  415, 383, 484, None ),
         ] ),
-    ( AlbeBOP,   Erhart_PRB_71_035211_SiC,
+    ( Brenner,   Erhart_PRB_71_035211_SiC,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]),
           # Ec    a0     C11   C12  C44  B    Cp
           7.3731, 3.566, 1082, 127, 673, 445, None ),
@@ -49,7 +49,7 @@ tests  = [
         dict( name="dia-Si-C", struct=B3( [ "Si", "C" ], latticeconstant=4.3596,
                                           size=[sx,sx,sx]),
               Ec=6.340,a0=4.359, C11=382, C12=145, C440=305, B=224 ) ] ),
-    ( AlbeBOPScr,   Erhart_PRB_71_035211_SiC__Scr,
+    ( BrennerScr,   Erhart_PRB_71_035211_SiC__Scr,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]),
           # Ec    a0     C11   C12  C44  B    Cp
           7.3731, 3.566, 1082, 127, 673, 445, None ),

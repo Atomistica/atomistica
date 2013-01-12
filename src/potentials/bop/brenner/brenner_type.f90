@@ -24,7 +24,7 @@
      !
      ! String to a reference
      !
-     character     :: ref(ALBE_BOP_MAX_REF) = "*"
+     character     :: ref(BRENNER_MAX_REF) = "*"
 
      integer       :: Z2db(MAX_Z)
 
@@ -32,25 +32,25 @@
      ! Precomputed constants
      !
 
-     real(DP)  :: c_sq(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: d_sq(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: c_d(ALBE_BOP_MAX_PAIRS) 
+     real(DP)  :: c_sq(BRENNER_MAX_PAIRS)
+     real(DP)  :: d_sq(BRENNER_MAX_PAIRS)
+     real(DP)  :: c_d(BRENNER_MAX_PAIRS) 
 
-     real(DP)  :: VR_f(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: expR(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: VA_f(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: expA(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: VR_f(BRENNER_MAX_PAIRS)
+     real(DP)  :: expR(BRENNER_MAX_PAIRS)
+     real(DP)  :: VA_f(BRENNER_MAX_PAIRS)
+     real(DP)  :: expA(BRENNER_MAX_PAIRS)
 
      !
      ! Cutoff parameters
      !
 
-     real(DP)  :: cut_in_h(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: cut_in_h2(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: cut_in_l(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: cut_in_fca(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: cut_in_h(BRENNER_MAX_PAIRS)
+     real(DP)  :: cut_in_h2(BRENNER_MAX_PAIRS)
+     real(DP)  :: cut_in_l(BRENNER_MAX_PAIRS)
+     real(DP)  :: cut_in_fca(BRENNER_MAX_PAIRS)
 #ifndef EXP_BOP
-     real(DP)  :: cut_in_fc(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: cut_in_fc(BRENNER_MAX_PAIRS)
 #endif
 
 #ifdef SCREENING
@@ -58,26 +58,26 @@
 ! The other cutoff are identical!
 #define cut_ar_h  cut_out_h
 
-     real(DP)  :: cut_out_h(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: cut_out_l(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: cut_out_fca(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: cut_out_h(BRENNER_MAX_PAIRS)
+     real(DP)  :: cut_out_l(BRENNER_MAX_PAIRS)
+     real(DP)  :: cut_out_fca(BRENNER_MAX_PAIRS)
 #ifndef EXP_BOP
-     real(DP)  :: cut_out_fc(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: cut_out_fc(BRENNER_MAX_PAIRS)
 #endif
 
-     real(DP)  :: cut_bo_h(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: cut_bo_l(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: cut_bo_fca(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: cut_bo_h(BRENNER_MAX_PAIRS)
+     real(DP)  :: cut_bo_l(BRENNER_MAX_PAIRS)
+     real(DP)  :: cut_bo_fca(BRENNER_MAX_PAIRS)
 #ifndef EXP_BOP
-     real(DP)  :: cut_bo_fc(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: cut_bo_fc(BRENNER_MAX_PAIRS)
 #endif
 
-     real(DP)  :: max_cut_sq(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: max_cut_sq(BRENNER_MAX_PAIRS)
 
-     real(DP)  :: Cmin(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: Cmax(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: dC(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: C_dr_cut(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: Cmin(BRENNER_MAX_PAIRS)
+     real(DP)  :: Cmax(BRENNER_MAX_PAIRS)
+     real(DP)  :: dC(BRENNER_MAX_PAIRS)
+     real(DP)  :: C_dr_cut(BRENNER_MAX_PAIRS)
 
      real(DP)  :: screening_threshold  = log(1d-6)
      real(DP)  :: dot_threshold        = 1e-10
@@ -87,9 +87,9 @@
      ! Bond-order stuff
      !
 
-     real(DP)  :: bo_exp(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: bo_fac(ALBE_BOP_MAX_PAIRS)
-     real(DP)  :: bo_exp1(ALBE_BOP_MAX_PAIRS)
+     real(DP)  :: bo_exp(BRENNER_MAX_PAIRS)
+     real(DP)  :: bo_fac(BRENNER_MAX_PAIRS)
+     real(DP)  :: bo_exp1(BRENNER_MAX_PAIRS)
 
      !
      ! Counters

@@ -8,6 +8,7 @@
 !! This software is distributed under the GNU General Public License.
 !! See the LICENSE file in the top-level MDCORE directory.
 !! ======================================================================
+
 !>
 !! Cut-off function: fC(r), dfC(r)
 !<

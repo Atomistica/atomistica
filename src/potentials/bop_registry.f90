@@ -8,6 +8,7 @@
 !! This software is distributed under the GNU General Public License.
 !! See the LICENSE file in the top-level MDCORE directory.
 !! ======================================================================
+
 ! @meta
 !   shared
 ! @endmeta
@@ -35,11 +36,11 @@ module bop_registry
   private
 
   ! Potentials
-#ifdef HAVE_ALBE_BOP
-  public :: albe_bop_register
+#ifdef HAVE_BRENNER
+  public :: brenner_register
 #endif
-#ifdef HAVE_ALBE_BOP_SCR
-  public :: albe_bop_scr_register
+#ifdef HAVE_BRENNER_SCR
+  public :: brenner_scr_register
 #endif
 #ifdef HAVE_KUMAGAI
   public :: kumagai_register
@@ -60,68 +61,68 @@ contains
   ! Bond-order potentials
   !
 
-#ifdef HAVE_ALBE_BOP
-  subroutine albe_bop_register(this, cfg, m)
+#ifdef HAVE_BRENNER
+  subroutine brenner_register(this, cfg, m)
     use, intrinsic :: iso_c_binding
 
     implicit none
 
-    type(albe_bop_t), target, intent(inout)  :: this
+    type(brenner_t), target, intent(inout)  :: this
     type(c_ptr), intent(in)          :: cfg
     type(c_ptr), intent(out)         :: m
 
     ! ---
 
-    m = ptrdict_register_section(cfg, CSTR("AlbeBOP"), &
-         CSTR("Albe-Type bond-order potential."))
+    m = ptrdict_register_section(cfg, CSTR("Brenner"), &
+         CSTR("Tersoff-Brenner type bond-order potential."))
 
     call ptrdict_register_string_list_property(m, &
-         c_loc11(this%db%el), 2, ALBE_BOP_MAX_EL, c_loc(this%db%nel), &
+         c_loc11(this%db%el), 2, BRENNER_MAX_EL, c_loc(this%db%nel), &
          CSTR("el"), CSTR("List of element symbols."))
 
     call ptrdict_register_string_property(m, c_loc(this%ref(1)), &
-         ALBE_BOP_MAX_REF, &
+         BRENNER_MAX_REF, &
          CSTR("ref"), &
          CSTR("Reference string to choose a parameters set from the database."))
 
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%D0), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nD0), &
+         c_loc1(this%db%D0), BRENNER_MAX_PAIRS, c_loc(this%db%nD0), &
          CSTR("D0"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%r0), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nr0), &
+         c_loc1(this%db%r0), BRENNER_MAX_PAIRS, c_loc(this%db%nr0), &
          CSTR("r0"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%S), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nS), &
+         c_loc1(this%db%S), BRENNER_MAX_PAIRS, c_loc(this%db%nS), &
          CSTR("S"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%beta), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nbeta), &
+         c_loc1(this%db%beta), BRENNER_MAX_PAIRS, c_loc(this%db%nbeta), &
          CSTR("beta"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%gamma), ALBE_BOP_MAX_PAIRS, c_loc(this%db%ngamma), &
+         c_loc1(this%db%gamma), BRENNER_MAX_PAIRS, c_loc(this%db%ngamma), &
          CSTR("gamma"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%c), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nc), &
+         c_loc1(this%db%c), BRENNER_MAX_PAIRS, c_loc(this%db%nc), &
          CSTR("c"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%d), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nd), &
+         c_loc1(this%db%d), BRENNER_MAX_PAIRS, c_loc(this%db%nd), &
          CSTR("d"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%h), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nh), &
+         c_loc1(this%db%h), BRENNER_MAX_PAIRS, c_loc(this%db%nh), &
          CSTR("h"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%mu), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nmu), &
+         c_loc1(this%db%mu), BRENNER_MAX_PAIRS, c_loc(this%db%nmu), &
          CSTR("mu"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%n), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nn), &
+         c_loc1(this%db%n), BRENNER_MAX_PAIRS, c_loc(this%db%nn), &
          CSTR("n"), CSTR("See functional form."))
     call ptrdict_register_integer_list_property(m, &
-         c_loc1(this%db%m), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nm), &
+         c_loc1(this%db%m), BRENNER_MAX_PAIRS, c_loc(this%db%nm), &
          CSTR("m"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%r1), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nr1), &
+         c_loc1(this%db%r1), BRENNER_MAX_PAIRS, c_loc(this%db%nr1), &
          CSTR("r1"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%r2), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nr2), &
+         c_loc1(this%db%r2), BRENNER_MAX_PAIRS, c_loc(this%db%nr2), &
          CSTR("r2"), CSTR("See functional form."))
 
     call ptrdict_register_integer_property(m, c_loc(this%nebmax), &
@@ -129,89 +130,89 @@ contains
     call ptrdict_register_integer_property(m, c_loc(this%nebavg), &
          CSTR("nebavg"), CSTR("Average number of neighbors (internal neighbor list)."))
 
-  endsubroutine albe_bop_register
+  endsubroutine brenner_register
 #endif
 
-#ifdef HAVE_ALBE_BOP_SCR
-  subroutine albe_bop_scr_register(this, cfg, m)
+#ifdef HAVE_BRENNER_SCR
+  subroutine brenner_scr_register(this, cfg, m)
     use, intrinsic :: iso_c_binding
 
     implicit none
 
-    type(albe_bop_scr_t), target, intent(inout)  :: this
+    type(brenner_scr_t), target, intent(inout)  :: this
     type(c_ptr),                  intent(in)     :: cfg
     type(c_ptr),                  intent(out)    :: m
 
     ! ---
 
-    m = ptrdict_register_section(cfg, CSTR("AlbeBOPScr"), &
-         CSTR("Albe-Type bond-order potential (screened)."))
+    m = ptrdict_register_section(cfg, CSTR("BrennerScr"), &
+         CSTR("Tersoff-Brenner type bond-order potential (screened)."))
 
     call ptrdict_register_string_list_property(m, &
-         c_loc11(this%db%el), 2, ALBE_BOP_SCR_MAX_EL, c_loc(this%db%nel), &
+         c_loc11(this%db%el), 2, BRENNER_SCR_MAX_EL, c_loc(this%db%nel), &
          CSTR("el"), CSTR("List of element symbols."))
 
     call ptrdict_register_string_property(m, c_loc(this%ref(1)), &
-         ALBE_BOP_MAX_REF, &
+         BRENNER_MAX_REF, &
          CSTR("ref"), &
          CSTR("Reference string to choose a parameters set from the database."))
 
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%D0), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nD0), &
+         c_loc1(this%db%D0), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nD0), &
          CSTR("D0"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%r0), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nr0), &
+         c_loc1(this%db%r0), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nr0), &
          CSTR("r0"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%S), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nS), &
+         c_loc1(this%db%S), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nS), &
          CSTR("S"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%beta), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nbeta), &
+         c_loc1(this%db%beta), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nbeta), &
          CSTR("beta"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%gamma),ALBE_BOP_SCR_MAX_PAIRS,c_loc(this%db%ngamma), &
+         c_loc1(this%db%gamma),BRENNER_SCR_MAX_PAIRS,c_loc(this%db%ngamma), &
          CSTR("gamma"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%c), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nc), &
+         c_loc1(this%db%c), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nc), &
          CSTR("c"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%d), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nd), &
+         c_loc1(this%db%d), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nd), &
          CSTR("d"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%h), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nh), &
+         c_loc1(this%db%h), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nh), &
          CSTR("h"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%mu), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nmu), &
+         c_loc1(this%db%mu), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nmu), &
          CSTR("mu"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%n), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nn), &
+         c_loc1(this%db%n), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nn), &
          CSTR("n"), CSTR("See functional form."))
     call ptrdict_register_integer_list_property(m, &
-         c_loc1(this%db%m), ALBE_BOP_MAX_PAIRS, c_loc(this%db%nm), &
+         c_loc1(this%db%m), BRENNER_MAX_PAIRS, c_loc(this%db%nm), &
          CSTR("m"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%r1), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nr1), &
+         c_loc1(this%db%r1), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nr1), &
          CSTR("r1"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%r2), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nr2), &
+         c_loc1(this%db%r2), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nr2), &
          CSTR("r2"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%or1), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nor1), &
+         c_loc1(this%db%or1), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nor1), &
          CSTR("or1"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%or2), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nor2), &
+         c_loc1(this%db%or2), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nor2), &
          CSTR("or2"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%bor1), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nbor1), &
+         c_loc1(this%db%bor1), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nbor1), &
          CSTR("bor1"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%bor2), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nbor2), &
+         c_loc1(this%db%bor2), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nbor2), &
          CSTR("bor2"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%Cmin), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nCmin), &
+         c_loc1(this%db%Cmin), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nCmin), &
          CSTR("Cmin"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%Cmax), ALBE_BOP_SCR_MAX_PAIRS, c_loc(this%db%nCmax), &
+         c_loc1(this%db%Cmax), BRENNER_SCR_MAX_PAIRS, c_loc(this%db%nCmax), &
          CSTR("Cmax"), CSTR("See functional form."))
 
     call ptrdict_register_integer_property(m, c_loc(this%nebmax), &
@@ -219,7 +220,7 @@ contains
     call ptrdict_register_integer_property(m, c_loc(this%nebavg), &
          CSTR("nebavg"), CSTR("Average number of neighbors (internal neighbor list)."))
 
-  endsubroutine albe_bop_scr_register
+  endsubroutine brenner_scr_register
 #endif
 
 #ifdef HAVE_KUMAGAI
