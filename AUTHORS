@@ -4,12 +4,17 @@ Keith Beardmore
     Loughborough University
     * Original bond-order potential code
 
+Tim Kunze
+    Technische Universitaet Dresden
+    Helmholtz-Zentrum Dresden Rossendorf
+    * LAMMPS interface
+
 Michael Moseler
     michael.moseler@iwm.fraunhofer.de
-    Fraunhofer Institute for Mechanics of Materials
+    Fraunhofer-Institut fuer Werkstoffmechanik IWM
     * Initial serial MD code
 
 Lars Pastewka
     lars.pastewka@iwm.fraunhofer.de
-    Fraunhofer Institute for Mechanics of Materials
+    Fraunhofer-Institut fuer Werkstoffmechanik IWM
 
