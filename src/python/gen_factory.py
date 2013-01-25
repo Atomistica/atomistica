@@ -57,7 +57,7 @@ def write_factory_f90(mods, str, fn):
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  allocate(this_fptr)\n"  +
                 "  if (.not. associated(this_fptr))   stop '[python_%s_new] *this_fptr* is NULL.'\n" % f90name +
-                "  call %s_register(this_fptr, cfg, m)\n" % ( f90name ) +
+                "  call register(this_fptr, cfg, m)\n"+
                 "  this_cptr = c_loc(this_fptr)\n" +
                 "endsubroutine python_%s_new\n\n\n" % f90name)
 

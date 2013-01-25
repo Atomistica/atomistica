@@ -67,4 +67,6 @@ contains
 
 #include "tersoff_func.f90"
 
+#include "tersoff_registry.f90"
+
 endmodule tersoff
