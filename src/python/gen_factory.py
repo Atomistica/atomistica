@@ -44,8 +44,7 @@ def write_factory_f90(mods, str, fn):
             '  use neighbors\n')
     for f90name, f90class, name, register_data_ex in mods:
         f.write('  use %s\n' % f90name)
-    f.write("  use %ss_registry\n\n" % str +
-            "  implicit none\n\n" +
+    f.write("  implicit none\n\n" +
             "contains\n\n")
 
     for f90name, f90class, name, register_data_ex in mods:

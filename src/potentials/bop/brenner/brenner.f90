@@ -15,17 +15,19 @@
 ! @endmeta
 
 !>
-!! Tersoff-Brenner type potentials
+!! Abell-Tersoff-Brenner type potentials
 !!
-!! Tersoff-Brenner type potentials with the Morse-style pair terms introduced
-!! by Brenner. Note: This potential does not contain the correction tables
-!! for treatment of pi-orbitals, etc.
+!! Abell-Tersoff-Brenner type potentials with the Morse-style pair terms
+!! used by Brenner. Note: This potential does not contain the correction 
+!! tables for treatment of pi-orbitals, etc.
 !<
 
 #include "macros.inc"
 
 module brenner
   use libAtoms_module
+
+  use ptrdict
 
   use logging
 
@@ -49,10 +51,8 @@ module brenner
 #define REGISTER_FUNC        brenner_register
 #define INIT_FUNC            brenner_init
 #define DEL_FUNC             brenner_del
-#define GET_CUTOFF_FUNC      brenner_get_cutoff
 #define BIND_TO_FUNC         brenner_bind_to
 #define COMPUTE_FUNC         brenner_energy_and_forces
-#define FORCE_FUNC           brenner_force
 
 #include "brenner_params.f90"
 
@@ -65,5 +65,7 @@ contains
 #include "../bop_kernel.f90"
 
 #include "brenner_func.f90"
+
+#include "brenner_registry.f90"
 
 endmodule brenner

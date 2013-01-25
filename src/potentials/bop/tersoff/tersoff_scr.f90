@@ -22,12 +22,15 @@
 !! Tersoff, Phys. Rev. B 37, 6991 (1988)
 !! Tersoff, Phys. Rev. B 38, 9902 (1988)
 !! Tersoff, Phys. Rev. B 39, 5566 (1989)
+!! Pastewka, Klemenz, Gumbsch, Moseler, arXiv:1301.2142
 !<
 
 #include "macros.inc"
 
 module tersoff_scr
   use libAtoms_module
+
+  use ptrdict
 
   use logging
   use timer

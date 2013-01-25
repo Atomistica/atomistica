@@ -29,6 +29,8 @@
 module tersoff
   use libAtoms_module
 
+  use ptrdict
+
   use logging
   use timer
 

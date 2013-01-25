@@ -25,6 +25,8 @@
 module kumagai
   use libAtoms_module
 
+  use ptrdict
+
   use logging
   use timer
 
@@ -45,7 +47,6 @@ module kumagai
 #define REGISTER_FUNC        kumagai_register
 #define INIT_FUNC            kumagai_init
 #define DEL_FUNC             kumagai_del
-#define GET_CUTOFF_FUNC      kumagai_get_cutoff
 #define BIND_TO_FUNC         kumagai_bind_to
 #define COMPUTE_FUNC         kumagai_energy_and_forces
 
@@ -60,5 +61,7 @@ contains
 #include "../bop_kernel.f90"
 
 #include "kumagai_func.f90"
+
+#include "kumagai_registry.f90"
 
 endmodule kumagai
