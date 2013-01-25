@@ -22,8 +22,8 @@ srcdir = '{0}/src'.format(cwd)
 # Select whether you are using the Intel or the GNU compiler
 #
 
-intel_compiler = True
-gnu_compiler = False
+intel_compiler = False
+gnu_compiler = True
 
 #
 # Module configuration
@@ -106,7 +106,7 @@ lib_srcs += [ '{0}/python/f90/'.format(srcdir)+i for i in
               ]
 
 # Generate versioninfo
-os.system('src/gen_versioninfo.sh src build Python')
+os.system('sh src/gen_versioninfo.sh src build Python')
 
 # Other stuff
 mod_srcs += [ '{0}/python/c/py_f.c'.format(srcdir),
@@ -148,9 +148,7 @@ write_factory_c(mods2, 'potential',
                 'build/potentials_factory_c.c',
                 '{0}/python/c/factory.template.h'.format(srcdir),
                 'build/potentials_factory_c.h')
-lib_srcs += [ '{0}/potentials/bop_registry.f90'.format(srcdir),
-              '{0}/potentials/potentials_registry.f90'.format(srcdir),
-              'build/potentials_factory_f90.f90',
+lib_srcs += [ 'build/potentials_factory_f90.f90',
               'build/potentials_factory_c.c',
               ]
 
