@@ -27,22 +27,14 @@ OMP_FLAGS =
 #
 # *** Extra includes and libraries
 #
-# - For NetCDF, generally add
-#   EXTRA_INCLUDE = `nc-config --fflags`
-#   EXTRA_LIB = `nc-config --flibs`
-# - For FFTW3 as installed by pas on joe1, add
-#   EXTRA_INCLUDE = -I/j1a/pas/applications/fftw-3.3/include
-#   EXTRA_LIB = -L/j1a/pas/applications/fftw-3.3/lib -lfftw3
-# - cxxlib is required to link to the C++ runtime 
-#
-EXTRA_INCLUDE += `nc-config --fflags` -I/usr/mpi/intel/openmpi-1.4.3/include
-EXTRA_LIB += `nc-config --flibs` -cxxlib
+EXTRA_INCLUDE += -I/usr/mpi/intel/openmpi-1.4.3/include
+EXTRA_LIB += -cxxlib
 #
 # *** LAPACK and BLAS link options here.
 #
 # Intel MKL
 #
-EXTRA_LIB += -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_lapack -lmkl_core -liomp5
+EXTRA_LIB += -mkl=sequential
 
 #
 # *** Other settings that rarely need to be touched
