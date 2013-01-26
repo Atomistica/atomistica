@@ -198,7 +198,7 @@ contains
 
     Z = atomic_number(a2s(c_f_string(el_str_cptr)))
     if (Z <= 0) then
-       RAISE_ERROR("Cannot find element '" // c_f_string(el_str_cptr) // "'.", error)
+       RAISE_ERROR("Cannot find element '" // a2s(c_f_string(el_str_cptr)) // "'.", error)
     endif
     this%nel = nel
     this%el2Z(el_no) = Z
