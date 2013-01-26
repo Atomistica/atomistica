@@ -83,7 +83,6 @@ contains
 
     ! ---
 
-    integer                          :: i
     integer                          :: now(8)
 
 #ifdef HAVE_IFPORT
