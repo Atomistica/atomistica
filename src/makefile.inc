@@ -31,6 +31,8 @@ VPATH = \
         $(SRCDIR)/potentials/bop/brenner \
         $(SRCDIR)/potentials/bop/kumagai \
         $(SRCDIR)/potentials/bop/tersoff \
+        $(SRCDIR)/potentials/bop/rebo2 \
+        $(SRCDIR)/potentials/bop/rebo2x \
 	$(SRCDIR)/support \
 	$(SRCDIR)/libAtoms
 
@@ -62,6 +64,9 @@ LAMMPS_SUPPLIB = \
 	c_logging.c \
 	timer.f90 \
 	tls.f90 \
+	simple_spline.f90 \
+	table2d.f90 \
+	table3d.f90 \
 	lammps_particles.f90 \
         lammps_neighbors.f90 \
 	lammps_filter.f90 \
@@ -71,8 +76,6 @@ LAMMPS_SUPPLIB = \
 ## LAMMPS dispatch
 LAMMPS_DISPATCH = \
 	potentials_factory_c.c \
-	bop_registry.f90 \
-	potentials_registry.f90 \
 	potentials_factory_f90.f90
 LAMMPS_DISPATCH_O1 = $(LAMMPS_DISPATCH:.c=.o)
 LAMMPS_DISPATCH_O = $(LAMMPS_DISPATCH_O1:.f90=.o)
@@ -127,7 +130,7 @@ C_STANDALONE_DISPATCH_O = $(C_STANDALONE_DISPATCH:.c=.o)
 	$(NVCC) $(CUFLAGS) -c $^ -o $@
 
 versioninfo.f90:
-	$(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(OPTFLAGS)
+	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(OPTFLAGS)
 
 
 # Targets
@@ -143,7 +146,7 @@ factories:
 	python $(SRCDIR)/lammps/gen_factory.py $(SRCDIR)/lammps $(FC) $(MACHINE) $(SYSTEM)
 
 versioninfo:
-	$(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(OPTFLAGS)
+	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(OPTFLAGS)
 
 mdcore: versioninfo $(LAMMPS_ALL_O)
 	$(LIBTOOL) libmdcore.a $(LAMMPS_ALL_O)
