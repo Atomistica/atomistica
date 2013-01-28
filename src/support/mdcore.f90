@@ -8,10 +8,13 @@
 !! This software is distributed under the GNU General Public License.
 !! See the LICENSE file in the top-level MDCORE directory.
 !! ======================================================================
+
 !>
-!! The main mdcore module
+!! The main MDCORE module
 !!
-!! The main mdcore module
+!! The main MDCORE module. Contains methods to initialize and finalize
+!! MDCORE. This opens and closes the log file (usually md.log), and prints
+!! some debug information to that file.
 !<
 module mdcore
 #ifdef HAVE_IFPORT
@@ -25,40 +28,6 @@ module mdcore
   use tls
 
   use versioninfo
-
-!!$  use particles
-!!$  use neighbors
-!!$  use dynamics
-!!$  use molecules
-!!$
-!!$  use bt_fast_multipole
-!!$  use charge_overlap
-!!$  use cutoff_coulomb
-!!$  use direct_coulomb
-!!$  use ewald
-!!$  use voltage
-!!$
-!!$  use albe_bop
-!!$  use albe_bop_scr
-!!$  use born_mayer
-!!$  use exp_bop
-!!$  use gupta
-!!$  use o2_bop
-!!$  use o2_bop_scr
-!!$  use rebo2
-!!$  use rebo2_scr
-!!$  use sliding_p
-!!$  use tabulated_eam
-!!$  use tersoff
-!!$  use variable_charge
-!!$  use zbl
-!!$  use bmhsw
-!!$
-!!$  use dense_hamiltonian_type
-!!$  use dense_hamiltonian
-!!$  use dense_solver
-!!$
-!!$  use dense_notb
 
   character(3), parameter, private :: month(12) = &
        (/ "Jan", "Feb", "Mar", "Apr", &
@@ -86,6 +55,7 @@ contains
     integer                          :: now(8)
 
 #ifdef HAVE_IFPORT
+    integer                          :: i
     character(MAX_HOSTNAM_LENGTH+1)  :: runhost
 #endif
 
@@ -194,7 +164,7 @@ contains
 #endif
 
 #ifndef LAMMPS
-    ! Avoid calling MPI_Finalize twice
+    ! Avoid calling MPI_Finalize twice. LAMMPS will call that.
    call system_finalise
 #endif
 
