@@ -95,6 +95,7 @@ lib_srcs += [ '{0}/support/'.format(srcdir)+i for i in
                 'simple_spline.f90',
                 'table2d.f90',
                 'table3d.f90',
+                'table4d.f90',
                 ]
               ]
 
