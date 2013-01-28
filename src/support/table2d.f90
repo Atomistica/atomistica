@@ -1,6 +1,17 @@
-!**********************************************************************
-! 2D-Lookup table for correction function using cubic splines
-!**********************************************************************
+!! ======================================================================
+!! MDCORE - Interatomic potential library
+!! https://github.com/pastewka/mdcore
+!! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
+!! See the AUTHORS file in the top-level MDCORE directory.
+!!
+!! Copyright (2005-2013) Fraunhofer IWM
+!! This software is distributed under the GNU General Public License.
+!! See the LICENSE file in the top-level MDCORE directory.
+!! ======================================================================
+
+!>
+!! 2D cubic spline interpolation
+!<
 
 #include "macros.inc"
 
@@ -55,11 +66,11 @@ module table2d
 
 contains
 
-  !**********************************************************************
-  ! generates the coefficients for bicubic interpolation of fch(ni,nj)
-  ! copyright: Keith Beardmore 30/11/93.
-  !            Lars Pastewka 05/07
-  !********************************************************************** 
+  !>
+  !! generates the coefficients for bicubic interpolation of fch(ni,nj)
+  !! copyright: Keith Beardmore 30/11/93.
+  !!            Lars Pastewka 05/07
+  !<
   subroutine table2d_init(t, nx, ny, values, ierror)
     implicit none
 
@@ -88,7 +99,8 @@ contains
     real(DP), allocatable  :: B(:, :)
     integer                :: ipiv(npara)
 
-    integer                :: icorn, irow, icol, ibox, nx1, nx2, npow1, npow2, npow1m, npow2m
+    integer                :: icorn, irow, icol, ibox, nx1, nx2
+    integer                :: npow1, npow2, npow1m, npow2m
     integer                :: i, j, nhbox, ncbox, info
 
     ! ---
@@ -194,9 +206,9 @@ contains
   endsubroutine table2d_init
 
 
-  !**********************************************************************
-  ! Free memory allocated for the spline coefficients
-  !********************************************************************** 
+  !>
+  !! Free memory allocated for the spline coefficients
+  !<
   elemental subroutine table2d_del(t)
     implicit none
 
@@ -209,15 +221,15 @@ contains
   endsubroutine table2d_del
 
 
-  !**********************************************************************
-  ! Compute function values and derivatives
-  !
-  ! bicubic interpolation of hch.
-  ! assumes 0.0 <= nhi,nci < 4.0
-  ! copyright: Keith Beardmore 30/11/93.
-  !            Lars Pastewka 05/07
-  !
-  !********************************************************************** 
+  !>
+  !! Compute function values and derivatives
+  !!
+  !! bicubic interpolation of hch.
+  !! assumes 0.0 <= nhi,nci < 4.0
+  !! copyright: Keith Beardmore 30/11/93.
+  !!            Lars Pastewka 05/07
+  !!
+  !<
   subroutine table2d_eval(t, nhi, nci, hch, dhchdh, dhchdc)
     implicit none
 

@@ -1,6 +1,17 @@
-!**********************************************************************
-! 2D-Lookup table for correction function using cubic splines
-!**********************************************************************
+!! ======================================================================
+!! MDCORE - Interatomic potential library
+!! https://github.com/pastewka/mdcore
+!! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
+!! See the AUTHORS file in the top-level MDCORE directory.
+!!
+!! Copyright (2005-2013) Fraunhofer IWM
+!! This software is distributed under the GNU General Public License.
+!! See the LICENSE file in the top-level MDCORE directory.
+!! ======================================================================
+
+!>
+!! 3D cubic spline interpolation
+!<
 
 #include "macros.inc"
 
@@ -56,11 +67,11 @@ module table3d
 
 contains
 
-  !**********************************************************************
-  ! generates the coefficients for bicubic interpolation of fch(ni,nj)
-  ! copyright: Keith Beardmore 30/11/93.
-  !            Lars Pastewka 05/07
-  !********************************************************************** 
+  !<
+  !! generates the coefficients for bicubic interpolation of fch(ni,nj)
+  !! copyright: Keith Beardmore 30/11/93.
+  !!            Lars Pastewka 05/07
+  !>
   subroutine table3d_init(t, nx, ny, nz, values, dvdx, dvdy, dvdz, ierror)
     implicit none
 
@@ -217,9 +228,9 @@ contains
   endsubroutine table3d_init
 
 
-  !**********************************************************************
-  ! Free memory allocated for the spline coefficients
-  !********************************************************************** 
+  !>
+  !! Free memory allocated for the spline coefficients
+  !<
   elemental subroutine table3d_del(t)
     implicit none
 
@@ -232,15 +243,15 @@ contains
   endsubroutine table3d_del
 
 
-  !**********************************************************************
-  ! Compute function values and derivatives
-  !
-  ! bicubic interpolation of hch.
-  ! assumes 0.0 <= nhi,nci < 4.0
-  ! copyright: Keith Beardmore 30/11/93.
-  !            Lars Pastewka 05/07
-  !
-  !********************************************************************** 
+  !>
+  !! Compute function values and derivatives
+  !!
+  !! bicubic interpolation of hch.
+  !! assumes 0.0 <= nhi,nci < 4.0
+  !! copyright: Keith Beardmore 30/11/93.
+  !!            Lars Pastewka 05/07
+  !!
+  !<
   subroutine table3d_eval(t, nti, ntj, nconji, fcc, dfccdi, dfccdj, dfccdc)
     implicit none
 
@@ -387,7 +398,8 @@ contains
     do k = 0, this%nz-1
        do j = 0, this%ny-1
           do i = 0, this%nx-1
-             call eval(this, i*1.0_DP, j*1.0_DP, k*1.0_DP, row(i), dummy1, dummy2, dummy3)
+             call eval(this, i*1.0_DP, j*1.0_DP, k*1.0_DP, row(i), dummy1, &
+                  dummy2, dummy3)
           enddo
 
           write (un, fmt)  j, row
