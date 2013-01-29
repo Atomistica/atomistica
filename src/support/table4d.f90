@@ -377,33 +377,41 @@ contains
     !
 
     nibox = int( nti )
-    x1    = nti - nibox
+    if (nibox < 0)      nibox = 0
+    if (nibox >= t%nx)  nibox = t%nx-1
     njbox = int( ntj )
-    x2    = ntj - njbox
+    if (njbox < 0)      njbox = 0
+    if (njbox >= t%ny)  njbox = t%ny-1
     ncbox = int( nconji )
-    x3    = nconji - ncbox
+    if (ncbox < 0)      ncbox = 0
+    if (ncbox >= t%nz)  ncbox = t%nz-1
     ndbox = int( nconjj )
-    x4    = nconjj - ndbox
+    if (ndbox < 0)      ndbox = 0
+    if (ndbox >= t%nt)  ndbox = t%nt-1
 
     ibox = 1+t%nx*(t%ny*(t%nz*ndbox+ncbox)+njbox)+nibox
+    x1   = nti - nibox
+    x2   = ntj - njbox
+    x3   = nconji - ncbox
+    x4   = nconjj - ndbox
 
-    fcc    = 0.0
-    dfccdi = 0.0
-    dfccdj = 0.0
-    dfccdc = 0.0
-    dfccdd = 0.0
+    fcc    = 0.0_DP
+    dfccdi = 0.0_DP
+    dfccdj = 0.0_DP
+    dfccdc = 0.0_DP
+    dfccdd = 0.0_DP
     do i = 4, 1, -1
-       sfcc   = 0.0
-       sfccdj = 0.0
-       sfccdc = 0.0
-       sfccdd = 0.0
+       sfcc   = 0.0_DP
+       sfccdj = 0.0_DP
+       sfccdc = 0.0_DP
+       sfccdd = 0.0_DP
        do j = 4, 1, -1
-          tfcc   = 0.0
-          tfccdc = 0.0
-          tfccdd = 0.0
+          tfcc   = 0.0_DP
+          tfccdc = 0.0_DP
+          tfccdd = 0.0_DP
           do k = 4, 1, -1
-             ufcc   = 0.0
-             ufccdd = 0.0
+             ufcc   = 0.0_DP
+             ufccdd = 0.0_DP
              do l=4,1,-1
                             coefij = t%coeff(ibox,i,j,k,l)
                             ufcc   =   ufcc*x4+       coefij
@@ -479,18 +487,16 @@ contains
     ! ---
 
     integer          :: i, j, k, l
-    real(DP)         :: row(0:this%nx-1), dummy1, dummy2, dummy3, dummy4
-    character(1000)  :: fmt
+    real(DP)         :: row(0:this%nx), dummy1, dummy2, dummy3, dummy4
+    character(1000)  :: fmt, fmthdr
 
     ! ---
 
     if (present(indent)) then
-       fmt = "(" // (indent+5) // "X," // (this%nx+1) // "I20)"
+       fmthdr = "(" // (indent) // "X,A15,I10," // this%nx // "I20)"
     else
-       fmt = "(5X," // (this%nx+1) // "I20)"
+       fmthdr = "(A15,I10," // this%nx // "I20)"
     endif
-
-    write (un, fmt)  (/ ( i, i=0, this%nx-1 ) /)
 
     if (present(indent)) then
        fmt = "(" // indent // "X,I3,' -'," // (this%nx+1) // "ES20.10)"
@@ -498,10 +504,12 @@ contains
        fmt = "(4I,1X," // (this%nx+1) // "ES20.10)"
     endif
 
-    do l = 0, this%nt-1
-       do k = 0, this%nz-1
-          do j = 0, this%ny-1
-             do i = 0, this%nx-1
+    do l = 0, this%nt
+       do k = 0, this%nz
+          write (un, fmthdr)  "[:,:,"//k//","//l//"]", &
+               (/ ( i, i=0, this%nx ) /)
+          do j = 0, this%ny
+             do i = 0, this%nx
                 call eval(this, i*1.0_DP, j*1.0_DP, k*1.0_DP, l*1.0_DP, &
                      row(i), dummy1, dummy2, dummy3, dummy4)
              enddo

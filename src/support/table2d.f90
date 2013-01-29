@@ -246,12 +246,12 @@ contains
     implicit none
 
     type(table2d_t), intent(in)  :: t
-    real(DP), intent(in)         :: nhi
-    real(DP), intent(in)         :: nci
+    real(DP),        intent(in)  :: nhi
+    real(DP),        intent(in)  :: nci
 
-    real(DP), intent(out)        :: hch
-    real(DP), intent(out)        :: dhchdh
-    real(DP), intent(out)        :: dhchdc
+    real(DP),        intent(out) :: hch
+    real(DP),        intent(out) :: dhchdh
+    real(DP),        intent(out) :: dhchdc
 
     ! ---
 
@@ -265,7 +265,11 @@ contains
 !    write (*, *)  nhi, nci
 
     nhbox = int( nhi )
+    if (nhbox < 0)      nhbox = 0
+    if (nhbox >= t%nx)  nhbox = t%nx-1
     ncbox = int( nci )
+    if (ncbox < 0)      ncbox = 0
+    if (ncbox >= t%ny)  ncbox = t%ny-1
 
     !
     !   find which box we're in and convert to normalised coordinates.
@@ -283,12 +287,12 @@ contains
 !!$
 !!$    else
 
-       hch    = 0.0
-       dhchdh = 0.0
-       dhchdc = 0.0
+       hch    = 0.0_DP
+       dhchdh = 0.0_DP
+       dhchdc = 0.0_DP
        do i = 4, 1, -1
-          shch   = 0.0
-          shchdc = 0.0
+          shch   = 0.0_DP
+          shchdc = 0.0_DP
           do j = 4, 1, -1
                          coefij = t%coeff(ibox, i, j)
                          shch   =   shch*x2 +       coefij
@@ -355,7 +359,7 @@ contains
     ! ---
 
     integer               :: i, j
-    real(DP)              :: row(0:this%nx-1), dummy1, dummy2
+    real(DP)              :: row(0:this%nx), dummy1, dummy2
     character(1000)       :: fmt
 
     ! ---
@@ -366,7 +370,7 @@ contains
        fmt = "(5X," // (this%nx+1) // "I20)"
     endif
 
-    write (un, fmt)  (/ ( i, i=0, this%nx-1 ) /)
+    write (un, fmt)  (/ ( i, i=0, this%nx ) /)
 
     if (present(indent)) then
        fmt = "(" // indent // "X,I3,' -'," // (this%nx+1) // "ES20.10)"
@@ -374,8 +378,8 @@ contains
        fmt = "(4I,1X," // (this%nx+1) // "ES20.10)"
     endif
 
-    do i = 0, this%ny-1
-       do j = 0, this%nx-1
+    do i = 0, this%ny
+       do j = 0, this%nx
           call eval(this, i*1.0_DP, j*1.0_DP, row(j), dummy1, dummy2)
        enddo
 
