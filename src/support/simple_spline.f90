@@ -408,7 +408,7 @@ contains
        i         = this%n-1
     else
        xf        = (x-this%x0)/dx+1
-       i         = xf
+       i         = floor(xf)
     endif
 
     if (i < 1 .or. i >= this%n) then
@@ -502,7 +502,7 @@ contains
        i         = this%n-1
     else
        xf        = (x-this%x0)/dx+1
-       i         = xf
+       i         = floor(xf)
     endif
 
     if (i < 1 .or. i >= this%n) then
@@ -574,7 +574,7 @@ contains
        i         = this%n-1
     else
        xf        = (x-this%x0)/dx+1
-       i         = xf
+       i         = floor(xf)
     endif
 
     if (i < 1 .or. i >= this%n) then
