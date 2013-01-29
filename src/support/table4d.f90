@@ -49,10 +49,12 @@ module table4d
      module procedure table4d_del
   endinterface
 
-  public :: f
-  interface f
-     module procedure table4d_f
+  public :: eval
+  interface eval
+     module procedure table4d_eval
   endinterface
+
+  public :: table4d_prlog
 
 contains
 
@@ -326,7 +328,7 @@ contains
   !!            Lars Pastewka 05/07
   !!
   !<
-  subroutine table4d_f(t, nti, ntj, nconji, nconjj, fcc, dfccdi, dfccdj, &
+  subroutine table4d_eval(t, nti, ntj, nconji, nconjj, fcc, dfccdi, dfccdj, &
        dfccdc, dfccdd)
     implicit none
 
@@ -402,7 +404,97 @@ contains
                    dfccdc = dfccdc *x1+       sfccdc
                    dfccdd = dfccdd *x1+       sfccdd
     enddo
+    
+  endsubroutine table4d_eval
 
-  endsubroutine table4d_f
+
+  !>
+  !! Print to screen
+  !!
+  !! Print to screen
+  !<
+  subroutine table4d_print(this, indent)
+    implicit none
+
+    type(table4d_t),   intent(in) :: this
+    integer, optional, intent(in) :: indent
+
+    ! ---
+
+    call table4d_print_un(7, this)
+
+  endsubroutine table4d_print
+
+
+  !>
+  !! Print to log file
+  !!
+  !! Print to log file
+  !<
+  subroutine table4d_prlog(this, indent)
+    implicit none
+
+    type(table4d_t),   intent(in) :: this
+    integer, optional, intent(in) :: indent
+
+    ! ---
+
+    call table4d_print_un(ilog, this, indent)
+
+  endsubroutine table4d_prlog
+
+
+  !>
+  !! Print to unit
+  !!
+  !! Print to unit
+  !<
+  subroutine table4d_print_un(un, this, indent)
+    implicit none
+
+    integer,           intent(in) :: un
+    type(table4d_t),   intent(in) :: this
+    integer, optional, intent(in) :: indent
+    
+    ! ---
+
+    integer          :: i, j, k, l
+    real(DP)         :: row(0:this%nx-1), dummy1, dummy2, dummy3, dummy4
+    character(1000)  :: fmt
+
+    ! ---
+
+    if (present(indent)) then
+       fmt = "(" // (indent+5) // "X," // (this%nx+1) // "I20)"
+    else
+       fmt = "(5X," // (this%nx+1) // "I20)"
+    endif
+
+    write (un, fmt)  (/ ( i, i=0, this%nx-1 ) /)
+
+    if (present(indent)) then
+       fmt = "(" // indent // "X,I3,' -'," // (this%nx+1) // "ES20.10)"
+    else
+       fmt = "(4I,1X," // (this%nx+1) // "ES20.10)"
+    endif
+
+    do l = 0, this%nt-1
+       do k = 0, this%nz-1
+          do j = 0, this%ny-1
+             do i = 0, this%nx-1
+                call eval(this, i*1.0_DP, j*1.0_DP, k*1.0_DP, l*1.0_DP, &
+                     row(i), dummy1, dummy2, dummy3, dummy4)
+             enddo
+
+             write (un, fmt)  j, row
+          enddo
+
+          write (un, *)
+       enddo
+
+       write (un, *)
+    enddo
+
+  endsubroutine table4d_print_un
 
 endmodule table4d
