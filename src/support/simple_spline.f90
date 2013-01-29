@@ -305,8 +305,14 @@ contains
        if (associated(this%dcoeff2))  deallocate(this%dcoeff2)
        if (associated(this%dcoeff3))  deallocate(this%dcoeff3)
 
-       this%y    => NULL()
-       this%d2y  => NULL()
+       this%y       => NULL()
+       this%d2y     => NULL()
+       this%coeff1  => NULL()
+       this%coeff2  => NULL()
+       this%coeff3  => NULL()
+       this%dcoeff1 => NULL()
+       this%dcoeff2 => NULL()
+       this%dcoeff3 => NULL()
     endif
 
   endsubroutine simple_spline_del
@@ -373,10 +379,10 @@ contains
 
     if (x == this%cut) then
        xf        = this%n
-       i         = this%n-1
+       i         = floor(this%n-1)
     else
        xf        = (x-this%x0)/dx+1
-       i         = xf
+       i         = floor(xf)
     endif
 
     if (i < 1 .or. i >= this%n) then

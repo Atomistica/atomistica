@@ -67,6 +67,7 @@ LAMMPS_SUPPLIB = \
 	simple_spline.f90 \
 	table2d.f90 \
 	table3d.f90 \
+	table4d.f90 \
 	lammps_particles.f90 \
         lammps_neighbors.f90 \
 	lammps_filter.f90 \

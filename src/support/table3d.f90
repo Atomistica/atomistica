@@ -27,13 +27,13 @@ module table3d
   public :: table3d_t
   type table3d_t
 
-     integer            :: nx = 1
-     integer            :: ny = 1
-     integer            :: nz = 1
+     integer               :: nx = 1
+     integer               :: ny = 1
+     integer               :: nz = 1
 
-     integer            :: nboxs
+     integer               :: nboxs
 
-     real(DP), pointer  :: coeff(:, :, :, :)  => NULL()
+     real(DP), allocatable :: coeff(:, :, :, :)
 
   endtype table3d_t
 
@@ -72,18 +72,18 @@ contains
   !! copyright: Keith Beardmore 30/11/93.
   !!            Lars Pastewka 05/07
   !>
-  subroutine table3d_init(t, nx, ny, nz, values, dvdx, dvdy, dvdz, ierror)
+  subroutine table3d_init(t, nx, ny, nz, values, dvdx, dvdy, dvdz, error)
     implicit none
 
     type(table3d_t), intent(inout)    :: t
     integer, intent(in)               :: nx
     integer, intent(in)               :: ny
     integer, intent(in)               :: nz
-    real(DP), intent(in)              :: values(0:nx, 0:ny, 0:nz)
-    real(DP), optional, intent(in)    :: dvdx(0:nx, 0:ny, 0:nz)
-    real(DP), optional, intent(in)    :: dvdy(0:nx, 0:ny, 0:nz)
-    real(DP), optional, intent(in)    :: dvdz(0:nx, 0:ny, 0:nz)
-    integer, intent(inout), optional  :: ierror
+    real(DP), intent(in)              :: values(0:, 0:, 0:)
+    real(DP), optional, intent(in)    :: dvdx(0:, 0:, 0:)
+    real(DP), optional, intent(in)    :: dvdy(0:, 0:, 0:)
+    real(DP), optional, intent(in)    :: dvdz(0:, 0:, 0:)
+    integer, intent(inout), optional  :: error
 
     ! ---
 
@@ -113,11 +113,62 @@ contains
 
     ! ---
 
+    ! Bounds checking
+
+    if (lbound(values, 1) /= 0 .or. ubound(values, 1) /= nx) then
+       RAISE_ERROR("First index of *values* must run from 0 to " // nx // ", but does run from " // lbound(values, 1) // " to " // ubound(values, 1) // ".", error)
+    endif
+    if (lbound(values, 2) /= 0 .or. ubound(values, 2) /= ny) then
+       RAISE_ERROR("Second index of *values* must run from 0 to " // ny // ", but does run from " // lbound(values, 2) // " to " // ubound(values, 2) // ".", error)
+    endif
+    if (lbound(values, 3) /= 0 .or. ubound(values, 3) /= nz) then
+       RAISE_ERROR("Third index of *values* must run from 0 to " // nz // ", but does run from " // lbound(values, 3) // " to " // ubound(values, 3) // ".", error)
+    endif
+
+    if (present(dvdx)) then
+       if (lbound(dvdx, 1) /= 0 .or. ubound(dvdx, 1) /= nx) then
+          RAISE_ERROR("First index of *dvdx* must run from 0 to " // nx // ", but does run from " // lbound(dvdx, 1) // " to " // ubound(dvdx, 1) // ".", error)
+       endif
+       if (lbound(dvdx, 2) /= 0 .or. ubound(dvdx, 2) /= ny) then
+          RAISE_ERROR("Second index of *dvdx* must run from 0 to " // ny // ", but does run from " // lbound(dvdx, 2) // " to " // ubound(dvdx, 2) // ".", error)
+       endif
+       if (lbound(dvdx, 3) /= 0 .or. ubound(dvdx, 3) /= nz) then
+          RAISE_ERROR("Third index of *dvdx* must run from 0 to " // nz // ", but does run from " // lbound(dvdx, 3) // " to " // ubound(dvdx, 3) // ".", error)
+       endif
+    endif
+
+    if (present(dvdy)) then
+       if (lbound(dvdy, 1) /= 0 .or. ubound(dvdy, 1) /= nx) then
+          RAISE_ERROR("First index of *dvdy* must run from 0 to " // nx // ", but does run from " // lbound(dvdy, 1) // " to " // ubound(dvdy, 1) // ".", error)
+       endif
+       if (lbound(dvdy, 2) /= 0 .or. ubound(dvdy, 2) /= ny) then
+          RAISE_ERROR("Second index of *dvdy* must run from 0 to " // ny // ", but does run from " // lbound(dvdy, 2) // " to " // ubound(dvdy, 2) // ".", error)
+       endif
+       if (lbound(dvdy, 3) /= 0 .or. ubound(dvdy, 3) /= nz) then
+          RAISE_ERROR("Third index of *dvdy* must run from 0 to " // nz // ", but does run from " // lbound(dvdy, 3) // " to " // ubound(dvdy, 3) // ".", error)
+       endif
+    endif
+
+    if (present(dvdz)) then
+       if (lbound(dvdz, 1) /= 0 .or. ubound(dvdz, 1) /= nx) then
+          RAISE_ERROR("First index of *dvdz* must run from 0 to " // nx // ", but does run from " // lbound(dvdz, 1) // " to " // ubound(dvdz, 1) // ".", error)
+       endif
+       if (lbound(dvdz, 2) /= 0 .or. ubound(dvdz, 2) /= ny) then
+          RAISE_ERROR("Second index of *dvdz* must run from 0 to " // ny // ", but does run from " // lbound(dvdz, 2) // " to " // ubound(dvdz, 2) // ".", error)
+       endif
+       if (lbound(dvdz, 3) /= 0 .or. ubound(dvdz, 3) /= nz) then
+          RAISE_ERROR("Third index of *dvdz* must run from 0 to " // nz // ", but does run from " // lbound(dvdz, 3) // " to " // ubound(dvdz, 3) // ".", error)
+       endif
+    endif
+
+    ! ---
+
     t%nx     = nx
     t%ny     = ny
     t%nz     = nz
     t%nboxs  = nx*ny*nz
 
+    if (allocated(t%coeff))  deallocate(t%coeff)
     allocate(t%coeff(t%nboxs, 4, 4, 4))
     allocate(B(npara, t%nboxs))
 
@@ -204,7 +255,7 @@ contains
     call dgesv(npara, t%nboxs, A, npara, ipiv, B, npara, info)
 
     if (info /= 0) then
-       RAISE_ERROR("dgesv failed.", ierror)
+       RAISE_ERROR("dgesv failed.", error)
     endif
 
     !
@@ -238,7 +289,9 @@ contains
 
     ! ---
 
-    deallocate(t%coeff)
+    if (allocated(t%coeff)) then
+       deallocate(t%coeff)
+    endif
 
   endsubroutine table3d_del
 

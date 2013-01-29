@@ -25,14 +25,14 @@ module table4d
   public :: table4d_t
   type table4d_t
 
-     integer            :: nx = 1
-     integer            :: ny = 1
-     integer            :: nz = 1
-     integer            :: nt = 1
+     integer               :: nx = 1
+     integer               :: ny = 1
+     integer               :: nz = 1
+     integer               :: nt = 1
 
-     integer            :: nboxs
+     integer               :: nboxs
 
-     real(DP), pointer  :: coeff(:, :, :, :, :)  => NULL()
+     real(DP), allocatable :: coeff(:, :, :, :, :)
 
   endtype table4d_t
 
@@ -63,7 +63,7 @@ contains
   !! copyright: Keith Beardmore 30/11/93.
   !!            Lars Pastewka 05/07
   !<
-  subroutine table4d_init(t, nx, ny, nz, nt, values, ierror)
+  subroutine table4d_init(t, nx, ny, nz, nt, values, error)
     implicit none
 
     type(table4d_t), intent(inout)    :: t
@@ -71,8 +71,8 @@ contains
     integer, intent(in)               :: ny
     integer, intent(in)               :: nz
     integer, intent(in)               :: nt
-    real(DP), intent(in)              :: values(0:nx, 0:ny, 0:nz, 0:nt)
-    integer, intent(inout), optional  :: ierror
+    real(DP), intent(in)              :: values(0:, 0:, 0:, 0:)
+    integer, intent(inout), optional  :: error
 
     ! ---
 
@@ -101,12 +101,30 @@ contains
 
     ! ---
 
+    ! Bounds checking
+
+    if (lbound(values, 1) /= 0 .or. ubound(values, 1) /= nx) then
+       RAISE_ERROR("First index of *values* must run from 0 to " // nx // ", but does run from " // lbound(values, 1) // " to " // ubound(values, 1) // ".", error)
+    endif
+    if (lbound(values, 2) /= 0 .or. ubound(values, 2) /= ny) then
+       RAISE_ERROR("Second index of *values* must run from 0 to " // ny // ", but does run from " // lbound(values, 2) // " to " // ubound(values, 2) // ".", error)
+    endif
+    if (lbound(values, 3) /= 0 .or. ubound(values, 3) /= nz) then
+       RAISE_ERROR("Third index of *values* must run from 0 to " // nz // ", but does run from " // lbound(values, 3) // " to " // ubound(values, 3) // ".", error)
+    endif
+    if (lbound(values, 4) /= 0 .or. ubound(values, 4) /= nz) then
+       RAISE_ERROR("Fourth index of *values* must run from 0 to " // nt // ", but does run from " // lbound(values, 4) // " to " // ubound(values, 4) // ".", error)
+    endif
+
+    ! ---
+
     t%nx     = nx
     t%ny     = ny
     t%nz     = nz
     t%nt     = nt
     t%nboxs  = nx*ny*nz*nt
 
+    if (allocated(t%coeff))  deallocate(t%coeff)
     allocate(t%coeff(t%nboxs, 4, 4, 4, 4))
     allocate(B(npara, t%nboxs))
 
@@ -278,7 +296,7 @@ contains
     call dgesv(npara, t%nboxs, A, npara, ipiv, B, npara, info)
 
     if (info /= 0) then
-       RAISE_ERROR("dgesv failed.", ierror)
+       RAISE_ERROR("dgesv failed.", error)
     endif
 
     !
@@ -314,7 +332,9 @@ contains
 
     ! ---
 
-    deallocate(t%coeff)
+    if (allocated(t%coeff)) then
+       deallocate(t%coeff)
+    endif
 
   endsubroutine table4d_del
 
