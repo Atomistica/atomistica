@@ -558,10 +558,6 @@ contains
     integer, intent(inout), optional  :: ierror
 
     ! ---
-    
-    integer  :: i
-    
-    ! ---
 
     call allocate(this%data, nat, allow_def)
 
