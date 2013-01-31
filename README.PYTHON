@@ -1,51 +1,71 @@
-To compile, use and test the Python interface do the following:
+The following instruction show how to compile, use and test the Python
+interface to MDCORE.
 
-1. ANNOYANCE: Patch your numpy distutils. Edit
+1. Setup your compiler. Edit ~/.pydistuils.cfg
+
+   For GNU Fortran/C use:
+
+     [config_fc]
+     fcompiler=gnu95
+     f90flags=-cpp -ffree-line-length-none [-fopenmp] [-DGETARG_F2003 -DGETENV_F2003]
+
+   For Intel Fortran/C (intel64) use:
+
+     [config_fc]
+     fcompiler=intelem
+     f90flags=-fpp [-openmp]
  
-     <path-to-python-site-packages>/numpy/distutils/command/build_clib.py
+     [config_cc]
+     compiler=intel
 
-   and change the line after "if f_sources or fmodule_sources:" to
+   You can get a list of available Fortran and C compilers by executing:
 
-     extra_postargs = build_info.get('extra_fcompiler_args') or []
+     python setup.py build --help-fcompiler
+     python setup.py build --help-compiler
 
-   This should become automatic at some point.
+   More information can be found here:
 
-2. ANNOYANCE: Edit setup.py. Change lib_fextra to whether you'll be using 
-   Intel Fortran or GNU Fortran. This should become automatic at some point.
+     http://docs.python.org/2/install/index.html
+     http://thread.gmane.org/gmane.comp.python.numeric.general/15793
 
-3. Type
 
-     python setup.py build [--compiler=intel --fcompiler=intelem]
+2. Compile the Python extension. Execute
 
-   This will build all Fortran and C sources required for the Python
-   interface. The above line uses the Intel compiler on x86_64 platforms.
+     python setup.py build
+
+   This will build and link all Fortran and C sources required for the Python
+   interface. You may need to edit setup.py if the LAPACK libraries are not
+   automatically detected.
 
    Note: You will need to
 
      python setup.py clean
      - or -
-     python setup.py build --force [--compiler=intel --fcompiler=intelem]
+     python setup.py build --force
 
    if the source has changed. Unfortunately, the current numpy distutils
    won't relink the module even if the library has been recompiled.
 
-   To see a list of available C and Fortran compilers to
 
-     python setup.py build --help-compiler
-     python setup.py build --help-fcompiler
-
-4. To use the Python interface type
+3. Test if the Python interface imports with errors. Type
 
      source <path-to-mdcore>/env.sh
 
-   which sets up the environment. To test do
+   which sets up the environment. To test if MDCORE can be imported into Python
+   execute"
 
      python -c "import mdcore"
 
-   If this worked then do
+   If you get "undefined symbol: getarg_" or "undefined symbol: getenv_" at this
+   stage, then add "-DGETARG_F2003 -DGETENV_F2003" to f90flags in bullet 1.
+
+
+4. Test if the Python interface gives correct results. Type
 
      cd <path-to-mdcore>/test_suite/ase
      python run_tests.py
 
-5. Run "tests/run_tests.py". Each test can also be run directly. This will
-   produce more diagnostic output.
+   Each test can also be run directly. This will produce more diagnostic output:
+
+     python bulk_properties.py
+     python forces_and_virial.py
