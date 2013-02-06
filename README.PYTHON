@@ -1,7 +1,7 @@
 The following instruction show how to compile, use and test the Python
 interface to MDCORE.
 
-1. Setup your compiler. Edit ~/.pydistuils.cfg
+1. Setup your compiler. Edit ~/.pydistutils.cfg
 
    For GNU Fortran/C use:
 
