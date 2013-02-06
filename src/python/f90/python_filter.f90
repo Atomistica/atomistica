@@ -20,6 +20,8 @@
 module filter
   use libAtoms_module
 
+  use logging
+
   use data
   use particles
 
@@ -31,7 +33,7 @@ module filter
 
   public :: MAX_EL_STR
   public :: filter_from_string, filter_count, filter_sum, filter_average
-  public :: filter_mask, filter_pack, filter_unpack
+  public :: filter_mask, filter_pack, filter_unpack, filter_prlog
 
 contains
 
@@ -294,5 +296,64 @@ contains
     enddo
 
   endsubroutine filter_unpack
+
+
+  !>
+  !! Dump filter information to log file
+  !!
+  !! Dump filter information to log file
+  !<
+  subroutine filter_prlog(f, p, indent)
+    implicit none
+
+    integer,           intent(in) :: f
+    type(particles_t), intent(in) :: p
+    integer, optional, intent(in) :: indent
+
+    ! ---
+
+    integer         :: i
+    character(1024) :: s
+
+    ! ---
+
+    s = " "
+    do i = 1, p%nel
+       if (IS_EL(f, p, i)) then
+          if (i == p%nel) then
+             s = trim(s)//trim(ElementName(p%el2Z(i)))
+          else
+             s = trim(s)//trim(ElementName(p%el2Z(i)))//","
+          endif
+       endif
+    enddo
+
+    s = trim(s)//" ("
+    do i = 1, p%nel
+       if (IS_EL(f, p, i)) then
+          if (i == p%nel) then
+             s = trim(s)//"X"
+          else
+             s = trim(s)//"X"//","
+          endif
+       else
+          if (i == p%nel) then
+             s = trim(s)//"_"
+          else
+             s = trim(s)//"_"//","
+          endif
+       endif
+    enddo
+    s = trim(s)//")"
+
+    if (present(indent)) then
+       do i = 1, indent
+          s = " " // s
+       enddo
+    endif
+
+    call prlog(s)
+
+  endsubroutine filter_prlog
 
 endmodule filter
