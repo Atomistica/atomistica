@@ -24,6 +24,8 @@ dev_thres  = 1e-4
 ###
 
 tests  = [
+    ( r6, dict(el1='Si', el2='Si', A=1.0, r0=1.0, cutoff=5.0),
+      [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
     ( Brenner,   Erhart_PRB_71_035211_SiC,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
@@ -84,7 +86,7 @@ def run_forces_and_virial_test(test=None):
             c  = pot()
         else:
             c  = pot(**par)
-            if test is None:
+            if test is None and '__ref__' in par:
                 print "    %s" % par["__ref__"]
 
         for imat in mats:
