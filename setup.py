@@ -19,13 +19,6 @@ srcdir = '{0}/src'.format(cwd)
 ###
 
 #
-# Select whether you are using the Intel or the GNU compiler
-#
-
-intel_compiler = False
-gnu_compiler = True
-
-#
 # Module configuration
 #
 
@@ -178,44 +171,11 @@ inc_dirs += [ np.get_include(),
               'src/potentials',
               ]
 
-lib_cextra = [ '-fPIC',
+lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
+               ( 'QUIP_ARCH', '\\"MDCORE\\"' ),
+               ( 'SIZEOF_FORTRAN_T', 8 ),
+               ( 'MDCORE_PYTHON', None ),
                ]
-
-# The following is for Intel compiler
-if intel_compiler:
-    lib_fextra = [ '-fpp',
-                   '-openmp',
-                   '-fPIC',
-                   '-DQUIP_ARCH=\\"MDCORE\\"',
-                   '-DSIZEOF_FORTRAN_T=8',
-                   '-DMDCORE_PYTHON',
-                   ]
-
-# The following is for gfortran compiler
-if gnu_compiler:
-    libs += [ 'gfortran' ]
-    lib_fextra = [ '-cpp', '-ffree-line-length-none',
-                   '-DNO_BIND_C_OPTIONAL',
-                   '-fPIC',
-                   '-DQUIP_ARCH=\\"MDCORE\\"',
-                   '-DSIZEOF_FORTRAN_T=8',
-                   '-DMDCORE_PYTHON',
-                   '-DGETARG_F2003',
-                   '-DGETENV_F2003',
-                   ]
-
-mod_extra = [ '-fPIC',
-             ]
-
-###
-
-#print 'Compiling the following files into the MDCORE library:'
-#for i, fn in enumerate(lib_srcs):
-#    print '{0:>3}: {1}'.format(i, fn)
-#
-#print 'Compiling the following files into the MDCORE module:'
-#for i, fn in enumerate(mod_srcs):
-#    print '{0:>3}: {1}'.format(i, fn)
 
 ###
 
@@ -232,9 +192,9 @@ setup(
         ( 'mdcorelib', dict(
                 sources = lib_srcs,
                 include_dirs = inc_dirs,
-                extra_compiler_args = lib_cextra,
-                extra_fcompiler_args = lib_fextra
-                ) 
+                macros = lib_macros,
+                extra_compiler_args = [ '-fPIC' ],
+                )
           )
         ],
     ext_modules = [
@@ -244,7 +204,7 @@ setup(
             include_dirs = inc_dirs,
             library_dirs = lib_dirs,
             libraries = libs,
-            extra_compile_args = mod_extra
+            extra_compile_args = [ '-fPIC' ],
             )
         ]
     )
