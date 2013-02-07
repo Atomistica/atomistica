@@ -129,29 +129,21 @@ contains
 
     s = " "
     do i = 1, p%nel
-       if (IS_EL(f, p, i)) then
-          if (i == p%nel) then
-             s = trim(s)//trim(ElementName(p%el2Z(i)))
-          else
-             s = trim(s)//trim(ElementName(p%el2Z(i)))//","
-          endif
+       if (IS_EL2(f, i)) then
+          s = trim(s)//trim(ElementName(p%el2Z(i)))//","
        endif
     enddo
 
+    if (len_trim(s) > 0) then
+       s = s(1:len_trim(s)-1)
+    endif
+
     s = trim(s)//" ("
     do i = 1, p%nel
-       if (IS_EL(f, p, i)) then
-          if (i == p%nel) then
-             s = trim(s)//"X"
-          else
-             s = trim(s)//"X"//","
-          endif
+       if (IS_EL2(f, i)) then
+          s = trim(s)//"X"
        else
-          if (i == p%nel) then
-             s = trim(s)//"_"
-          else
-             s = trim(s)//"_"//","
-          endif
+          s = trim(s)//"_"
        endif
     enddo
     s = trim(s)//")"

@@ -139,7 +139,7 @@ contains
 
     do i = 1, p%nel
        do j = 1, p%nel
-          if (IS_EL(this%el1, p, i) .and. IS_EL(this%el2, p, j)) then
+          if (IS_EL2(this%el1, i) .and. IS_EL2(this%el2, j)) then
              call request_interaction_range(nl, this%cutoff, i, j)
           endif
        enddo
