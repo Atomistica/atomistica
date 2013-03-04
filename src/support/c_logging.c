@@ -1,14 +1,3 @@
-/* ======================================================================
-   MDCORE - Interatomic potential library
-   https://github.com/pastewka/mdcore
-   Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
-   See the AUTHORS file in the top-level MDCORE directory.
-
-   Copyright (2005-2013) Fraunhofer IWM
-   This software is distributed under the GNU General Public License.
-   See the LICENSE file in the top-level MDCORE directory.
-   ====================================================================== */
-
 #include <stdarg.h>
 
 #include "logging.h"
@@ -17,7 +6,7 @@
 /*!
  * Record a log message to screen and file
  */
-void prscrlog(char *msg, ...)
+void prscrlog(const char *msg, ...)
 {
   char buf[1024];
   va_list args;
@@ -31,7 +20,7 @@ void prscrlog(char *msg, ...)
 /*!
  * Record a log message to file only
  */
-void prlog(char *msg, ...)
+void prlog(const char *msg, ...)
 {
   char buf[1024];
   va_list args;

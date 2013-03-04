@@ -30,18 +30,6 @@ module python_helper
 
 contains
 
-  subroutine f_system_initialise() bind(C)
-    use, intrinsic :: iso_c_binding
-
-    implicit none
-
-    ! ---
-
-    call system_initialise(PRINT_SILENT)
-
-  endsubroutine f_system_initialise
-
-
   !>
   !! Convert zero terminated string to Fortran string
   !<

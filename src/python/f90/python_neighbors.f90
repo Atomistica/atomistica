@@ -805,9 +805,9 @@ contains
     !
 
     ! Compute the surface normal vectors
-    nx  = this%cell_size(:, 2) .cross. this%cell_size(:, 3)
-    ny  = this%cell_size(:, 3) .cross. this%cell_size(:, 1)
-    nz  = this%cell_size(:, 1) .cross. this%cell_size(:, 2)
+    nx  = cross_product(this%cell_size(:, 2), this%cell_size(:, 3))
+    ny  = cross_product(this%cell_size(:, 3), this%cell_size(:, 1))
+    nz  = cross_product(this%cell_size(:, 1), this%cell_size(:, 2))
 
     ! The cell volume
     cv  = dot_product(this%cell_size(:, 1), nx)

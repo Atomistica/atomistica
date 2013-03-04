@@ -40,6 +40,10 @@
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 module error_module
+  use, intrinsic :: iso_c_binding
+
+  use c_f
+
   implicit none
 
   private
@@ -101,18 +105,6 @@ module error_module
      module procedure error_abort_with_message
   endinterface
 
-  interface quippy_running
-     function quippy_running()
-       logical :: quippy_running
-     end function quippy_running
-  end interface quippy_running
-
-  interface quippy_error_abort
-     subroutine quippy_error_abort(message)
-       character(*), intent(in) :: message
-     end subroutine quippy_error_abort
-  end interface quippy_error_abort
-
   public :: error_abort
   interface error_abort
      module procedure error_abort_from_stack
@@ -160,7 +152,7 @@ contains
 
   endsubroutine push_error
 
-  subroutine error_clear_stack()
+  subroutine error_clear_stack() bind(C)
     error_stack_position = 0
   end subroutine error_clear_stack
 
@@ -293,8 +285,6 @@ contains
     include "mpif.h"
 #endif
 
-    if (quippy_running()) call quippy_error_abort(message)
-
 #ifdef _MPI
     write(unit=error_unit, fmt='(a,i0," ",a)') 'SYSTEM ABORT: proc=',error_mpi_myid,error_linebreak_string(trim(message),100)
 #else
@@ -337,6 +327,7 @@ contains
     call system_abort(get_error_string_and_clear(error))
 
   endsubroutine error_abort_from_stack
+
 
   pure function error_linebreak_string_length(str, line_len) result(length)
     character(len=*), intent(in) :: str
@@ -409,5 +400,53 @@ contains
 
    end function error_linebreak_string
 
+
+   !>
+   !! Invoke errors from C/C++
+   !<
+   subroutine c_push_error_with_info(doc, fn, line, kind) bind(C)
+     use, intrinsic :: iso_c_binding
+
+     implicit none
+
+     type(C_PTR),    value :: doc, fn
+     integer(C_INT), value :: line, kind
+
+     call push_error_with_info(a2s(c_f_string(doc)), a2s(c_f_string(fn)), line,&
+          kind)
+
+   endsubroutine c_push_error_with_info
+
+
+   !>
+   !! Invoke errors from C/C++
+   !<
+   subroutine c_push_error(fn, line, kind) bind(C)
+     use, intrinsic :: iso_c_binding
+
+     implicit none
+
+     type(C_PTR),    value :: fn
+     integer(C_INT), value :: line, kind
+
+     call push_error(a2s(c_f_string(fn)), line, kind)
+
+   endsubroutine c_push_error
+
+
+   !>
+   !! Invoke errors from C/C++
+   !<
+   subroutine c_error_abort(error) bind(C)
+     implicit none
+
+     integer(C_INT), value :: error
+
+     ! ---
+
+     ! This is for compatibility with quippy, change to error_abort
+     call system_abort(get_error_string_and_clear(error))
+
+  endsubroutine c_error_abort
 
 endmodule error_module

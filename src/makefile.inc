@@ -34,44 +34,34 @@ VPATH = \
         $(SRCDIR)/potentials/pair_potentials \
         $(SRCDIR)/potentials/bop/rebo2 \
         $(SRCDIR)/potentials/bop/rebo2x \
-	$(SRCDIR)/support \
-	$(SRCDIR)/libAtoms
-
-
-## libAtoms
-LIBATOMS = \
-	cutil.c \
-	error.f90 \
-	System.f90 \
-	MPI_context.f90 \
-	Units.f90 \
-	linearalgebra.f90 \
-	PeriodicTable.f90 \
-	libAtoms.f90 \
-	libAtoms_misc_utils.f90 \
-	libAtoms_utils_no_module.f90
-LIBATOMS_O1 = $(LIBATOMS:.c=.o)
-LIBATOMS_O = $(LIBATOMS_O1:.f90=.o)
+	$(SRCDIR)/special
+	$(SRCDIR)/support
 
 
 ## LAMMPS support library, includes libAtoms
 LAMMPS_SUPPLIB = \
-	$(LIBATOMS) \
+        error.f90 \
+        System.f90 \
+        MPI_context.f90 \
+        Units.f90 \
+        linearalgebra.f90 \
+        PeriodicTable.f90 \
 	f_ptrdict.f90 \
 	c_ptrdict.c \
 	c_f.f90 \
-	versioninfo.f90 \
 	f_logging.f90 \
 	c_logging.c \
 	timer.f90 \
 	tls.f90 \
 	simple_spline.f90 \
+	supplib.f90 \
 	table2d.f90 \
 	table3d.f90 \
 	table4d.f90 \
 	lammps_particles.f90 \
         lammps_neighbors.f90 \
 	lammps_filter.f90 \
+        versioninfo.f90 \
 	mdcore.f90
 
 

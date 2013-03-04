@@ -15,7 +15,10 @@
 #include "macros.inc"
 
 module misc
-  use libAtoms_module
+  use error_module
+  use system_module
+
+  use logging
 
   implicit none
 

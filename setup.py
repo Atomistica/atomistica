@@ -55,38 +55,35 @@ else:
 lib_srcs = [ ]
 mod_srcs = [ ]
 
-# libAtoms
-lib_srcs += [ '{0}/libAtoms/'.format(srcdir)+i for i in
-              [ 'cutil.c',
-                'error.f90',
-                'System.f90',
-                'MPI_context.f90',
-                'Units.f90',
-                'linearalgebra.f90',
-                'PeriodicTable.f90',
-                'libAtoms.f90',
-                'libAtoms_misc_utils.f90',
-                'libAtoms_utils_no_module.f90',
-                ]
-              ]
-
-# MDCORE support
+# MDCORE support modules
 lib_srcs += [ 'build/versioninfo.f90',
             ]
 
 lib_srcs += [ '{0}/support/'.format(srcdir)+i for i in
-              [ 'f_ptrdict.f90',
+              [ 'c_f.f90',
+                'error.f90',
+                'System.f90',
+                'MPI_context.f90',
+                'Units.f90',
+                'PeriodicTable.f90',
+                'f_linearalgebra.f90',
+                'f_ptrdict.f90',
                 'c_ptrdict.c',
-                'c_f.f90',
+                'io.f90',
                 'f_logging.f90',
                 'c_logging.c',
                 'timer.f90',
                 'tls.f90',
-                'mdcore.f90',
                 'misc.f90',
                 'data.f90',
                 'simple_spline.f90',
-                'table2d.f90',
+                'supplib.f90',
+                'mdcore.f90',
+                ]
+              ]
+
+lib_srcs += [ '{0}/special/'.format(srcdir)+i for i in
+              [ 'table2d.f90',
                 'table3d.f90',
                 'table4d.f90',
                 ]
@@ -172,8 +169,6 @@ inc_dirs += [ np.get_include(),
               ]
 
 lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
-               ( 'QUIP_ARCH', '\\"MDCORE\\"' ),
-               ( 'SIZEOF_FORTRAN_T', 8 ),
                ( 'MDCORE_PYTHON', None ),
                ]
 

@@ -1,20 +1,10 @@
-!! ======================================================================
-!! MDCORE - Interatomic potential library
-!! https://github.com/pastewka/mdcore
-!! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
-!! See the AUTHORS file in the top-level MDCORE directory.
-!!
-!! Copyright (2005-2013) Fraunhofer IWM
-!! This software is distributed under the GNU General Public License.
-!! See the LICENSE file in the top-level MDCORE directory.
-!! ======================================================================
 !>
 !! Global logging capabilities
 !<
 module logging
-  use libAtoms_module
-
+  use system_module
   use c_f
+  use io
 
   implicit none
 
@@ -22,7 +12,6 @@ module logging
 
   integer, parameter  :: BYTES_PER_MB  = 1024*1024
 
-  type(Inoutput)      :: logfile
   integer             :: ilog = -1
   real(DP)            :: total_memory = 0.0_DP
 
@@ -64,12 +53,10 @@ contains
 
 #ifdef _MPI
     if (mpi_id() == ROOT) then
-       call Initialise(logfile, fn, OUTPUT)
-       ilog = logfile%unit
+       ilog = fopen(fn, mode=F_WRITE)
     endif
 #else
-    call Initialise(logfile, fn, OUTPUT)
-    ilog = logfile%unit
+    ilog = fopen(fn, mode=F_WRITE)
 #endif
 
   endsubroutine logging_start
@@ -81,7 +68,7 @@ contains
   subroutine logging_stop() bind(C)
     implicit none
 
-    call Finalise(logfile)
+    call fclose(ilog)
     ilog  = -1
 
   endsubroutine logging_stop
@@ -103,23 +90,23 @@ contains
 #endif
 #if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
        ! Do not print to screen if we're using the Python or LAMMPS module
-       call print(msg, PRINT_ALWAYS)
+       write (*, '(A)')  msg
 #endif
 #ifdef _MPI
        endif
 #endif
-       call print(msg, PRINT_ALWAYS, file=logfile)
+       write (ilog, '(A)')  msg
     else
 #ifdef _MPI
        if (mpi_id() == ROOT) then
 #endif
 #if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
-       call print("", PRINT_ALWAYS)
+       write (ilog, *)
 #endif
 #ifdef _MPI
        endif
 #endif
-       call print("", PRINT_ALWAYS, file=logfile)
+       write (ilog, *)
     endif
 
   endsubroutine prscrlog
@@ -136,9 +123,9 @@ contains
     ! ---
 
     if (present(msg)) then
-       call print(msg, file=logfile)
+       write (ilog, '(A)')  msg
     else
-       call print("", file=logfile)
+       write (ilog, *)
     endif
 
   endsubroutine prlog
@@ -170,7 +157,7 @@ contains
     ! ---
 
 !    write (ilog, '(5X,A,F7.1,A)')  "Memory estimate: ", total_memory, " MB"
-    call print("Memory estimate: " // total_memory // " MB", file=logfile)
+    write (ilog, '(A)')  "Memory estimate: " // total_memory // " MB"
     
   endsubroutine log_memory_stop
 

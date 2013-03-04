@@ -65,7 +65,7 @@ character(3),parameter,dimension(0:116) :: ElementName =   (/"xx ",             
 
 ! Units: grams per Mole * MASSCONVERT (conforming to eV,A,fs system)
 
-real(dp),parameter,dimension(116) :: ElementMass =                                                     &
+real(dp),parameter,dimension(116) :: ElementMass_in_g_mol =                                                     &
 (/1.00794, 4.00260, 6.941, 9.012187, 10.811, 12.0107, 14.00674, 15.9994, 18.99840, 20.1797, 22.98977,  &
 24.3050, 26.98154, 28.0855, 30.97376, 32.066, 35.4527, 39.948, 39.0983, 40.078, 44.95591, 47.867,      &
 50.9415, 51.9961, 54.93805, 55.845, 58.93320, 58.6934, 63.546, 65.39, 69.723, 72.61, 74.92160, 78.96,  &
@@ -75,8 +75,10 @@ real(dp),parameter,dimension(116) :: ElementMass =                              
 168.93421, 173.04, 174.967, 178.49, 180.9479, 183.84, 186.207, 190.23, 192.217, 195.078, 196.96655,    &
 200.59, 204.3833, 207.2, 208.98038, 209.0, 210.0, 222.0, 223.0, 226.0, 227.0, 232.0381, 231.03588,     &
 238.0289, 237.0, 244.0, 243.0, 247.0, 247.0, 251.0, 252.0, 257.0, 258.0, 259.0, 262.0, 261.0, 262.0,   &
-263.0, 264.0, 265.0, 268.0, 271.0, 272.0, 285.0, 284.0, 289.0, 288.0, 292.0/)*MASSCONVERT 
+263.0, 264.0, 265.0, 268.0, 271.0, 272.0, 285.0, 284.0, 289.0, 288.0, 292.0/)
 !% Element mass in grams per Mole $\times$ 'MASSCONVERT' (conforming to eV,\AA,fs unit system).
+
+real(dp),dimension(116) :: ElementMass = ElementMass_in_g_mol*MASSCONVERT
 
 ! Units: Angstroms
 

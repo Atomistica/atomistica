@@ -15,8 +15,8 @@
 #include "macros.inc"
 
 module timer
-  use libAtoms_module
-
+  use error_module
+  use system_module
   use c_f
   use logging
 

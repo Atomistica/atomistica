@@ -1,31 +1,14 @@
-!! ======================================================================
-!! MDCORE - Interatomic potential library
-!! https://github.com/pastewka/mdcore
-!! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
-!! See the AUTHORS file in the top-level MDCORE directory.
-!!
-!! Copyright (2005-2013) Fraunhofer IWM
-!! This software is distributed under the GNU General Public License.
-!! See the LICENSE file in the top-level MDCORE directory.
-!! ======================================================================
-
 !>
-!! The main MDCORE module
+!! The main mdcore module
 !!
-!! The main MDCORE module. Contains methods to initialize and finalize
-!! MDCORE. This opens and closes the log file (usually md.log), and prints
-!! some debug information to that file.
+!! The main mdcore module
 !<
 module mdcore
 #ifdef HAVE_IFPORT
   use ifport
 #endif
 
-  use libAtoms_module
-
-  use logging
-  use timer
-  use tls
+  use supplib
 
   use versioninfo
 
@@ -43,19 +26,17 @@ contains
   !!
   !! Open log file, print a greetings message and start the timer.
   !<
-  subroutine mdcore_startup(verbosity) bind(C)
+  subroutine mdcore_startup() bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
 
-    integer(c_int), value            :: verbosity
-
     ! ---
 
+    integer                          :: i
     integer                          :: now(8)
 
 #ifdef HAVE_IFPORT
-    integer                          :: i
     character(MAX_HOSTNAM_LENGTH+1)  :: runhost
 #endif
 
@@ -64,8 +45,6 @@ contains
 #endif
 
     ! ---
-
-    call system_initialise(verbosity=verbosity)
 
 #ifdef HAVE_IFPORT
     i = hostnam(runhost)
@@ -113,6 +92,8 @@ contains
     call prscrlog
 #endif
 
+!    call rng_init(now(7)+1)
+
     call timer_start("MDCORE")
 
     start_time_and_date  = now
@@ -128,7 +109,7 @@ contains
   subroutine mdcore_shutdown() bind(C)
     implicit none
 
-    type(InOutput) :: done_file
+    integer :: done_file
     integer :: now(8)
 
     call timer_stop("MDCORE")
@@ -156,16 +137,11 @@ contains
     ! Create the (empty) file DONE to let everyone know we finished properly
     !
 
-    call initialise(done_file, "DONE", OUTPUT)
-    call finalise(done_file)
+    done_file = fopen("DONE", mode=F_WRITE)
+    call fclose(done_file)
 
 #ifdef _MPI
     endif
-#endif
-
-#ifndef LAMMPS
-    ! Avoid calling MPI_Finalize twice. LAMMPS will call that.
-   call system_finalise
 #endif
 
   endsubroutine mdcore_shutdown

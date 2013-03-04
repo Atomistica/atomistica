@@ -64,11 +64,6 @@ interface Finalise
   module procedure MPI_context_Finalise
 end interface
 
-public :: Print
-interface Print
-  module procedure MPI_context_Print
-end interface
-
 public :: Split_context
 interface Split_context
   module procedure MPI_context_Split_context
@@ -125,8 +120,6 @@ public :: collect
 interface collect
   module procedure MPI_context_collect_real2
 end interface collect
-
-public :: mpi_print
 
 public :: barrier
 interface barrier
@@ -227,7 +220,7 @@ include 'mpif.h'
           this%my_coords, err)
      PASS_MPI_ERROR(err, error)
 
-     call print("MPI_context_Initialise : Cart created, coords = " // this%my_coords, PRINT_VERBOSE)
+!     call print("MPI_context_Initialise : Cart created, coords = " // this%my_coords, PRINT_VERBOSE)
   endif
 #endif
 end subroutine MPI_context_Initialise
@@ -1247,35 +1240,6 @@ include 'mpif.h'
   PASS_MPI_ERROR(err, error)
 #endif
 end subroutine MPI_context_bcast_char2
-
-subroutine MPI_Context_Print(this, file)
-  type(MPI_context), intent(in) :: this
-  type(Inoutput), intent(inout), optional :: file
-
-  call print("MPI_Context : active " // this%active, file=file)
-  if (this%active) then
-    call print("communicator " // this%communicator, file=file)
-    call print("n_procs " // this%n_procs // " my_proc " // this%my_proc, file=file)
-  endif
-end subroutine MPI_Context_Print
-
-subroutine MPI_Print(this, lines)
-  type(MPI_context), intent(in) :: this
-  character(len=*), intent(in) :: lines(:)
-
-  integer i
-
-  if (.not. this%active) then
-    do i=1, size(lines)
-      call Print(trim(lines(i)))
-    end do
-#ifdef _MPI
-  else
-    call parallel_print(lines, this%communicator)
-#endif
-  endif
-
-end subroutine MPI_Print
 
 subroutine MPI_context_collect_real2(this, v_in, v_out, error)
   type(MPI_context), intent(in) :: this
