@@ -229,6 +229,8 @@ contains
     this%requested_bin_size  = -1.0_DP
     this%bin_size            = 0.0_DP
 
+    this%neighbors_size      = 0
+
     !
     ! Set values if present
     !
