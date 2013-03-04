@@ -15,10 +15,10 @@
 ! @endmeta
 
 !>
-!! Screened Tersoff-Brenner type potentials
+!! Screened Abell-Tersoff-Brenner type potentials
 !!
-!! Screened Tersoff-Brenner type potentials with the Morse-style pair terms
-!! introduced by Brenner. Note: This potential does not contain the correction
+!! Screened Abell-Tersoff-Brenner type potentials with the Morse-style pair
+!! terms used by Brenner. Note: This potential does not contain the correction
 !! tables for treatment of pi-orbitals, etc.
 !<
 
@@ -26,6 +26,8 @@
 
 module brenner_scr
   use libAtoms_module
+
+  use ptrdict
 
   use logging
 
@@ -56,10 +58,8 @@ module brenner_scr
 #define REGISTER_FUNC        brenner_scr_register
 #define INIT_FUNC            brenner_scr_init
 #define DEL_FUNC             brenner_scr_del
-#define GET_CUTOFF_FUNC      brenner_scr_get_cutoff
 #define BIND_TO_FUNC         brenner_scr_bind_to
 #define COMPUTE_FUNC         brenner_scr_energy_and_forces
-#define FORCE_FUNC           brenner_scr_force
 
 #include "brenner_params.f90"
 
@@ -72,5 +72,7 @@ contains
 #include "../bop_kernel.f90"
 
 #include "brenner_func.f90"
+
+#include "brenner_registry.f90"
 
 endmodule brenner_scr

@@ -1,14 +1,12 @@
 #! /bin/bash
 
-mdcore_rev=`svn info $1 | grep Revision | awk '{ print $2 }'`
-mdcore_url=`svn info $1 | grep URL | awk '{ print $2 }'`
+mdcore_rev=$( cd $1 ; git describe --always --tags --dirty )
+mdcore_url=$( cd $1 ; git config --get remote.origin.url )
 libAtoms_rev=`cat $1/libAtoms/REV | grep Revision | awk '{ print $2 }'`
 libAtoms_url=`cat $1/libAtoms/REV | grep URL | awk '{ print $2 }'`
 h=`hostname`
 m=`uname -m`
 
-
-mdcore_rev=`svnversion -n $1`
 
 if [[ "$3" == "xlf_r" ]]; then
     fortvers1=`$3 -qversion | head -n 1 | tail -n 1`

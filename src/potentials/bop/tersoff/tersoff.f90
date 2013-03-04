@@ -29,6 +29,8 @@
 module tersoff
   use libAtoms_module
 
+  use ptrdict
+
   use logging
   use timer
 
@@ -64,5 +66,7 @@ contains
 #include "../bop_kernel.f90"
 
 #include "tersoff_func.f90"
+
+#include "tersoff_registry.f90"
 
 endmodule tersoff

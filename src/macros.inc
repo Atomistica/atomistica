@@ -172,3 +172,10 @@
 !<
 #define outer_product(x, y)  ( spread(x, dim=2, ncopies=size(y))*spread(y, dim=1, ncopies=size(x)) )
 
+
+!>
+!! c_loc, but on an array. Circumvents a bug (compiler segfault) in gfortran
+!<
+#define c_loc1(x) c_loc(x(lbound(x,1)))
+#define c_loc11(x) c_loc(x(lbound(x,1),lbound(x,2)))
+#define c_loc111(x) c_loc(x(lbound(x,1),lbound(x,2),lbound(x,3)))

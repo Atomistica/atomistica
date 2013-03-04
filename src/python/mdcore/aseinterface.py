@@ -213,6 +213,17 @@ class MDCore:
 
 ### Short-cuts
 
+# Simple r^6 pair potential
+
+if hasattr(_mdcore, 'r6'):
+    class r6(MDCore):
+        """r^6 potential.
+        """
+
+        def __init__(self, **kwargs):
+            apply(MDCore.__init__, (self, _mdcore.r6, 100,), kwargs)
+
+
 # Tersoff potential
 
 # Parameters

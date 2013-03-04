@@ -18,12 +18,15 @@
 !!
 !! Screened Kumagai-Izumi-Hara-Sakai potential
 !! See: Kumagai, Izumi, Hara, Sakai, Comp. Mater. Sci. 39, 457 (2007)
+!! Pastewka, Klemenz, Gumbsch, Moseler, arXiv:1301.2142
 !<
 
 #include "macros.inc"
 
 module kumagai_scr
   use libAtoms_module
+
+  use ptrdict
 
   use logging
   use timer
@@ -52,7 +55,6 @@ module kumagai_scr
 #define REGISTER_FUNC        kumagai_scr_register
 #define INIT_FUNC            kumagai_scr_init
 #define DEL_FUNC             kumagai_scr_del
-#define GET_CUTOFF_FUNC      kumagai_scr_get_cutoff
 #define BIND_TO_FUNC         kumagai_scr_bind_to
 #define COMPUTE_FUNC         kumagai_scr_energy_and_forces
 
@@ -67,5 +69,7 @@ contains
 #include "../bop_kernel.f90"
 
 #include "kumagai_func.f90"
+
+#include "kumagai_registry.f90"
 
 endmodule kumagai_scr

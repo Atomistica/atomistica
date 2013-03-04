@@ -300,7 +300,13 @@ contains
   subroutine timer_print_to_log() bind(C)
     implicit none
 
-    call timer_print(ilog)
+#ifdef _MPI
+    if (mpi_id() == ROOT) then
+#endif
+      call timer_print(ilog)
+#ifdef _MPI
+    endif
+#endif
 
   endsubroutine timer_print_to_log
 

@@ -347,7 +347,6 @@ void PairMDCORE::MDCORE_neigh()
     maxlocal_ = atom->nmax;
     memory->sfree(MDCORE_seed_);
     memory->sfree(MDCORE_last_);
-    memory->sfree(MDCORE_neighb_);
     MDCORE_seed_ = (int *)
       memory->smalloc(maxlocal_*sizeof(int),"MDCORE:MDCORE_seed");
     MDCORE_last_ = (int *)
