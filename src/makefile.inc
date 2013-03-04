@@ -31,6 +31,7 @@ VPATH = \
         $(SRCDIR)/potentials/bop/brenner \
         $(SRCDIR)/potentials/bop/kumagai \
         $(SRCDIR)/potentials/bop/tersoff \
+        $(SRCDIR)/potentials/pair_potentials \
         $(SRCDIR)/potentials/bop/rebo2 \
         $(SRCDIR)/potentials/bop/rebo2x \
 	$(SRCDIR)/support \
