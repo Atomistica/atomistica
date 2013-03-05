@@ -16,11 +16,8 @@
 !! Provides access to Fortran type objects from C
 !<
 module python_helper
-  use libAtoms_module
+  use supplib
 
-  use logging
-
-  use data
   use particles
   use neighbors
 
