@@ -1,0 +1,100 @@
+#
+# *** Paths
+# 
+# MDCORE
+#
+SRCDIR   = ../src
+
+
+#
+# *** Compilers and parallelization
+#
+# Serial / OpenMP execution (Intel)
+#
+FC        = ifort
+F90C      = ifort
+CC        = icc
+CXX       = icpc
+LD        = ifort
+MPI_FLAGS =
+#
+# OpenMP parallelization or hybrid MPI/OpenMP
+#
+OMP_FLAGS = 
+#OMP_FLAGS = -openmp -openmp-report2
+
+
+#
+# Extract MPI path
+#
+MPIROOT=$(shell which mpicc | sed 's,bin/mpicc,,')
+
+
+#
+# *** Extra includes and libraries
+#
+EXTRA_INCLUDE += -I$(MPIROOT)/include
+EXTRA_LIB += -cxxlib
+#
+# *** LAPACK and BLAS link options here.
+#
+# Intel MKL
+#
+EXTRA_LIB += -mkl=sequential
+
+#
+# *** Other settings that rarely need to be touched
+#
+LIBTOOL  = ar r
+#
+# * Optimization
+#
+# Normal (Intel)
+#
+OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -no-prec-div \
+	-no-prec-sqrt
+#
+# Debug (Intel)
+#
+#OPTFLAGS = -g -O0
+
+#
+# * Defines
+#
+#   -DLAMMPS                   Compute LAMMPS specific stuff
+#
+#   LAMMPS needs to be specified
+#
+#   -DHAVE_IFPORT              Compiler is Intel Fortran and the ifport module
+#                              is present (switches writing of a restart file
+#                              upon SIGTERM, i.e. if wallclock time is reached)
+# 
+DEFINES  = \
+	-DHAVE_IFPORT \
+	-DLAMMPS \
+	-DHAVE_MKL \
+	-D_MPI
+
+
+#
+# *** Compilation and linking flags
+#     (settings should be made mainly above, not here)
+#
+GFFLAGS  = \
+	$(DEFINES) \
+	$(OPTFLAGS) \
+	$(MPI_FLAGS) \
+	$(OMP_FLAGS)
+#
+# Intel
+#
+GFFLAGS += -fpp -warn unused -fPIC -traceback
+FFLAGS   = $(GFFLAGS)
+F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE)
+CFLAGS   = -O3 -fPIC $(DEFINES)
+
+LDFLAGS  = 
+LIBS     = $(EXTRA_LIB)
+
+include $(SRCDIR)/makefile.inc
+
