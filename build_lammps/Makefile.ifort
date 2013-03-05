@@ -80,15 +80,6 @@ DEFINES  = \
 # *** Compilation and linking flags
 #     (settings should be made mainly above, not here)
 #
-# * CFLAGS = -DCONFIG_TRAILING_UNDERSCORE, -DCONFIG_LEADING_UNDERSCORE
-#
-#   If the use of iso_c_binding for config is disabled (-DBROKEN_ISO_C_BINDING
-#   above), then the Fortran compiler might add an underscore before or after
-#   the subroutine names. The exact names that are used can be obtained from
-#   "nm config_stub.o". Add a -DCONFIG_TRAILING_UNDERSCORE or
-#   -DCONFIG_LEADING_UNDERSCORE to CFLAGS accordingly. No define is need if
-#   iso_c_binding works.
-#
 GFFLAGS  = \
 	$(DEFINES) \
 	$(OPTFLAGS) \
