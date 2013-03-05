@@ -746,28 +746,4 @@ contains
     endif
   endfunction k_delta
 
-
-  !% Return this processes' MPI ID
-  function mpi_id()
-    implicit none
-
-    integer :: mpi_id
- 
-    ! ---
-
-#ifdef _MPI
-    include 'mpif.h'
-
-    integer :: i, ierr
-
-    ! ---
-
-    call mpi_comm_rank(MPI_COMM_WORLD, i, ierr)
-    mpi_id = i
-#else
-    mpi_id = ROOT
-#endif
-
-  endfunction mpi_id
-
 endmodule system_module
