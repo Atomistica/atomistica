@@ -1,13 +1,13 @@
 The following instruction show how to compile, use and test the Python
 interface to MDCORE.
 
-1. Setup your compiler. Edit ~/.pydistutils.cfg
+1. Setup your compiler. Edit setup.cfg
 
    For GNU Fortran/C use:
 
      [config_fc]
      fcompiler=gnu95
-     f90flags=-cpp -ffree-line-length-none [-fopenmp] [-DGETARG_F2003 -DGETENV_F2003]
+     f90flags=-cpp -ffree-line-length-none [-fopenmp]
 
    For Intel Fortran/C (intel64) use:
 
@@ -55,9 +55,6 @@ interface to MDCORE.
    execute"
 
      python -c "import mdcore"
-
-   If you get "undefined symbol: getarg_" or "undefined symbol: getenv_" at this
-   stage, then add "-DGETARG_F2003 -DGETENV_F2003" to f90flags in bullet 1.
 
 
 4. Test if the Python interface gives correct results. Type

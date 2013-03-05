@@ -1,0 +1,7 @@
+[config_fc]
+fcompiler=intelem
+f90flags=-fpp -fPIC
+f77flags=-fpp -fPIC
+ 
+[config_cc]
+compiler=intel
