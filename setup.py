@@ -45,6 +45,7 @@ if mklroot is not None:
     #libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
     #          'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
     #          'stdc++' ]
+    libs += [ 'ifcore', 'ifport' ]
     extra_link_args += [ '-mkl=sequential' ]
 else:
     libs += [ 'blas', 'lapack' ]
