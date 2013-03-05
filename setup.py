@@ -26,7 +26,7 @@ inc_dirs = [ ]
 lib_dirs = [ ]
 # mdcorelib is a dependency, build below by the setup command
 libs = [ 'mdcorelib' ]
-mod_extra = [ ]
+extra_link_args = [ ]
 
 ###
 
@@ -38,11 +38,14 @@ mklroot = os.getenv('MKLROOT')
 if mklroot is None:
     mklroot = os.getenv('MKL_ROOT')
 if mklroot is not None:
-    lib_dirs += [ '%s/lib/em64t' % mklroot ]
-    libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
-              'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
-              'stdc++' ]
-    mod_extra += [ ]
+    for lib_dir in [ '{0}/lib/em64t'.format(mklroot), 
+                     '{0}/lib/intel64'.format(mklroot) ]:
+        if os.path.exists(lib_dir):
+            lib_dirs += [ lib_dir ]
+    #libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
+    #          'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
+    #          'stdc++' ]
+    extra_link_args += [ '-mkl=sequential' ]
 else:
     libs += [ 'blas', 'lapack' ]
 
@@ -200,6 +203,7 @@ setup(
             library_dirs = lib_dirs,
             libraries = libs,
             extra_compile_args = [ '-fPIC' ],
+            extra_link_args = extra_link_args,
             )
         ]
     )

@@ -18,6 +18,7 @@ module timer
   use error_module
   use system_module
   use c_f
+  use mpi_context_module
   use logging
 
 #ifdef _OPENMP
@@ -300,13 +301,9 @@ contains
   subroutine timer_print_to_log() bind(C)
     implicit none
 
-#ifdef _MPI
     if (mpi_id() == ROOT) then
-#endif
       call timer_print(ilog)
-#ifdef _MPI
     endif
-#endif
 
   endsubroutine timer_print_to_log
 

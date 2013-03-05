@@ -137,7 +137,7 @@ interface sendrecv
    module procedure MPI_context_sendrecv_r, MPI_context_sendrecv_ra
 end interface sendrecv
 
-public :: push_MPI_error
+public :: push_MPI_error, mpi_id, mpi_n_procs
 
 contains
 
@@ -1472,4 +1472,51 @@ include 'mpif.h'
 endsubroutine push_MPI_error
 
 
-end module MPI_context_module
+  !% Return this processes' MPI ID
+  function mpi_id()
+    implicit none
+
+    integer :: mpi_id
+
+    ! ---
+
+#ifdef _MPI
+    include 'mpif.h'
+
+    integer :: i, ierr
+
+    ! ---
+
+    call mpi_comm_rank(MPI_COMM_WORLD, i, ierr)
+    mpi_id = i
+#else
+    mpi_id = ROOT
+#endif
+
+  endfunction mpi_id
+
+
+  !% Return total number of MPI processes
+  function mpi_n_procs()
+    implicit none
+
+    integer :: mpi_n_procs
+
+    ! ---
+
+#ifdef _MPI
+    include 'mpif.h'
+
+    integer :: i, ierr
+
+    ! ---
+
+    call mpi_comm_size(MPI_COMM_WORLD, i, ierr)
+    mpi_n_procs = i
+#else
+    mpi_n_procs = 1
+#endif
+
+  endfunction mpi_n_procs
+
+endmodule MPI_context_module

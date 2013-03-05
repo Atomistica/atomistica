@@ -69,26 +69,10 @@ OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -no-prec-div \
 #                              is present (switches writing of a restart file
 #                              upon SIGTERM, i.e. if wallclock time is reached)
 # 
-# * libAtoms defines
-#
-#   -DGETENV_F2003             Fortran 2003 getenv is present (define if you
-#                              get undefined references to _getenv_)
-#   -DGETARG_F2003             Fortran 2003 getarg is present (define if you
-#                              get undefined references to _getarg_)
-#
-#
-#   -DQUIP_ARCH=\"MDCORE\"     libAtoms/QUIP internal versioning
-#   -DSIZEOF_FORTRAN_T=8       for libAtoms/QUIP C interoperability
-#
 DEFINES  = \
-	-DPTR=8 \
-	-DMKL \
-	-DHAVE_NETCDF \
 	-DHAVE_IFPORT \
-	-DQUIP_ARCH=\"MDCORE\" \
 	-DLAMMPS \
 	-DHAVE_MKL \
-	-DSIZEOF_FORTRAN_T=8 \
 	-D_MPI
 
 
@@ -106,10 +90,6 @@ DEFINES  = \
 #   iso_c_binding works.
 #
 GFFLAGS  = \
-	-I$(SRCDIR) \
-	-I$(SRCDIR)/potentials \
-	-I$(SRCDIR)/standalone \
-	-I$(SRCDIR)/libAtoms \
 	$(DEFINES) \
 	$(OPTFLAGS) \
 	$(MPI_FLAGS) \
@@ -120,8 +100,7 @@ GFFLAGS  = \
 GFFLAGS += -fpp -warn unused -fPIC -traceback
 FFLAGS   = $(GFFLAGS)
 F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE)
-CFLAGS   = -O3 -fPIC $(DEFINES) -I/usr/site/cuda/include
-CUFLAGS  = -O3 -arch=sm_20 $(DEFINES)
+CFLAGS   = -O3 -fPIC $(DEFINES)
 
 LDFLAGS  = 
 LIBS     = $(EXTRA_LIB)

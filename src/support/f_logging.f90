@@ -5,6 +5,7 @@ module logging
   use system_module
   use c_f
   use io
+  use mpi_context_module
 
   implicit none
 
@@ -51,13 +52,9 @@ contains
 
     ! ---
 
-#ifdef _MPI
     if (mpi_id() == ROOT) then
        ilog = fopen(fn, mode=F_WRITE)
     endif
-#else
-    ilog = fopen(fn, mode=F_WRITE)
-#endif
 
   endsubroutine logging_start
 
@@ -85,27 +82,19 @@ contains
     ! ---
 
     if (present(msg)) then
-#ifdef _MPI
        if (mpi_id() == ROOT) then
-#endif
 #if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
        ! Do not print to screen if we're using the Python or LAMMPS module
        write (*, '(A)')  msg
 #endif
-#ifdef _MPI
        endif
-#endif
        write (ilog, '(A)')  msg
     else
-#ifdef _MPI
        if (mpi_id() == ROOT) then
-#endif
 #if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
        write (ilog, *)
 #endif
-#ifdef _MPI
        endif
-#endif
        write (ilog, *)
     endif
 

@@ -4,6 +4,10 @@
 !! The main mdcore module
 !<
 module mdcore
+#ifdef _OPENMP
+  use omp_lib
+#endif
+
 #ifdef HAVE_IFPORT
   use ifport
 #endif

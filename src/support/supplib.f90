@@ -50,7 +50,9 @@ module supplib
   use misc
 !  use rng
 !  use math
+#ifndef LAMMPS
   use data
+#endif
 !  use special_functions
   use simple_spline
 !  use nonuniform_spline
