@@ -58,15 +58,13 @@ contains
     call logging_start("md.log")
 
 #ifdef LAMMPS
-    call prscrlog("Welcome to - LAMMPS+MDCORE+libAtoms -")
+    call prscrlog("Welcome to - LAMMPS+MDCORE -")
 #else
-    call prscrlog("Welcome to - MDCORE+libAtoms -")
+    call prscrlog("Welcome to - MDCORE -")
 #endif
     call prscrlog
     call prscrlog("   MDCORE revision:      " // trim(mdcore_revision))
     call prscrlog("   MDCORE URL:           " // trim(mdcore_url))
-    call prscrlog("   libAtoms revision:    " // trim(libAtoms_revision))
-    call prscrlog("   libAtoms URL:         " // trim(libAtoms_URL))
 #ifdef HAVE_MKL
     call mklgetversionstring(mklversion)
     call prscrlog("   MKL version:          " // trim(mklversion))
