@@ -92,7 +92,7 @@ contains
     else
        if (mpi_id() == ROOT) then
 #if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
-       write (ilog, *)
+       write (*, *)
 #endif
        endif
        write (ilog, *)
