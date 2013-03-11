@@ -5,8 +5,8 @@
 #include "macros.inc"
 
 module io
-  use System_module
-  use Error_module
+  use error_module
+  use system_module
 
   implicit none
 

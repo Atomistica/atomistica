@@ -15,9 +15,9 @@
 #include "macros.inc"
 
 module timer
+  use c_f
   use error_module
   use system_module
-  use c_f
   use mpi_context_module
   use logging
 
