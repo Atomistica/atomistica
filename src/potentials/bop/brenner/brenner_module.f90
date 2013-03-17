@@ -163,8 +163,6 @@
     real(DP)         :: c
 #endif
 
-    logical          :: ex(this%db%nel)
-    logical          :: expairs(this%db%nel*(this%db%nel+1)/2)
 #ifdef SCREENING
     real(DP)         :: x(this%db%nel*(this%db%nel+1)/2)
 #endif
@@ -200,9 +198,6 @@
     endwhere
 
 #endif
-
-    ex       = .false.
-    expairs  = .false.
 
     npairs = this%db%nel*(this%db%nel+1)/2
 
@@ -259,18 +254,9 @@
        Z = atomic_number(a2s(this%db%el(:, i)))
        if (Z > 0) then
           this%Z2db(Z)  = i
-          ex(i)         = any(p%el2Z(p%el) == Z)
        else
           RAISE_ERROR("Unknown element '" // trim(a2s(this%db%el(:, i))) // "'.", ierror)
        endif
-    enddo
-
-    do i = 1, this%db%nel
-       do j = 1, this%db%nel
-          if (ex(i) .and. ex(j)) then
-             expairs(Z2pair(this, i, j)) = .true.
-          endif
-       enddo
     enddo
 
     do i = 1, npairs
@@ -356,35 +342,22 @@
        do j = 1, p%nel
           ii = this%Z2db(p%el2Z(i))
           jj = this%Z2db(p%el2Z(j))
-          if (ex(ii) .and. ex(jj)) then
-             nel = Z2pair(this, ii, jj)
+          nel = Z2pair(this, ii, jj)
 #ifdef SCREENING
-             call request_interaction_range( &
-                  nl, &
-                  x(nel)*sqrt(this%max_cut_sq(nel)), &
-                  i, j &
-                  )
+          call request_interaction_range( &
+               nl, &
+               x(nel)*sqrt(this%max_cut_sq(nel)), &
+               i, j &
+               )
 #else
-             call request_interaction_range( &
-                  nl, &
-                  this%cut_in_h(nel), &
-                  i, j &
-                  )
+          call request_interaction_range( &
+               nl, &
+               this%cut_in_h(nel), &
+               i, j &
+               )
 #endif
-          endif
        enddo
     enddo
-
-#ifdef SCREENING
-
-    c = max( &
-         maxval(x*this%db%r2(1:npairs), mask=expairs), &
-         maxval(x*this%db%or2(1:npairs), mask=expairs), &
-         maxval(x*this%db%bor2(1:npairs), mask=expairs) &
-         )
-    call request_border(p, c)
-
-#endif
 
   endsubroutine BIND_TO_FUNC
 
