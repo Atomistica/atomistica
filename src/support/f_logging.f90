@@ -65,7 +65,9 @@ contains
   subroutine logging_stop() bind(C)
     implicit none
 
-    call fclose(ilog)
+    if (ilog /= -1) then
+      call fclose(ilog)
+    endif
     ilog  = -1
 
   endsubroutine logging_stop
@@ -82,20 +84,20 @@ contains
     ! ---
 
     if (present(msg)) then
-       if (mpi_id() == ROOT) then
+       if (ilog /= -1) then
 #if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
        ! Do not print to screen if we're using the Python or LAMMPS module
-       write (*, '(A)')  msg
+         write (*, '(A)')  msg
 #endif
+         write (ilog, '(A)')  msg
        endif
-       write (ilog, '(A)')  msg
     else
-       if (mpi_id() == ROOT) then
+       if (ilog /= -1) then
 #if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
-       write (*, *)
+         write (*, *)
 #endif
+         write (ilog, *)
        endif
-       write (ilog, *)
     endif
 
   endsubroutine prscrlog
@@ -111,10 +113,12 @@ contains
 
     ! ---
 
-    if (present(msg)) then
-       write (ilog, '(A)')  msg
-    else
-       write (ilog, *)
+    if (ilog /= -1) then
+      if (present(msg)) then
+         write (ilog, '(A)')  msg
+      else
+         write (ilog, *)
+      endif
     endif
 
   endsubroutine prlog
@@ -145,8 +149,7 @@ contains
 
     ! ---
 
-!    write (ilog, '(5X,A,F7.1,A)')  "Memory estimate: ", total_memory, " MB"
-    write (ilog, '(A)')  "Memory estimate: " // total_memory // " MB"
+    call prlog("Memory estimate: " // total_memory // " MB")
     
   endsubroutine log_memory_stop
 
