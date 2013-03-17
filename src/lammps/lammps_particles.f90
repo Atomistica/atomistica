@@ -144,14 +144,32 @@ contains
   !>
   !! Constructor
   !<
-  subroutine particles_init(this) bind(C)
+  subroutine particles_init(this_cptr) bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
 
-    type(C_PTR), value :: this
+    type(C_PTR), value :: this_cptr
 
     ! ---
+
+    type(particles_t), pointer :: this
+
+    ! ---
+
+    call c_f_pointer(this_cptr, this)
+
+    this%nat = 0
+    this%natloc = 0
+    this%maxnatloc = 0
+
+    this%nel = 0
+
+    this%border = 0.0_DP
+
+    this%tag => NULL()
+    this%el => NULL()
+    this%r_non_cyc => NULL()
 
   endsubroutine particles_init
 
