@@ -26,7 +26,7 @@ inc_dirs = [ ]
 lib_dirs = [ ]
 # mdcorelib is a dependency, build below by the setup command
 libs = [ 'mdcorelib' ]
-mod_extra = [ ]
+extra_link_args = [ ]
 
 ###
 
@@ -38,11 +38,15 @@ mklroot = os.getenv('MKLROOT')
 if mklroot is None:
     mklroot = os.getenv('MKL_ROOT')
 if mklroot is not None:
-    lib_dirs += [ '%s/lib/em64t' % mklroot ]
-    libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
-              'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
-              'stdc++' ]
-    mod_extra += [ ]
+    for lib_dir in [ '{0}/lib/em64t'.format(mklroot), 
+                     '{0}/lib/intel64'.format(mklroot) ]:
+        if os.path.exists(lib_dir):
+            lib_dirs += [ lib_dir ]
+    #libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
+    #          'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
+    #          'stdc++' ]
+    libs += [ 'ifcore', 'ifport' ]
+    extra_link_args += [ '-mkl=sequential' ]
 else:
     libs += [ 'blas', 'lapack' ]
 
@@ -55,38 +59,35 @@ else:
 lib_srcs = [ ]
 mod_srcs = [ ]
 
-# libAtoms
-lib_srcs += [ '{0}/libAtoms/'.format(srcdir)+i for i in
-              [ 'cutil.c',
-                'error.f90',
-                'System.f90',
-                'MPI_context.f90',
-                'Units.f90',
-                'linearalgebra.f90',
-                'PeriodicTable.f90',
-                'libAtoms.f90',
-                'libAtoms_misc_utils.f90',
-                'libAtoms_utils_no_module.f90',
-                ]
-              ]
-
-# MDCORE support
+# MDCORE support modules
 lib_srcs += [ 'build/versioninfo.f90',
             ]
 
 lib_srcs += [ '{0}/support/'.format(srcdir)+i for i in
-              [ 'f_ptrdict.f90',
+              [ 'c_f.f90',
+                'error.f90',
+                'System.f90',
+                'MPI_context.f90',
+                'Units.f90',
+                'PeriodicTable.f90',
+                'f_linearalgebra.f90',
+                'f_ptrdict.f90',
                 'c_ptrdict.c',
-                'c_f.f90',
+                'io.f90',
                 'f_logging.f90',
                 'c_logging.c',
                 'timer.f90',
                 'tls.f90',
-                'mdcore.f90',
                 'misc.f90',
                 'data.f90',
                 'simple_spline.f90',
-                'table2d.f90',
+                'supplib.f90',
+                'mdcore.f90',
+                ]
+              ]
+
+lib_srcs += [ '{0}/special/'.format(srcdir)+i for i in
+              [ 'table2d.f90',
                 'table3d.f90',
                 'table4d.f90',
                 ]
@@ -172,8 +173,6 @@ inc_dirs += [ np.get_include(),
               ]
 
 lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
-               ( 'QUIP_ARCH', '\\"MDCORE\\"' ),
-               ( 'SIZEOF_FORTRAN_T', 8 ),
                ( 'MDCORE_PYTHON', None ),
                ]
 
@@ -205,6 +204,7 @@ setup(
             library_dirs = lib_dirs,
             libraries = libs,
             extra_compile_args = [ '-fPIC' ],
+            extra_link_args = extra_link_args,
             )
         ]
     )

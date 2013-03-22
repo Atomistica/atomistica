@@ -2,8 +2,6 @@
 
 mdcore_rev=$( cd $1 ; git describe --always --tags --dirty )
 mdcore_url=$( cd $1 ; git config --get remote.origin.url )
-libAtoms_rev=`cat $1/libAtoms/REV | grep Revision | awk '{ print $2 }'`
-libAtoms_url=`cat $1/libAtoms/REV | grep URL | awk '{ print $2 }'`
 h=`hostname`
 m=`uname -m`
 
@@ -45,8 +43,6 @@ implicit none
 integer, private, parameter :: MAXSTRLEN = 1000
 character(MAXSTRLEN)  :: mdcore_revision      = "$mdcore_rev"
 character(MAXSTRLEN)  :: mdcore_url           = "$mdcore_url"
-character(MAXSTRLEN)  :: libAtoms_revision    = "$libAtoms_rev"
-character(MAXSTRLEN)  :: libAtoms_url         = "$libAtoms_url"
 character(MAXSTRLEN)  :: builddate            = __DATE__ // " " // __TIME__
 character(MAXSTRLEN)  :: buildhost            = "$h"
 character(MAXSTRLEN)  :: arch                 = "$m"

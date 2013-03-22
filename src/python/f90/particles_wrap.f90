@@ -8,8 +8,9 @@
 !! This software is distributed under the GNU General Public License.
 !! See the LICENSE file in the top-level MDCORE directory.
 !! ======================================================================
+
 module particles_wrap
-  use libAtoms_module
+  use supplib
 
   use data
   use particles

@@ -15,9 +15,10 @@
 #include "macros.inc"
 
 module timer
-  use libAtoms_module
-
   use c_f
+  use error_module
+  use system_module
+  use mpi_context_module
   use logging
 
 #ifdef _OPENMP
@@ -300,7 +301,9 @@ contains
   subroutine timer_print_to_log() bind(C)
     implicit none
 
-    call timer_print(ilog)
+    if (mpi_id() == ROOT) then
+      call timer_print(ilog)
+    endif
 
   endsubroutine timer_print_to_log
 

@@ -32,17 +32,32 @@
 !X  libAtoms module
 !X
 !% This is a container module, "use" it if you want to use libatoms stuff:
-!%> 	  use libAtoms_module
+!%> 	  use supplib
 !% 
 !X
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-module libAtoms_module
-  use, intrinsic :: iso_c_binding
+module supplib
+  use c_f
   use error_module
-  use system_module
   use MPI_context_module
   use units_module
-  use linearalgebra_module
   use periodictable_module
-end module libAtoms_module
+  use io
+!  use histogram1d_module
+  use linearalgebra
+  use logging
+  use misc
+!  use rng
+!  use math
+#ifndef LAMMPS
+  use data
+#endif
+!  use special_functions
+  use simple_spline
+!  use nonuniform_spline
+  use timer
+  use tls
+  use ptrdict
+!  use signal_handler
+endmodule supplib

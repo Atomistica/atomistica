@@ -16,7 +16,9 @@
 #include "macros.inc"
 
 module simple_spline
-  use libAtoms_module
+  use error_module
+  use system_module
+  use io
 
 #ifndef SILENT
   use logging
@@ -600,7 +602,7 @@ contains
     implicit none
 
     type(simple_spline_t), intent(inout)  :: this
-    type(InOutput),        intent(in)     :: f
+    integer,               intent(in)     :: f
     integer,               intent(in)     :: n
     real(DP),              intent(in)     :: x0
     real(DP),              intent(in)     :: dx
@@ -646,20 +648,20 @@ contains
 
     ! ---
 
-    type(InOutput) :: un
-    character(80)  :: fmt
-    real(DP)       :: x, f, df
+    integer       :: un
+    character(80) :: fmt
+    real(DP)      :: x, f, df
     
     ! ---
 
     write (fmt, '(A,I2.2,A)')  "(3ES20.10)"
 
-    call initialise(un, filename=fn, action=OUTPUT)
+    un = fopen(fn, mode=F_WRITE)
 
     x  = this%x0
     do while (x <= this%cut)
        call simple_spline_f_and_df(this, x, f, df)
-       write (un%unit, trim(fmt))  x, f, df
+       write (un, trim(fmt))  x, f, df
 
        if (present(dx)) then
           x  = x + dx
@@ -668,7 +670,7 @@ contains
        endif
     enddo
 
-    call finalise(un)
+    call fclose(un)
 
   endsubroutine simple_spline_write
 #endif
@@ -707,7 +709,7 @@ contains
 
     dx  = (this%cut**2 - x0)/(my_n-1)
 
-    call print("simple_spline_square_x_axis : n = " // my_n // ", dx = " // dx, PRINT_VERBOSE)
+!    call print("simple_spline_square_x_axis : n = " // my_n // ", dx = " // dx, PRINT_VERBOSE)
 
     allocate(y(my_n))
 

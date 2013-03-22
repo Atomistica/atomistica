@@ -28,12 +28,7 @@
 #include "macros.inc"
 
 module tersoff_scr
-  use libAtoms_module
-
-  use ptrdict
-
-  use logging
-  use timer
+  use supplib
 
   use particles
   use neighbors

@@ -23,12 +23,7 @@
 #include "macros.inc"
 
 module kumagai
-  use libAtoms_module
-
-  use ptrdict
-
-  use logging
-  use timer
+  use supplib
 
   use particles
   use neighbors

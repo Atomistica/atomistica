@@ -9,32 +9,32 @@ SRCDIR   = ../src
 #
 # *** Compilers and parallelization
 #
-# Serial / OpenMP execution (Intel)
+# Serial / OpenMP execution (GNU)
 #
-FC        = ifort
-F90C      = ifort
-CC        = icc
-CXX       = icpc
-LD        = ifort
-MPI_FLAGS =
+FC        = gfortran
+F90C      = gfortran
+CC        = gcc
+CXX       = g++
+LD        = gfortran
 #
 # OpenMP parallelization or hybrid MPI/OpenMP
 #
 OMP_FLAGS = 
-#OMP_FLAGS = -openmp -openmp-report2
+#OMP_FLAGS = -fopenmp
 
 
 #
 # *** Extra includes and libraries
+#
 #
 EXTRA_INCLUDE += -I/usr/mpi/intel/openmpi-1.4.3/include
 EXTRA_LIB += -cxxlib
 #
 # *** LAPACK and BLAS link options here.
 #
-# Intel MKL
+# cygwin lapack/blas
 #
-EXTRA_LIB += -mkl=sequential
+#EXTRA_LIB += -llapack -lblas
 
 #
 # *** Other settings that rarely need to be touched
@@ -43,25 +43,35 @@ LIBTOOL  = ar r
 #
 # * Optimization
 #
-# Normal (Intel)
+# Normal (GNU)
 #
-OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -no-prec-div \
-	-no-prec-sqrt
+OPTFLAGS = -O3 -funroll-loops
 #
-# Debug (Intel)
+# Debug (GNU)
 #
-#OPTFLAGS = -g -O0 -check bounds
+#OPTFLAGS = -g -O0 -fbounds-check
 
 #
 # * Defines
 #
+#   -DMDCORE_MONOLITHIC        Compile modules that work only in the standalone
+#                              version of MDCORE (i.e. HarmonicHook, etc.)
+#   -DMDCORE_PYTHON            Compile Python specific stuff
 #   -DLAMMPS                   Compute LAMMPS specific stuff
 #
-#   LAMMPS needs to be specified
+#   MDCORE_MONOLITHIC, MDCORE_PYTHON, and LAMMPS are (should be) mutually exclusive
 #
+#   -DHAVE_NETCDF              Compile with NetCDF output module
+#   -DHAVE_FFTW3               Compile PME module using FFTW3
+#   -DHAVE_MKL                 LAPACK implementation is the MKL
+#                              (switches printing of MKL version information)
 #   -DHAVE_IFPORT              Compiler is Intel Fortran and the ifport module
 #                              is present (switches writing of a restart file
 #                              upon SIGTERM, i.e. if wallclock time is reached)
+#   -DBROKEN_ISO_C_BINDING     c_loc implementation in iso_c_binding is 
+#                              broken (basically all gfortran versions)
+#   -DHAVE_CUDA                CUDA is available on the system. Compile code to
+#                              use CUDA GPU hardware.
 # 
 # * libAtoms defines
 #
@@ -74,49 +84,33 @@ OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -no-prec-div \
 #   -DQUIP_ARCH=\"MDCORE\"     libAtoms/QUIP internal versioning
 #   -DSIZEOF_FORTRAN_T=8       for libAtoms/QUIP C interoperability
 #
+# - Would be nice to have all explained eventually.
+#
 DEFINES  = \
-	-DPTR=8 \
-	-DMKL \
-	-DHAVE_NETCDF \
-	-DHAVE_IFPORT \
-	-DQUIP_ARCH=\"MDCORE\" \
 	-DLAMMPS \
-	-DHAVE_MKL \
-	-DSIZEOF_FORTRAN_T=8 \
-	-D_MPI
+	-DNO_BIND_C_OPTIONAL
 
 
 #
 # *** Compilation and linking flags
 #     (settings should be made mainly above, not here)
 #
-# * CFLAGS = -DCONFIG_TRAILING_UNDERSCORE, -DCONFIG_LEADING_UNDERSCORE
-#
-#   If the use of iso_c_binding for config is disabled (-DBROKEN_ISO_C_BINDING
-#   above), then the Fortran compiler might add an underscore before or after
-#   the subroutine names. The exact names that are used can be obtained from
-#   "nm config_stub.o". Add a -DCONFIG_TRAILING_UNDERSCORE or
-#   -DCONFIG_LEADING_UNDERSCORE to CFLAGS accordingly. No define is need if
-#   iso_c_binding works.
-#
 GFFLAGS  = \
-	-I$(SRCDIR) \
-	-I$(SRCDIR)/potentials \
-	-I$(SRCDIR)/standalone \
-	-I$(SRCDIR)/libAtoms \
 	$(DEFINES) \
 	$(OPTFLAGS) \
 	$(MPI_FLAGS) \
 	$(OMP_FLAGS)
 #
-# Intel
+# GNU
 #
-GFFLAGS += -fpp -warn unused -fPIC -traceback
-FFLAGS   = $(GFFLAGS)
-F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE)
-CFLAGS   = -O3 -fPIC $(DEFINES) -I/usr/site/cuda/include
-CUFLAGS  = -O3 -arch=sm_20 $(DEFINES)
+FFLAGS   = $(GFFLAGS) -x f77-cpp-input
+F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE) \
+	-ffree-form -ffree-line-length-none -x f95-cpp-input
+CFLAGS   = -O0
 
+#
+# Use LDFLAGS = -static if you want a static binary
+#
 LDFLAGS  = 
 LIBS     = $(EXTRA_LIB)
 

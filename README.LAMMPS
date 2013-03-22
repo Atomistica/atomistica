@@ -1,11 +1,11 @@
 To compile the LAMMPS-MDCORE interface do the following:
 
-1. In your the build directory do
+1. In the build_lammps directory do
 
     make -f <Makefile> factories
     make -f <Makefile> mdcore
 
-   Here <Makefile> is some makefile configured for the current environment.
+   Here <Makefile> is some makefile configured for your environment.
    Example makefiles for the Intel and GNU compilers are provided. This should
    generate the file "libmdcore.a".
 

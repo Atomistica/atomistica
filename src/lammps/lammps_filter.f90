@@ -18,9 +18,7 @@
 !! Filter a type of atom
 !<
 module filter
-  use libAtoms_module
-
-  use logging
+  use supplib
 
   use particles
 
@@ -31,7 +29,7 @@ module filter
   integer, parameter  :: MAX_EL_STR = 80
 
   public :: MAX_EL_STR
-  public :: filter_from_string, filter_prlog
+  public :: filter_from_string, filter_count, filter_pack, filter_unpack, filter_prlog
 
 contains
 
@@ -109,6 +107,96 @@ contains
 
 
   !>
+  !! Count how many atoms that match this filter we have locally
+  !!
+  !! Count how many atoms that match this filter we have locally
+  !<
+  function filter_count(f, p)
+    implicit none
+
+    integer, intent(in)            :: f
+    type(particles_t), intent(in)  :: p
+    integer                        :: filter_count
+
+    ! ---
+
+    integer  :: i, n
+
+    ! ---
+
+    n = 0
+    do i = 1, p%natloc
+       if (IS_EL(f, p, i)) then
+          n = n + 1
+       endif
+    enddo
+
+    filter_count = n
+
+  endfunction filter_count
+
+
+  !>
+  !! Pack property into an array
+  !!
+  !! Pack property into an array
+  !<
+  subroutine filter_pack(f, p, unpacked, packed)
+    implicit none
+
+    integer, intent(in)            :: f
+    type(particles_t), intent(in)  :: p
+    real(DP), intent(in)           :: unpacked(p%maxnatloc)
+    real(DP), intent(inout)        :: packed(*)
+
+    ! ---
+
+    integer  :: i, n
+
+    ! ---
+
+    n = 0
+    do i = 1, p%natloc
+       if (IS_EL(f, p, i)) then
+          n = n + 1
+          packed(n)  = unpacked(i)
+       endif
+    enddo
+
+  endsubroutine filter_pack
+
+
+  !>
+  !! Pack property into an array
+  !!
+  !! Pack property into an array
+  !<
+  subroutine filter_unpack(f, p, packed, unpacked)
+    implicit none
+
+    integer, intent(in)            :: f
+    type(particles_t), intent(in)  :: p
+    real(DP), intent(in)           :: packed(*)
+    real(DP), intent(inout)        :: unpacked(p%maxnatloc)
+
+    ! ---
+
+    integer  :: i, n
+
+    ! ---
+
+    n = 0
+    do i = 1, p%natloc
+       if (IS_EL(f, p, i)) then
+          n = n + 1
+          unpacked(i)  = packed(n)
+       endif
+    enddo
+
+  endsubroutine filter_unpack
+
+
+ !>
   !! Dump filter information to log file
   !!
   !! Dump filter information to log file
@@ -116,13 +204,13 @@ contains
   subroutine filter_prlog(f, p, indent)
     implicit none
 
-    integer,           intent(in) :: f
+integer, intent(in) :: f
     type(particles_t), intent(in) :: p
     integer, optional, intent(in) :: indent
 
     ! ---
 
-    integer         :: i
+    integer :: i
     character(1024) :: s
 
     ! ---

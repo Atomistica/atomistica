@@ -17,7 +17,8 @@
 !! FIXME! Add Documentation
 !<
 module data
-  use libAtoms_module
+  use error_module
+  use system_module
 
   use logging
 

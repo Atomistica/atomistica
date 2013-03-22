@@ -179,3 +179,10 @@
 #define c_loc1(x) c_loc(x(lbound(x,1)))
 #define c_loc11(x) c_loc(x(lbound(x,1),lbound(x,2)))
 #define c_loc111(x) c_loc(x(lbound(x,1),lbound(x,2),lbound(x,3)))
+
+
+!
+! Some name mangling
+!
+
+#define libAtoms_module supplib

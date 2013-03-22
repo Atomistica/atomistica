@@ -8,6 +8,7 @@
 !! This software is distributed under the GNU General Public License.
 !! See the LICENSE file in the top-level MDCORE directory.
 !! ======================================================================
+
   !>
   !! Compute energy, force, virial etc.
   !<
@@ -38,10 +39,8 @@
 
     call timer_start(BOP_NAME_STR // "_force")
 
-#ifdef MDCORE_INTERFACE
     call update(nl, p, ierror)
     PASS_ERROR(ierror)
-#endif
 
     ! Internal element numbers
     el = -1
