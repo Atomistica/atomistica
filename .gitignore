@@ -15,6 +15,7 @@
 *.class
 *.dll
 *.exe
+*.mod
 *.o
 *.py[ocd]
 *.so
