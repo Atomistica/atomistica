@@ -80,9 +80,9 @@ contains
     integer, intent(in)               :: ny
     integer, intent(in)               :: nz
     real(DP), intent(in)              :: values(0:, 0:, 0:)
-    real(DP), optional, intent(in)    :: dvdx(0:, 0:, 0:)
-    real(DP), optional, intent(in)    :: dvdy(0:, 0:, 0:)
-    real(DP), optional, intent(in)    :: dvdz(0:, 0:, 0:)
+    real(DP), optional, intent(in)    :: dvdx(0:nx, 0:ny, 0:nz)
+    real(DP), optional, intent(in)    :: dvdy(0:nx, 0:ny, 0:nz)
+    real(DP), optional, intent(in)    :: dvdz(0:nx, 0:ny, 0:nz)
     integer, intent(inout), optional  :: error
 
     ! ---
