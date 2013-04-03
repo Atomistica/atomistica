@@ -74,9 +74,10 @@ LAPACK_PATH =
 LAPACK_LIB = -mkl=sequential
 
 # MDCORE stuff
-MDCORE_INC = -I/j1a/pas/source/mdcore/build/lmp_ser -I/j1a/pas/source/mdcore/src/standalone
-MDCORE_PATH = -L/j1a/pas/source/mdcore/build/lmp_ser
-MDCORE_LIB = -llmpmdcore -lifcore -lifport
+MDCORE_ROOT = /j1a/pas/source/mdcore
+MDCORE_INC = -I$(MDCORE_ROOT)/build_lammps -I$(MDCORE_ROOT)/src/support
+MDCORE_PATH = -L$(MDCORE_ROOT)/build_lammps
+MDCORE_LIB = -lmdcore -lifcore -lifport
 
 # ---------------------------------------------------------------------
 # build rules and dependencies
