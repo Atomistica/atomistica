@@ -185,8 +185,10 @@ void ptrdict_from_stream(section_t *root, FILE *f);
 /* Read ptrdicturation from a file. */
 void ptrdict_read(section_t *root, char *fn);
 
+#ifndef __APPLE__
 /* Read ptrdicturation from a string. */
 void ptrdict_from_string(section_t *root, char *s);
+#endif
 
 /* Write current ptrdicturation to a file. */
 void ptrdict_write(section_t *root, char *fn);
