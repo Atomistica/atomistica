@@ -45,17 +45,17 @@ module particles
      !>
      !! Number of particles in system (including ghost particles)
      !<
-     integer                 :: nat
+     integer                 :: nat = 0
 
      !>
      !! Number of particles on this processor (excluding ghost particles)
      !<
-     integer                 :: natloc
+     integer                 :: natloc = 0
 
      !>
      !! Length of the position array
      !<
-     integer                 :: maxnatloc
+     integer                 :: maxnatloc = 0
 
      !
      ! All particel data is managed by LAMMPS. The fields below are pointers to
@@ -65,17 +65,17 @@ module particles
      !>
      !! Unique atom id
      !<
-     integer(C_INT), pointer :: tag(:)
+     integer(C_INT), pointer :: tag(:) => NULL()
 
      !>
      !! Internal element numbers
      !<
-     integer(C_INT), pointer :: el(:)
+     integer(C_INT), pointer :: el(:) => NULL()
 
      !>
      !! These positions are always local and may be outside the global box.
      !<
-     real(C_DOUBLE), pointer :: r_non_cyc(:, :)
+     real(C_DOUBLE), pointer :: r_non_cyc(:, :) => NULL()
 
      !>
      !! Mapping of internal element numbers to real elements

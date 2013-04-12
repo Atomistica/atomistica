@@ -140,8 +140,11 @@ void PairMDCORE::compute(int eflag, int vflag)
   if (eflag || vflag) ev_setup(eflag,vflag);
   else evflag = vflag_fdotr = vflag_atom = 0;
 
-  MDCORE_neigh();
-  FMDCORE(eflag,vflag);
+  // do not compute if there are no atoms
+  if (atom->nmax > 0) {
+    MDCORE_neigh();
+    FMDCORE(eflag,vflag);
+  }
 }
 
 /* ----------------------------------------------------------------------
@@ -284,8 +287,13 @@ void PairMDCORE::init_style()
   }
 
   // set pointers in particles object
-  particles_set_pointers(particles_,atom->nlocal+atom->nghost,atom->nlocal,
-			 atom->nmax,atom->tag,atom->type,&atom->x[0][0]);
+  if (atom->nmax > 0) {
+    // Note: Only call set_pointers if there are any atoms in this domain.
+    // atom->x = NULL otherwise. MDCORE should NOT expect to have proper
+    // atom position pointers etc. in bind_to. This may break some potentials.
+    particles_set_pointers(particles_,atom->nlocal+atom->nghost,atom->nlocal,
+                           atom->nmax,atom->tag,atom->type,&atom->x[0][0]);
+  }
 
   class_->init(potential_);
 
