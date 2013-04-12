@@ -167,8 +167,13 @@ contains
     real(DP), optional, intent(inout) :: epot_per_at(p%maxnatloc)
     real(DP), optional, intent(inout) :: epot_per_bond(nl%neighbors_size)
     real(DP), optional, intent(inout) :: f_per_bond(3, nl%neighbors_size)
+#ifdef LAMMPS
+    real(DP), optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
+    real(DP), optional, intent(inout) :: wpot_per_bond(6, nl%neighbors_size)
+#else
     real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
     real(DP), optional, intent(inout) :: wpot_per_bond(3, 3, nl%neighbors_size)
+#endif
     integer,  optional, intent(inout) :: ierror
 
     ! ---
@@ -214,9 +219,9 @@ contains
                    wpot  = wpot + dw
 
                    if (present(wpot_per_at)) then
-                      dw                       = dw/2
-                      wpot_per_at(1:3, 1:3, i) = wpot_per_at(1:3, 1:3, i) + dw
-                      wpot_per_at(1:3, 1:3, j) = wpot_per_at(1:3, 1:3, j) + dw
+                      dw = dw/2
+                      SUM_VIRIAL(wpot_per_at, i, dw)
+                      SUM_VIRIAL(wpot_per_at, j, dw)
                    endif
 
                 endif

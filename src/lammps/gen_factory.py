@@ -129,8 +129,8 @@ def write_factory_f90(mods, str, fn):
                 "  real(c_double) :: epot_per_at(*)\n" +
                 "  real(c_double) :: epot_per_bond(*)\n" +
                 "  real(c_double) :: f_per_bond(3, *)\n" +
-                "  real(c_double) :: wpot_per_at(3, 3, *)\n" +
-                "  real(c_double) :: wpot_per_bond(3, 3, *)\n" +
+                "  real(c_double) :: wpot_per_at(6, *)\n" +
+                "  real(c_double) :: wpot_per_bond(6, *)\n" +
                 "  integer(c_int), intent(out) :: error\n\n" +
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  type(particles_t), pointer :: p\n" +

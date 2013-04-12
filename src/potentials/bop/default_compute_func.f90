@@ -25,8 +25,13 @@
     real(DP), optional, intent(inout) :: epot_per_at(p%maxnatloc)
     real(DP), optional, intent(inout) :: epot_per_bond(nl%neighbors_size)
     real(DP), optional, intent(inout) :: f_per_bond(3, nl%neighbors_size)
+#ifdef LAMMPS
+    real(DP), optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
+    real(DP), optional, intent(inout) :: wpot_per_bond(6, nl%neighbors_size)
+#else
     real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
     real(DP), optional, intent(inout) :: wpot_per_bond(3, 3, nl%neighbors_size)
+#endif
     integer,  optional, intent(out)   :: ierror
 
     ! ---
