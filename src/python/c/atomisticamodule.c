@@ -1,6 +1,6 @@
 /* ======================================================================
-   MDCORE - Interatomic potential library
-   https://github.com/pastewka/mdcore
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
    Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
    See the AUTHORS file in the top-level MDCORE directory.
 
@@ -9,12 +9,12 @@
    See the LICENSE file in the top-level MDCORE directory.
    ====================================================================== */
 #include <Python.h>
-#define PY_ARRAY_UNIQUE_SYMBOL MDCORE_ARRAY_API
+#define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #include <numpy/arrayobject.h>
 
 #include <stddef.h>
 
-#include "mdcoremodule.h"
+#include "atomisticamodule.h"
 
 #include "potentials_factory_c.h"
 
@@ -37,10 +37,10 @@
 int has_started = 0;
 
 PyObject *
-py_mdcore_startup(PyObject *self, PyObject *args)
+py_atomistica_startup(PyObject *self, PyObject *args)
 {
   if (!has_started) {
-    mdcore_startup(-1);
+    atomistica_startup(-1);
 
     has_started = 1;
   }
@@ -50,9 +50,9 @@ py_mdcore_startup(PyObject *self, PyObject *args)
 
 
 PyObject *
-py_mdcore_shutdown(PyObject *self, PyObject *args)
+py_atomistica_shutdown(PyObject *self, PyObject *args)
 {
-  mdcore_shutdown();
+  atomistica_shutdown();
 
   Py_RETURN_NONE;
 }
@@ -86,9 +86,9 @@ read_atoms(PyObject *self, PyObject *args)
 
 
 static PyMethodDef module_methods[] = {
-  { "startup", py_mdcore_startup, METH_NOARGS,
+  { "startup", py_atomistica_startup, METH_NOARGS,
     "File which to write log information to." },
-  { "shutdown", py_mdcore_shutdown, METH_NOARGS,
+  { "shutdown", py_atomistica_shutdown, METH_NOARGS,
     "Write timings and close log file." },
   { "pair_distribution", py_pair_distribution, METH_VARARGS,
     "Compute pair distribution function." },
@@ -113,7 +113,7 @@ static PyTypeObject
 potential_types[N_CLASSES];
 
 PyMODINIT_FUNC
-init_mdcore(void)
+init_atomistica(void)
 {
     PyObject* m;
     int i;
@@ -132,8 +132,8 @@ init_mdcore(void)
     if (PyType_Ready(&neighbors_type) < 0)
       return;
 
-    m = Py_InitModule3("_mdcore", module_methods,
-                       "Interface to the MDCORE molecular dynamics Fortran "
+    m = Py_InitModule3("_atomistica", module_methods,
+                       "Interface to the ATOMISTICA molecular dynamics Fortran "
 		       "kernel.");
 
     if (m == NULL)
@@ -148,7 +148,7 @@ init_mdcore(void)
     for (i = 0; i < N_CLASSES; i++) {
       potential_types[i] = potential_type;
       potential_types[i].tp_name = malloc(MAX_POTENTIAL_NAME);
-      strncpy((char*) potential_types[i].tp_name, "mdcore.",
+      strncpy((char*) potential_types[i].tp_name, "atomistica.",
 	      MAX_POTENTIAL_NAME);
       strncat((char*) potential_types[i].tp_name, potential_classes[i].name,
 	      MAX_POTENTIAL_NAME);

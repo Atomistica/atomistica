@@ -1,6 +1,6 @@
 !! ======================================================================
-!! MDCORE - Interatomic potential library
-!! https://github.com/pastewka/mdcore
+!! Atomistica - Interatomic potential library
+!! https://github.com/pastewka/atomistica
 !! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
 !! See the AUTHORS file in the top-level MDCORE directory.
 !!
@@ -31,7 +31,7 @@
 #endif
 
 #ifndef LAMMPS
-#define SUM_VIRIAL(a, i, b)  a(1, i) = a(1, i) + b(1, 1) ; a(2, i) = a(2, i) + b(2, 2) ; a(3, i) = a(3, i) + b(3, 3) ; a(4, i) = a(4, i) + b(2, 1) ; a(5, i) = a(5, i) + b(3, 1) ; a(6, i) = a(6, i) + b(3, 2)
+#define DCELL_INDEX(ni)  VEC(dc, ni, 3) + (2*maxdc(3)+1) * ( VEC(dc, ni, 2) + (2*maxdc(2)+1) * VEC(dc, ni, 1) )
 #endif
 
 #define TOO_SMALL(what, i, ierror)  nebtot = 1 ; neb_last(i) = neb_seed(i) ; RAISE_DELAYED_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // neb_max // ", nebmax = " // this%nebmax // ", nebavg = " // this%nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (neb_last(i)-neb_seed(i)+1), ierror)

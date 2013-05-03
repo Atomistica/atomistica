@@ -1,3 +1,13 @@
+!! ======================================================================
+!! Atomistica - Interatomic potential library
+!! https://github.com/pastewka/atomistica
+!! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
+!! See the AUTHORS file in the top-level MDCORE directory.
+!!
+!! Copyright (2005-2013) Fraunhofer IWM
+!! This software is distributed under the GNU General Public License.
+!! See the LICENSE file in the top-level MDCORE directory.
+!! ======================================================================
 ! H0 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ! H0 X
 ! H0 X   libAtoms+QUIP: atomistic simulation library

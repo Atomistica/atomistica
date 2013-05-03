@@ -10,8 +10,8 @@ from ase.lattice.cubic import Diamond, FaceCenteredCubic, SimpleCubic
 from ase.lattice.cubic import BodyCenteredCubic
 from ase.lattice.compounds import B1, B2, B3, L1_2
 
-from mdcore import *
-from mdcore.tests import test_forces, test_virial
+from atomistica import *
+from atomistica.tests import test_forces, test_virial
 
 # import ase_ext_io as io
 

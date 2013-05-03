@@ -15,8 +15,8 @@ import numpy as np
 import ase
 import ase.constraints
 
-from mdcore import *
-from mdcore.tests import test_cubic_elastic_constants
+from atomistica import *
+from atomistica.tests import test_cubic_elastic_constants
 
 from ase.lattice.cubic import Diamond, BodyCenteredCubic
 from ase.lattice.cubic import FaceCenteredCubic, SimpleCubic

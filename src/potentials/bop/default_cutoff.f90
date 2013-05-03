@@ -1,6 +1,6 @@
 !! ======================================================================
-!! MDCORE - Interatomic potential library
-!! https://github.com/pastewka/mdcore
+!! Atomistica - Interatomic potential library
+!! https://github.com/pastewka/atomistica
 !! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
 !! See the AUTHORS file in the top-level MDCORE directory.
 !!

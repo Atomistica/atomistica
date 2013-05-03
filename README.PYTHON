@@ -1,5 +1,5 @@
 The following instruction show how to compile, use and test the Python
-interface to MDCORE.
+interface to Atomistica.
 
 1. Setup your compiler. Edit setup.cfg
 
@@ -49,17 +49,17 @@ interface to MDCORE.
 
 3. Test if the Python interface imports with errors. Type
 
-     source <path-to-mdcore>/env.sh
+     source <path-to-atomistica>/env.sh
 
-   which sets up the environment. To test if MDCORE can be imported into Python
-   execute"
+   which sets up the environment. To test if Atomistica can be imported into
+   Python execute"
 
-     python -c "import mdcore"
+     python -c "import atomistica"
 
 
 4. Test if the Python interface gives correct results. Type
 
-     cd <path-to-mdcore>/test_suite/ase
+     cd <path-to-atomistica>/test_suite/ase
      python run_tests.py
 
    Each test can also be run directly. This will produce more diagnostic output:

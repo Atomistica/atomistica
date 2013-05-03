@@ -1,6 +1,6 @@
 /* ======================================================================
-   MDCORE - Interatomic potential library
-   https://github.com/pastewka/mdcore
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
    Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
    See the AUTHORS file in the top-level MDCORE directory.
 
@@ -9,11 +9,11 @@
    See the LICENSE file in the top-level MDCORE directory.
    ====================================================================== */
 #include <Python.h>
-#define PY_ARRAY_UNIQUE_SYMBOL MDCORE_ARRAY_API
+#define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
 #include <numpy/arrayobject.h>
 
-#include "mdcoremodule.h"
+#include "atomisticamodule.h"
 
 #include "potential.h"
 
@@ -46,8 +46,8 @@ potential_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
   self = (potential_t *)type->tp_alloc(type, 0);
   if (self != NULL) {
 
-    /* FIXME: the offset *7* assumes the namespace is always mdcore.* */
-    name  = strdup(self->ob_type->tp_name + 7);
+    /* FIXME: the offset *7* assumes the namespace is always atomistica.* */
+    name  = strdup(self->ob_type->tp_name + 11);
 
 #ifdef DEBUG
     printf("[potential_new] Potential name: %s\n", name);
@@ -547,7 +547,7 @@ static PyMethodDef potential_methods[] = {
 PyTypeObject potential_type = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
-    "mdcore.Potential",                         /*tp_name*/
+    "atomistica.Potential",                     /*tp_name*/
     sizeof(potential_t),                        /*tp_basicsize*/
     0,                                          /*tp_itemsize*/
     (destructor)potential_dealloc,              /*tp_dealloc*/

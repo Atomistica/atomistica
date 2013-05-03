@@ -1,12 +1,12 @@
 /* ======================================================================
-   MDCORE - Interatomic potential library
+   Atomistica - Interatomic potential library
    https://github.com/pastewka/mdcore
    Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
-   See the AUTHORS file in the top-level MDCORE directory.
+   See the AUTHORS file in the top-level Atomistica directory.
 
    Copyright (2005-2013) Fraunhofer IWM
    This software is distributed under the GNU General Public License.
-   See the LICENSE file in the top-level MDCORE directory.
+   See the LICENSE file in the top-level Atomistica directory.
    ====================================================================== */
 
 /* ----------------------------------------------------------------------
@@ -31,7 +31,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "mpi.h"
-#include "pair_mdcore.h"
+#include "pair_atomistica.h"
 #include "atom.h"
 #include "force.h"
 #include "comm.h"
@@ -68,7 +68,7 @@ int error2lmp(Error *error, const char *fn, int line, int ierror)
 
 /* ---------------------------------------------------------------------- */
 
-PairMDCORE::PairMDCORE(LAMMPS *lmp) : Pair(lmp)
+PairAtomistica::PairAtomistica(LAMMPS *lmp) : Pair(lmp)
 {
   single_enable = 0;
   one_coeff = 1;
@@ -79,10 +79,10 @@ PairMDCORE::PairMDCORE(LAMMPS *lmp) : Pair(lmp)
   fn_ = NULL;
 
   maxlocal_ = 0;
-  MDCORE_seed_ = NULL;
-  MDCORE_last_ = NULL;
-  MDCORE_nneighb_ = 0;
-  MDCORE_neighb_ = NULL;
+  Atomistica_seed_ = NULL;
+  Atomistica_last_ = NULL;
+  Atomistica_nneighb_ = 0;
+  Atomistica_neighb_ = NULL;
 
   particles_new(&particles_);
   particles_init(particles_);
@@ -94,14 +94,14 @@ PairMDCORE::PairMDCORE(LAMMPS *lmp) : Pair(lmp)
   members_ = NULL;
   potential_ = NULL;
 
-  mdcore_startup(-1);
+  atomistica_startup(-1);
 }
 
 /* ----------------------------------------------------------------------
    check if allocated, since class can be destructed when incomplete
 ------------------------------------------------------------------------- */
 
-PairMDCORE::~PairMDCORE()
+PairAtomistica::~PairAtomistica()
 {
   if (name_)  free(name_);
 
@@ -110,8 +110,8 @@ PairMDCORE::~PairMDCORE()
     class_->free_instance(potential_);
   }
 
-  memory->sfree(MDCORE_seed_);
-  memory->sfree(MDCORE_last_);
+  memory->sfree(Atomistica_seed_);
+  memory->sfree(Atomistica_last_);
 
   if (allocated) {
     memory->destroy(setflag);
@@ -130,28 +130,25 @@ PairMDCORE::~PairMDCORE()
     particles_free(particles_);
   }
 
-  mdcore_shutdown();
+  atomistica_shutdown();
 }
 
 /* ---------------------------------------------------------------------- */
 
-void PairMDCORE::compute(int eflag, int vflag)
+void PairAtomistica::compute(int eflag, int vflag)
 {
   if (eflag || vflag) ev_setup(eflag,vflag);
   else evflag = vflag_fdotr = vflag_atom = 0;
 
-  // do not compute if there are no atoms
-  if (atom->nmax > 0) {
-    MDCORE_neigh();
-    FMDCORE(eflag,vflag);
-  }
+  Atomistica_neigh();
+  FAtomistica(eflag,vflag);
 }
 
 /* ----------------------------------------------------------------------
    allocate all arrays
 ------------------------------------------------------------------------- */
 
-void PairMDCORE::allocate()
+void PairAtomistica::allocate()
 {
   allocated = 1;
   int n = atom->ntypes;
@@ -170,10 +167,10 @@ void PairMDCORE::allocate()
    global settings
 ------------------------------------------------------------------------- */
 
-void PairMDCORE::settings(int narg, char **arg)
+void PairAtomistica::settings(int narg, char **arg)
 {
   if (narg != 1 && narg != 2)
-    error->all(FLERR,"pair_style mdcore expects potential name and "
+    error->all(FLERR,"pair_style atomistica expects potential name and "
 	       "configuration file as parameters");
 
   name_ = strdup(arg[0]);
@@ -185,7 +182,7 @@ void PairMDCORE::settings(int narg, char **arg)
    set coeffs for one or more type pairs
 ------------------------------------------------------------------------- */
 
-void PairMDCORE::coeff(int narg, char **arg)
+void PairAtomistica::coeff(int narg, char **arg)
 {
   int n = atom->ntypes;
   int map[n];
@@ -244,17 +241,17 @@ void PairMDCORE::coeff(int narg, char **arg)
    init specific to this pair style
 ------------------------------------------------------------------------- */
 
-void PairMDCORE::init_style()
+void PairAtomistica::init_style()
 {
   if (!allocated)
-    error->all(FLERR,"Something wrong. pair mdcore not allocated.");
+    error->all(FLERR,"Something wrong. pair atomistica not allocated.");
 
   if (strcmp(update->unit_style,"metal"))
-    error->all(FLERR,"Pair style mdcore requires metal units");
+    error->all(FLERR,"Pair style atomistica requires metal units");
   if (atom->tag_enable == 0)
-    error->all(FLERR,"Pair style mdcore requires atom IDs");
+    error->all(FLERR,"Pair style atomistica requires atom IDs");
   if (force->newton_pair == 0)
-    error->all(FLERR,"Pair style mdcore requires newton pair on");
+    error->all(FLERR,"Pair style atomistica requires newton pair on");
 
   // need a full neighbor list
 
@@ -263,7 +260,7 @@ void PairMDCORE::init_style()
   neighbor->requests[irequest]->full = 1;
   neighbor->requests[irequest]->ghost = 1;
 
-  // find potential class in MDCORE potential database
+  // find potential class in Atomistica potential database
 
   class_ = NULL;
   for (int i = 0; i < N_CLASSES; i++) {
@@ -272,7 +269,7 @@ void PairMDCORE::init_style()
   }
   if (!class_) {
     char errstr[1024];
-    sprintf(errstr,"Could not find potential '%s' in the MDCORE potential "
+    sprintf(errstr,"Could not find potential '%s' in the Atomistica potential "
 	    "database",name_);
     error->all(FLERR,errstr);
   }
@@ -287,13 +284,8 @@ void PairMDCORE::init_style()
   }
 
   // set pointers in particles object
-  if (atom->nmax > 0) {
-    // Note: Only call set_pointers if there are any atoms in this domain.
-    // atom->x = NULL otherwise. MDCORE should NOT expect to have proper
-    // atom position pointers etc. in bind_to. This may break some potentials.
-    particles_set_pointers(particles_,atom->nlocal+atom->nghost,atom->nlocal,
-                           atom->nmax,atom->tag,atom->type,&atom->x[0][0]);
-  }
+  particles_set_pointers(particles_,atom->nlocal+atom->nghost,atom->nlocal,
+			 atom->nmax,atom->tag,atom->type,&atom->x[0][0]);
 
   class_->init(potential_);
 
@@ -301,7 +293,7 @@ void PairMDCORE::init_style()
   class_->bind_to(potential_,particles_,neighbors_,&ierror);
   error2lmp(error,FLERR,ierror);
 
-  // dump all cutoffs to the MDCORE log file
+  // dump all cutoffs to the Atomistica log file
 
   neighbors_dump_cutoffs(neighbors_,particles_);
 
@@ -316,7 +308,7 @@ void PairMDCORE::init_style()
    init for one type pair i,j and corresponding j,i
 ------------------------------------------------------------------------- */
 
-double PairMDCORE::init_one(int i, int j)
+double PairAtomistica::init_one(int i, int j)
 {
   if (setflag[i][j] == 0) error->all(FLERR,"All pair coeffs are not set");
 
@@ -331,13 +323,13 @@ double PairMDCORE::init_one(int i, int j)
 }
 
 /* ----------------------------------------------------------------------
-   create MDCORE neighbor list from main neighbor list
-   MDCORE neighbor list stores neighbors of ghost atoms
+   create Atomistica neighbor list from main neighbor list
+   Atomistica neighbor list stores neighbors of ghost atoms
 ------------------------------------------------------------------------- */
 
-void PairMDCORE::MDCORE_neigh()
+void PairAtomistica::Atomistica_neigh()
 {
-  //printf("...entering MDCORE_neigh():\n");
+  //printf("...entering Atomistica_neigh():\n");
   int i,j,ii,jj,n,inum,jnum,itype,jtype;
   double xtmp,ytmp,ztmp,delx,dely,delz,rsq;
   int *ilist,*jlist,*numneigh,**firstneigh;
@@ -348,23 +340,23 @@ void PairMDCORE::MDCORE_neigh()
   int nall = nlocal + atom->nghost;
 
   if (!list->ghostflag) {
-    error->all(FLERR,"MDCORE needs neighbor list with ghost atoms.");
+    error->all(FLERR,"Atomistica needs neighbor list with ghost atoms.");
   }
 
   if (nall > maxlocal_) {
     maxlocal_ = atom->nmax;
-    memory->sfree(MDCORE_seed_);
-    memory->sfree(MDCORE_last_);
-    MDCORE_seed_ = (int *)
-      memory->smalloc(maxlocal_*sizeof(int),"MDCORE:MDCORE_seed");
-    MDCORE_last_ = (int *)
-      memory->smalloc(maxlocal_*sizeof(int),"MDCORE:MDCORE_last");
+    memory->sfree(Atomistica_seed_);
+    memory->sfree(Atomistica_last_);
+    Atomistica_seed_ = (int *)
+      memory->smalloc(maxlocal_*sizeof(int),"Atomistica:Atomistica_seed");
+    Atomistica_last_ = (int *)
+      memory->smalloc(maxlocal_*sizeof(int),"Atomistica:Atomistica_last");
   }
 
-  // set start values for neighbor array MDCORE_neighb
+  // set start values for neighbor array Atomistica_neighb
   for (i = 0; i < nall; i++) {
-    MDCORE_seed_[i] = -1;
-    MDCORE_last_[i] = -2;
+    Atomistica_seed_[i] = -1;
+    Atomistica_last_[i] = -2;
   }
 
   inum = list->inum+list->gnum;
@@ -374,14 +366,14 @@ void PairMDCORE::MDCORE_neigh()
 
   // Map seed and last arrays to point to the appropriate position in the native
   // LAMMPS neighbor list
-  MDCORE_neighb_ = &firstneigh[0][0];
-  MDCORE_nneighb_ = 0;
+  Atomistica_neighb_ = &firstneigh[0][0];
+  Atomistica_nneighb_ = 0;
   for (ii = 0; ii < inum; ii++) {
     i = ilist[ii];
-    // MDCORE seed index is index relative to beginning of the neighbor array
-    MDCORE_seed_[i] = (int) (firstneigh[i]-MDCORE_neighb_)+1;
-    MDCORE_last_[i] = MDCORE_seed_[i]+numneigh[i]-1;
-    MDCORE_nneighb_ = MAX(MDCORE_nneighb_, MDCORE_last_[i]);
+    // Atomistica seed index is index relative to beginning of the neighbor array
+    Atomistica_seed_[i] = (int) (firstneigh[i]-Atomistica_neighb_)+1;
+    Atomistica_last_[i] = Atomistica_seed_[i]+numneigh[i]-1;
+    Atomistica_nneighb_ = MAX(Atomistica_nneighb_, Atomistica_last_[i]);
   }
 
 #if 0
@@ -390,29 +382,29 @@ void PairMDCORE::MDCORE_neigh()
     xtmp = x[i][0];
     ytmp = x[i][1];
     ztmp = x[i][2];
-    for (ii = MDCORE_seed_[i]-1; ii < MDCORE_last_[i]; ii++) {
-      j = MDCORE_neighb_[ii]-1;
+    for (ii = Atomistica_seed_[i]-1; ii < Atomistica_last_[i]; ii++) {
+      j = Atomistica_neighb_[ii]-1;
 
       // Check if i is neighbor of j
       n = 0;
-      for (jj = MDCORE_seed_[j]-1; jj < MDCORE_last_[j]; jj++) {
-	if (MDCORE_neighb_[jj]-1 == i) {
+      for (jj = Atomistica_seed_[j]-1; jj < Atomistica_last_[j]; jj++) {
+	if (Atomistica_neighb_[jj]-1 == i) {
 	  n = 1;
 	}
       }
       if (!n) {
 	printf("i = %i, j = %i\n", i, j);
 	printf("Neighbors of i\n");
-	for (jj = MDCORE_seed_[i]-1; jj < MDCORE_last_[i]; jj++) {
-	  j = MDCORE_neighb_[jj]-1;
+	for (jj = Atomistica_seed_[i]-1; jj < Atomistica_last_[i]; jj++) {
+	  j = Atomistica_neighb_[jj]-1;
 	  delx = xtmp - x[j][0];
 	  dely = ytmp - x[j][1];
 	  delz = ztmp - x[j][2];
 	  printf("   %i  %f\n", j, sqrt(delx*delx+dely*dely+delz*delz));
 	}
 	printf("Neighbors of j\n");
-	for (jj = MDCORE_seed_[j]-1; jj < MDCORE_last_[j]; jj++) {
-	  j = MDCORE_neighb_[jj]-1;
+	for (jj = Atomistica_seed_[j]-1; jj < Atomistica_last_[j]; jj++) {
+	  j = Atomistica_neighb_[jj]-1;
 	  delx = xtmp - x[j][0];
 	  dely = ytmp - x[j][1];
 	  delz = ztmp - x[j][2];
@@ -426,10 +418,10 @@ void PairMDCORE::MDCORE_neigh()
 }
 
 /* ----------------------------------------------------------------------
-   MDCORE forces and energy
+   Atomistica forces and energy
 ------------------------------------------------------------------------- */
 
-void PairMDCORE::FMDCORE(int eflag, int vflag)
+void PairAtomistica::FAtomistica(int eflag, int vflag)
 {
   double **x = atom->x;
   double **f = atom->f;
@@ -456,8 +448,8 @@ void PairMDCORE::FMDCORE(int eflag, int vflag)
 			 type,&x[0][0]);
 
   // set pointers in neighbor list object
-  neighbors_set_pointers(neighbors_,nall,MDCORE_seed_,MDCORE_last_,
-			 MDCORE_nneighb_,MDCORE_neighb_);
+  neighbors_set_pointers(neighbors_,nall,Atomistica_seed_,Atomistica_last_,
+			 Atomistica_nneighb_,Atomistica_neighb_);
 
   int ierror;
   epot = 0.0;
@@ -484,7 +476,7 @@ void PairMDCORE::FMDCORE(int eflag, int vflag)
    memory usage of local atom-based arrays 
 ------------------------------------------------------------------------- */
 
-double PairMDCORE::memory_usage()
+double PairAtomistica::memory_usage()
 {
   double bytes = 0.0;
   return bytes;

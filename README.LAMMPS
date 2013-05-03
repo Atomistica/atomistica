@@ -1,33 +1,33 @@
-To compile the LAMMPS-MDCORE interface do the following:
+To compile the LAMMPS-Atomistica interface do the following:
 
 1. In the build_lammps directory do
 
     make -f <Makefile> factories
-    make -f <Makefile> mdcore
+    make -f <Makefile> atomistica
 
    Here <Makefile> is some makefile configured for your environment.
    Example makefiles for the Intel and GNU compilers are provided. This should
-   generate the file "libmdcore.a".
+   generate the file "libatomistica.a".
 
-2. Copy "pair_mdcore.cpp" and "pair_mdcore.h" from the "src/lammps/pair_style"
-   directory to the LAMMPS "src" directory.
+2. Copy "pair_atomistica.cpp" and "pair_atomistica.h" from the
+   "src/lammps/pair_style" directory to the LAMMPS "src" directory.
 
-3. Modify your LAMMPS Makefile to link "libmdcore.a" created by step 1.
+3. Modify your LAMMPS Makefile to link "libatomistica.a" created by step 1.
    Compile LAMMPS. The "src/lammps/MAKE" subdirectory contains sample
    makefiles.
 
 
-MDCORE potentials are available under the "mdcore" pair style. A typical LAMMPS
-script looks like
+Atomistica potentials are available under the "atomistica" pair style. A typical
+LAMMPS script looks like
 
   ...
   units metal
   ...
-  pair_style mdcore Tersoff   # Tersoff potential
+  pair_style atomistica Tersoff   # Tersoff potential
   pair_coeff * * Si           # LAMMPS atom id 1 is Silicon
   ...
 
-If you need to modify the potential parameters create an MDCORE parameter file.
+If you need to modify the potential parameters create an Atomistica parameter file.
 
   Tersoff {
     A = "1000, 1000, 1000";
@@ -35,7 +35,7 @@ If you need to modify the potential parameters create an MDCORE parameter file.
 
 In the LAMMPS control file use:
 
-  pair_style mdcore Tersoff params.dat
+  pair_style atomistica Tersoff params.dat
   pair_coeff * * Si
 
 where "params.dat" is the above file.

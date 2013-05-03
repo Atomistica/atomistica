@@ -1,11 +1,11 @@
-MDCORE is a library of interatomic potentials. It currently supports the
+Atomistica is a library of interatomic potentials. It currently supports the
 potentials described in the following publication:
 
   Lars Pastewka, Andreas Klemenz, Peter Gumbsch, Michael Moseler
   Screened empirical bond-order potential for Si-C
   arXiv:1301.2142 (http://arxiv.org/abs/1301.2142)
 
-MDCORE can be used in two distinct manners:
+Atomistica can be used in two distinct manners:
 
 1. From Python using the Atomistic Simulation Environment
    (ASE - see https://wiki.fysik.dtu.dk/ase/)

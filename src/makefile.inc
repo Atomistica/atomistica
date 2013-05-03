@@ -61,7 +61,7 @@ LAMMPS_SUPPLIB = \
         lammps_neighbors.f90 \
 	lammps_filter.f90 \
         versioninfo.f90 \
-	mdcore.f90
+	atomistica.f90
 
 
 ## LAMMPS dispatch
@@ -139,8 +139,8 @@ factories:
 versioninfo:
 	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(OPTFLAGS)
 
-mdcore: versioninfo $(LAMMPS_ALL_O)
-	$(LIBTOOL) libmdcore.a $(LAMMPS_ALL_O)
+atomistica: versioninfo $(LAMMPS_ALL_O)
+	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
 
 clean:
 	rm -f *.o

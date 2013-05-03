@@ -1,6 +1,6 @@
 /* ======================================================================
-   MDCORE - Interatomic potential library
-   https://github.com/pastewka/mdcore
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
    Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
    See the AUTHORS file in the top-level MDCORE directory.
 
@@ -24,12 +24,13 @@
 
 #ifdef PAIR_CLASS
 
-PairStyle(mdcore,PairMDCORE)
+PairStyle(mdcore,PairAtomistica)
+PairStyle(atomistica,PairAtomistica)
 
 #else
 
-#ifndef LMP_PAIR_MDCORE_H
-#define LMP_PAIR_MDCORE_H
+#ifndef LMP_PAIR_ATOMISTICA_H
+#define LMP_PAIR_ATOMISTICA_H
 
 #include "pair.h"
 
@@ -38,10 +39,10 @@ PairStyle(mdcore,PairMDCORE)
 
 namespace LAMMPS_NS {
 
-class PairMDCORE : public Pair {
+class PairAtomistica : public Pair {
  public:
-  PairMDCORE(class LAMMPS *);
-  ~PairMDCORE();
+  PairAtomistica(class LAMMPS *);
+  ~PairAtomistica();
   void compute(int, int);
   void settings(int, char **);
   void coeff(int, char **);
@@ -54,10 +55,10 @@ class PairMDCORE : public Pair {
   char *fn_;                       // file name with potential parameters
   int maxlocal_;                   // size of numneigh, firstneigh arrays
 
-  int *MDCORE_seed_;
-  int *MDCORE_last_;
-  int *MDCORE_neighb_;
-  int MDCORE_nneighb_;
+  int *Atomistica_seed_;
+  int *Atomistica_last_;
+  int *Atomistica_neighb_;
+  int Atomistica_nneighb_;
 
   double **rcmaxsq_;
 
@@ -70,8 +71,8 @@ class PairMDCORE : public Pair {
   // particles, neighbors and potential objects
   void *particles_,*neighbors_,*potential_;
 
-  void MDCORE_neigh();
-  void FMDCORE(int, int);
+  void Atomistica_neigh();
+  void FAtomistica(int, int);
 
   void allocate();
 };
@@ -106,8 +107,8 @@ extern "C" {
   void neighbors_get_cutoff(void *self, int Z1, int Z2, double *cutoff);
   void neighbors_dump_cutoffs(void *self, void *p);
 
-  void mdcore_startup(int);
-  void mdcore_shutdown(void);
+  void atomistica_startup(int);
+  void atomistica_shutdown(void);
   void timer_print_to_log(void);
   void get_full_error_string(char *);
 

@@ -3,7 +3,7 @@
 
 import atexit
 
-import _mdcore
+import _atomistica
 
 from aseinterface import *
 
@@ -11,12 +11,12 @@ from aseinterface import *
 # Enabled logging
 #
 
-_mdcore.startup()
+_atomistica.startup()
 
 #
 # Close logfile upon exit
 #
 
-atexit.register(_mdcore.shutdown)
+atexit.register(_atomistica.shutdown)
 
 

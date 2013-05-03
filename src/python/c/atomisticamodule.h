@@ -1,6 +1,6 @@
 /* ======================================================================
-   MDCORE - Interatomic potential library
-   https://github.com/pastewka/mdcore
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
    Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
    See the AUTHORS file in the top-level MDCORE directory.
 
@@ -8,8 +8,8 @@
    This software is distributed under the GNU General Public License.
    See the LICENSE file in the top-level MDCORE directory.
    ====================================================================== */
-#ifndef __MDCOREMODULE_H_
-#define __MDCOREMODULE_H_
+#ifndef __ATOMISTICAMODULE_H_
+#define __ATOMISTICAMODULE_H_
 
 #include <Python.h>
 
@@ -52,8 +52,8 @@ void real3x3_attr_by_name(void *, char *, void **, int *);
 
 /* general */
 void units_init(int);
-void mdcore_startup(int);
-void mdcore_shutdown(void);
+void atomistica_startup(int);
+void atomistica_shutdown(void);
 void timer_print_to_log(void);
 
 #endif

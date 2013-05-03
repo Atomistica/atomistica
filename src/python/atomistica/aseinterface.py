@@ -1,29 +1,30 @@
-"""ASE interface to MDCore.
+"""ASE interface to Atomistica.
 """
 
 import copy
 from math import sqrt, log
 
-import _mdcore
+import _atomistica
 
 import numpy as np
 
 from ase.data import atomic_numbers
 
 
-class MDCore:
-    """MDCore ASE calculator.
+class Atomistica:
+    """Atomistica ASE calculator.
     """
 
     CELL_TOL = 1e-16
     POSITIONS_TOL = 1e-16
 
     def __init__(self, potential, avgn, **kwargs):
-        """ Initialize a potential. *potential* is the a native MDCore potential class, in which
-            case the arguments are given by the keywords of this function.
-            Alternatively, it can be a list of tuples [ ( pot1, args1 ), ... ]
-            in which case *pot1* is the name of the first potential and *args1* a 
-            dictionary containing its arguments.
+        """
+        Initialize a potential. *potential* is the a native Atomistica
+        potential class, in which case the arguments are given by the keywords
+        of this function. Alternatively, it can be a list of tuples
+        [ ( pot1, args1 ), ... ] in which case *pot1* is the name of the first
+        potential and *args1* a dictionary containing its arguments.
         """
         self.avgn                   = avgn
 
@@ -55,7 +56,7 @@ class MDCore:
         # For now, length and elements are fixed
         # FIXME! Override pbc since code exits when atom moves out of the box!
         pbc = np.array( [ True, True, True ] )
-        self.particles  = _mdcore.Particles()
+        self.particles  = _atomistica.Particles()
         self.potential.register_data(self.particles)
         self.particles.allocate(len(atoms))
         self.particles.set_cell(atoms.get_cell(), pbc)
@@ -75,7 +76,7 @@ class MDCore:
         self.particles.update_elements()
 
         # Initialize and set neighbor list
-        self.nl = _mdcore.Neighbors(self.avgn)
+        self.nl = _atomistica.Neighbors(self.avgn)
 
         # Tell the potential about the new Particles and Neighbors object
         self.potential.bind_to(self.particles, self.nl)
@@ -181,7 +182,7 @@ class MDCore:
         self.wpot += w
 
 
-    ### MDCore features
+    ### Atomistica features
     def set_lees_edwards(self, dx, dv=None):
         self.lees_edwards_dx  = dx
         if dv is None:
@@ -215,13 +216,13 @@ class MDCore:
 
 # Simple r^6 pair potential
 
-if hasattr(_mdcore, 'r6'):
-    class r6(MDCore):
+if hasattr(_atomistica, 'r6'):
+    class r6(Atomistica):
         """r^6 potential.
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.r6, 100,), kwargs)
+            apply(Atomistica.__init__, (self, _atomistica.r6, 100,), kwargs)
 
 
 # Tersoff potential
@@ -294,24 +295,24 @@ Goumri_Said_ChemPhys_302_135_Al_N = {
   }
 
 
-if hasattr(_mdcore, 'Tersoff'):
-    class Tersoff(MDCore):
+if hasattr(_atomistica, 'Tersoff'):
+    class Tersoff(Atomistica):
         """Tersoff potential.
         Refs: J. Tersoff, Phys. Rev. B 39, 5566 (1989)
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.Tersoff, 100,), kwargs)
+            apply(Atomistica.__init__, (self, _atomistica.Tersoff, 100,), kwargs)
 
 
-if hasattr(_mdcore, 'TersoffScr'):
-    class TersoffScr(MDCore):
+if hasattr(_atomistica, 'TersoffScr'):
+    class TersoffScr(Atomistica):
         """Tersoff potential including screening functions.
         Refs: J. Tersoff, Phys. Rev. B 39, 5566 (1989)
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.TersoffScr, 1000,), kwargs)
+            apply(Atomistica.__init__, (self, _atomistica.TersoffScr, 1000,), kwargs)
 
 
 # Karsten Albe's BOP
@@ -455,24 +456,24 @@ Brenner_PRB_42_9458_C_II = {
     "r2":       [  2.00         ]
     }
 
-if hasattr(_mdcore, 'Brenner'):
-    class Brenner(MDCore):
+if hasattr(_atomistica, 'Brenner'):
+    class Brenner(Atomistica):
         """Karsten Albe-type bond order potential.
            (This is actually the same form used by Brenner, maybe rename.)
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.Brenner, 100,), kwargs)
+            apply(Atomistica.__init__, (self, _atomistica.Brenner, 100,), kwargs)
 
 
-if hasattr(_mdcore, 'BrennerScr'):
-    class BrennerScr(MDCore):
+if hasattr(_atomistica, 'BrennerScr'):
+    class BrennerScr(Atomistica):
         """Karsten Albe-type bond order potential.
            (This is actually the same form used by Brenner, maybe rename.)
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.BrennerScr, 1000,), kwargs)
+            apply(Atomistica.__init__, (self, _atomistica.BrennerScr, 1000,), kwargs)
 
 
 # Kumagai's Si potential
@@ -512,20 +513,20 @@ Kumagai_CompMaterSci_39_457_Si__Scr.update({
         'Cmax':    [ 3.00     ],
         })
 
-if hasattr(_mdcore, 'Kumagai'):
-    class Kumagai(MDCore):
+if hasattr(_atomistica, 'Kumagai'):
+    class Kumagai(Atomistica):
         """Kumagai bond order potential.
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.Kumagai, 100,), kwargs)
+            apply(Atomistica.__init__, (self, _atomistica.Kumagai, 100,), kwargs)
 
-if hasattr(_mdcore, 'KumagaiScr'):
-    class KumagaiScr(MDCore):
+if hasattr(_atomistica, 'KumagaiScr'):
+    class KumagaiScr(Atomistica):
         """Kumagai bond order potential.
         """
 
         def __init__(self, **kwargs):
-            apply(MDCore.__init__, (self, _mdcore.KumagaiScr, 1000,), kwargs)
+            apply(Atomistica.__init__, (self, _atomistica.KumagaiScr, 1000,), kwargs)
 
 

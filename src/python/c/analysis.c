@@ -1,6 +1,6 @@
 /* ======================================================================
-   MDCORE - Interatomic potential library
-   https://github.com/pastewka/mdcore
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
    Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
    See the AUTHORS file in the top-level MDCORE directory.
 
@@ -9,11 +9,11 @@
    See the LICENSE file in the top-level MDCORE directory.
    ====================================================================== */
 #include <Python.h>
-#define PY_ARRAY_UNIQUE_SYMBOL MDCORE_ARRAY_API
+#define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
 #include <numpy/arrayobject.h>
 
-#include "mdcoremodule.h"
+#include "atomisticamodule.h"
 
 
 PyObject *

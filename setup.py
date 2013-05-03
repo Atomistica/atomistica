@@ -24,8 +24,8 @@ srcdir = '{0}/src'.format(cwd)
 
 inc_dirs = [ ]
 lib_dirs = [ ]
-# mdcorelib is a dependency, build below by the setup command
-libs = [ 'mdcorelib' ]
+# atomisticalib is a dependency, build below by the setup command
+libs = [ 'atomisticalib' ]
 extra_link_args = [ ]
 
 ###
@@ -45,8 +45,8 @@ if mklroot is not None:
     #libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
     #          'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
     #          'stdc++' ]
-    libs += [ 'ifcore', 'ifport' ]
-    extra_link_args += [ '-mkl=sequential' ]
+    libs += [ 'ifcore', 'ifport', 'mkl_rt' ]
+    #extra_link_args += [ '-mkl=sequential' ]
 else:
     libs += [ 'blas', 'lapack' ]
 
@@ -82,7 +82,7 @@ lib_srcs += [ '{0}/support/'.format(srcdir)+i for i in
                 'data.f90',
                 'simple_spline.f90',
                 'supplib.f90',
-                'mdcore.f90',
+                'atomistica.f90',
                 ]
               ]
 
@@ -112,7 +112,7 @@ mod_srcs += [ '{0}/python/c/py_f.c'.format(srcdir),
               '{0}/python/c/neighbors.c'.format(srcdir),
               '{0}/python/c/potential.c'.format(srcdir),
               '{0}/python/c/analysis.c'.format(srcdir),
-              '{0}/python/c/mdcoremodule.c'.format(srcdir),
+              '{0}/python/c/atomisticamodule.c'.format(srcdir),
               ]
 
 ###
@@ -179,16 +179,16 @@ lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
 ###
 
 setup(
-    name = 'mdcore',
+    name = 'atomistica',
     version = '0.1',
     packages = [
-        'mdcore'
+        'atomistica'
         ],
     package_dir = {
-        'mdcore': 'src/python/mdcore'
+        'atomistica': 'src/python/atomistica'
         },
     libraries = [
-        ( 'mdcorelib', dict(
+        ( 'atomisticalib', dict(
                 sources = lib_srcs,
                 include_dirs = inc_dirs,
                 macros = lib_macros,
@@ -198,7 +198,7 @@ setup(
         ],
     ext_modules = [
         Extension(
-            '_mdcore',
+            '_atomistica',
             mod_srcs,
             include_dirs = inc_dirs,
             library_dirs = lib_dirs,

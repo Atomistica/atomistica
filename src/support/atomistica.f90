@@ -1,9 +1,19 @@
-!>
-!! The main mdcore module
+!! ======================================================================
+!! Atomistica - Interatomic potential library
+!! https://github.com/pastewka/atomistica
+!! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
+!! See the AUTHORS file in the top-level MDCORE directory.
 !!
-!! The main mdcore module
+!! Copyright (2005-2013) Fraunhofer IWM
+!! This software is distributed under the GNU General Public License.
+!! See the LICENSE file in the top-level MDCORE directory.
+!! ======================================================================
+!>
+!! The main atomistica module
+!!
+!! The main atomistica module
 !<
-module mdcore
+module atomistica
 #ifdef _OPENMP
   use omp_lib
 #endif
@@ -30,7 +40,7 @@ contains
   !!
   !! Open log file, print a greetings message and start the timer.
   !<
-  subroutine mdcore_startup() bind(C)
+  subroutine atomistica_startup() bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -63,8 +73,8 @@ contains
     call prscrlog("Welcome to - MDCORE -")
 #endif
     call prscrlog
-    call prscrlog("   MDCORE revision:      " // trim(mdcore_revision))
-    call prscrlog("   MDCORE URL:           " // trim(mdcore_url))
+    call prscrlog("   MDCORE revision:      " // trim(atomistica_revision))
+    call prscrlog("   MDCORE URL:           " // trim(atomistica_url))
 #ifdef HAVE_MKL
     call mklgetversionstring(mklversion)
     call prscrlog("   MKL version:          " // trim(mklversion))
@@ -100,7 +110,7 @@ contains
 
     start_time_and_date  = now
 
-  endsubroutine mdcore_startup
+  endsubroutine atomistica_startup
 
 
   !>
@@ -108,7 +118,7 @@ contains
   !!
   !! Print timing information, close log file and write an empty "DONE" file.
   !<
-  subroutine mdcore_shutdown() bind(C)
+  subroutine atomistica_shutdown() bind(C)
     implicit none
 
     integer :: done_file
@@ -146,6 +156,6 @@ contains
     endif
 #endif
 
-  endsubroutine mdcore_shutdown
+  endsubroutine atomistica_shutdown
 
 endmodule
