@@ -51,8 +51,7 @@ LIBTOOL  = ar r
 #
 # Normal (Intel)
 #
-OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -no-prec-div \
-	-no-prec-sqrt
+OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -fp-model fast
 #
 # Debug (Intel)
 #
