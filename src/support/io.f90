@@ -220,7 +220,7 @@ contains
 
     ! ---
 
-    read (f, *)  read_line
+    read (f, '(A)')  read_line
 
   endfunction read_line
 
