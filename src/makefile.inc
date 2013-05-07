@@ -31,6 +31,7 @@ VPATH = \
         $(SRCDIR)/potentials/pair_potentials \
         $(SRCDIR)/potentials/bop/rebo2 \
         $(SRCDIR)/potentials/bop/rebo2x \
+        $(SRCDIR)/potentials/eam \
 	$(SRCDIR)/special \
 	$(SRCDIR)/support
 
