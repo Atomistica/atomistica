@@ -530,3 +530,22 @@ if hasattr(_atomistica, 'KumagaiScr'):
             apply(Atomistica.__init__, (self, _atomistica.KumagaiScr, 1000,), kwargs)
 
 
+# Tabulated EAM potentials
+if hasattr(_atomistica, 'TabulatedEAM'):
+    class TabulatedEAM(Atomistica):
+        """Tabulated single-element EAM potential.
+        """
+
+        def __init__(self, **kwargs):
+            apply(Atomistica.__init__, (self, _atomistica.TabulatedEAM, 1000,), kwargs)
+
+
+if hasattr(_atomistica, 'TabulatedAlloyEAM'):
+    class TabulatedAlloyEAM(Atomistica):
+        """Tabulated multi-element (alloy) EAM potential.
+        """
+
+        def __init__(self, **kwargs):
+            apply(Atomistica.__init__, (self, _atomistica.TabulatedAlloyEAM, 1000,),
+                  kwargs)
+
