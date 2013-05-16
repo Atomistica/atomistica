@@ -267,14 +267,14 @@ contains
   !!
   !! Initially set/change cell size
   !<
-  subroutine particles_set_cell(this, Abox, pbc, scale_atoms, ierror)
+  subroutine particles_set_cell(this, Abox, pbc, scale_atoms, error)
     implicit none
 
     type(particles_t), intent(inout) :: this
     real(DP),          intent(in)    :: Abox(3, 3)
     logical, optional, intent(in)    :: pbc(3)
     logical, optional, intent(in)    :: scale_atoms
-    integer, optional, intent(inout) :: ierror
+    integer, optional, intent(inout) :: error
     
     ! ---
 
@@ -327,7 +327,7 @@ contains
     call dgesv(3, 3, A, 3, ipiv, this%Bbox, 3, in)
 
     if (in /= 0) then
-       RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), ierror)
+       RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
     endif
 
     if (.not. all(this%periodic)) then
@@ -335,7 +335,7 @@ contains
     endif
 
     if (.not. this%cell_is_orthorhombic .and. this%orthorhombic_cell_is_required) then
-       RAISE_ERROR("This cell is non-orthorhombic, however, an orthorhombic cell was required.", ierror)
+       RAISE_ERROR("This cell is non-orthorhombic, however, an orthorhombic cell was required.", error)
     endif
 
     this%lower  = (/ 0.0, 0.0, 0.0 /)
@@ -354,14 +354,14 @@ contains
   !!
   !! Initially set/change cell size
   !<
-  subroutine particles_set_cell_orthorhombic(this, cell, pbc, scale_atoms, ierror)
+  subroutine particles_set_cell_orthorhombic(this, cell, pbc, scale_atoms, error)
     implicit none
 
     type(particles_t), intent(inout) :: this
     real(DP),          intent(in)    :: cell(3)
     logical, optional, intent(in)    :: pbc(3)
     logical, optional, intent(in)    :: scale_atoms
-    integer, optional, intent(inout) :: ierror
+    integer, optional, intent(inout) :: error
 
     ! ---
 
@@ -374,7 +374,7 @@ contains
     cell3x3(2, 2)  = cell(2)
     cell3x3(3, 3)  = cell(3)
 
-    call particles_set_cell(this, cell3x3, pbc=pbc, scale_atoms=scale_atoms, ierror=ierror)
+    call particles_set_cell(this, cell3x3, pbc=pbc, scale_atoms=scale_atoms, error=error)
 
   endsubroutine particles_set_cell_orthorhombic
 
@@ -382,13 +382,13 @@ contains
   !**********************************************************************
   ! Set Lees-Edwards boundary conditions
   !**********************************************************************
-  subroutine particles_set_lees_edwards(this, dx, dv, ierror)
+  subroutine particles_set_lees_edwards(this, dx, dv, error)
     implicit none
 
     type(particles_t), intent(inout)  :: this
     real(DP), intent(in)              :: dx(3)
     real(DP), intent(in), optional    :: dv(3)
-    integer, intent(inout), optional  :: ierror
+    integer, intent(inout), optional  :: error
 
     ! ---
 
@@ -398,8 +398,8 @@ contains
 
     ! ---
 
-    call require_orthorhombic_cell(this, ierror)
-    PASS_ERROR(ierror)
+    call require_orthorhombic_cell(this, error)
+    PASS_ERROR(error)
 
     old_dx         = this%shear_dx
 
@@ -499,12 +499,12 @@ contains
   !**********************************************************************
   ! Allocate particle information
   !**********************************************************************
-  subroutine particles_init_from_particles(this, from, ierror)
+  subroutine particles_init_from_particles(this, from, error)
     implicit none
 
     type(particles_t), intent(inout)  :: this
     type(particles_t), intent(in)     :: from
-    integer, intent(inout), optional  :: ierror
+    integer, intent(inout), optional  :: error
 
     ! ---
 
@@ -518,7 +518,7 @@ contains
 
     call init(this%data, from%data)
 
-    call set_cell(this, from%Abox, from%periodic, ierror=ierror)
+    call set_cell(this, from%Abox, from%periodic, error=error)
 
   endsubroutine particles_init_from_particles
 
@@ -548,14 +548,14 @@ contains
   !! This means that one should call particles_init and others, such as dynamics_init and
   !! molecules_init, before calling particles_allocate.
   !<
-  subroutine particles_allocate(this, nat, totnat, allow_def, ierror)
+  subroutine particles_allocate(this, nat, totnat, allow_def, error)
     implicit none
 
     type(particles_t), intent(inout)  :: this
     integer, intent(in)               :: nat
     integer, intent(in), optional     :: totnat
     logical, intent(in), optional     :: allow_def
-    integer, intent(inout), optional  :: ierror
+    integer, intent(inout), optional  :: error
 
     ! ---
 
@@ -574,7 +574,7 @@ contains
 
     this%Z             = 1
 
-    call set_cell(this, (/ 1.0_DP, 1.0_DP, 1.0_DP /), ierror=ierror)
+    call set_cell(this, (/ 1.0_DP, 1.0_DP, 1.0_DP /), error=error)
 
     call update_elements(this)
 
@@ -806,18 +806,18 @@ contains
   !**********************************************************************
   ! Call to require an orthorhombic cell
   !**********************************************************************
-  subroutine particles_require_orthorhombic_cell(this, ierror)
+  subroutine particles_require_orthorhombic_cell(this, error)
     implicit none
 
     type(particles_t), intent(inout)  :: this
-    integer, intent(inout), optional  :: ierror
+    integer, intent(inout), optional  :: error
 
     ! ---
 
     this%orthorhombic_cell_is_required  = .true.
 
     if (.not. this%cell_is_orthorhombic) then
-       RAISE_ERROR("Orthorhombic cell is requested, however cell is already non-orthorhombic.", ierror)
+       RAISE_ERROR("Orthorhombic cell is requested, however cell is already non-orthorhombic.", error)
     endif
 
   endsubroutine particles_require_orthorhombic_cell

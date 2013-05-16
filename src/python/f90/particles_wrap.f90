@@ -12,7 +12,6 @@
 module particles_wrap
   use supplib
 
-  use data
   use particles
 
   implicit none
@@ -75,7 +74,7 @@ contains
 
   endsubroutine f_particles_init
 
-  subroutine f_particles_allocate(this_cptr, nat, ierror) &
+  subroutine f_particles_allocate(this_cptr, nat, error) &
        bind(C)
     use, intrinsic :: iso_c_binding
 
@@ -83,7 +82,7 @@ contains
 
     type(c_ptr),     value          :: this_cptr
     integer(c_int),  value          :: nat
-    integer(c_int),  intent(inout)  :: ierror
+    integer(c_int),  intent(inout)  :: error
 
     ! ---
 
@@ -92,7 +91,7 @@ contains
     ! ---
 
     call c_f_pointer(this_cptr, this)
-    call allocate(this, nat, ierror=ierror)
+    call allocate(this, nat, error=error)
 
   endsubroutine f_particles_allocate
 
@@ -135,7 +134,7 @@ contains
   endsubroutine f_particles_update_elements
 
 
-  subroutine f_particles_set_cell(this_cptr, cell, pbc, ierror) bind(C)
+  subroutine f_particles_set_cell(this_cptr, cell, pbc, error) bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -143,7 +142,7 @@ contains
     type(c_ptr),     value          :: this_cptr
     real(c_double)                  :: cell(3, 3)
     logical(c_bool)                 :: pbc(3)
-    integer(c_int),  intent(inout)  :: ierror
+    integer(c_int),  intent(inout)  :: error
 
     ! ---
 
@@ -152,12 +151,12 @@ contains
     ! ---
 
     call c_f_pointer(this_cptr, this)
-    call set_cell(this, cell, logical(pbc), ierror=ierror)
+    call set_cell(this, cell, logical(pbc), error=error)
 
   endsubroutine f_particles_set_cell
 
 
-  subroutine f_particles_set_lees_edwards(this_cptr, dx, dv, ierror) bind(C)
+  subroutine f_particles_set_lees_edwards(this_cptr, dx, dv, error) bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -165,7 +164,7 @@ contains
     type(c_ptr),     value          :: this_cptr
     real(c_double)                  :: dx(3)
     real(c_double)                  :: dv(3)
-    integer(c_int),  intent(inout)  :: ierror
+    integer(c_int),  intent(inout)  :: error
 
     ! ---
 
@@ -174,7 +173,7 @@ contains
     ! ---
 
     call c_f_pointer(this_cptr, this)
-    call set_lees_edwards(this, dx, dv, ierror=ierror)
+    call set_lees_edwards(this, dx, dv, error=error)
 
   endsubroutine f_particles_set_lees_edwards
 

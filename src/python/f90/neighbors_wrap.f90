@@ -149,14 +149,14 @@ contains
   endsubroutine f_neighbors_request_interaction_range
 
 
-  subroutine f_neighbors_update(this_cptr, p_cptr, ierror) bind(C)
+  subroutine f_neighbors_update(this_cptr, p_cptr, error) bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
 
     type(c_ptr),     value        :: this_cptr
     type(c_ptr),     value        :: p_cptr
-    integer(c_int),  intent(out)  :: ierror
+    integer(c_int),  intent(out)  :: error
 
     ! ---
 
@@ -167,7 +167,7 @@ contains
 
     call c_f_pointer(this_cptr, this)
     call c_f_pointer(p_cptr, p)
-    call update(this, p, ierror)
+    call update(this, p, error)
 
   endsubroutine f_neighbors_update
 
