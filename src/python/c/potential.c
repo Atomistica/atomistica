@@ -19,6 +19,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ====================================================================== */
+
 #include <Python.h>
 #define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
@@ -57,15 +58,15 @@ potential_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
   self = (potential_t *)type->tp_alloc(type, 0);
   if (self != NULL) {
 
-    /* FIXME: the offset *7* assumes the namespace is always atomistica.* */
-    name  = strdup(self->ob_type->tp_name + 11);
+    /* FIXME: the offset *12* assumes the namespace is always _atomistica.* */
+    name  = strdup(self->ob_type->tp_name + 12);
 
 #ifdef DEBUG
-    printf("[potential_new] Potential name: %s\n", name);
+    printf("[potential_new] Potential name: %s (%s)\n", name, self->ob_type->tp_name);
 #endif
 
     self->f90class  = NULL;
-    for (i = 0; i < N_CLASSES; i++) {
+    for (i = 0; i < N_POTENTIAL_CLASSES; i++) {
       if (!strcmp(name, potential_classes[i].name))
         self->f90class  = &potential_classes[i];
     }
@@ -103,6 +104,8 @@ potential_dealloc(potential_t *self)
 static int
 potential_init(potential_t *self, PyObject *args, PyObject *kwargs)
 {
+  int ierror = ERROR_NONE;
+
 #ifdef DEBUG
   printf("[potential_init] %p %p %p\n", self, args, kwargs);
 #endif
@@ -112,7 +115,10 @@ potential_init(potential_t *self, PyObject *args, PyObject *kwargs)
       return -1;
   }
 
-  self->f90class->init(self->f90obj);
+  self->f90class->init(self->f90obj, &ierror);
+
+  if (error_to_py(ierror))
+    return -1;
 
 #ifdef DEBUG
   printf("{potential_init}\n");
@@ -280,11 +286,43 @@ potential_bind_to(potential_t *self, PyObject *args)
 
 
 static PyObject *
+potential_set_Coulomb(potential_t *self, PyObject *args)
+{
+  int ierror = ERROR_NONE;
+  PyObject *coul;
+
+#ifdef DEBUG
+  printf("[potential_set_Coulomb] self = %p\n", self);
+#endif
+
+  if (!self->f90class->set_Coulomb) {
+    char errstr[1024];
+    sprintf(errstr, "Potential %s does not require a Coulomb solver",
+            self->f90class->name);
+    PyErr_SetString(PyExc_RuntimeError, errstr);
+    return NULL;
+  }
+
+  if (!PyArg_ParseTuple(args, "O", &coul))
+    return NULL; 
+
+  self->f90class->set_Coulomb(self->f90obj, coul, &ierror);
+
+  if (error_to_py(ierror))
+    return NULL;
+
+  Py_RETURN_NONE;
+}
+
+
+static PyObject *
 potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
 {
   static char *kwlist[] = {
     "particles",
     "neighbors",
+    "forces",
+    "charges",
     "epot_per_at",
     "epot_per_bond",
     "f_per_bond",
@@ -307,8 +345,9 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
   int ierror = ERROR_NONE;
 
   double epot;
-  PyObject *f;
+  PyObject *f = NULL;
   PyObject *wpot;
+  PyObject *q = NULL;
   PyObject *epot_per_at = NULL;
   PyObject *epot_per_bond = NULL;
   PyObject *f_per_bond = NULL;
@@ -331,8 +370,9 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
   printf("[potential_energy_and_forces] self = %p\n", self);
 #endif
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|O!O!O!O!O!", kwlist,
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|O!O!O!O!O!O!O!", kwlist,
 				   &particles_type, &a, &neighbors_type, &n,
+				   &PyArray_Type, &f, &PyArray_Type, &q,
 				   &PyBool_Type, &return_epot_per_at, 
 				   &PyBool_Type, &return_epot_per_bond, 
 				   &PyBool_Type, &return_f_per_bond,
@@ -342,13 +382,18 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
 
   epot = 0.0;
 
-  dims[0] = data_get_len(a->f90data);
-  dims[1] = 3;
-  strides[0] = dims[1]*NPY_SIZEOF_DOUBLE;
-  strides[1] = NPY_SIZEOF_DOUBLE;
-  f = (PyObject*) PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, strides,
-                              NULL, 0, NPY_FARRAY, NULL);
-  memset(PyArray_DATA(f), 0, dims[0]*dims[1]*NPY_SIZEOF_DOUBLE);
+  if (f) {
+    Py_INCREF(f);
+  }
+  else {
+    dims[0] = data_get_len(a->f90data);
+    dims[1] = 3;
+    strides[0] = dims[1]*NPY_SIZEOF_DOUBLE;
+    strides[1] = NPY_SIZEOF_DOUBLE;
+    f = (PyObject*) PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, strides,
+                                NULL, 0, NPY_FARRAY, NULL);
+    memset(PyArray_DATA(f), 0, dims[0]*dims[1]*NPY_SIZEOF_DOUBLE);
+  }
 
   dims[0] = 3;
   dims[1] = 3;
@@ -454,11 +499,13 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
 	 self->f90class->energy_and_forces);
 #endif
 
+  double *q_data = NULL;
+  if (q)  q_data = PyArray_DATA(q);
   self->f90class->energy_and_forces(self->f90obj, a->f90obj, n->f90obj,
-				    &epot, PyArray_DATA(f), PyArray_DATA(wpot),
-				    epot_per_at_ptr, epot_per_bond_ptr,
-				    f_per_bond_ptr, wpot_per_at_ptr,
-				    wpot_per_bond_ptr,
+				    q_data, &epot, PyArray_DATA(f),
+				    PyArray_DATA(wpot), epot_per_at_ptr,
+				    epot_per_bond_ptr, f_per_bond_ptr,
+				    wpot_per_at_ptr, wpot_per_bond_ptr,
 				    &ierror);
 
   /*
@@ -548,9 +595,12 @@ static PyMethodDef potential_methods[] = {
   { "register_data", (PyCFunction) potential_register_data, METH_VARARGS,
     "Register internal data fields with a particles object." },
   { "bind_to", (PyCFunction) potential_bind_to, METH_VARARGS,
-    "Bind this potential to a certain Particles and Neighbors object. This is to be called if either one changes." },
-  { "energy_and_forces", (PyCFunction) potential_energy_and_forces, METH_KEYWORDS,
-    "Compute the forces and return the potential energy." },
+    "Bind this potential to a certain Particles and Neighbors object. This is "
+    "to be called if either one changes." },
+  { "set_Coulomb", (PyCFunction) potential_set_Coulomb, METH_VARARGS,
+    "Set the object that handles Coulomb callbacks." },
+  { "energy_and_forces", (PyCFunction) potential_energy_and_forces,
+    METH_KEYWORDS, "Compute the forces and return the potential energy." },
   { NULL, NULL, 0, NULL }  /* Sentinel */
 };
 
@@ -558,7 +608,7 @@ static PyMethodDef potential_methods[] = {
 PyTypeObject potential_type = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
-    "atomistica.Potential",                     /*tp_name*/
+    "_atomistica.Potential",                    /*tp_name*/
     sizeof(potential_t),                        /*tp_basicsize*/
     0,                                          /*tp_itemsize*/
     (destructor)potential_dealloc,              /*tp_dealloc*/
