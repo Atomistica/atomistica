@@ -33,6 +33,7 @@
 #define RAISE_ERROR_WITH_KIND(error, kind, info, ...) { char error_h_info[1000]; sprintf(error_h_info, info, ## __VA_ARGS__ ); int error_h_line = __LINE__; int error_h_kind = kind; c_push_error_with_info(error_h_info, __FILE__, error_h_line, error_h_kind); if (error != NULL) { *error = error_h_kind; return; } else c_error_abort(error_h_kind); }
 #define PASS_ERROR(error) if (error != NULL && *error != ERROR_NONE) { int error_h_line = __LINE__; c_push_error(__FILE__, error_h_line, *error); return; }
 #define PASS_ERROR_WITH_RET(error, x) if (error != NULL && *error != ERROR_NONE) { int error_h_line = __LINE__; c_push_error(__FILE__, error_h_line, *error); return (x); }
+#define PASS_PYTHON_ERROR(error, res) { if (!res) { py_to_error(__FILE__, __LINE__, error); return; } }
 #define CLEAR_ERROR error_clear_stack();
 
 #ifdef __cplusplus

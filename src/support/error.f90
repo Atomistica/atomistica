@@ -116,7 +116,6 @@ module error_module
 
   save
   integer                :: error_stack_position  = 0       !% If this is zero, no error has occured
-  integer                :: error_mpi_myid = 0              !% MPI rank of process. Initialised by system_initialise()
   type(ErrorDescriptor)  :: error_stack(ERROR_STACK_SIZE)   !% Error stack
 
   ! ---
@@ -136,11 +135,6 @@ module error_module
   public :: push_error, push_error_with_info
   public :: get_error_string_and_clear, clear_error
 
-  ! ---
-
-  public  :: error_unit, error_mpi_myid
-  integer :: error_unit = -1
-
 contains
 
   !% Push a new error callback to the stack
@@ -158,6 +152,7 @@ contains
     error_stack_position  = error_stack_position + 1
 
     if (error_stack_position > ERROR_STACK_SIZE) then
+       write(*,*), get_error_string_and_clear()
        call system_abort("Fatal error: Error stack size too small.")
     endif
 
@@ -194,6 +189,7 @@ contains
     error_stack_position  = error_stack_position + 1
 
     if (error_stack_position > ERROR_STACK_SIZE) then
+       write(*,*), get_error_string_and_clear()
        call system_abort("Fatal error: Error stack size too small.")
     endif
 
@@ -247,11 +243,12 @@ contains
     if (present(error)) then
        if (-error < lbound(ERROR_STRINGS, 1) .or. &
            -error > ubound(ERROR_STRINGS, 1)) then
-          call system_abort("Fatal: error descriptor out of bounds. Did you initialise the error variable?")
+          !call system_abort("Fatal: error descriptor out of bounds. Did you initialise the error variable?")
+          str = "Traceback (most recent call last - error descriptor out of bounds)"
+       else
+          str = "Traceback (most recent call last - error kind " &
+               // trim(ERROR_STRINGS(-error)) // "):"
        endif
-
-       str = "Traceback (most recent call last - error kind " &
-            // trim(ERROR_STRINGS(-error)) // "):"
     else
        str = "Traceback (most recent call last)"
     endif
@@ -307,11 +304,10 @@ contains
 #endif
 
 #ifdef _MPI
-    write(unit=error_unit, fmt='(a,i0," ",a)') 'SYSTEM ABORT: proc=',error_mpi_myid,error_linebreak_string(trim(message),100)
+    write(*, fmt='(a,i0," ",a)') 'SYSTEM ABORT: proc=',-1,error_linebreak_string(trim(message),100)
 #else
-    write(unit=error_unit, fmt='(a," ",a)') 'SYSTEM ABORT:', error_linebreak_string(trim(message),100)
+    write(*, fmt='(a," ",a)') 'SYSTEM ABORT:', error_linebreak_string(trim(message),100)
 #endif
-    call flush(error_unit)
 
 #ifdef _MPI
     call MPI_Abort(MPI_COMM_WORLD, 1, PRINT_ALWAYS)
@@ -330,7 +326,7 @@ contains
     ! send ourselves a USR1 signal rather than aborting
     call kill(getpid(), SIGUSR1, status)
 #else
-    stop
+    stop 999
 #endif
 #endif
   end subroutine error_abort_with_message
