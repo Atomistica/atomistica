@@ -180,7 +180,7 @@ def write_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     # Classes
     #
 
-    s = "%s_class_t %s_classes[N_CLASSES] = {\n" % ( str, str )
+    s = "%s_class_t %s_classes[N_POTENTIAL_CLASSES] = {\n" % ( str, str )
     for f90name, f90class, name, register_data_ex in mods:
         s += "  {\n"
         s += "    \"%s\",\n" % name
