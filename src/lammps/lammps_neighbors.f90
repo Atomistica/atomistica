@@ -257,9 +257,9 @@ contains
 
     implicit none
 
-    type(C_PTR), value       :: this_cptr
-    integer,     value       :: el1, el2
-    real(DP),    intent(out) :: cutoff
+    type(C_PTR),    value       :: this_cptr
+    integer(C_INT), value       :: el1, el2
+    real(DP),       intent(out) :: cutoff
 
     ! ---
 
