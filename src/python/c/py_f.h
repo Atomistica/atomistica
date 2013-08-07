@@ -51,6 +51,7 @@ void get_full_error_string(char *);
 /* Pass an error from an F90-object to the Python runtime */
 
 int error_to_py(int ierror);
+void py_to_error(char *file, int line, int *ierror);
 
 
 /* Initialize an F90-object from a Python dictionary */

@@ -19,12 +19,15 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ====================================================================== */
+
 #include <Python.h>
 #define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
 #include <numpy/arrayobject.h>
 
 #include "py_f.h"
+
+#include "error.h"
 
 #define MAX_STR 100
 
@@ -42,6 +45,26 @@ error_to_py(int ierror)
   } else {
     return 0;
   }   
+}
+
+
+void
+py_to_error(char *file, int line, int *ierror)
+{
+  PyObject *ptype, *pvalue, *ptraceback;
+  PyErr_Fetch(&ptype, &pvalue, &ptraceback); 
+
+  c_push_error_with_info(PyString_AsString(pvalue), file, line,
+			 ERROR_UNSPECIFIED);
+
+  PyErr_Clear();
+
+  if (ierror != NULL) {
+    *ierror = ERROR_UNSPECIFIED;
+  }
+  else {
+    c_error_abort(ERROR_UNSPECIFIED);
+  }
 }
 
 
@@ -103,7 +126,7 @@ pydict_to_ptrdict(PyObject *dict, section_t *s)
 
   PyObject *t;
 
-  char errstr[120];
+  char errstr[1024];
 
 #ifdef DEBUG
   printf("[pydict_to_ptrdict] %p %p\n", dict, s);
@@ -376,6 +399,35 @@ pydict_to_ptrdict(PyObject *dict, section_t *s)
           Py_DECREF(arr);
         }
 
+	break;
+      case PK_ENUM:
+#ifdef DEBUG
+        printf("PK_ENUM, key = %s\n", key);
+#endif
+	if (!PyString_Check(value)) {
+	  sprintf(errstr,
+	          "Property '%s' of section '%s' should be a string.\n",
+		  p->name, p->parent->name);
+	  PyErr_SetString(PyExc_ValueError, errstr);
+	  return -1;
+        }
+	str = PyString_AS_STRING(value);
+
+	j = -1;
+	for (i = 0; i < p->tag; i++) {
+	  if (!strcmp(str, p->tag4 + i*p->tag2))
+	    j = i;
+        }
+
+	if (j < 0) {
+	  sprintf(errstr, "[ptrdict_set_property] Error: Could not find key "
+	          "'%s' in property '%s' of section '%s'.\n",
+	          str, p->name, p->parent->name);
+	  PyErr_SetString(PyExc_ValueError, errstr);
+	  return -1;
+        } else {
+	  *((int*) p->ptr) = j;
+        };
 	break;
       case PK_ARRAY2D:
 	if (!PyArray_Check(value)) {
