@@ -363,7 +363,7 @@ contains
     integer   :: i, ni, j, eli, elj, dbi, dbj, els, seedi, lasti
     real(DP)  :: dr(3), abs_dr, r_abs_dr, ri(3), fori(3)
     real(DP)  :: rho, drho, Fi, dFi
-    real(DP)  :: e, w(3, 3), cutoff_sq
+    real(DP)  :: e, w(3, 3), wij(3, 3), cutoff_sq
 
     real(DP)  :: phi, dphi, fac
     real(DP)  :: df(3)
@@ -397,12 +397,12 @@ contains
     !$omp& private(dphi, dr, fori, rho, drho, fac) &
     !$omp& private(i, j, ni, phi, ri, seedi, lasti) &
     !$omp& private(neb_n, neb, neb_dr, neb_abs_dr) &
-    !$omp& private(dbi, dbj) &
+    !$omp& private(dbi, dbj, wij) &
     !$omp& shared(nl, f, p) &
-    !$omp& shared(epot_per_at, this) &
+    !$omp& shared(epot_per_at, wpot_per_at, this) &
     !$omp& reduction(+:e) reduction(+:w)
 
-    call tls_init(p%nat, sca=1)
+    call tls_init(p%nat, sca=1, vec=1)
 
     !$omp do
     do i = 1, p%natloc
@@ -504,11 +504,18 @@ contains
 #endif
              df   = - ( dFi * fac + (dphi-phi*r_abs_dr)*r_abs_dr )*r_abs_dr * dr
 
-             fori        = fori       + df
-             VEC3(f, j)  = VEC3(f, j) - df
-             w           = w + (- outer_product(dr, df))
+             fori              = fori       + df
+             VEC3(tls_vec1, j) = VEC3(tls_vec1, j) - df
+             wij               = - outer_product(dr, df)
+             w                 = w + wij
+
+             if (present(wpot_per_at)) then
+                wij = wij/2
+                SUM_VIRIAL(wpot_per_at, i, wij)
+                SUM_VIRIAL(wpot_per_at, j, wij)
+             endif
           enddo
-          VEC3(f, i)  = VEC3(f, i) + fori
+          VEC3(tls_vec1, i)  = VEC3(tls_vec1, i) + fori
 
        endif
     enddo
@@ -516,7 +523,9 @@ contains
     e  = e + sum(tls_sca1(1:p%natloc))
 
     if (present(epot_per_at)) then
-       call tls_reduce(p%nat, sca1=epot_per_at)
+       call tls_reduce(p%nat, sca1=epot_per_at, vec1=f)
+    else
+       call tls_reduce(p%nat, vec1=f)
     endif
 
     !$omp end parallel
