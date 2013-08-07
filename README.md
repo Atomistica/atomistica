@@ -1,3 +1,6 @@
+Atomistica
+==========
+
 Atomistica is a library of interatomic potentials. It currently supports the
 potentials described in the following publication:
 
