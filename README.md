@@ -2,7 +2,7 @@ Atomistica
 ==========
 
 Atomistica is a library of interatomic potentials. It currently supports the
-potentials described in the following publication:
+potentials:
 
 *   J. Tersoff  
     "Modeling solid-state chemistry: Interatomic potentials for multicomponent systems"  
@@ -20,6 +20,9 @@ potentials described in the following publication:
     "Screened empirical bond-order potential for Si-C"  
     Phys. Rev. B 87, 205410 (2013) - http://dx.doi.org/10.1103/PhysRevB.87.205410  
     arXiv:1301.2142 - http://arxiv.org/abs/1301.2142
+
+*   General EAM potentials tabulated in the DYNAMO 'setfl' format.  
+    See http://www.ctcms.nist.gov/~cbecker/ for a database of potential datafiles.
 
 Atomistica can be used in two distinct manners:
 
