@@ -61,3 +61,47 @@ class JoinCalculators:
             if hasattr(c, "set_atoms"):
                 c.set_atoms(a)
 
+
+class LinearPotential:
+    """ Potential that is linear in some direction, i.e. a constant force
+    """
+    def __init__(self, force, mask=None):
+        self.force = force
+        self.mask = mask
+
+
+    def get_forces(self, a=None):
+        """Calculate atomic forces."""
+        if a is None:
+            a = self.a
+        forces = np.zeros([len(a), 3], dtype=float)
+        if self.mask is None:
+            forces[self.mask] = self.force
+        else:
+            forces[:] = self.force
+        return forces
+
+
+    def get_potential_energy(self, a=None):
+        """Calculate potential energy."""
+        if a is None:
+            a = self.a
+        if self.mask is None:
+            return -np.sum(np.dot(a.get_positions()[self.mask], self.force))
+        else:
+            return -np.sum(np.dot(a.get_positions(), self.force))
+
+
+    def get_potential_energies(self, a):
+        """Calculate the potential energies of all the atoms."""
+        raise NotImplementedError
+
+
+    def get_stress(self, a=None):
+        """Calculate stress tensor."""
+        return np.zeros(6, dtype=float)
+
+
+    def set_atoms(self, a):
+        """Assign an atoms object."""
+        self.a = a
