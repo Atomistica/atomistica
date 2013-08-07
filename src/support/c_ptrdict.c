@@ -1146,12 +1146,12 @@ void ptrdict_write_section(section_t *self, FILE *f, int indent)
       s = s->next;
     }
 
-    fprintf(f, "%s%s};\n", space, self->name);
+    fprintf(f, "%s};\n", space);
   }
 }
 
 
-/* Write ptrdicturation to a file. */
+/* Write ptrdict to a file. */
 void ptrdict_write(section_t *root, char *fn)
 {
   FILE *f;
@@ -1268,7 +1268,7 @@ void ptrdict_sf_read_section(section_t *self, parser_t *parser)
 }
 
 
-/* Read ptrdicturation from a stream. */
+/* Read ptrdict from a stream. */
 void ptrdict_from_stream(section_t *root, FILE *f)
 {
   /* Note: We might want to switch to XML, i.e., using libXML2 eventually.
@@ -1317,7 +1317,7 @@ void ptrdict_from_stream(section_t *root, FILE *f)
 }
 
 
-/* Read ptrdicturation from a file. */
+/* Read ptrdict from a file. */
 void ptrdict_read(section_t *root, char *fn)
 {
   FILE *f = fopen(fn, "r");
@@ -1334,7 +1334,7 @@ void ptrdict_read(section_t *root, char *fn)
 
 
 #ifndef __APPLE__
-/* Read ptrdicturation from a string. */
+/* Read ptrdict from a string. */
 void ptrdict_from_string(section_t *root, char *s)
 {
   FILE *f = fmemopen(s, strlen(s), "r");
