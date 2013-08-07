@@ -127,7 +127,8 @@ metadata = scanallmeta(srcdir)
 #print 'Writing factories...'
 
 mods2, fns2 = get_module_list(metadata, 'potentials',
-                              finterface_list = [ 'register_data' ],
+                              finterface_list = [ 'register_data',
+                                                  'set_Coulomb' ],
                               exclude_list = [ 'MolecularTightBinding',
                                                'VariableCharge',
                                                'ConstantForce',
@@ -153,7 +154,7 @@ lib_srcs += [ 'build/potentials_factory_f90.f90',
 f = open('build/have.inc', 'w')
 print >> f, '#ifndef __HAVE_INC'
 print >> f, '#define __HAVE_INC'
-for classabbrev, classname, classtype, s in mods2:
+for classabbrev, classname, classtype, s1, s2 in mods2:
     print >> f, '#define HAVE_{0}'.format(classabbrev.upper())
 print >> f, '#endif'
 f.close()
