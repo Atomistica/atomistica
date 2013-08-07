@@ -28,7 +28,7 @@
 
 #include "ptrdict.h"
 
-#define N_CLASSES %(n_classes)i
+#define N_POTENTIAL_CLASSES %(n_classes)i
 
 /*
  * Class definition
@@ -41,15 +41,16 @@ typedef struct __%(name)s_class_t {
   void (*free_instance)(void *);
 
   void (*register_data)(void *, void *, int *);
-  void (*init)(void *);
+  void (*init)(void *, int *);
   void (*bind_to)(void *, void *, void *, int *);
+  void (*set_Coulomb)(void *, void *, int *);
   void (*energy_and_forces)(void *, void *, void *, double *, double *,
 			    double *, double *, double *, double *, double *,
-			    double *, int *);
+			    double *, double *, int *);
 
 } %(name)s_class_t;
 
-extern %(name)s_class_t %(name)s_classes[N_CLASSES];
+extern %(name)s_class_t %(name)s_classes[N_POTENTIAL_CLASSES];
 
 #endif
 

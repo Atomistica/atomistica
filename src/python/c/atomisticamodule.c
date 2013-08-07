@@ -121,7 +121,7 @@ static PyMethodDef module_methods[] = {
 #endif
 
 static PyTypeObject
-potential_types[N_CLASSES];
+potential_types[N_POTENTIAL_CLASSES];
 
 PyMODINIT_FUNC
 init_atomistica(void)
@@ -144,7 +144,7 @@ init_atomistica(void)
       return;
 
     m = Py_InitModule3("_atomistica", module_methods,
-                       "Interface to the ATOMISTICA molecular dynamics Fortran "
+                       "Interface to the Atomistica molecular dynamics Fortran "
 		       "kernel.");
 
     if (m == NULL)
@@ -156,10 +156,10 @@ init_atomistica(void)
     Py_INCREF(&neighbors_type);
     PyModule_AddObject(m, "Neighbors", (PyObject *) &neighbors_type);
 
-    for (i = 0; i < N_CLASSES; i++) {
+    for (i = 0; i < N_POTENTIAL_CLASSES; i++) {
       potential_types[i] = potential_type;
       potential_types[i].tp_name = malloc(MAX_POTENTIAL_NAME);
-      strncpy((char*) potential_types[i].tp_name, "atomistica.",
+      strncpy((char*) potential_types[i].tp_name, "_atomistica.",
 	      MAX_POTENTIAL_NAME);
       strncat((char*) potential_types[i].tp_name, potential_classes[i].name,
 	      MAX_POTENTIAL_NAME);
