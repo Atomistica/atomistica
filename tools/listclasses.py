@@ -15,7 +15,7 @@ from meta import scanallmeta
 ###
 
 def get_finterfaces(fn):
-    iface = re.compile('^interface',re.IGNORECASE)
+    iface = re.compile('^\ *interface\ ',re.IGNORECASE)
 
     finterfaces = [ ]
 
@@ -24,8 +24,8 @@ def get_finterfaces(fn):
     while l:
         l = f.readline()
         if re.match(iface, l):
-            l = iface.sub('', l)
-            raise NotImplementedError
+            l = iface.sub('', l).strip().lower()
+            finterfaces += [ l ]
     f.close()
 
     return finterfaces
@@ -36,6 +36,8 @@ def get_module_list(metadata, interface, finterface_list=[], exclude_list=[]):
     mods = [ ]
     fns = [ ]
     depalready = [ ]
+
+    # Loop over all files and find modules
     for path, metapath in metadata.iteritems():
         for fn, meta in metapath.iteritems():
             if 'interface' in meta:
@@ -43,15 +45,15 @@ def get_module_list(metadata, interface, finterface_list=[], exclude_list=[]):
                     classtype = meta['classtype']
                     classname = meta['classname']
                     if not classname in exclude_list:
-                        s = 0
+                        s = [ ]
                         if len(finterface_list) > 0:
                             finterfaces_present = get_finterfaces(path+'/'+fn)
                             for finterface in finterface_list:
-                                if finterface in finterfaces_present:
-                                    s += 1
+                                if finterface.lower() in finterfaces_present:
+                                    s += [ True ]
                                 else:
-                                    s += 0
-                        mods += [ ( classtype[:-2], classtype, classname, s ) ]
+                                    s += [ False ]
+                        mods += [ [ classtype[:-2], classtype, classname ] + s ]
                         if 'dependencies' in meta:
                             dependencies = meta['dependencies'].split(',')
                             for depfn in dependencies:
