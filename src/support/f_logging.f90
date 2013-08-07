@@ -73,6 +73,7 @@ contains
 
     ! ---
 
+    call logging_stop
     if (mpi_id() == ROOT) then
        ilog = fopen(fn, mode=F_WRITE)
     endif
