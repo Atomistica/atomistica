@@ -263,7 +263,7 @@ void PairAtomistica::init_style()
   // find potential class in Atomistica potential database
 
   class_ = NULL;
-  for (int i = 0; i < N_CLASSES; i++) {
+  for (int i = 0; i < N_POTENTIAL_CLASSES; i++) {
     if (!strcmp(name_,potential_classes[i].name))
       class_ = &potential_classes[i];
   }
