@@ -4,22 +4,25 @@ Atomistica
 Atomistica is a library of interatomic potentials. It currently supports the
 potentials described in the following publication:
 
-  Lars Pastewka, Andreas Klemenz, Peter Gumbsch, Michael Moseler
-  Screened empirical bond-order potential for Si-C
-  Phys. Rev. B 87, 205410 (2013) - http://dx.doi.org/10.1103/PhysRevB.87.205410
-  arXiv:1301.2142 - http://arxiv.org/abs/1301.2142
+*   Lars Pastewka, Andreas Klemenz, Peter Gumbsch, Michael Moseler
+
+    Screened empirical bond-order potential for Si-C
+
+    Phys. Rev. B 87, 205410 (2013) - http://dx.doi.org/10.1103/PhysRevB.87.205410
+
+    arXiv:1301.2142 - http://arxiv.org/abs/1301.2142
 
 Atomistica can be used in two distinct manners:
 
-1. From Python using the Atomistic Simulation Environment
-   (ASE - see https://wiki.fysik.dtu.dk/ase/)
-   * Build instructions are in README.PYTHON
-   * Examples are in examples/ASE
+1.  From Python using the Atomistic Simulation Environment
+    (ASE - see https://wiki.fysik.dtu.dk/ase/)
+    * Build instructions are in README.PYTHON
+    * Examples are in examples/ASE
 
-2. From within LAMMPS as a separate pair style
-   (LAMMPS - see https://lammps.sandia.gov/)
-   * Build instructions are in README.LAMMPS
-   * Examples are in examples/LAMMPS
+2.  From within LAMMPS as a separate pair style
+    (LAMMPS - see https://lammps.sandia.gov/)
+    * Build instructions are in README.LAMMPS
+    * Examples are in examples/LAMMPS
 
 You need the following packages:
 
