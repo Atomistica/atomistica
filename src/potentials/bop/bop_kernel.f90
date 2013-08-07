@@ -499,6 +499,9 @@
 #define pe tls_sca1
 #define f  tls_vec1
 
+#define nebmax_sq zij
+    nebmax_sq = this%nebmax*this%nebmax
+
     ! Convert to real to avoid overflow
 #ifdef _OPENMP
     nebtot   = int(1 + real(neb_max, DP)*omp_get_thread_num()/omp_get_num_threads())
@@ -627,13 +630,10 @@
                       TOO_SMALL("nebmax", i, ierror_loc)
                    endif
 
-#ifdef SCREENING
-                   if (nebtot > neb_max .or. snebtot > sneb_max) then
-#else
                    if (nebtot > neb_max) then
-#endif
-                      TOO_SMALL("nebtot", i, ierror_loc)
+                      TOO_SMALL("nebavg", i, ierror_loc)
                    endif
+
 #endif
       
 #ifdef SCREENING
@@ -985,6 +985,14 @@
 #ifdef SCREENING
                    this%sneb_seed(nebtot) = snebtot
                    this%sneb_last(nebtot) = snebtot-1
+
+                   if (this%sneb_last(nebtot)-this%sneb_seed(nebtot)+1 > &
+                        nebmax_sq) then
+                      TOO_SMALL("nebmax", i, ierror_loc)
+                   endif
+                   if (snebtot > sneb_max) then
+                      TOO_SMALL("nebavg", i, ierror_loc)
+                   endif
 #endif
 
                    neb_last(i)            = nebtot
@@ -995,7 +1003,7 @@
                    endif
 
                    if (nebtot > neb_max) then
-                      TOO_SMALL("nebtot", i, ierror_loc)
+                      TOO_SMALL("nebavg", i, ierror_loc)
                    endif
 
                 endif cutoff_region
@@ -1531,9 +1539,10 @@
 
 #endif
 
-    epot  = epot + 0.5*sum(pe(1:nat))
+    epot  = epot + 0.5_DP*sum(pe(1:nat))
 
     if (present(epot_per_at)) then
+       tls_sca1 = 0.5_DP*tls_sca1
        call tls_reduce(nat, sca1=epot_per_at, vec1=f_inout)
     else
        call tls_reduce(nat, vec1=f_inout)
