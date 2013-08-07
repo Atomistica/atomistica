@@ -1,4 +1,4 @@
-"""Main MDCore module.
+"""Main Atomistica module.
 """
 
 import atexit
