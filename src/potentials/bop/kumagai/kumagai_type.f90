@@ -122,7 +122,7 @@
      module procedure COMPUTE_FUNC
   endinterface
 
-  public :: register
+  public :: register, REGISTER_FUNC
   interface register
      module procedure REGISTER_FUNC
   endinterface register
