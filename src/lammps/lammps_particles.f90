@@ -214,7 +214,11 @@ contains
     integer(C_INT),           value       :: nel
     integer(C_INT),           value       :: el_no
     integer(C_INT),           intent(out) :: Z
+#ifdef NO_BIND_C_OPTIONAL
+    integer(C_INT),           intent(out) :: error
+#else
     integer(C_INT), optional, intent(out) :: error
+#endif
 
     ! ---
 
@@ -222,12 +226,22 @@ contains
 
     ! ---
 
+#ifdef NO_BIND_C_OPTIONAL
+    error = ERROR_NONE
+#else
     INIT_ERROR(error)
+#endif
     call c_f_pointer(this_cptr, this)
 
     Z = atomic_number(a2s(c_f_string(el_str_cptr)))
     if (Z <= 0) then
+#ifdef NO_BIND_C_OPTIONAL
+       call push_error_with_info("Cannot find element '" // a2s(c_f_string(el_str_cptr)) // "'.", __FILE__, __LINE__)
+       error = ERROR_UNSPECIFIED
+       return
+#else
        RAISE_ERROR("Cannot find element '" // a2s(c_f_string(el_str_cptr)) // "'.", error)
+#endif
     endif
     this%nel = nel
     this%el2Z(el_no) = Z
