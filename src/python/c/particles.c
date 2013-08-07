@@ -19,6 +19,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ====================================================================== */
+
 #include <Python.h>
 #define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
@@ -26,6 +27,15 @@
 
 #include "atomisticamodule.h"
 
+/* Backport type definitions from Python 2.5's object.h */ 
+#if PY_VERSION_HEX < 0x02050000 
+typedef int Py_ssize_t; 
+typedef Py_ssize_t (*lenfunc)(PyObject *); 
+typedef PyObject *(*ssizeargfunc)(PyObject *, Py_ssize_t); 
+typedef PyObject *(*ssizessizeargfunc)(PyObject *, Py_ssize_t, Py_ssize_t); 
+typedef int(*ssizeobjargproc)(PyObject *, Py_ssize_t, PyObject *); 
+typedef int(*ssizessizeobjargproc)(PyObject *, Py_ssize_t, Py_ssize_t, PyObject *); 
+#endif /* PY_VERSION_HEX */ 
 
 /* Python object types:
    Particles - List of particles, including velocities and forces
@@ -69,6 +79,7 @@ particles_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
   if (self != NULL) {
     self->initialized = 0;
     f_particles_new(&self->f90obj);
+    f_particles_set_tag(self->f90obj, self);
   }
 
   return (PyObject *)self;
@@ -127,17 +138,28 @@ particles_allocate(particles_t *self, PyObject *args)
 static PyObject*
 particles_set_lees_edwards(particles_t *self, PyObject *value)
 {
-  PyArrayObject *dx_arr, *dv_arr = NULL;
+  PyObject *dx_arr, *dv_arr = NULL;
   double *dx, dv[3];
 
   int ierror = ERROR_NONE;
 
-  if (!PyArg_ParseTuple(value, "O&|O&",
-                        PyArray_Converter, &dx_arr,
-                        PyArray_Converter, &dv_arr))
+  if (!PyArg_ParseTuple(value, "O|O", &dx_arr, &dv_arr))
     return NULL;
+    
+  if (dv_arr == Py_None)
+    dv_arr = NULL;
+    
+  dx_arr = PyArray_FROMANY(dx_arr, NPY_DOUBLE, 1, 1, 0);
+    
+  if (dv_arr) {
+    dv_arr = PyArray_FROMANY(dv_arr, NPY_DOUBLE, 1, 1, 0);
+    if (!dv_arr) {
+      Py_DECREF(dx_arr);
+      return NULL;
+    }
+  }
 
-  if (PyArray_NDIM(dx_arr) != 1 || PyArray_DIM(dx_arr, 0) != 3) {
+  if (PyArray_DIM(dx_arr, 0) != 3) {
     PyErr_SetString(PyExc_TypeError, "dx needs to be 3 vector.");
     Py_DECREF(dx_arr);
     if (dv_arr) {
@@ -151,7 +173,7 @@ particles_set_lees_edwards(particles_t *self, PyObject *value)
   dv[1] = 0.0;
   dv[2] = 0.0;
   if (dv_arr) {
-    if (PyArray_NDIM(dv_arr) != 1 || PyArray_DIM(dv_arr, 0) != 3) {
+    if (PyArray_DIM(dv_arr, 0) != 3) {
       PyErr_SetString(PyExc_TypeError, "dv needs to be 3 vector.");
       Py_DECREF(dx_arr);
       Py_DECREF(dv_arr);
@@ -161,7 +183,7 @@ particles_set_lees_edwards(particles_t *self, PyObject *value)
     dv[1] = ((double *)  PyArray_DATA(dv_arr))[1];
     dv[2] = ((double *)  PyArray_DATA(dv_arr))[2];
   }
-
+  
   f_particles_set_lees_edwards(self->f90obj, dx, dv, &ierror);
   if (error_to_py(ierror))
       return NULL;
@@ -496,7 +518,7 @@ static PyMappingMethods particles_as_mapping = {
 PyTypeObject particles_type = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
-    "atomistica.Particles",                     /*tp_name*/
+    "_atomistica.Particles",                    /*tp_name*/
     sizeof(particles_t),                        /*tp_basicsize*/
     0,                                          /*tp_itemsize*/
     (destructor)particles_dealloc,              /*tp_dealloc*/

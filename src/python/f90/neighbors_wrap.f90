@@ -531,5 +531,51 @@ contains
     enddo
 
   endsubroutine f_pack_per_bond_3x3
+  
+  
+  !>
+  !! Set the tag that is stored in the neighbors_t
+  !<
+  subroutine f_neighbors_set_tag(this_cptr, tag) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(C_PTR), value  :: this_cptr
+    type(C_PTR), value  :: tag
+
+    ! ---
+
+    type(neighbors_t), pointer  :: this
+
+    ! ---
+   
+    call c_f_pointer(this_cptr, this)
+    this%tag = tag
+
+  endsubroutine f_neighbors_set_tag
+
+ 
+  !>
+  !! Get the tag that is stored in the neighbors_t
+  !<
+  subroutine f_neighbors_get_tag(this_cptr, tag) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(C_PTR), value        :: this_cptr
+    type(C_PTR), intent(out)  :: tag
+
+    ! ---
+
+    type(neighbors_t), pointer  :: this
+
+    ! ---
+   
+    call c_f_pointer(this_cptr, this)
+    tag = this%tag
+
+  endsubroutine f_neighbors_get_tag
 
 endmodule neighbors_wrap

@@ -19,6 +19,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ====================================================================== */
+
 #ifndef __PARTICLES_H
 #define __PARTICLES_H
 
@@ -58,6 +59,11 @@ void f_particles_inbox(void *);
 void f_particles_i_changed_positions(void *);
 
 void f_particles_get_data(void *, void **);
+
+void f_particles_set_tag(void *, void *);
+void f_particles_get_tag(void *, void **);
+
+int f_particles_get_nel(void *);
 
 PyObject *particles_update_elements(particles_t *self, PyObject *args);
 

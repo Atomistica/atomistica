@@ -248,5 +248,75 @@ contains
     data_cptr = c_loc(this%data)
 
   endsubroutine f_particles_get_data
+  
+  
+  !>
+  !! Set the tag that is stored in the particles_t
+  !<
+  subroutine f_particles_set_tag(this_cptr, tag) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(C_PTR), value  :: this_cptr
+    type(C_PTR), value  :: tag
+
+    ! ---
+
+    type(particles_t), pointer  :: this
+
+    ! ---
+   
+    call c_f_pointer(this_cptr, this)
+    this%tag = tag
+
+  endsubroutine f_particles_set_tag
+
+ 
+  !>
+  !! Get the tag that is stored in the particles_t
+  !<
+  subroutine f_particles_get_tag(this_cptr, tag) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(C_PTR), value        :: this_cptr
+    type(C_PTR), intent(out)  :: tag
+
+    ! ---
+
+    type(particles_t), pointer  :: this
+
+    ! ---
+   
+    call c_f_pointer(this_cptr, this)
+    tag = this%tag
+
+  endsubroutine f_particles_get_tag
+
+
+  !>
+  !! Return number of elements of this particles object
+  !<
+  function f_particles_get_nel(this_cptr) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(c_ptr), value :: this_cptr
+
+    integer(c_int)     :: f_particles_get_nel
+
+    ! ---
+
+    type(particles_t), pointer :: this
+
+    ! ---
+
+    call c_f_pointer(this_cptr, this)
+    f_particles_get_nel  = this%nel
+
+  endfunction f_particles_get_nel
 
 endmodule particles_wrap

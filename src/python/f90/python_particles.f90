@@ -172,6 +172,12 @@ module particles
      integer                :: el2Z(MAX_Z)   !> id - i.e. from 1 to nel
      integer                :: Z2el(MAX_Z)   !> reverse mapping
 
+     !
+     ! Tag - this is used to attach the umbrella Python instance
+     !
+
+     type(C_PTR)            :: tag
+
   endtype particles_t
 
   public :: init

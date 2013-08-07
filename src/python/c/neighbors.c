@@ -43,6 +43,7 @@ neighbors_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self = (neighbors_t *)type->tp_alloc(type, 0);
     if (self != NULL) {
       f_neighbors_new(&self->f90obj);
+      f_neighbors_set_tag(self->f90obj, self);
     }
 
     return (PyObject *)self;
@@ -303,7 +304,7 @@ static PyMethodDef neighbors_methods[] = {
 PyTypeObject neighbors_type = {
     PyObject_HEAD_INIT(NULL)
     0,                                          /*ob_size*/
-    "atomistica.Neighbors",                     /*tp_name*/
+    "_atomistica.Neighbors",                    /*tp_name*/
     sizeof(neighbors_t),                        /*tp_basicsize*/
     0,                                          /*tp_itemsize*/
     (destructor)neighbors_dealloc,              /*tp_dealloc*/

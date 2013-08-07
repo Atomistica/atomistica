@@ -66,4 +66,7 @@ void f_get_all_neighbors_vec(void *, int *, int *, double *, double *);
 void f_pack_per_bond_scalar(void *, double *, double *);
 void f_pack_per_bond_3x3(void *, double *, double *);
 
+void f_neighbors_set_tag(void *, void *);
+void f_neighbors_get_tag(void *, void **);
+
 #endif

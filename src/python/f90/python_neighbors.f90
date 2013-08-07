@@ -127,6 +127,12 @@ module neighbors
 
      real(DP)                    :: avgnn           !< Average number of neighbors
 
+     !
+     ! Tag - this is used to attach the umbrella Python instance
+     !
+
+     type(C_PTR)                 :: tag
+
   endtype neighbors_t
 
 
