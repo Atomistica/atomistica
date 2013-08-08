@@ -70,6 +70,8 @@ def walkfunc(d, dirname, fns):
         if os.path.isfile(fullfn):
             if fn.split('.')[-1] in srcexts:
                 dd[fn] = scanmeta(fullfn)
+        elif os.path.islink(fullfn):
+            os.path.walk(fullfn, walkfunc, d)
     d[dirname] = dd
 
 
