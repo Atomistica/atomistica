@@ -60,3 +60,37 @@ for i in `find src/lammps src/potentials src/python src/support -name "*.f90"`; 
     fi
 
 done
+
+# .py files
+for i in `find src/lammps src/potentials src/python src/support -name "*.py"`; do
+
+    if [ "$(grep ${NDELIM1} $i | wc -l)" -gt 0 ]; then
+
+    echo "proprietary: $i"
+
+    sed "/# ${NDELIM1}/,/# ${DELIM}/d" $i > $i.tmp
+    cat ${ROOT}/py_header_n.txt $i.tmp > $i
+    rm $i.tmp
+
+    else
+
+    if [ "$(grep ${DELIM} $i | wc -l)" -gt 0 ]; then
+
+    echo "GPL: $i"
+
+    sed "/# ${DELIM}/,/# ${DELIM}/d" $i > $i.tmp
+    cat ${ROOT}/py_header.txt $i.tmp > $i
+    rm $i.tmp
+
+    else
+
+    echo "GPL: $i"
+
+    cat ${ROOT}/py_header.txt $i > $i.tmp
+    mv $i.tmp $i
+
+    fi
+
+    fi
+
+done
