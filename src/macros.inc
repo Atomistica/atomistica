@@ -190,7 +190,7 @@
 
 #ifdef LAMMPS
 
-#define SUM_VIRIAL(a, i, b)  a(1, i) = a(1, i) + b(1, 1) ; a(2, i) = a(2, i) + b(2, 2) ; a(3, i) = a(3, i) + b(3, 3) ; a(4, i) = a(4, i) + b(2, 1) ; a(5, i) = a(5, i) + b(3, 1) ; a(6, i) = a(6, i) + b(3, 2)
+#define SUM_VIRIAL(a, i, b)  a(1, i) = a(1, i) - b(1, 1) ; a(2, i) = a(2, i) - b(2, 2) ; a(3, i) = a(3, i) - b(3, 3) ; a(4, i) = a(4, i) - b(2, 1) ; a(5, i) = a(5, i) - b(3, 1) ; a(6, i) = a(6, i) - b(3, 2)
 
 #else
 
