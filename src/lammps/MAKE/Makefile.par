@@ -1,4 +1,6 @@
-# openmpi = Fedora Core 6, mpic++, OpenMPI-1.1, FFTW2
+# The current set of flags is for Intel C++ (icc) and Atomistica compiled
+# with Intel Fortran (ifort). See comments below for how to use the GNU
+# compilers.
 
 SHELL = /bin/sh
 
@@ -7,12 +9,12 @@ SHELL = /bin/sh
 # specify flags and libraries needed for your compiler
 
 CC =		mpic++
-CCFLAGS =	-O3 -xHost -funroll-loops -unroll-aggressive -no-prec-sqrt -fstrict-aliasing -openmp
+CCFLAGS =	-g -O3 -xHost -funroll-loops -unroll-aggressive -no-prec-sqrt -fstrict-aliasing
 SHFLAGS =	-fPIC
 DEPFLAGS =	-M
 
 LINK =		mpic++
-LINKFLAGS =	-O -openmp
+LINKFLAGS =	-g -O3
 LIB =           -lstdc++
 SIZE =		size
 
@@ -48,9 +50,9 @@ MPI_LIB =
 # PATH = path for FFT library
 # LIB = name of FFT library
 
-FFT_INC =      
+FFT_INC = -DHAVE_FFTW3 -I/usr/local/fftw/3.3-a1/double/include
 FFT_PATH = 
-FFT_LIBS =
+FFT_LIBS = -L/usr/local/fftw/3.3-a1/double/lib -lfftw3
 
 # JPEG library, OPTIONAL
 # see discussion in doc/Section_start.html#2_2 (step 7)
@@ -63,22 +65,25 @@ JPG_INC =
 JPG_PATH = 	
 JPG_LIB =	
 
-# NetCDF libraries
-NETCDF_INC = `nc-config --cflags`
-NETCDF_PATH =
-NETCDF_LIB = `nc-config --libs` -lnetcdf_c++
-
 # LAPACK libraries
+# The following lines should work for Intel MKL
 LAPACK_INC = $(MKLROOT)/include -DHAVE_MKL
 LAPACK_PATH = #-L$(MKLROOT)/lib/intel64
-#LAPACK_LIB = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_lapack -lmkl_core -liomp5 -pthread
+#LAPACK_LIB = -mkl=parallel
 LAPACK_LIB = -mkl=sequential
+# Alternatively, use default LAPACK
+#LAPACK_INC =
+#LAPACK_PATH =
+#LAPACK_LIB = -llapack -lblas
 
-# MDCORE stuff
-MDCORE_ROOT = /j1a/pas/source/mdcore
-MDCORE_INC = -I$(MDCORE_ROOT)/build_lammps -I$(MDCORE_ROOT)/src/support
-MDCORE_PATH = -L$(MDCORE_ROOT)/build_lammps
-MDCORE_LIB = -lmdcore -lifcore -lifport
+# ATOMISTICA stuff
+ATOMISTICA_FLAVOR = atomistica
+ATOMISTICA_INC = -I/W1/pas/source/$(ATOMISTICA_FLAVOR)/build_lammps -I/W1/pas/source/$(ATOMISTICA_FLAVOR)/src/support
+ATOMISTICA_PATH = -L/W1/pas/source/$(ATOMISTICA_FLAVOR)/build_lammps
+# The following lines should work for the Intel compilers
+ATOMISTICA_LIB = -latomistica -lifcore -lifport -lmpi_f77
+# For gcc/gfortran use
+#ATOMISTICA_LIB = -latomistica -lgfortran
 
 # ---------------------------------------------------------------------
 # build rules and dependencies
@@ -87,9 +92,14 @@ MDCORE_LIB = -lmdcore -lifcore -lifport
 include	Makefile.package.settings
 include	Makefile.package
 
-EXTRA_INC = $(LMP_INC) $(PKG_INC) $(MPI_INC) $(FFT_INC) $(JPG_INC) $(PKG_SYSINC) $(NETCDF_INC) $(MDCORE_INC)
-EXTRA_PATH = $(PKG_PATH) $(MPI_PATH) $(FFT_PATH) $(JPG_PATH) $(PKG_SYSPATH) $(NETCDF_PATH) $(MDCORE_PATH) $(LAPACK_PATH)
-EXTRA_LIB = $(PKG_LIB) $(MPI_LIB) $(FFT_LIB) $(JPG_LIB) $(PKG_SYSLIB) $(NETCDF_LIB) $(MDCORE_LIB) $(LAPACK_LIB)
+EXTRA_INC = $(LMP_INC) $(PKG_INC) $(MPI_INC) $(FFT_INC) $(JPG_INC) $(PKG_SYSINC) $(ATOMISTICA_INC)
+EXTRA_PATH = $(PKG_PATH) $(MPI_PATH) $(FFT_PATH) $(JPG_PATH) $(PKG_SYSPATH) $(ATOMISTICA_PATH) $(LAPACK_PATH)
+EXTRA_LIB = $(PKG_LIB) $(MPI_LIB) $(FFT_LIB) $(JPG_LIB) $(PKG_SYSLIB) $(ATOMISTICA_LIB) $(LAPACK_LIB)
+
+# Path to src files
+
+vpath %.cpp ..
+vpath %.h ..
 
 # Link target
 
