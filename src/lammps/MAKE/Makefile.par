@@ -50,7 +50,7 @@ MPI_LIB =
 # PATH = path for FFT library
 # LIB = name of FFT library
 
-FFT_INC = -DHAVE_FFTW3 -I/usr/local/fftw/3.3-a1/double/include
+FFT_INC = -DFFT_FFTW3 -I/usr/local/fftw/3.3-a1/double/include
 FFT_PATH = 
 FFT_LIBS = -L/usr/local/fftw/3.3-a1/double/lib -lfftw3
 
