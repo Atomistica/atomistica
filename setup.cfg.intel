@@ -1,3 +1,6 @@
+# Configuration file for the Intel compilers (icc/ifort).
+# Rename to setup.cfg.
+
 [config_fc]
 fcompiler=intelem
 f90flags=-fpp -fPIC
