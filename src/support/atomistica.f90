@@ -47,7 +47,7 @@ module atomistica
 contains
 
   !>
-  !! Initialize MDCORE
+  !! Initialize Atomistica
   !!
   !! Open log file, print a greetings message and start the timer.
   !<
@@ -79,13 +79,14 @@ contains
     call logging_start("md.log")
 
 #ifdef LAMMPS
-    call prscrlog("Welcome to - LAMMPS+MDCORE -")
+    call prscrlog("Welcome to - LAMMPS+Atomistica -")
 #else
-    call prscrlog("Welcome to - MDCORE -")
+    call prscrlog("Welcome to - Atomistica -")
 #endif
     call prscrlog
-    call prscrlog("   MDCORE revision:      " // trim(atomistica_revision))
-    call prscrlog("   MDCORE URL:           " // trim(atomistica_url))
+    call prscrlog("   Atomistica revision:  " // trim(atomistica_revision))
+    call prscrlog("   Atomistica rev date:  " // trim(atomistica_date))
+    call prscrlog("   Atomistica URL:       " // trim(atomistica_url))
 #ifdef HAVE_MKL
     call mklgetversionstring(mklversion)
     call prscrlog("   MKL version:          " // trim(mklversion))

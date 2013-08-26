@@ -1,6 +1,7 @@
-#! /bin/bash
+#! /bin/base
 
-atomistica_rev=$( cd $1 ; git describe --always --tags --dirty )
+atomistica_revision=$( cd $1 ; git describe --always --tags --dirty )
+atomistica_date=$( cd $1 ; git log -1 --format=%ct | awk '{print strftime("%d%b%y",$1)}' )
 atomistica_url=$( cd $1 ; git config --get remote.origin.url )
 h=`hostname`
 m=`uname -m`
@@ -29,19 +30,21 @@ for i in "$@"; do
 done
 
 
-if [[ $atomistica_rev == "exported" ]]; then
+if [[ $atomistica_revision == "exported" ]]; then
     if [[ -a $1/REV ]]; then
-	atomistica_rev="$atomistica_rev, `cat $1/REV`"
+	atomistica_revsion="$atomistica_revision, `cat $1/REV`"
     fi
 else
-    echo $atomistica_rev > $1/REV
+    echo $atomistica_revision > $1/REV
+    echo $atomistica_date > $1/REV_DATE
 fi
 
 cat<<EOF > $2/versioninfo.f90
 module versioninfo
 implicit none
 integer, private, parameter :: MAXSTRLEN = 1000
-character(MAXSTRLEN)  :: atomistica_revision  = "$atomistica_rev"
+character(MAXSTRLEN)  :: atomistica_revision  = "$atomistica_revision"
+character(MAXSTRLEN)  :: atomistica_date      = "$atomistica_date"
 character(MAXSTRLEN)  :: atomistica_url       = "$atomistica_url"
 character(MAXSTRLEN)  :: builddate            = __DATE__ // " " // __TIME__
 character(MAXSTRLEN)  :: buildhost            = "$h"
