@@ -62,7 +62,7 @@ for i in `find src/lammps src/potentials src/python src/support -name "*.f90"`; 
 done
 
 # .py files
-for i in `find src/lammps src/potentials src/python src/support -name "*.py"`; do
+for i in `find src/lammps src/potentials src/python src/support tests -name "*.py"`; do
 
     if [ "$(grep ${NDELIM1} $i | wc -l)" -gt 0 ]; then
 

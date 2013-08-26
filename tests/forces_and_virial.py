@@ -1,10 +1,33 @@
 #! /usr/bin/env python
 
+# ======================================================================
+# Atomistica - Interatomic potential library
+# https://github.com/pastewka/atomistica
+# Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others.
+# See the AUTHORS file in the top-level Atomistica directory.
+#
+# Copyright (2005-2013) Fraunhofer IWM
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ======================================================================
+
 import sys
 
 import unittest
 
 import ase
+from ase.units import mol
 
 from ase.lattice.cubic import Diamond, FaceCenteredCubic, SimpleCubic
 from ase.lattice.cubic import BodyCenteredCubic
@@ -17,16 +40,33 @@ from atomistica.tests import test_forces, test_virial
 
 ###
 
-sx         = 2
-dx         = 1e-6
-dev_thres  = 1e-4
+sx = 2
+dx = 1e-6
+tol = 1e-4
+
+###
+
+def random_solid(els, density):
+    syms = [ ]
+    nat = 0
+    for sym, n in els:
+        syms += n*[sym]
+        nat += n
+    r = np.random.rand(nat, 3)
+    a = ase.Atoms(syms, positions=r, cell=[1,1,1], pbc=True)
+
+    mass = np.sum(a.get_masses())
+    a0 = ( 1e24*mass/(density*mol) )**(1./3)
+    a.set_cell([a0,a0,a0], scale_atoms=True)
+
+    return a
 
 ###
 
 tests  = [
     ( r6, dict(el1='Si', el2='Si', A=1.0, r0=1.0, cutoff=5.0),
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
-    ( Brenner,   Erhart_PRB_71_035211_SiC,
+    ( Brenner, Erhart_PRB_71_035211_SiC,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
         ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
@@ -36,7 +76,7 @@ tests  = [
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
         ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
                           size=[sx,sx,sx]) ) ] ),
-    ( Brenner,   Henriksson_PRB_79_114107_FeC,
+    ( Brenner, Henriksson_PRB_79_114107_FeC,
       [ dict( name='dia-C', struct=Diamond('C', size=[sx,sx,sx]) ),
         dict( name='bcc-Fe',
               struct=BodyCenteredCubic('Fe', size=[sx,sx,sx]) ),
@@ -50,16 +90,24 @@ tests  = [
         dict( name='B3-Fe-C',
               struct=B3( [ 'Fe', 'C' ], size=[sx,sx,sx], latticeconstant=4.0) ),
         ] ),
-    ( Kumagai,    Kumagai_CompMaterSci_39_457_Si,
+    ( Kumagai, Kumagai_CompMaterSci_39_457_Si,
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
     ( KumagaiScr, Kumagai_CompMaterSci_39_457_Si__Scr,
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
-    ( Tersoff,    Tersoff_PRB_39_5566_Si_C,
+    ( Tersoff, Tersoff_PRB_39_5566_Si_C,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
     ( TersoffScr, Tersoff_PRB_39_5566_Si_C__Scr,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
+    ( Rebo2, None,
+      [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
+        ( 'random-C-H', random_solid( [('C',50),('H',10)], 3.0 ) ),
+        ] ),
+    ( Rebo2Scr, None,
+      [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
+        ( 'random-C-H', random_solid( [('C',50),('H',10)], 3.0 ) ),
+        ] ),
     ]
 
 ###
@@ -73,6 +121,13 @@ def run_forces_and_virial_test(test=None):
                     if '__ref__' in par:
                         if par['__ref__'].lower().find(keyword.lower()) != -1:
                             found = True
+            try:
+                potname = pot.__name__
+            except:
+                potname = pot.__class__.__name__
+            for keyword in sys.argv[1:]:
+                if potname.lower().find(keyword.lower()) != -1:
+                    found = True
             if not found:
                 continue
 
@@ -115,7 +170,7 @@ def run_forces_and_virial_test(test=None):
                 ffd, f0, maxdf  = test_forces(a, dx=dx)
         
                 if test is None:
-                    if abs(maxdf) < dev_thres:
+                    if abs(maxdf) < tol:
                         print "forces .ok."
                     else:
                         print "forces .failed."
@@ -127,13 +182,13 @@ def run_forces_and_virial_test(test=None):
                         print "f - numerically"
                         print ffd
                 else:
-                    test.assertTrue(abs(maxdf) < dev_thres,
+                    test.assertTrue(abs(maxdf) < tol,
                                     msg=errmsg+'; forces')
 
                 sfd, s0, maxds  = test_virial(a, de=dx)
 
                 if test is None:
-                    if abs(maxds) < dev_thres:
+                    if abs(maxds) < tol:
                         print "virial .ok."
                     else:
                         print "virial .failed."
@@ -145,7 +200,7 @@ def run_forces_and_virial_test(test=None):
                         print "s - numerically"
                         print sfd
                 else:
-                    test.assertTrue(abs(maxds) < dev_thres,
+                    test.assertTrue(abs(maxds) < tol,
                                     msg=errmsg+'; virial')
             
                 a.rattle(0.5)

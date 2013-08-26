@@ -66,3 +66,4 @@ interface to Atomistica.
 
      python bulk_properties.py
      python forces_and_virial.py
+     python rebo2_molecules.py
