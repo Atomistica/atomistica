@@ -19,8 +19,8 @@ Empirical bond-order potentials:
     "Modeling solid-state chemistry: Interatomic potentials for multicomponent systems"  
     Phys. Rev. B 39, 5566 (1989) - http://dx.doi.org/10.1103/PhysRevB.39.5566
 
-*   Donald W. Brenner, Olga A. Shenderova, Judith A. Harrison, Steven J. Stuart, Boris Ni, Susan B. Sinnott
-    "A second-generation reactive empirical bond order (REBO) potential energy expression for hydrocarbons"
+*   Donald W. Brenner, Olga A. Shenderova, Judith A. Harrison, Steven J. Stuart, Boris Ni, Susan B. Sinnott   
+    "A second-generation reactive empirical bond order (REBO) potential energy expression for hydrocarbons"   
     J. Phys.: Condens. Matter 14, 783 (2002) - http://dx.doi.org/10.1088/0953-8984/14/4/312
 
 *   Paul Erhart, Karsten Albe  
@@ -33,8 +33,8 @@ Empirical bond-order potentials:
 
 Screened empirical bond-order potentials:
 
-*   Lars Pastewka, Pablo Pou, Ruben Perez, Peter Gumbsch, Michael Moseler
-    "Describing bond-breaking processes by reactive potentials: Importance of an environment-dependent interaction range"
+*   Lars Pastewka, Pablo Pou, Ruben Perez, Peter Gumbsch, Michael Moseler   
+    "Describing bond-breaking processes by reactive potentials: Importance of an environment-dependent interaction range"   
     Phys. Rev. B 78, 161402(R) (2008) - http://dx.doi.org/10.1103/PhysRevB.78.161402
 
 *   Lars Pastewka, Andreas Klemenz, Peter Gumbsch, Michael Moseler  
@@ -42,9 +42,9 @@ Screened empirical bond-order potentials:
     Phys. Rev. B 87, 205410 (2013) - http://dx.doi.org/10.1103/PhysRevB.87.205410  
     arXiv:1301.2142 - http://arxiv.org/abs/1301.2142
 
-*   A general overview on bond-order potentials can be found in
-    Lars Pastewka, Matous Mrovec, Michael Moseler, Peter Gumbsch
-    "Bond order potentials for fracture, wear, and plasticity"
+*   A general overview on bond-order potentials can be found in   
+    Lars Pastewka, Matous Mrovec, Michael Moseler, Peter Gumbsch   
+    "Bond order potentials for fracture, wear, and plasticity"   
     MRS Bulletin 37, 493 (2012) - http://dx.doi.org/10.1557/mrs.2012.94
 
 Embedded-atom method potentials:
@@ -62,13 +62,13 @@ intructions below.)
 
 Currently supported engines are...
 
-1.  ...the Atomistic Simulation Environment
+1.  ...the Atomistic Simulation Environment   
     (ASE - see https://wiki.fysik.dtu.dk/ase/)
     * Build instructions are in README.PYTHON
     * Examples are in examples/ASE
     * Tests are in tests
 
-2.  ...the Large-scale Atomic/Molecular Massively Parallel Simulator
+2.  ...the Large-scale Atomic/Molecular Massively Parallel Simulator   
     (LAMMPS - see https://lammps.sandia.gov/)
     * Build instructions are in README.LAMMPS
     * Examples are in examples/LAMMPS
