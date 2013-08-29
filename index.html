@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Atomistica by pastewka</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Atomistica</h1>
+        <h2>Atomistica is a library of interatomic potentials that is compatible with ASE and LAMMPS</h2>
+        <a href="https://github.com/pastewka/atomistica" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a name="atomistica" class="anchor" href="#atomistica"><span class="octicon octicon-link"></span></a>Atomistica</h1>
+
+<p>Atomistica is a library of interatomic potentials written in Fortran. It is
+designed to be used with different computational engines. Currently supported
+are ASE and LAMMPS (see below).</p>
+
+<h2>
+<a name="supported-interatomic-potentials" class="anchor" href="#supported-interatomic-potentials"><span class="octicon octicon-link"></span></a>Supported interatomic potentials</h2>
+
+<p>Atomistica implements the potentials that are documented in the following
+publications. Others that employ identical functional forms can be used by
+adjusting the parameter set of one of the below.</p>
+
+<p>Empirical bond-order potentials:</p>
+
+<ul>
+<li><p>J. Tersoff<br>
+"Modeling solid-state chemistry: Interatomic potentials for multicomponent systems"<br>
+Phys. Rev. B 39, 5566 (1989) - <a href="http://dx.doi.org/10.1103/PhysRevB.39.5566">http://dx.doi.org/10.1103/PhysRevB.39.5566</a></p></li>
+<li><p>Donald W. Brenner, Olga A. Shenderova, Judith A. Harrison, Steven J. Stuart, Boris Ni, Susan B. Sinnott<br>
+"A second-generation reactive empirical bond order (REBO) potential energy expression for hydrocarbons"<br>
+J. Phys.: Condens. Matter 14, 783 (2002) - <a href="http://dx.doi.org/10.1088/0953-8984/14/4/312">http://dx.doi.org/10.1088/0953-8984/14/4/312</a></p></li>
+<li><p>Paul Erhart, Karsten Albe<br>
+"Analytical potential for atomistic simulations of silicon, carbon, and silicon carbide"<br>
+Phys. Rev. B 71, 035211 (2005) - <a href="http://dx.doi.org/10.1103/PhysRevB.71.035211">http://dx.doi.org/10.1103/PhysRevB.71.035211</a></p></li>
+<li><p>T. Kumagai, S. Izumi, S. Hara, S. Sakai<br>
+"Development of bond-order potentials that can reproduce the elastic constants and melting point of silicon for classical molecular dynamics simulation"<br>
+Comp. Mater. Sci. 39, 457 (2007) - <a href="http://dx.doi.org/10.1016/j.commatsci.2006.07.013">http://dx.doi.org/10.1016/j.commatsci.2006.07.013</a></p></li>
+</ul><p>Screened empirical bond-order potentials:</p>
+
+<ul>
+<li><p>Lars Pastewka, Pablo Pou, Ruben Perez, Peter Gumbsch, Michael Moseler<br>
+"Describing bond-breaking processes by reactive potentials: Importance of an environment-dependent interaction range"<br>
+Phys. Rev. B 78, 161402(R) (2008) - <a href="http://dx.doi.org/10.1103/PhysRevB.78.161402">http://dx.doi.org/10.1103/PhysRevB.78.161402</a></p></li>
+<li><p>Lars Pastewka, Andreas Klemenz, Peter Gumbsch, Michael Moseler<br>
+"Screened empirical bond-order potential for Si-C"<br>
+Phys. Rev. B 87, 205410 (2013) - <a href="http://dx.doi.org/10.1103/PhysRevB.87.205410">http://dx.doi.org/10.1103/PhysRevB.87.205410</a><br>
+arXiv:1301.2142 - <a href="http://arxiv.org/abs/1301.2142">http://arxiv.org/abs/1301.2142</a></p></li>
+<li><p>A general overview on bond-order potentials can be found in<br>
+Lars Pastewka, Matous Mrovec, Michael Moseler, Peter Gumbsch<br>
+"Bond order potentials for fracture, wear, and plasticity"<br>
+MRS Bulletin 37, 493 (2012) - <a href="http://dx.doi.org/10.1557/mrs.2012.94">http://dx.doi.org/10.1557/mrs.2012.94</a></p></li>
+</ul><p>Embedded-atom method potentials:</p>
+
+<ul>
+<li>  General EAM potentials tabulated in the DYNAMO 'setfl' format.<br>
+See <a href="http://www.ctcms.nist.gov/%7Ecbecker/">http://www.ctcms.nist.gov/~cbecker/</a> for a database of potential datafiles.</li>
+</ul><h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Atomistica can be used in two distinct manners. It is recommended to compile the
+ASE interface first and run the tests in the "tests" subdirectory. (See ASE
+intructions below.)</p>
+
+<p>Currently supported engines are...</p>
+
+<ol>
+<li>
+<p>...the Atomistic Simulation Environment<br>
+(ASE - see <a href="https://wiki.fysik.dtu.dk/ase/">https://wiki.fysik.dtu.dk/ase/</a>)</p>
+
+<ul>
+<li>Build instructions are in README.PYTHON</li>
+<li>Examples are in examples/ASE</li>
+<li>Tests are in tests</li>
+</ul>
+</li>
+<li>
+<p>...the Large-scale Atomic/Molecular Massively Parallel Simulator<br>
+(LAMMPS - see <a href="https://lammps.sandia.gov/">https://lammps.sandia.gov/</a>)</p>
+
+<ul>
+<li>Build instructions are in README.LAMMPS</li>
+<li>Examples are in examples/LAMMPS</li>
+</ul>
+</li>
+</ol><p>You need the following packages:</p>
+
+<ul>
+<li>Python 2.4.0 or greater (even if you do not compile the Python interface)
+(Some parts of the Python interface could rely on features from Python 2.6.0)</li>
+</ul>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/pastewka/atomistica/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/pastewka/atomistica/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/pastewka/atomistica"></a> is maintained by <a href="https://github.com/pastewka">pastewka</a>.</p>
+
+          <p>This page was generated by <a href="pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
