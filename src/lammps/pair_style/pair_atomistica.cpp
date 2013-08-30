@@ -366,10 +366,14 @@ void PairAtomistica::Atomistica_neigh()
 
   // Map seed and last arrays to point to the appropriate position in the native
   // LAMMPS neighbor list
-  Atomistica_neighb_ = &firstneigh[0][0];
+  Atomistica_neighb_ = NULL;
   Atomistica_nneighb_ = 0;
   for (ii = 0; ii < inum; ii++) {
     i = ilist[ii];
+    // Neighbor list is relative to first neighbor
+    if (Atomistica_neighb_ == NULL) {
+      Atomistica_neighb_ = firstneigh[i];
+    }
     // Atomistica seed index is index relative to beginning of the neighbor array
     Atomistica_seed_[i] = (int) (firstneigh[i]-Atomistica_neighb_)+1;
     Atomistica_last_[i] = Atomistica_seed_[i]+numneigh[i]-1;
