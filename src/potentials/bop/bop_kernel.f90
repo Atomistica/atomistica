@@ -52,7 +52,7 @@
        this, &
        maxnat, natloc, nat, r, &
        el, &
-       aptr, a2ptr, bptr, neb_max, &
+       aptr, a2ptr, bptr, ptrmax, &
        epot, f_inout, wpot_inout, &
        epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
        ierror)
@@ -61,7 +61,7 @@
        this, cell, &
        maxnat, natloc, nat, r, &
        el, &
-       aptr, a2ptr, bptr, neb_max, dc, shear_dx, &
+       aptr, a2ptr, bptr, ptrmax, dc, shear_dx, &
        epot, f_inout, wpot_inout, &
        epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
        ierror)
@@ -133,7 +133,7 @@
     integer,             intent(in)    :: nat
     real(DP),            intent(inout) :: r(3, maxnat)
 
-    integer,             intent(in)    :: neb_max
+    integer,             intent(in)    :: ptrmax
 
     real(DP),            intent(inout) :: f_inout(3, maxnat)
     real(DP),            intent(inout) :: epot
@@ -142,7 +142,7 @@
 
     integer,             intent(in)    :: el(maxnat)
     real(DP),  optional, intent(inout) :: epot_per_at(nat)
-    real(DP),  optional, intent(inout) :: epot_per_bond(neb_max)
+    real(DP),  optional, intent(inout) :: epot_per_bond(ptrmax)
 
 #ifdef LAMMPS
     integer(C_INTPTR_T), intent(in)    :: aptr(maxnat+1)
@@ -151,20 +151,20 @@
     integer,             intent(in)    :: aptr(maxnat+1)
     integer,             intent(in)    :: a2ptr(maxnat+1)
 #endif
-    integer,             intent(in)    :: bptr(neb_max)
+    integer,             intent(in)    :: bptr(ptrmax)
 
 #ifdef LAMMPS
     real(DP),  optional, intent(inout) :: wpot_per_at(6, maxnat)
-    real(DP),  optional, intent(inout) :: wpot_per_bond(6, neb_max)
+    real(DP),  optional, intent(inout) :: wpot_per_bond(6, ptrmax)
 #else
-    integer,             intent(in)    :: dc(3, neb_max)
+    integer,             intent(in)    :: dc(3, ptrmax)
     real(DP),            intent(in)    :: shear_dx(3)
 
     real(DP),  optional, intent(inout) :: wpot_per_at(3, 3, maxnat)
-    real(DP),  optional, intent(inout) :: wpot_per_bond(3, 3, neb_max)
+    real(DP),  optional, intent(inout) :: wpot_per_bond(3, 3, ptrmax)
 #endif
 
-    real(DP), optional, intent(inout)  :: f_per_bond(3, neb_max)
+    real(DP), optional, intent(inout)  :: f_per_bond(3, ptrmax)
 
     integer,  optional, intent(inout)  :: ierror
 
@@ -246,6 +246,8 @@
 
     integer  :: numnbi
 
+    integer  :: neb_max
+
 #ifdef SCREENING
     integer  :: seedi(this%nebmax)
     integer  :: lasti(this%nebmax)
@@ -277,9 +279,9 @@
 #ifdef DEBUG_OUTPUT
 
     if (.not. allocated(debug_S)) then
-       allocate(debug_S(neb_max))
-       allocate(debug_fC(neb_max))
-       allocate(debug_rl(neb_max))
+       allocate(debug_S(ptrmax))
+       allocate(debug_fC(ptrmax))
+       allocate(debug_rl(ptrmax))
     endif
 
     debug_S   = 0.0_DP
@@ -291,6 +293,7 @@
 
     this%it = this%it + 1
 
+    neb_max   = min(maxnat*this%nebavg, ptrmax)
 #ifdef SCREENING
     sneb_max  = neb_max*this%nebavg
 #endif
