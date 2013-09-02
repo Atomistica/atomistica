@@ -23,6 +23,8 @@
 !! Global logging capabilities
 !<
 module logging
+  use, intrinsic :: iso_c_binding
+
   use system_module
   use c_f
   use io
@@ -43,6 +45,7 @@ module logging
      module procedure log_memory_estimate_integer2
      module procedure log_memory_estimate_integer3
      module procedure log_memory_estimate_integer4
+     module procedure log_memory_estimate_intptr_t
      module procedure log_memory_estimate_logical
      module procedure log_memory_estimate_logical2
      module procedure log_memory_estimate_logical3
@@ -220,6 +223,8 @@ contains
   LOG_MEMORY2(integer, log_memory_estimate_integer2, 8)
   LOG_MEMORY3(integer, log_memory_estimate_integer3, 8)
   LOG_MEMORY4(integer, log_memory_estimate_integer4, 8)
+
+  LOG_MEMORY1(integer(C_INTPTR_T), log_memory_estimate_intptr_t, C_INTPTR_T)
 
   LOG_MEMORY1(logical, log_memory_estimate_logical, 8)
   LOG_MEMORY2(logical, log_memory_estimate_logical2, 8)
