@@ -34,9 +34,6 @@
     ! ---
 
     integer          :: i, j, ii, jj, nel, npairs, Z
-#ifdef SCREENING
-    real(DP)         :: c
-#endif
 
     real(DP)         :: x(this%db%nel*(this%db%nel+1)/2)
 
