@@ -26,9 +26,9 @@
 !! Binning and neighbor list module
 !<
 module neighbors
-  use libAtoms_module
+  use, intrinsic :: iso_c_binding
 
-  use logging
+  use supplib
 
   use particles
 
@@ -42,27 +42,27 @@ module neighbors
      !>
      !! Seed for the neighbor list for the first set of neighbors
      !<
-     integer,      pointer :: seed(:)
+     integer(C_INTPTR_T), pointer :: seed(:)
 
      !>
      !! End type neighbors_tthe neighbor list for the first set of neighbors
      !<
-     integer,      pointer :: last(:)
+     integer(C_INTPTR_T), pointer :: last(:)
 
      !>
      !! Size of the neighbor list
      !<
-     integer               :: neighbors_size
+     integer                      :: neighbors_size
 
      !>
      !! Neighbor list for the second set of neighbors
      !<
-     integer,      pointer :: neighbors(:)
+     integer(C_INT),      pointer :: neighbors(:)
 
      !>
      !! Neighbor list cutoffs
      !<
-     real(DP), allocatable :: cutoff(:, :)
+     real(DP),        allocatable :: cutoff(:, :)
 
   endtype neighbors_t
 
@@ -172,8 +172,8 @@ contains
   !>
   !! Assign pointers to data
   !>
-  subroutine neighbors_set_pointers(this_cptr, natloc, seed, last, neighbors_size, neighbors) &
-       bind(C)
+  subroutine neighbors_set_pointers(this_cptr, natloc, seed, last, &
+       neighbors_size, neighbors) bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none

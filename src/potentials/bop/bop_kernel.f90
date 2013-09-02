@@ -123,51 +123,60 @@
 
     ! ---
 
-    type(BOP_TYPE), intent(inout)  :: this
+    type(BOP_TYPE),      intent(inout) :: this
 #ifndef LAMMPS
-    real(DP), intent(in)     :: cell(3, 3)
+    real(DP),            intent(in)    :: cell(3, 3)
 #endif
 
-    integer, intent(in)      :: maxnat
-    integer, intent(in)      :: natloc
-    integer, intent(in)      :: nat
-    real(DP), intent(inout)  :: r(3, maxnat)
+    integer,             intent(in)    :: maxnat
+    integer,             intent(in)    :: natloc
+    integer,             intent(in)    :: nat
+    real(DP),            intent(inout) :: r(3, maxnat)
 
-    integer, intent(in)      :: ptrmax
+    integer,             intent(in)    :: ptrmax
 
-    real(DP), intent(inout)  :: f_inout(3, maxnat)
-    real(DP), intent(inout)  :: epot
-    real(DP), intent(inout)  :: wpot_inout(3, 3)
-    real(DP)                 :: wpot(3, 3)
+    real(DP),            intent(inout) :: f_inout(3, maxnat)
+    real(DP),            intent(inout) :: epot
+    real(DP),            intent(inout) :: wpot_inout(3, 3)
+    real(DP)                           :: wpot(3, 3)
 
-    integer, intent(in)      :: el(maxnat)
-    real(DP), intent(inout), optional  :: epot_per_at(nat)
-    real(DP), intent(inout), optional  :: epot_per_bond(ptrmax)
-
-    integer, intent(in)      :: aptr(maxnat+1)
-    integer, intent(in)      :: a2ptr(maxnat+1)
-    integer, intent(in)      :: bptr(ptrmax)
+    integer,             intent(in)    :: el(maxnat)
+    real(DP),  optional, intent(inout) :: epot_per_at(nat)
+    real(DP),  optional, intent(inout) :: epot_per_bond(ptrmax)
 
 #ifdef LAMMPS
-    real(DP), intent(inout), optional  :: wpot_per_at(6, maxnat)
-    real(DP), intent(inout), optional  :: wpot_per_bond(6, ptrmax)
+    integer(C_INTPTR_T), intent(in)    :: aptr(maxnat+1)
+    integer(C_INTPTR_T), intent(in)    :: a2ptr(maxnat+1)
 #else
-    integer, intent(in)      :: dc(3, ptrmax)
-    real(DP), intent(in)     :: shear_dx(3)
+    integer,             intent(in)    :: aptr(maxnat+1)
+    integer,             intent(in)    :: a2ptr(maxnat+1)
+#endif
+    integer,             intent(in)    :: bptr(ptrmax)
 
-    real(DP), intent(inout), optional  :: wpot_per_at(3, 3, maxnat)
-    real(DP), intent(inout), optional  :: wpot_per_bond(3, 3, ptrmax)
+#ifdef LAMMPS
+    real(DP),  optional, intent(inout) :: wpot_per_at(6, maxnat)
+    real(DP),  optional, intent(inout) :: wpot_per_bond(6, ptrmax)
+#else
+    integer,             intent(in)    :: dc(3, ptrmax)
+    real(DP),            intent(in)    :: shear_dx(3)
+
+    real(DP),  optional, intent(inout) :: wpot_per_at(3, 3, maxnat)
+    real(DP),  optional, intent(inout) :: wpot_per_bond(3, 3, ptrmax)
 #endif
 
-    real(DP), intent(inout), optional  :: f_per_bond(3, ptrmax)
+    real(DP), optional, intent(inout)  :: f_per_bond(3, ptrmax)
 
-    integer, intent(inout), optional  :: ierror
+    integer,  optional, intent(inout)  :: ierror
 
     ! ---
 
     ! "short" neighbor list (all neighbors which are not screened)
 
+#ifdef LAMMPS
+    integer(C_INTPTR_T)  :: jbeg,jend,jn
+#else
     integer   :: jbeg,jend,jn
+#endif
 
     real(DP)  :: rij(3)
     real(DP)  :: rlij, rlijr, rlik
@@ -245,7 +254,12 @@
 
     integer  :: sneb_max
 
-    integer  :: i1,i2,kn
+    integer  :: i1,i2
+#ifdef LAMMPS
+    integer(C_INTPTR_T) :: kn
+#else
+    integer  :: kn
+#endif
 
     integer  :: nijc
     integer  :: snebtot, ineb

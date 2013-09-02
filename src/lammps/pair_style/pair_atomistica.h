@@ -66,8 +66,8 @@ class PairAtomistica : public Pair {
   char *fn_;                       // file name with potential parameters
   int maxlocal_;                   // size of numneigh, firstneigh arrays
 
-  int *Atomistica_seed_;
-  int *Atomistica_last_;
+  intptr_t *Atomistica_seed_;
+  intptr_t *Atomistica_last_;
   int *Atomistica_neighb_;
   int Atomistica_nneighb_;
 

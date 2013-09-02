@@ -347,10 +347,10 @@ void PairAtomistica::Atomistica_neigh()
     maxlocal_ = atom->nmax;
     memory->sfree(Atomistica_seed_);
     memory->sfree(Atomistica_last_);
-    Atomistica_seed_ = (int *)
-      memory->smalloc(maxlocal_*sizeof(int),"Atomistica:Atomistica_seed");
-    Atomistica_last_ = (int *)
-      memory->smalloc(maxlocal_*sizeof(int),"Atomistica:Atomistica_last");
+    Atomistica_seed_ = (intptr_t *)
+      memory->smalloc(maxlocal_*sizeof(intptr_t),"Atomistica:Atomistica_seed");
+    Atomistica_last_ = (intptr_t *)
+      memory->smalloc(maxlocal_*sizeof(intptr_t),"Atomistica:Atomistica_last");
   }
 
   // set start values for neighbor array Atomistica_neighb
@@ -366,18 +366,13 @@ void PairAtomistica::Atomistica_neigh()
 
   // Map seed and last arrays to point to the appropriate position in the native
   // LAMMPS neighbor list
-  Atomistica_neighb_ = NULL;
+  Atomistica_neighb_ = &firstneigh[0][0];
   Atomistica_nneighb_ = 0;
   for (ii = 0; ii < inum; ii++) {
     i = ilist[ii];
-    // Neighbor list is relative to first neighbor
-    if (Atomistica_neighb_ == NULL) {
-      Atomistica_neighb_ = firstneigh[i];
-    }
-    // Atomistica seed index is index relative to beginning of the neighbor array
-    Atomistica_seed_[i] = (int) (firstneigh[i]-Atomistica_neighb_)+1;
+    Atomistica_seed_[i] = firstneigh[i]-Atomistica_neighb_+1;
     Atomistica_last_[i] = Atomistica_seed_[i]+numneigh[i]-1;
-    Atomistica_nneighb_ = MAX(Atomistica_nneighb_, Atomistica_last_[i]);
+    Atomistica_nneighb_ += numneigh[i];
   }
 
 #if 0

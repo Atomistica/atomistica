@@ -360,7 +360,12 @@ contains
 
     integer, parameter  :: maxneb = 100
 
-    integer   :: i, ni, j, eli, elj, dbi, dbj, els, seedi, lasti
+    integer   :: i, j, eli, elj, dbi, dbj, els
+#ifdef LAMMPS
+    integer(C_INTPTR_T) :: ni, seedi, lasti
+#else
+    integer   :: ni, seedi, lasti
+#endif
     real(DP)  :: dr(3), abs_dr, r_abs_dr, ri(3), fori(3)
     real(DP)  :: rho, drho, Fi, dFi
     real(DP)  :: e, w(3, 3), wij(3, 3), cutoff_sq

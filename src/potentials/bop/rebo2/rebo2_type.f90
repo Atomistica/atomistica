@@ -335,7 +335,11 @@
      integer, allocatable   :: sneb_seed(:)
      integer, allocatable   :: sneb_last(:)
      integer, allocatable   :: sneb(:)
+#ifdef LAMMPS
+     integer(C_INTPTR_T), allocatable   :: sbnd(:)
+#else
      integer, allocatable   :: sbnd(:)
+#endif
 
      ! for force calculation
      real(DP), allocatable  :: sfacbo(:)
