@@ -32,9 +32,7 @@
 module particles
   use, intrinsic :: iso_c_binding
 
-  use libAtoms_module
-
-  use c_f
+  use supplib
 
   implicit none
 
@@ -97,7 +95,7 @@ module particles
      !>
      !! Communication border
      !<
-     real(DP)                :: border
+     real(C_DOUBLE)          :: border
 
   endtype particles_t
 
