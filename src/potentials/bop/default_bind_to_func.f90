@@ -116,24 +116,28 @@
 #endif
 
     do i = 1, p%nel
-       do j = 1, p%nel
-          ii = this%Z2db(p%el2Z(i))
-          jj = this%Z2db(p%el2Z(j))
-          nel = Z2pair(this, ii, jj)
+       if (p%el2Z(i) > 0) then
+          do j = 1, p%nel
+             if (p%el2Z(j) > 0) then
+                ii = this%Z2db(p%el2Z(i))
+                jj = this%Z2db(p%el2Z(j))
+                nel = Z2pair(this, ii, jj)
 #ifdef SCREENING
-          call request_interaction_range( &
-               nl, &
-               x(nel)*sqrt(this%max_cut_sq(nel)), &
-               i, j &
-               )
+                call request_interaction_range( &
+                     nl, &
+                     x(nel)*sqrt(this%max_cut_sq(nel)), &
+                     i, j &
+                     )
 #else
-          call request_interaction_range( &
-               nl, &
-               this%cut_in_h(nel), &
-               i, j &
-               )
+                call request_interaction_range( &
+                     nl, &
+                     this%cut_in_h(nel), &
+                     i, j &
+                     )
 #endif
-       enddo
+             endif
+          enddo
+       endif
     enddo
 
   endsubroutine BIND_TO_FUNC

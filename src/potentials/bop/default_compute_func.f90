@@ -61,7 +61,9 @@
     ! Internal element numbers
     el = -1
     do i = 1, p%nat
-       el(i) = this%Z2db(p%el2Z(p%el(i)))
+       if (p%el2Z(p%el(i)) > 0) then
+         el(i) = this%Z2db(p%el2Z(p%el(i)))
+       endif
     enddo
 
 #ifdef LAMMPS
