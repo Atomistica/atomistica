@@ -104,6 +104,7 @@ PairAtomistica::PairAtomistica(LAMMPS *lmp) : Pair(lmp)
 PairAtomistica::~PairAtomistica()
 {
   if (name_)  free(name_);
+  if (fn_)  free(fn_);
 
   if (potential_) {
     class_->del(potential_);
@@ -172,6 +173,9 @@ void PairAtomistica::settings(int narg, char **arg)
   if (narg != 1 && narg != 2)
     error->all(FLERR,"pair_style atomistica expects potential name and "
 	       "configuration file as parameters");
+
+  if (name_)  free(name_);
+  if (fn_)  free(fn_);
 
   name_ = strdup(arg[0]);
   if (narg == 2)
@@ -252,6 +256,16 @@ void PairAtomistica::init_style()
     error->all(FLERR,"Pair style atomistica requires atom IDs");
   if (force->newton_pair == 0)
     error->all(FLERR,"Pair style atomistica requires newton pair on");
+
+  // delete potential object, if already allocated
+
+  if (potential_) {
+    if (!class_)
+      error->one(FLERR,"(Internal error) class_ is NULL, but potential_ is "
+                       "not.");
+    class_->del(potential_);
+    class_->free_instance(potential_);
+  }
 
   // need a full neighbor list
 
