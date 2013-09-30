@@ -308,9 +308,8 @@ def write_coulomb_factory_f90(mods, str, fn):
             '  use neighbors\n')
     for f90name, f90class, name, register_data_ex, set_Hubbard_U_ex in mods:
         f.write('  use %s\n' % f90name)
-    f.write("  use %s_registry\n\n" % str +
-            "  implicit none\n\n" +
-            "contains\n\n")
+    f.write('  implicit none\n\n' +
+            'contains\n\n')
 
     for f90name, f90class, name, register_data_ex, set_Hubbard_U_ex in mods:
         f.write("subroutine python_%s_new(this_cptr, cfg, m) bind(C)\n" % f90name +
@@ -322,7 +321,7 @@ def write_coulomb_factory_f90(mods, str, fn):
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  allocate(this_fptr)\n"  +
                 "  if (.not. associated(this_fptr))   stop '[python_%s_new] *this_fptr* is NULL.'\n" % f90name +
-                "  call %s_register(this_fptr, cfg, m)\n" % ( f90name ) +
+                "  call register(this_fptr, cfg, m)\n" +
                 "  this_cptr = c_loc(this_fptr)\n" +
                 "endsubroutine python_%s_new\n\n\n" % f90name)
 
