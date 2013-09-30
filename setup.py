@@ -10,11 +10,12 @@ from numpy.distutils.core import setup, Extension
 from meta import scanallmeta
 from listclasses import get_module_list
 from gen_factory import write_factory_f90, write_factory_c
+from gen_factory import write_coulomb_factory_f90, write_coulomb_factory_c
 
 ###
 
 cwd = os.getcwd()
-srcdir = '{0}/src'.format(cwd)
+srcdir = '%s/src' % cwd
 
 ###
 
@@ -38,8 +39,8 @@ mklroot = os.getenv('MKLROOT')
 if mklroot is None:
     mklroot = os.getenv('MKL_ROOT')
 if mklroot is not None:
-    for lib_dir in [ '{0}/lib/em64t'.format(mklroot), 
-                     '{0}/lib/intel64'.format(mklroot) ]:
+    for lib_dir in [ '%s/lib/em64t' % mklroot, 
+                     '%s/lib/intel64' % mklroot ]:
         if os.path.exists(lib_dir):
             lib_dirs += [ lib_dir ]
     #libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
@@ -63,7 +64,7 @@ mod_srcs = [ ]
 lib_srcs += [ 'build/versioninfo.f90',
             ]
 
-lib_srcs += [ '{0}/support/'.format(srcdir)+i for i in
+lib_srcs += [ ('%s/support/' % srcdir)+i for i in
               [ 'c_f.f90',
                 'error.f90',
                 'System.f90',
@@ -86,7 +87,7 @@ lib_srcs += [ '{0}/support/'.format(srcdir)+i for i in
                 ]
               ]
 
-lib_srcs += [ '{0}/special/'.format(srcdir)+i for i in
+lib_srcs += [ ('%s/special/' % srcdir)+i for i in
               [ 'table2d.f90',
                 'table3d.f90',
                 'table4d.f90',
@@ -107,12 +108,14 @@ lib_srcs += [ '{0}/python/f90/'.format(srcdir)+i for i in
 os.system('sh src/gen_versioninfo.sh src build Python')
 
 # Other stuff
-mod_srcs += [ '{0}/python/c/py_f.c'.format(srcdir),
-              '{0}/python/c/particles.c'.format(srcdir),
-              '{0}/python/c/neighbors.c'.format(srcdir),
-              '{0}/python/c/potential.c'.format(srcdir),
-              '{0}/python/c/analysis.c'.format(srcdir),
-              '{0}/python/c/atomisticamodule.c'.format(srcdir),
+mod_srcs += [ '%s/python/c/py_f.c' % (srcdir),
+              '%s/python/c/particles.c' % (srcdir),
+              '%s/python/c/neighbors.c' % (srcdir),
+              '%s/python/c/coulomb.c' % (srcdir),
+              '%s/python/c/coulomb_callback.c' % (srcdir),
+              '%s/python/c/potential.c' % (srcdir),
+              '%s/python/c/analysis.c' % (srcdir),
+              '%s/python/c/atomisticamodule.c' % (srcdir),
               ]
 
 ###
@@ -126,6 +129,28 @@ metadata = scanallmeta(srcdir)
 
 #print 'Writing factories...'
 
+# Coulomb modules
+mods1, fns1 = get_module_list(metadata, 'coulomb',
+                              finterface_list = [ 'register_data',
+                                                  'set_Hubbard_U' ])
+lib_srcs += fns1
+
+
+# Write coulomb factory
+write_coulomb_factory_f90(mods1, 'coulomb', 'build/coulomb_factory_f90.f90')
+write_coulomb_factory_c(mods1, 'coulomb',
+                        '%s/python/c/coulomb_factory.template.c' \
+                             % (srcdir),
+                        'build/coulomb_factory_c.c',
+                        '%s/python/c/coulomb_factory.template.h' \
+                             % (srcdir),
+                        'build/coulomb_factory_c.h')
+lib_srcs += [ '%s/python/f90/coulomb_dispatch.f90' % (srcdir),
+              'build/coulomb_factory_f90.f90',
+              'build/coulomb_factory_c.c',
+              ]
+
+# Potential modules
 mods2, fns2 = get_module_list(metadata, 'potentials',
                               finterface_list = [ 'register_data',
                                                   'set_Coulomb' ],
@@ -154,6 +179,8 @@ lib_srcs += [ 'build/potentials_factory_f90.f90',
 f = open('build/have.inc', 'w')
 print >> f, '#ifndef __HAVE_INC'
 print >> f, '#define __HAVE_INC'
+for classabbrev, classname, classtype, s, s2 in mods1:
+    print >> f, '#define HAVE_%s' % (classabbrev.upper())
 for classabbrev, classname, classtype, s1, s2 in mods2:
     print >> f, '#define HAVE_{0}'.format(classabbrev.upper())
 print >> f, '#endif'
