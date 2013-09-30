@@ -442,6 +442,7 @@ particles_I_changed_positions(particles_t *self, PyObject *args)
 static PyObject*
 particles_set_cell(particles_t *self, PyObject *args)
 {
+  PyObject *Abox_obj, *pbc_obj = NULL;
   PyArrayObject *Abox_arr;
   PyArrayObject *pbc_arr = NULL;
   double *Abox;
@@ -449,21 +450,24 @@ particles_set_cell(particles_t *self, PyObject *args)
   BOOL pbc_for[3];
   int ierror = ERROR_NONE;
 
-  if (!PyArg_ParseTuple(args, "O!|O!", &PyArray_Type, &Abox_arr,
-			&PyArray_Type, &pbc_arr))
+  if (!PyArg_ParseTuple(args, "O|O", &Abox_obj, &pbc_obj))
     return NULL;
 
-  if (!PyArray_ISFLOAT(Abox_arr))
+  Abox_arr = (PyArrayObject *) PyArray_FROMANY(Abox_obj, NPY_DOUBLE, 2, 2,
+                                               NPY_C_CONTIGUOUS);
+  if (!Abox_arr)
     return NULL;
   Abox = DOUBLEP(Abox_arr);
 
   pbc_for[0] = 1;
   pbc_for[1] = 1;
   pbc_for[2] = 1;
-  if (pbc_arr) {
-    if (!PyArray_ISBOOL(pbc_arr))
+  if (pbc_obj) {
+    pbc_arr = (PyArrayObject *) PyArray_FROMANY(pbc_obj, NPY_BOOL, 1, 1,
+                                                NPY_C_CONTIGUOUS);
+    if (!pbc_arr)
       return NULL;
-    pbc  = (npy_bool *) BOOLP(pbc_arr);
+    pbc = (npy_bool *) BOOLP(pbc_arr);
 
     pbc_for[0] = pbc[0];
     pbc_for[1] = pbc[1];
