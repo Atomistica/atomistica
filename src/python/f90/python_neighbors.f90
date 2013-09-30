@@ -792,7 +792,6 @@ contains
           this%cell_size(:, x)      = this%Abox(:, x) / this%n_cells(x)
           this%rec_cell_size(x, :)  = p%Bbox(x, :) * this%n_cells(x)
        endforall
-
     endif
 
     if (allocated(this%binning_seed)) then
@@ -946,7 +945,7 @@ contains
 
     ! ---
 
-    integer   :: i, cell(3)
+    integer   :: i, j, cell(3)
 !    real(DP)  :: s(3)
 
     ! ---
@@ -964,6 +963,17 @@ contains
 !       s     = floor(matmul(p%Bbox, PNC3(p, i)-p%lower_with_border))
 !       s     = s - floor(s)
 !       cell  = s*this%n_cells + 1
+
+!       Proposed fix for the Particle outside simulation domain problem
+       do j = 1, 3
+           if (cell(j) < 1) then
+              cell(j) = cell(j) + this%n_cells(j)
+              PNC3(p, i) = PNC3(p, i) + p%Abox(:, j)
+           else if (cell(j) > this%n_cells(j)) then
+              cell(j) = cell(j) - this%n_cells(j)
+              PNC3(p, i) = PNC3(p, i) - p%Abox(:, j)
+           endif
+       enddo
 
        if (any(cell < 1) .or. any(cell > this%n_cells)) then
 !          write (ilog, '(A,3F20.10)')  "s = ", s
