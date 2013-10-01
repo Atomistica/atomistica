@@ -84,3 +84,10 @@ Known issues
 
 We have experienced issues with icc/ifort 11.1 20100414 and do not recommend
 usage of this particular compiler.
+
+
+Contact
+-------
+
+Please write to Lars Pastewka (lars.pastewka@iwm.fraunhofer.de) for questions
+and suggestions.
