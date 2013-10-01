@@ -368,7 +368,9 @@ class NetCDFTrajectory:
 
     def close(self):
         """Close the trajectory file."""
-        self.nc.close()
+        if self.nc is not None:
+            self.nc.close()
+            self.nc = None
 
 
     def __getitem__(self, i=-1):
