@@ -138,10 +138,7 @@ class NetCDFTrajectory:
         else:
             self.n_atoms = None
 
-        if self.mode == 'r' or self.mode == 'a':
-            self.open(filename)
-        elif self.mode == 'w':
-            self.open_new(filename)
+        self.open(filename)
 
 
     def open(self, filename):
@@ -150,22 +147,12 @@ class NetCDFTrajectory:
 
         For internal use only.
         """
-        self.nc = Dataset(filename, self.mode)
-
-        self.frame = 1
-        self.read_header()
-        self.frame = len(self)
-
-
-    def open_new(self, filename):
-        """
-        Opens a new file.
-
-        For internal use only.
-        """
-        self.nc = Dataset(filename, 'w', format = 'NETCDF3_64BIT')
+        self.nc = Dataset(filename, self.mode, format='NETCDF3_64BIT')
 
         self.frame = 0
+        if self.mode == 'r' or self.mode == 'a':
+            self.read_header()
+            self.frame = len(self)
 
 
     def set_atoms(self, atoms=None):
