@@ -94,7 +94,7 @@ lib_srcs += [ ('%s/special/' % srcdir)+i for i in
                 ]
               ]
 
-lib_srcs += [ '{0}/python/f90/'.format(srcdir)+i for i in
+lib_srcs += [ ('%s/python/f90/' % srcdir)+i for i in
               [ 'python_particles.f90',
                 'python_filter.f90',
                 'python_neighbors.f90',
@@ -168,9 +168,9 @@ lib_srcs += fns2
 
 write_factory_f90(mods2, 'potential', 'build/potentials_factory_f90.f90')
 write_factory_c(mods2, 'potential', 
-                '{0}/python/c/factory.template.c'.format(srcdir),
+                '%s/python/c/factory.template.c' % srcdir,
                 'build/potentials_factory_c.c',
-                '{0}/python/c/factory.template.h'.format(srcdir),
+                '%s/python/c/factory.template.h' % srcdir,
                 'build/potentials_factory_c.h')
 lib_srcs += [ 'build/potentials_factory_f90.f90',
               'build/potentials_factory_c.c',
@@ -182,7 +182,7 @@ print >> f, '#define __HAVE_INC'
 for classabbrev, classname, classtype, s, s2 in mods1:
     print >> f, '#define HAVE_%s' % (classabbrev.upper())
 for classabbrev, classname, classtype, s1, s2 in mods2:
-    print >> f, '#define HAVE_{0}'.format(classabbrev.upper())
+    print >> f, '#define HAVE_%s' % (classabbrev.upper())
 print >> f, '#endif'
 f.close()
 
