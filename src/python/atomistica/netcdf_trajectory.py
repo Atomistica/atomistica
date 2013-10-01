@@ -279,6 +279,15 @@ class NetCDFTrajectory:
 
 
     def _define_file_structure(self, atoms):
+        if not 'Conventions' in self.nc.ncattrs():
+            self.nc.setncattr('Conventions', 'AMBER')
+        if not 'ConventionVersion' in self.nc.ncattrs():
+            self.nc.setncattr('ConventionVersion', '1.0')
+        if not 'program' in self.nc.ncattrs():
+            self.nc.setncattr('program', 'atomistica')
+        if not 'programVersion' in self.nc.ncattrs():
+            self.nc.setncattr('programVersion', '')
+
         if not self._frame_dim in self.nc.dimensions:
             self.nc.createDimension(self._frame_dim, None)
         if not self._spatial_dim in self.nc.dimensions:
@@ -294,22 +303,29 @@ class NetCDFTrajectory:
             self.nc.createVariable(self._numbers_var[0], 'i',
                                    ( self._atom_dim ))
         if not self._has_variable(self._positions_var):
-            self.nc.createVariable(self._positions_var, 'd',
+            self.nc.createVariable(self._positions_var, 'f4',
                                    ( self._frame_dim, self._atom_dim,
                                      self._spatial_dim ))
+            self.nc.variables[self._positions_var].setncattr('units', 'Angstrom')
+            self.nc.variables[self._positions_var].setncattr('scale_factor', 1.)
         if not self._has_variable(self._cell_lengths_var):
             self.nc.createVariable(self._cell_lengths_var, 'd',
                                    ( self._frame_dim, self._cell_spatial_dim ))
+            self.nc.variables[self._cell_lengths_var].setncattr('units', 'Angstrom')
+            self.nc.variables[self._cell_lengths_var].setncattr('scale_factor', 1.)
         if not self._has_variable(self._cell_angles_var):
             self.nc.createVariable(self._cell_angles_var, 'd',
                                    ( self._frame_dim, self._cell_angular_dim ))
+            self.nc.variables[self._cell_angles_var].setncattr('units', 'degree')
 
 
     def _add_velocities(self):
         if not self._has_variable(self._velocities_var):
-            self.nc.createVariable(self._positions_var, 'd',
+            self.nc.createVariable(self._velocities_var, 'f4',
                                    ( self._frame_dim, self._atom_dim,
                                      self._spatial_dim ))
+            self.nc.variables[self._velocities_var].setncattr('units', 'Angstrom')
+            self.nc.variables[self._velocities_var].setncattr('scale_factor', 1.)
 
 
     def _add_array(self, atoms, array_name, type, shape):
