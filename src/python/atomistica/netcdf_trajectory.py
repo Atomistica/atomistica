@@ -141,6 +141,10 @@ class NetCDFTrajectory:
         self.open(filename)
 
 
+    def __del__(self):
+        self.close()
+
+
     def open(self, filename):
         """
         Opens the file.
