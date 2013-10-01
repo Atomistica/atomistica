@@ -32,7 +32,7 @@ class NetCDFTrajectory:
 
     # Default field names. If it is a list, check for any of these names upon
     # opening. Upon writing, use the first name.
-    _numbers_var = [ 'atom_types', 'Z' ]
+    _numbers_var = [ 'Z', 'atom_types' ]
     _positions_var = 'coordinates'
     _velocities_var = 'velocities'
     _cell_origin_var = 'cell_origin'
