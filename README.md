@@ -78,3 +78,9 @@ You need the following packages:
 * Python 2.4.0 or greater (even if you do not compile the Python interface)
   (Some parts of the Python interface could rely on features from Python 2.6.0)
 
+
+Known issues
+------------
+
+We have experienced issues with icc/ifort 11.1 20100414 and do not recommend
+usage of this particular compiler.
