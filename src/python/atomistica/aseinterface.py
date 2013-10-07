@@ -285,8 +285,8 @@ class Atomistica(object):
         if self.q is None:
             # No charges? Just call the potentials...
             for pot in self.pots:
-                _epot, _forces, _wpot, self.epot_per_at, _epot_per_bond, \
-                    _f_per_bond, self.wpot_per_at, _wpot_per_bond  = \
+                _epot, _forces, _wpot, self.epot_per_at, self.epot_per_bond, \
+                    self.f_per_bond, self.wpot_per_at, self.wpot_per_bond  = \
                         pot.energy_and_forces(
                             self.particles, self.nl, forces = self.forces,
                             epot_per_at = self.compute_epot_per_at,
@@ -301,8 +301,8 @@ class Atomistica(object):
         else:
             # Charges? Pass charge array to potentials and ...
             for pot in self.pots:
-                _epot, _forces, _wpot, self.epot_per_at, _epot_per_bond, \
-                    _f_per_bond, self.wpot_per_at, _wpot_per_bond  = \
+                _epot, _forces, _wpot, self.epot_per_at, self.epot_per_bond, \
+                    self.f_per_bond, self.wpot_per_at, self.wpot_per_bond  = \
                         pot.energy_and_forces(
                             self.particles, self.nl, forces = self.forces,
                             charges = self.q,
