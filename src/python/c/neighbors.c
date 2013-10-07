@@ -145,11 +145,12 @@ neighbors_get_neighbors(neighbors_t *self, PyObject *args, PyObject *kwargs)
 {
   particles_t *p;
   int i = -1;
-  PyObject *vec = NULL;
+  PyObject *vec = NULL, *seed = NULL;
 
-  static char *kwlist[] = { "p", "i", "vec", NULL };
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|iO!", kwlist,
+  static char *kwlist[] = { "p", "i", "seed", "vec", NULL };
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|iO!O!", kwlist,
                                    &particles_type, &p, &i,
+                                   &PyBool_Type, &seed,
                                    &PyBool_Type, &vec))
     return NULL;
 
@@ -178,6 +179,14 @@ neighbors_get_neighbors(neighbors_t *self, PyObject *args, PyObject *kwargs)
   }
   else {
     npy_intp dims[2];
+
+    PyObject *seed_arr = NULL;
+    if (seed && seed == Py_True) {
+      dims[0] = data_get_len(p->f90data);
+      seed_arr = PyArray_ZEROS(1, dims, NPY_INT, 1);
+      f_get_seed(self->f90obj, PyArray_DATA(seed_arr));
+    }
+
     dims[0] = f_get_number_of_all_neighbors(self->f90obj);
 
     PyObject *i = PyArray_ZEROS(1, dims, NPY_INT, 1);
@@ -190,7 +199,12 @@ neighbors_get_neighbors(neighbors_t *self, PyObject *args, PyObject *kwargs)
       f_get_all_neighbors_vec(self->f90obj, PyArray_DATA(i), PyArray_DATA(j),
                               PyArray_DATA(rvec), PyArray_DATA(r));
 
-      ret = Py_BuildValue("OOOO", i, j, rvec, r);
+      if (seed_arr) {
+        ret = Py_BuildValue("OOOOO", i, j, seed_arr, rvec, r);
+      }
+      else {
+        ret = Py_BuildValue("OOOO", i, j, rvec, r);
+      }
 
       Py_DECREF(rvec);
     }
@@ -198,12 +212,19 @@ neighbors_get_neighbors(neighbors_t *self, PyObject *args, PyObject *kwargs)
       f_get_all_neighbors(self->f90obj, PyArray_DATA(i), PyArray_DATA(j),
                           PyArray_DATA(r));
 
-      ret = Py_BuildValue("OOO", i, j, r);
+      if (seed_arr) {
+        ret = Py_BuildValue("OOOO", i, j, seed, r);
+      }
+      else {
+        ret = Py_BuildValue("OOO", i, j, r);
+      }
     }
 
     Py_DECREF(i);
     Py_DECREF(j);
     Py_DECREF(r);
+    if (seed_arr)
+      Py_DECREF(seed_arr);
   }
 
   return ret;

@@ -395,6 +395,35 @@ contains
 
 
   !>
+  !! Return seed array
+  !<
+  subroutine f_get_seed(this_cptr, seed) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(c_ptr),   value :: this_cptr
+    integer(c_int)       :: seed(*)
+
+    type(neighbors_t), pointer :: this
+
+    ! ---
+
+    integer :: i, ni, j
+
+    ! ---
+
+    call c_f_pointer(this_cptr, this)
+
+    seed(1) = 0
+    do i = 2, this%p%nat
+       seed(i) = seed(i-1)+this%last(i-1)-this%seed(i-1)+1
+    enddo
+
+  endsubroutine f_get_seed
+
+
+  !>
   !! Return neighbors and distances
   !<
   subroutine f_get_all_neighbors(this_cptr, i1, i2, r) bind(C)

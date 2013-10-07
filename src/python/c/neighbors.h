@@ -60,6 +60,7 @@ int f_get_coordination_numbers(void *, double, int *);
 int f_get_number_of_neighbors(void *, int);
 int f_get_number_of_all_neighbors(void *);
 void f_get_neighbors(void *, int, int *, double *);
+void f_get_seed(void *, int *);
 void f_get_all_neighbors(void *, int *, int *, double *);
 void f_get_all_neighbors_vec(void *, int *, int *, double *, double *);
 
