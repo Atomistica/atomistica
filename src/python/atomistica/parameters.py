@@ -27,6 +27,27 @@ Database with parameters for specific parameterizations of the potentials
 import copy
 from math import log, sqrt
 
+# Mixing rules
+def pair_index(i, j, maxval):
+    return min(i+j*maxval, j+i*maxval)-min(i*(i+1)/2, j*(j+1)/2)
+
+def mix(p, key, rule):
+    nel = len(p['el'])
+    for i in range(nel):
+        for j in range(i+1,nel):
+            ii = pair_index(i,i,nel)
+            jj = pair_index(j,j,nel)
+            ij = pair_index(i,j,nel)
+            p[key][ij] = rule(p[key][ii], p[key][jj])
+
+def mix_arithmetic(p, key):
+    mix(p, key, lambda x,y: (x+y)/2)
+
+def mix_geometric(p, key):
+    mix(p, key, lambda x,y: sqrt(x*y))
+
+
+
 # Tersoff potential --- to be used with the *Tersoff* potential
 
 # Parameters
@@ -96,6 +117,51 @@ Goumri_Said_ChemPhys_302_135_Al_N = {
   "h":        [  -0.659266,  -0.56239   ]
   }
 
+Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N = {
+  "__ref__":  "Matsunaga K., Fisher C., Matsubara H., Jpn. J. Appl. Phys. 39, 48 (2000)",
+  "el":       [  "C", "N", "B" ],
+  "A":        [  1.3936e3,    -1.0,     -1.0,     1.1e4,      -1.0,     2.7702e2  ],
+  "B":        [  3.4674e2,    -1.0,     -1.0,     2.1945e2,   -1.0,     1.8349e2  ],
+  "xi":       [  1.0,         0.9685,   1.0025,   1.0,        1.1593,   1.0       ],
+  "lambda":   [  3.4879,      -1.0,     -1.0,     5.7708,     -1.0,     1.9922    ],
+  "mu":       [  2.2119,      -1.0,     -1.0,     2.5115,     -1.0,     1.5856    ],
+  "omega":    [  1.0,         0.6381,   1.0,      1.0,        1.0,      1.0       ],
+  "mubo":     [  0.0,         0.0,      0.0,      0.0,        0.0,      0.0       ],
+  "m":        [  1,           1,        1,        1,          1,        1         ],
+  "r1":       [  1.80,        -1.0,     -1.0,     2.0,         -1.0,    1.8       ],
+  "r2":       [  2.10,        -1.0,     -1.0,     2.3,         -1.0,    2.1       ],
+  "beta":     [  1.5724e-7,   1.0562e-1,   1.6e-6     ],
+  "n":        [  7.2751e-1,   12.4498,     3.9929     ],
+  "c":        [  3.8049e4,    7.9934e4,    5.2629e-1  ],
+  "d":        [  4.3484e0,    1.3432e2,    1.5870e-3  ],
+  "h":        [  -5.7058e-1,  -0.9973,     0.5        ],
+  }
+# Apply mixing rules
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N, 'A')
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N, 'B')
+mix_arithmetic(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N, 'lambda')
+mix_arithmetic(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N, 'mu')
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N, 'r1')
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N, 'r2')
+
+Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr = Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N.copy()
+Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr.update({
+    "m":        [  3,          3,      3,      3,          3,      3        ],
+    "r1":       [  2.00,       -1.0,   -1.0,   2.00,       -1.0,   1.8      ],
+    "r2":       [  2.00*1.2,   -1.0,   -1.0,   2.00*1.2,   -1.0,   1.8*1.2  ],
+    "or1":      [  2.00,       -1.0,   -1.0,   3.00,       -1.0,   1.8      ],
+    "or2":      [  2.00*2.0,   -1.0,   -1.0,   3.00*2.0,   -1.0,   1.8*2    ],
+    "bor1":     [  2.00,       -1.0,   -1.0,   3.00,       -1.0,   1.8      ],
+    "bor2":     [  2.00*2.0,   -1.0,   -1.0,   3.00*2.0,   -1.0,   1.8*2    ],
+    "Cmin":     [  1.00,       1.00,   1.00,   1.00,       1.00,   1.00     ],
+    "Cmax":     [  3.00,       3.00,   3.00,   3.00,       3.00,   3.00     ],
+    })
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr, 'r1')
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr, 'r2')
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr, 'or1')
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr, 'or2')
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr, 'bor1')
+mix_geometric(Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr, 'bor2')
 
 
 
@@ -238,6 +304,9 @@ Brenner_PRB_42_9458_C_II = {
     "r1":       [  1.70         ],
     "r2":       [  2.00         ]
     }
+
+
+
 
 # Kumagai's Si potential --- to be used with the *Kumagai* potential
 # Parameters

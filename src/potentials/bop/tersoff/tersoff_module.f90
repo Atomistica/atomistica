@@ -56,6 +56,7 @@
     call prlog("     xi     = " // this%db%xi(1:this%db%nxi))
     call prlog("     lambda = " // this%db%lambda(1:this%db%nlambda))
     call prlog("     mu     = " // this%db%mu(1:this%db%nmu))
+    call prlog("     omega  = " // this%db%omega(1:this%db%nomega))
     call prlog("     mubo   = " // this%db%mubo(1:this%db%nmubo))
     call prlog("     m      = " // this%db%m(1:this%db%nm))
     call prlog("     beta   = " // this%db%beta(1:this%db%nbeta))

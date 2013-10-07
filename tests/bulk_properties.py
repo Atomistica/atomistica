@@ -116,6 +116,22 @@ tests  = [
                                           size=[sx,sx,sx]),
               Ec=6.165, a0=4.321, C11=437, C12=118, C440=311, B=224 ),
         ] ),
+    ( Tersoff, Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N,
+      [ dict( name="dia-C", struct=Diamond("C", size=[sx,sx,sx]),
+              Ec=7.396-0.0250, a0=3.566, C11=1067, C12=104, C44=636,
+              C440=671 ),
+        dict( name="dia-B-N", struct=B3( [ "B", "N" ], latticeconstant=3.7,
+                                         size=[sx,sx,sx]),
+              Ec=6.63, a0=3.658, B=385 ),
+        ] ),
+    ( TersoffScr, Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr,
+      [ dict( name="dia-C", struct=Diamond("C", size=[sx,sx,sx]),
+              Ec=7.396-0.0250, a0=3.566, C11=1067, C12=104, C44=636,
+              C440=671 ),
+        dict( name="dia-B-N", struct=B3( [ "B", "N" ], latticeconstant=3.7,
+                                         size=[sx,sx,sx]),
+              Ec=6.63, a0=3.658, B=385 ),
+        ] ),
     ]
 
 ###

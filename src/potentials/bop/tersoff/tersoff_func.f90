@@ -249,17 +249,18 @@ subroutine g(this, ktypj, ktypi, ktypk, ijpot, ikpot, costh, val, dval_dcosth)
 
   ! ---
 
-  real(DP)  :: h, c_sq, d_sq, h_c
+  real(DP)  :: omega, h, c_sq, d_sq, h_c
 
   ! ---
 
+  omega        = this%db%omega(ikpot)
   h_c          = this%db%h(ktypi) - costh
   c_sq         = this%db%c(ktypi)**2
   d_sq         = this%db%d(ktypi)**2
 
   h            = d_sq + h_c**2
-  val          = 1.0_DP + c_sq/d_sq - c_sq/h
-  dval_dcosth  = -2*c_sq*h_c/(h**2)
+  val          = omega*(1.0_DP + c_sq/d_sq - c_sq/h)
+  dval_dcosth  = -2*omega*c_sq*h_c/(h**2)
 
 endsubroutine g
 

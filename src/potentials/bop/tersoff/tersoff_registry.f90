@@ -33,10 +33,10 @@
 
 #ifdef SCREENING
     m = ptrdict_register_section(cfg, CSTR(BOP_STR), &
-         CSTR("The Tersoff potential (screened)."))
+         CSTR("The Tersoff potential (screened). Parameters are named according Tersoff, PRB 39, 5566 (1989)."))
 #else
     m = ptrdict_register_section(cfg, CSTR(BOP_STR), &
-         CSTR("The Tersoff potential."))
+         CSTR("The Tersoff potential. Parameters are named according Tersoff, PRB 39, 5566 (1989)."))
 #endif
 
     call ptrdict_register_string_list_property(m, &
@@ -59,6 +59,9 @@
     call ptrdict_register_list_property(m, &
          c_loc1(this%db%mu), TERSOFF_MAX_PAIRS, c_loc(this%db%nmu), &
          CSTR("mu"), CSTR("See functional form."))
+    call ptrdict_register_list_property(m, &
+         c_loc1(this%db%omega), TERSOFF_MAX_PAIRS, c_loc(this%db%nomega), &
+         CSTR("omega"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
          c_loc1(this%db%mubo), TERSOFF_MAX_PAIRS, c_loc(this%db%nmubo), &
          CSTR("mubo"), CSTR("See functional form."))
