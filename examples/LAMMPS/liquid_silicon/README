@@ -1,4 +1,4 @@
-The two input files use the LAMMPS native and MDCORE's Tersoff implementation.
+The two input files use the LAMMPS native and Atomistica's Tersoff implementation.
 
 Note that the SiC.tersoff here is modified from the one that ships with LAMMPS
 and in line with Tersoff's papers. Both script should give identical results.
