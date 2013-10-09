@@ -194,7 +194,7 @@ neighbors_get_neighbors(neighbors_t *self, PyObject *args, PyObject *kwargs)
     PyObject *r = PyArray_ZEROS(1, dims, NPY_DOUBLE, 1);
     if (vec && vec == Py_True) {
       dims[1] = 3;
-      PyObject *rvec = PyArray_ZEROS(2, dims, NPY_DOUBLE, 1);
+      PyObject *rvec = PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
 
       f_get_all_neighbors_vec(self->f90obj, PyArray_DATA(i), PyArray_DATA(j),
                               PyArray_DATA(rvec), PyArray_DATA(r));
