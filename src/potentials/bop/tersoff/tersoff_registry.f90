@@ -54,7 +54,7 @@
          c_loc1(this%db%xi), TERSOFF_MAX_PAIRS, c_loc(this%db%nxi), &
          CSTR("xi"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
-         c_loc1(this%db%lambda), TERSOFF_MAX_EL, c_loc(this%db%nlambda), &
+         c_loc1(this%db%lambda), TERSOFF_MAX_PAIRS, c_loc(this%db%nlambda), &
          CSTR("lambda"), CSTR("See functional form."))
     call ptrdict_register_list_property(m, &
          c_loc1(this%db%mu), TERSOFF_MAX_PAIRS, c_loc(this%db%nmu), &
