@@ -76,7 +76,7 @@ contains
 #endif
     call date_and_time(values=now)
 
-    call logging_start("md.log")
+    call logging_start("atomistica.log")
 
 #ifdef LAMMPS
     call prscrlog("Welcome to - LAMMPS+Atomistica -")
