@@ -422,7 +422,7 @@ class NetCDFTrajectory:
                 atoms.set_array(name, self.nc.variables[name][:])
             return atoms
 
-        i = len(self) + i
+        i = N + i
         if i < 0 or i >= N:
             raise IndexError('Trajectory index out of range.')
         return self[i]
