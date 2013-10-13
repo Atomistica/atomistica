@@ -129,7 +129,7 @@ init_atomistica(void)
     PyObject* m;
     int i;
 
-#if 1
+#if 0
     /* Uncomment to enable floating-point exception */
     //    int feenableexcept();
     feenableexcept(FE_DIVBYZERO | FE_INVALID);
