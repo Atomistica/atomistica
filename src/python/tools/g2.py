@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # ======================================================================
 # Atomistica - Interatomic potential library
 # https://github.com/pastewka/atomistica
@@ -20,18 +22,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
-#! /usr/bin/env python
-
 import sys
 
 import numpy as np
 
 import ase
-from ase.io import read
 from ase.units import mol
-from mdcore.io import read
+from atomistica.io import read
 
-import mdcore.native as native
+import atomistica.native as native
 
 ###
 
