@@ -58,9 +58,7 @@ def write(fn, a, **kwargs):
     Has support for writing LAMMPS data files.
     """
     ext = fn[fn.rfind('.'):].split('@')
-    if ext[0] == '.out' or ext[0] == '.dat':
-        return write_atoms(fn, a)
-    elif ext[0] == '.lammps':
+    if ext[0] == '.lammps':
         return write_lammps_data(fn, a, **kwargs)
     else:
         return ase.io.write(fn, a, **kwargs)
