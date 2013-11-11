@@ -27,10 +27,15 @@ Database with parameters for specific parameterizations of the potentials
 import copy
 from math import log, sqrt
 
-# Mixing rules
+# These should correspond to PAIR_INDEX and TRIPLET_INDEX_NS of src/macros.inc.
+# Note that Python indices start at 0 while Fortran indices start at 1!
 def pair_index(i, j, maxval):
     return min(i+j*maxval, j+i*maxval)-min(i*(i+1)/2, j*(j+1)/2)
 
+def triplet_index(i, j, k, maxval):
+    return k+maxval*(j+maxval*i)
+
+# Mixing rules
 def mix(p, key, rule):
     nel = len(p['el'])
     for i in range(nel):
