@@ -32,10 +32,105 @@ import _atomistica
 
 import numpy as np
 
+from ase.atoms import string2symbols
 from ase.data import atomic_numbers
 from ase.units import Hartree, Bohr
 
 from atomistica.parameters import *
+
+###
+
+def convpar(p):
+    """
+    Convert a parameter set from convenient Python dictionary to the format
+    expected by the Fortran kernels.
+    """
+
+    if 'el' not in p:
+        return p
+
+    els = p['el']
+    nel = len(els)
+
+    q = { }
+    for name, values in p.iteritems():
+        
+        if isinstance(values, dict):
+            # This is a dictionary. We need to first understand what it is and
+            # then convert to the appropriate list
+            m = 0
+            for itype, value in values:
+                if itype[0] == '_':
+                    continue
+                # Ask ASE to turn this into a list of symbols
+                syms = string2symbols(itype)
+                # Now turn this into a list of indices
+                nums = [ els.index(sym) for sym in syms ]
+                # We need to know the maximum number of symbols
+                m = max(m, nums)
+
+            default = 0.0
+            if '__default__' in values:
+                default = values['__default__']
+            if m == 2:
+                # These are pair indices
+                new_values = [ default ]*pair_index(nel,nel,nel)
+            elif m == 3:
+                # These are triplet indices
+                new_values = [ default ]*triplet_index(nel,nel,nel,nel)
+            else:
+                raise RuntimeError("Parameter '%s' appears to involve " \
+                                   "interaction between %i atoms. Do not know "\
+                                   "how to handle this." % ( name, nel ))
+
+            for itype, value in values:
+                if itype[0] == '_':
+                    continue
+                # Ask ASE to turn this into a list of symbols
+                syms = string2symbols(itype)
+                # Now turn this into a list of indices
+                nums = [ els.index(sym) for sym in syms ]
+                if len(nums) == m:
+                    # Set value
+                    if m == 2:
+                        i,j = nums
+                        new_values[pair_index(i,j,nel)] = value
+                    elif m == 3:
+                        i,j,k = nums
+                        new_values[triple_index(i,j,k,nel)] = value
+                else:
+                    # We have fewer values than we need
+                    if m == 3 and len(nums) == 1:
+                        [k] = nums
+                        for i in range(nel):
+                            for j in range(nel):
+                                # There is six possible permutations
+                                new_values[triple_index(i,j,k,nel)] = value
+                                new_values[triple_index(i,k,j,nel)] = value
+                                new_values[triple_index(k,j,i,nel)] = value
+                                new_values[triple_index(j,k,i,nel)] = value
+                                new_values[triple_index(k,i,j,nel)] = value
+                                new_values[triple_index(i,j,k,nel)] = value
+                    elif m == 3 and len(nums) == 2:
+                        [i,j] = nums
+                        for k in range(nel):
+                            # There is six possible permutations
+                            new_values[triple_index(i,j,k,nel)] = value
+                            new_values[triple_index(i,k,j,nel)] = value
+                            new_values[triple_index(k,j,i,nel)] = value
+                            new_values[triple_index(j,k,i,nel)] = value
+                            new_values[triple_index(k,i,j,nel)] = value
+                            new_values[triple_index(i,j,k,nel)] = value
+                    else:
+                        raise RuntimeError("Parameter '%s' appears to involve " \
+                                           "interaction between %i atoms, but " \
+                                           "only %i elements were provied. Do " \
+                                           "not know how to handle this." \
+                                           % ( name, nel, len(nums) ))
+            values = new_values
+
+        q[name] = values
+    return q
 
 ###
 
@@ -76,7 +171,7 @@ class Atomistica(object):
                 else:
                     self.pots += [ pot ]
         else:
-            self.pots = [ self.potential_class(**kwargs) ]
+            self.pots = [ self.potential_class(**convpar(kwargs)) ]
             self.couls = [ ]
 
         if avgn:
@@ -112,13 +207,7 @@ class Atomistica(object):
         # FIXME! Override pbc since code exits when atom moves out of the box!
         pbc = np.array( [ True, True, True ] )
         self.particles  = _atomistica.Particles()
-        if len(self.couls) > 0:
-            self.q = np.zeros(len(atoms))
-            self.phi = np.zeros(len(atoms))
-            self.E = np.zeros([3,len(atoms)])
-            # Coulomb callback should be directed to this wrapper object
-            for pot in self.pots:
-                pot.set_Coulomb(self)
+
         for pot in self.pots:
             pot.register_data(self.particles)
         self.particles.allocate(len(atoms))
@@ -149,6 +238,15 @@ class Atomistica(object):
         # Tell the potential about the new Particles and Neighbors object
         for pot in self.pots:
             pot.bind_to(self.particles, self.nl)
+
+        if len(self.couls) > 0:
+            self.q = np.zeros(len(atoms))
+            self.phi = np.zeros(len(atoms))
+            self.E = np.zeros([3,len(atoms)])
+            # Coulomb callback should be directed to this wrapper object
+            for pot in self.pots:
+                pot.set_Coulomb(self)
+
         for coul in self.couls:
             coul.bind_to(self.particles, self.nl)
 
@@ -341,7 +439,7 @@ class Atomistica(object):
             self.forces += self.q.reshape(-1,1) * self.E
             
             
-    ### Covenience
+    ### Convenience
     def _warn_lees_edwards(self):
         global _warned_about_lees_edwards
         if not _warned_about_lees_edwards:
@@ -395,7 +493,7 @@ class Atomistica(object):
 
 
     def potential_and_field(self, p, nl, q, phi, epot, E, wpot):
-        # It appeas this callback is actually not needed. Remove?
+        # It appears this callback is actually not needed. Remove?
         raise NotImplementedError
 
 
@@ -435,8 +533,7 @@ if hasattr(_atomistica, 'TightBinding'):
 
         potential_class = _atomistica.TightBinding
 
-        def __init__(self, width=0.1, kpts=None, kpts_shift=None,
-                     database_folder=None):
+        def __init__(self, width=0.1, database_folder=None):
             
             # Translate from a human friendly format
             d = {
@@ -447,15 +544,6 @@ if hasattr(_atomistica, 'TightBinding'):
 
             if database_folder is not None:
                 d["database_folder"] = database_folder
-
-            if kpts is not None:
-                bz = { }
-                bz["nk"] = kpts
-
-                if kpts_shift is not None:
-                    bz["shift"] = kpts_shift
-
-                d["BrillouinZone"] = { "MonkhorstPack" : bz }
 
             d['avgn'] = 1000
 
