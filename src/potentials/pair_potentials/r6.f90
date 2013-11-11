@@ -207,10 +207,8 @@ contains
 
     call timer_start("r6_force")
 
-#ifdef MDCORE_INTERFACE
     call update(nl, p, ierror)
     PASS_ERROR(ierror)
-#endif
 
     cut_sq = this%cutoff**2
 
