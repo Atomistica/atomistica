@@ -32,6 +32,7 @@
 
 #include "particles.h"
 #include "neighbors.h"
+#include "coulomb.h"
 #include "potential.h"
 #include "analysis.h"
 

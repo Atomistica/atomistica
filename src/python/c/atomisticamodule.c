@@ -27,6 +27,7 @@
 
 #include "atomisticamodule.h"
 
+#include "coulomb_factory_c.h"
 #include "potentials_factory_c.h"
 
 #include <fenv.h>
@@ -40,6 +41,7 @@
 #include "potential.c"
 */
 
+#define MAX_COULOMB_NAME 100
 #define MAX_POTENTIAL_NAME 100
 
 /* Global methods
@@ -121,6 +123,8 @@ static PyMethodDef module_methods[] = {
 #endif
 
 static PyTypeObject
+coulomb_types[N_COULOMB_CLASSES];
+static PyTypeObject
 potential_types[N_POTENTIAL_CLASSES];
 
 PyMODINIT_FUNC
@@ -155,6 +159,22 @@ init_atomistica(void)
 
     Py_INCREF(&neighbors_type);
     PyModule_AddObject(m, "Neighbors", (PyObject *) &neighbors_type);
+
+    for (i = 0; i < N_COULOMB_CLASSES; i++) {
+      coulomb_types[i] = coulomb_type;
+      coulomb_types[i].tp_name = malloc(MAX_COULOMB_NAME);
+      strncpy((char*) coulomb_types[i].tp_name, "_atomistica.",
+              MAX_COULOMB_NAME);
+      strncat((char*) coulomb_types[i].tp_name, coulomb_classes[i].name,
+              MAX_COULOMB_NAME);
+
+      if (PyType_Ready(&coulomb_types[i]) < 0)
+        return;
+
+      Py_INCREF(&coulomb_types[i]);
+      PyModule_AddObject(m, coulomb_classes[i].name,
+                         (PyObject *) &coulomb_types[i]);
+    }
 
     for (i = 0; i < N_POTENTIAL_CLASSES; i++) {
       potential_types[i] = potential_type;
