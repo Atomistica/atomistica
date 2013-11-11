@@ -278,6 +278,9 @@ contains
        RAISE_ERROR("charge_overlap_bind_to: No Hubbard-Us have been specified. Did you specify a tight-binding SCC or a classical variable charge model?", ierror)
     endif
 
+    if (allocated(this%U)) then
+       deallocate(this%U)
+    endif
     allocate(this%U(p%nel))
 
     this%U = this%U_in / (Hartree*Bohr)
