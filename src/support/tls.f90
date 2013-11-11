@@ -71,7 +71,7 @@ contains
 
        if (sca <= 1) then
 
-          if (allocated(tls_sca1) .and. size(tls_sca1) < n) then
+          if (allocated(tls_sca1) .and. size(tls_sca1) /= n) then
              deallocate(tls_sca1)
           endif
 
@@ -94,7 +94,7 @@ contains
     
        if (vec <= 1) then
 
-          if (allocated(tls_vec1) .and. size(tls_vec1) < 3*n) then
+          if (allocated(tls_vec1) .and. size(tls_vec1) /= 3*n) then
              deallocate(tls_vec1)
           endif
 
@@ -117,7 +117,7 @@ contains
     
        if (mat <= 2) then
 
-          if (allocated(tls_mat1) .and. size(tls_mat1) < n*n) then
+          if (allocated(tls_mat1) .and. size(tls_mat1) /= n*n) then
              deallocate(tls_mat1)
           endif
 
@@ -129,7 +129,7 @@ contains
 
           if (mat == 2) then
 
-             if (allocated(tls_mat2) .and. size(tls_mat2) < n*n) then
+             if (allocated(tls_mat2) .and. size(tls_mat2) /= n*n) then
                 deallocate(tls_mat2)
              endif
 
