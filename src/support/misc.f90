@@ -40,6 +40,13 @@ module misc
      module procedure swap_real, swap_int, swap_logical, swap_sym
   endinterface
 
+  public :: resize
+  interface resize
+     module procedure resize_int
+     module procedure resize_real, resize_real2
+     module procedure resize_complex
+  endinterface
+
   public :: equal, uppercase, xyz2index, index2xyz
 
 contains
@@ -191,5 +198,214 @@ contains
     val2 = tmp
 
   endsubroutine swap_sym
+
+
+  !>
+  !! Resize integer array while keeping contents
+  !!
+  !! Resize array v to length n, keeping the contents. (If n is smaller than
+  !! the current size, obviously the elements exceeding the new size are
+  !! lost.)
+  !!
+  !! If the new size is zero, the array will be deallocated. Likewise, if the
+  !! old size is zero, the array will be allocated.
+  !<
+  subroutine resize_int(v, n)
+    implicit none
+
+    integer, dimension(:), allocatable, intent(inout) :: v  !< Array to be resized
+    integer                                           :: n  !< New length
+
+    ! ---
+
+    integer                            :: i     ! loops
+    integer, dimension(:), allocatable :: newv  ! new array
+    integer                            :: on    ! max i to copy
+
+    ! ---
+
+    if(n==0) then
+       if(allocated(v)) then
+          deallocate(v)
+       end if
+    else
+       if (allocated(v) .and. size(v) == n)  return
+
+       allocate(newv(n))
+       newv = 0
+
+       if(allocated(v)) then
+          on = min(size(v), n)
+          do i = 1, on
+             newv(i) = v(i)
+          enddo
+
+          deallocate(v)
+       endif
+
+       allocate(v(n))
+       v = newv
+       deallocate(newv)
+    end if
+
+  end subroutine resize_int
+
+
+  !>
+  !! Resize real array while keeping contents
+  !!
+  !! Resize array v to length n, keeping the contents. (If n is smaller than
+  !! the current size, obviously the elements exceeding the new size are
+  !! lost.)
+  !!
+  !! If the new size is zero, the array will be deallocated. Likewise, if the
+  !! old size is zero, the array will be allocated.
+  !<
+  subroutine resize_real(v, n)
+    implicit none
+
+    real(DP), dimension(:), allocatable, intent(inout) :: v  !< Array to be resized
+    integer                                            :: n  !< New length
+
+    ! ---
+
+    integer                             :: i     ! loops
+    real(DP), dimension(:), allocatable :: newv  ! new array
+    integer                             :: on    ! max i to copy
+
+    ! ---
+
+    if(n==0) then
+       if(allocated(v)) then
+          deallocate(v)
+       end if
+    else
+       if (allocated(v) .and. size(v) == n)  return
+
+       allocate(newv(n))
+       newv = 0
+
+       if(allocated(v)) then
+          on = min(size(v), n)
+          do i = 1, on
+             newv(i) = v(i)
+          enddo
+
+          deallocate(v)
+       endif
+
+       allocate(v(n))
+       v = newv
+       deallocate(newv)
+    end if
+
+  end subroutine resize_real
+
+
+  !>
+  !! Resize real array while keeping contents
+  !!
+  !! Resize 2d array v to length n1 x n2, keeping the contents.
+  !! (If n is smaller than
+  !! the current size, obviously the elements exceeding the new size are
+  !! lost.)
+  !!
+  !! If the new size is zero, the array will be deallocated. Likewise, if the
+  !! old size is zero, the array will be allocated.
+  !<
+  subroutine resize_real2(v, n1, n2)
+    implicit none
+
+    real(DP), dimension(:, :), allocatable, intent(inout) :: v   !< Array to be resized
+    integer                                               :: n1  !< New length
+    integer                                               :: n2  !< New length
+
+    ! ---
+
+    integer                                :: i, j        ! loops
+    real(DP), dimension(:, :), allocatable :: newv        ! new array
+    integer                                :: on1, on2    ! max i to copy
+
+    ! ---
+
+    if(n1 == 0 .or. n2 == 0) then
+       if(allocated(v)) then
+          deallocate(v)
+       end if
+    else
+       if (allocated(v) .and. size(v,1) == n1 .and. size(v,2) == n2)  return
+
+       allocate(newv(n1, n2))
+       newv = 0
+
+       if(allocated(v)) then
+          on1 = min(size(v, 1), n1)
+          on2 = min(size(v, 2), n2)
+          do i = 1, on2
+             do j = 1, on1
+                newv(j, i) = v(j, i)
+             enddo
+          enddo
+
+          deallocate(v)
+       endif
+
+       allocate(v(n1, n2))
+       v = newv
+       deallocate(newv)
+    end if
+
+  end subroutine resize_real2
+
+
+  !>
+  !! Resize real array while keeping contents
+  !!
+  !! Resize array v to length n, keeping the contents. (If n is smaller than
+  !! the current size, obviously the elements exceeding the new size are
+  !! lost.)
+  !!
+  !! If the new size is zero, the array will be deallocated. Likewise, if the
+  !! old size is zero, the array will be allocated.
+  !<
+  subroutine resize_complex(v, n)
+    implicit none
+
+    complex(DP), dimension(:), allocatable, intent(inout) :: v  !< Array to be resized
+    integer                                               :: n  !< New length
+
+    ! ---
+
+    integer                                :: i     ! loops
+    complex(DP), dimension(:), allocatable :: newv  ! new array
+    integer                                :: on    ! max i to copy
+
+    ! ---
+
+    if(n==0) then
+       if(allocated(v)) then
+          deallocate(v)
+       end if
+    else
+       if (allocated(v) .and. size(v) == n)  return
+
+       allocate(newv(n))
+       newv = 0
+
+       if(allocated(v)) then
+          on = min(size(v), n)
+          do i = 1, on
+             newv(i) = v(i)
+          enddo
+
+          deallocate(v)
+       endif
+
+       allocate(v(n))
+       v = newv
+       deallocate(newv)
+    end if
+
+  end subroutine resize_complex
 
 endmodule misc
