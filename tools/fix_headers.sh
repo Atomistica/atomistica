@@ -6,7 +6,7 @@ DELIM="======================================================================"
 NDELIM1="N====================================================================="
 
 # .c/.h files
-for i in `find src/lammps src/potentials src/python src/support -name "*.c"` `find src/lammps src/potentials src/python src/support -name "*.h"`; do
+for i in `find src/lammps src/potentials src/notb src/python src/special src/support -name "*.c*"` `find src/lammps src/potentials src/notb src/python src/special src/support -name "*.h"`; do
 
     if [ "$(grep $DELIM $i | wc -l)" -gt 0 ]; then
 
@@ -28,7 +28,7 @@ for i in `find src/lammps src/potentials src/python src/support -name "*.c"` `fi
 done
 
 # .f90 files
-for i in `find src/lammps src/potentials src/python src/support -name "*.f90"`; do
+for i in `find src/lammps src/potentials src/notb src/python src/special src/support -name "*.f90"`; do
 
     if [ "$(grep ${NDELIM1} $i | wc -l)" -gt 0 ]; then
 
@@ -62,7 +62,7 @@ for i in `find src/lammps src/potentials src/python src/support -name "*.f90"`; 
 done
 
 # .py files
-for i in `find src/lammps src/potentials src/python src/support tests -name "*.py"`; do
+for i in `find src/lammps src/potentials src/notb src/python src/special src/support tests -name "*.py"`; do
 
     if [ "$(grep ${NDELIM1} $i | wc -l)" -gt 0 ]; then
 
