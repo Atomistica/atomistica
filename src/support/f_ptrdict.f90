@@ -49,6 +49,20 @@ module ptrdict
      endfunction ptrdict_register_section
 
 
+     function ptrdict_register_module(this, enabled, name, description) bind(C)
+       use, intrinsic :: iso_c_binding
+
+       implicit none
+
+       type(c_ptr),                   value   :: this
+       type(c_ptr),                   value   :: enabled
+       character(kind=c_char, len=1)          :: name(*)
+       character(kind=c_char, len=1)          :: description(*)
+
+       type(c_ptr)                            :: ptrdict_register_module
+     endfunction ptrdict_register_module
+
+
      subroutine ptrdict_register_integer_property(this, ptr, name, &
           description) bind(C)
        use, intrinsic :: iso_c_binding
