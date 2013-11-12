@@ -1,7 +1,3 @@
-! deprecated, should go away at some point
-#define MDCORE_INTERFACE
-#define IMPLICIT_R
-
 !>
 !! Return a single vector from a vector array, i.e. an array
 !! with shape (3, :). Here, *i* is the index of the entry. 
@@ -129,13 +125,11 @@
 #define PAIR_INDEX_NS(i, j, maxval) (j+(i-1)*maxval)
 
 
-
 !>
-!! Generate an index for a group of three atoms.
+!! Generate a non-symmetric tribole index
 !<
 
-#define TRIPLE_INDEX(i, j, k, maxval) (i + (j-1)*maxval + (k-1)*maxval**2)
-
+#define TRIPLET_INDEX_NS(i, j, k, maxval) (k+maxval*(j-1+maxval*(i-1)))
 
 
 
@@ -198,3 +192,27 @@
 
 #endif
 
+!>
+!! Data type for wavefunctions
+!<
+#define WF_T real
+
+!>
+!! Check association of objects, i.e. raise and error is *a* and *b*
+!! are not the same object.
+!<
+#define ASSERT_ASSOCIATION(a, b, ierror)   if (.not. associated(a, b)) then ; RAISE_ERROR("Internal error: Incompatible object associations.", ierror) ; endif
+
+!>
+!! Print a warning
+!<
+#define WARN(x) \
+   write (*, '(4A)')     "Warning (", MODULE_STR, "): ", x ; \
+   write (ilog, '(4A)')  "Warning (", MODULE_STR, "): ", x
+
+
+!>
+!! Some LAPACK shortcuts
+!<
+#define GEMM dgemm
+#define MM(n, alpha, A, B, beta, C)  dgemm('N', 'N', n, n, n, alpha, A, n, B, n, beta, C, n, n)

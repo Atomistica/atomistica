@@ -1,0 +1,71 @@
+/* ======================================================================
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
+   Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
+   See the AUTHORS file in the top-level Atomistica directory.
+
+   Copyright (2005-2013) Fraunhofer IWM
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 2 of the License, or
+   (at your option) any later version.
+  
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+  
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   ====================================================================== */
+
+#ifndef __MATERIALS_H
+#define __MATERIALS_H
+
+#include <stdbool.h>
+
+/*
+ * IF YOU MODIFY THIS STRUCTURE, *ALWAYS* ALSO MODIFY THE CORRESPONDING
+ * STRUCTURE IN materials.f90
+ */
+
+struct notb_element_t {
+
+  _Bool exists;
+
+  char name[2];     /* name of element */
+  char cname[10];   /* common name of element */
+  int elem;         /* number of element (official) */
+  int no;           /* number of orbitals */
+  int l[9];         /* angular momenta of orbitals */
+  int lmax;         /* maximum angular momentum */
+  double m;         /* mass */
+  double e[9];      /* orbital energies [ e(1:no) ] */
+  double occ[9];    /* occupations in neutral atom */
+  double el_max;    /* max number of valence electrons on an atom */
+  double U;         /* Hubbard U */
+  double q0;        /* charge (nr of electrons in neutral) */
+  double FWHM;      /* .. of Gaussian charge distribution */
+  double vib;       /* vibrational frequency of dimer [cm^-1] */
+  double Dnn;       /* nearest neighbor distance in bulk  */
+       
+  /*
+   * internal bookkeeping
+   */
+
+  double guess_dq;  /* guessed initial excess charge */
+  double fixed_dq;  /* initial charges for TDTB propagation */
+  int o1;           /* index of the first orbital */
+  int enr;          /* element number in the internal book-keeping */
+
+  /*
+   * spin-related variables
+   */
+
+  _Bool spin;       /* spin parameter set */
+  double W[9];      /* W parameter values */
+
+};
+
+#endif

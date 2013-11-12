@@ -46,7 +46,7 @@ if mklroot is not None:
     #libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
     #          'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
     #          'stdc++' ]
-    libs += [ 'ifcore', 'ifport', 'mkl_rt' ]
+    libs += [ 'iomp5', 'ifcore', 'ifport', 'mkl_rt' ]
     #extra_link_args += [ '-mkl=sequential' ]
 else:
     libs += [ 'blas', 'lapack' ]
@@ -71,6 +71,7 @@ lib_srcs += [ ('%s/support/' % srcdir)+i for i in
                 'MPI_context.f90',
                 'Units.f90',
                 'PeriodicTable.f90',
+                'c_linearalgebra.cpp',
                 'f_linearalgebra.f90',
                 'f_ptrdict.f90',
                 'c_ptrdict.c',
@@ -82,6 +83,7 @@ lib_srcs += [ ('%s/support/' % srcdir)+i for i in
                 'misc.f90',
                 'data.f90',
                 'simple_spline.f90',
+                'nonuniform_spline.f90',
                 'supplib.f90',
                 'atomistica.f90',
                 ]
@@ -91,6 +93,7 @@ lib_srcs += [ ('%s/special/' % srcdir)+i for i in
               [ 'table2d.f90',
                 'table3d.f90',
                 'table4d.f90',
+                'anderson_mixer.f90',
                 ]
               ]
 
@@ -195,9 +198,10 @@ f.close()
 inc_dirs += [ np.get_include(),
               'build',
               'src',
-              'src/libAtoms',
               'src/support',
               'src/potentials',
+              'src/notb',
+              'src/notb/dense',
               ]
 
 lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
