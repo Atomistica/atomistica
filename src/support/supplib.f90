@@ -38,7 +38,7 @@ module supplib
 #endif
 !  use special_functions
   use simple_spline
-!  use nonuniform_spline
+  use nonuniform_spline
   use timer
   use tls
   use ptrdict
