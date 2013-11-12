@@ -1,0 +1,45 @@
+/* ======================================================================
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
+   Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
+   See the AUTHORS file in the top-level Atomistica directory.
+
+   Copyright (2005-2013) Fraunhofer IWM
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 2 of the License, or
+   (at your option) any later version.
+  
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+  
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+   ====================================================================== */
+#ifndef __CU_VEC_H
+#define __CU_VEC_H
+
+#include "cu_util.h"
+
+#ifdef HAVE_CUDA
+
+double cu_sum(int n, double *A, int *error=NULL,
+	      int threads_per_block=THREADS_PER_BLOCK);
+double cu_max(int n, double *A, int *error=NULL,
+	      int threads_per_block=THREADS_PER_BLOCK);
+double cu_min(int n, double *A, int *error=NULL,
+	      int threads_per_block=THREADS_PER_BLOCK);
+double cu_amax(int n, double *A, int *error=NULL,
+	       int threads_per_block=THREADS_PER_BLOCK);
+double cu_amin(int n, double *A, int *error=NULL,
+	       int threads_per_block=THREADS_PER_BLOCK);
+
+double cu_trace(int n, double *A, int *error=NULL,
+		int threads_per_block=THREADS_PER_BLOCK);
+
+#endif
+
+#endif
