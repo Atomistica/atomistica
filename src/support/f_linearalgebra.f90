@@ -61,12 +61,6 @@ module linearalgebra
      module procedure dnorm
   endinterface norm
 
-  !% Return the trace of a matrix.
-  public :: trace
-  interface trace
-     module procedure matrix_trace
-  endinterface
-
   public :: ev_bounds
   interface ev_bounds
      subroutine dev_bounds(n, H, l, u) bind(C)
@@ -90,9 +84,9 @@ module linearalgebra
      subroutine iterative_matrix_inverse(mat, invmat, n, prev, epsilon, work1, &
        work2, error, cublas_handle, nit) bind(C)
        use, intrinsic :: iso_c_binding
+       integer(C_INT),           value          :: n             !< Matrix size (n,n)
        real(C_DOUBLE),           intent(in)     :: mat(n, n)     !< Matrix to be inverted
        real(C_DOUBLE),           intent(inout)  :: invmat(n, n)  !< Inverse
-       integer(C_INT),           value          :: n             !< Matrix size (n,n)
        logical(C_BOOL),          value          :: prev          !< Previous inverse supplied in invM?
        real(C_DOUBLE),           value          :: epsilon       !< Converge criterion on inverse matrix elements
 #ifdef NO_BIND_C_OPTIONAL
@@ -282,7 +276,7 @@ contains
 
     integer, intent(in)      :: n
     real(DP), intent(in)     :: s
-    real(DP), intent(inout)  :: mat(n, n)
+    WF_T(DP), intent(inout)  :: mat(n, n)
 
     ! ---
 
@@ -330,21 +324,5 @@ contains
     cross_product(3) = + ( x(1)*y(2) - x(2)*y(1) )
 
   end function cross_product
-
-
-  !returns trace of a matrix
-  function matrix_trace(matrix) result(tr)
-    real(dp),intent(in), dimension(:,:) ::matrix
-    real(dp)::tr
-    integer::i,N
-
-    N = min(size(matrix,1),size(matrix,2))
-   
-    tr=0.0_dp
-    do i=1,N
-       tr=tr+matrix(i,i)
-    end do
-
-  end function matrix_trace
 
 endmodule linearalgebra
