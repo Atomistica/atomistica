@@ -22,6 +22,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
+"""
+Compute pair distribution function.
+"""
+
+
 import sys
 
 import numpy as np
