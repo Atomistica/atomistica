@@ -20,9 +20,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
+"""
+I/O convenience functions.
+"""
+
+import os
+
 import ase.io
 
 from ase.calculators.lammps import write_lammps_data
+
+from atomistica.mdcore_io import read_atoms, write_atoms
 from atomistica.netcdf_trajectory import NetCDFTrajectory
 
 ###
@@ -35,7 +43,12 @@ def read(fn, **kwargs):
     """
     ext = fn[fn.rfind('.'):].split('@')
     if len(ext) == 1:
-        if ext[0] == '.nc':
+        if ext[0] == '.out' or ext[0] == '.dat':
+            cycfn = os.path.dirname(fn)+'/cyc.dat'
+            if os.path.exists(cycfn):
+                return read_atoms(fn, cycfn=cycfn)
+            return read_atoms(fn)
+        elif ext[0] == '.nc':
             traj = NetCDFTrajectory(fn, **kwargs)
             return traj[-1]
         else:
@@ -58,7 +71,9 @@ def write(fn, a, **kwargs):
     Has support for writing LAMMPS data files.
     """
     ext = fn[fn.rfind('.'):].split('@')
-    if ext[0] == '.lammps':
+    if ext[0] == '.out' or ext[0] == '.dat':
+        return write_atoms(fn, a)
+    elif ext[0] == '.lammps':
         return write_lammps_data(fn, a, **kwargs)
     else:
         return ase.io.write(fn, a, **kwargs)
