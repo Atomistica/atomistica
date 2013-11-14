@@ -44,7 +44,10 @@ def read(fn, **kwargs):
     ext = fn[fn.rfind('.'):].split('@')
     if len(ext) == 1:
         if ext[0] == '.out' or ext[0] == '.dat':
-            cycfn = os.path.dirname(fn)+'/cyc.dat'
+            dirname = os.path.dirname(fn)
+            if len(dirname) == 0:
+                dirname = '.'
+            cycfn = dirname+'/cyc.dat'
             if os.path.exists(cycfn):
                 return read_atoms(fn, cycfn=cycfn)
             return read_atoms(fn)
