@@ -133,7 +133,6 @@ contains
   subroutine atomistica_shutdown() bind(C)
     implicit none
 
-    integer :: done_file
     integer :: now(8)
 
     call timer_stop("MDCORE")
@@ -152,21 +151,6 @@ contains
     !$omp parallel
     call tls_del
     !$omp end parallel
-
-#ifdef _MPI
-    if (mpi_id() == ROOT) then
-#endif
-    
-    !
-    ! Create the (empty) file DONE to let everyone know we finished properly
-    !
-
-    done_file = fopen("DONE", mode=F_WRITE)
-    call fclose(done_file)
-
-#ifdef _MPI
-    endif
-#endif
 
   endsubroutine atomistica_shutdown
 
