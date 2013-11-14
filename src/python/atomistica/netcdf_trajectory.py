@@ -126,7 +126,9 @@ class NetCDFTrajectory:
         if types_to_numbers:
             self.types_to_numbers = np.array(types_to_numbers)
 
-        self.dtype_conv = { }
+        # 'l' should be a valid type according to the netcdf4-python
+        # documentation, but does not appear to work.
+        self.dtype_conv = { 'l': 'i' }
         if not double:
             self.dtype_conv.update(dict(d='f'))
 
@@ -338,7 +340,7 @@ class NetCDFTrajectory:
                     raise TypeError("Don't know how to dump array of shape {0} "
                                     "into NetCDF trajectory.".format(shape))
             try:
-                t = self.dtype_conv[type.str]
+                t = self.dtype_conv[type.char]
             except:
                 t = type
             self.nc.createVariable(array_name, t, dims)
