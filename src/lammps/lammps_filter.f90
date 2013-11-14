@@ -40,7 +40,8 @@ module filter
   integer, parameter  :: MAX_EL_STR = 80
 
   public :: MAX_EL_STR
-  public :: filter_from_string, filter_count, filter_pack, filter_unpack, filter_prlog
+  public :: filter_from_string, filter_count, filter_average, filter_mask
+  public :: filter_pack, filter_unpack, filter_prlog
 
 contains
 
@@ -145,6 +146,75 @@ contains
     filter_count = n
 
   endfunction filter_count
+
+
+  !>
+  !! Average field x
+  !!
+  !! Average field x
+  !<
+  function filter_average(f, p, x, mpi)
+    implicit none
+
+    integer,                     intent(in)  :: f
+    type(particles_t),           intent(in)  :: p
+    real(DP),                    intent(in)  :: x(p%natloc)
+    type(MPI_context), optional, intent(in)  :: mpi
+    integer                                  :: filter_average
+
+    ! ---
+
+    integer  :: i, n
+
+    ! ---
+
+    filter_average = 0.0_DP
+    n = 0
+    do i = 1, p%natloc
+       if (IS_EL(f, p, i)) then
+          filter_average = filter_average + x(i)
+          n = n + 1
+       endif
+    enddo
+
+#ifdef _MP
+    if (present(mpi)) then
+       call sum_in_place(mpi, filter_average)
+       call sum_in_place(mpi, n)
+    endif
+#endif
+
+    filter_average = filter_average/n
+
+  endfunction filter_average
+
+
+  !>
+  !! Mask field x
+  !!
+  !! Mask field x
+  !<
+  function filter_mask(f, p)
+    implicit none
+
+    integer, intent(in)            :: f
+    type(particles_t), intent(in)  :: p
+    logical                        :: filter_mask(1:p%maxnatloc)
+
+    ! ---
+
+    integer  :: i
+
+    ! ---
+
+    filter_mask = .false.
+    do i = 1, p%natloc
+       if (IS_EL(f, p, i)) then
+          filter_mask(i) = .true.
+       endif
+    enddo
+
+  endfunction filter_mask
 
 
   !>
