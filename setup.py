@@ -1,3 +1,4 @@
+import glob
 import os
 import sys
 
@@ -157,15 +158,6 @@ lib_srcs += [ '%s/python/f90/coulomb_dispatch.f90' % (srcdir),
 mods2, fns2 = get_module_list(metadata, 'potentials',
                               finterface_list = [ 'register_data',
                                                   'set_Coulomb' ],
-                              exclude_list = [ 'MolecularTightBinding',
-                                               'VariableCharge',
-                                               'ConstantForce',
-                                               'HarmonicHook',
-                                               'Harmonic',
-                                               'LennardJones',
-                                               'Confinement',
-                                               'SlidingP',
-                                               'FFMTip' ]
                               )
 lib_srcs += fns2
 
@@ -210,6 +202,10 @@ lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
 
 ###
 
+scripts = glob.glob('src/python/tools/*.py')
+
+###
+
 setup(
     name = 'atomistica',
     version = '0.1',
@@ -238,5 +234,6 @@ setup(
             extra_compile_args = [ '-fPIC' ],
             extra_link_args = extra_link_args,
             )
-        ]
+        ],
+    scripts = scripts
     )
