@@ -548,24 +548,24 @@ contains
        ierror)
     implicit none
 
-    type(dense_notb_t), intent(inout)  :: this
-    type(particles_t), intent(inout)   :: p
-    type(neighbors_t), intent(inout)   :: nl
-    real(DP), intent(inout)            :: epot
-    real(DP), intent(inout)            :: f(3, p%maxnatloc)
-    real(DP), intent(inout)            :: wpot(3, 3)
-    real(DP), intent(inout), optional  :: q(p%maxnatloc)
-    real(DP), intent(inout), optional  :: epot_per_at(p%maxnatloc)
-    real(DP), intent(inout), optional  :: epot_per_bond(nl%neighbors_size)
-    real(DP), intent(inout), optional  :: f_per_bond(3, nl%neighbors_size)
+    type(dense_notb_t), intent(inout) :: this
+    type(particles_t),  intent(inout) :: p
+    type(neighbors_t),  intent(inout) :: nl
+    real(DP),           intent(inout) :: epot
+    real(DP),           intent(inout) :: f(3, p%maxnatloc)
+    real(DP),           intent(inout) :: wpot(3, 3)
+    real(DP), optional, intent(inout) :: q(p%maxnatloc)
+    real(DP), optional, intent(inout) :: epot_per_at(p%maxnatloc)
+    real(DP), optional, intent(inout) :: epot_per_bond(nl%neighbors_size)
+    real(DP), optional, intent(inout) :: f_per_bond(3, nl%neighbors_size)
 #ifdef LAMMPS
-    real(DP), intent(inout), optional  :: wpot_per_at(6, p%maxnatloc)
-    real(DP), intent(inout), optional  :: wpot_per_bond(6, nl%neighbors_size)
+    real(DP), optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
+    real(DP), optional, intent(inout) :: wpot_per_bond(6, nl%neighbors_size)
 #else
-    real(DP), intent(inout), optional  :: wpot_per_at(3, 3, p%maxnatloc)
-    real(DP), intent(inout), optional  :: wpot_per_bond(3, 3, nl%neighbors_size)
+    real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
+    real(DP), optional, intent(inout) :: wpot_per_bond(3, 3, nl%neighbors_size)
 #endif
-    integer, intent(out), optional     :: ierror
+    integer,  optional, intent(out)   :: ierror
 
     ! ---
 
