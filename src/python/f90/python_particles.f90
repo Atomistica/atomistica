@@ -250,9 +250,19 @@ module particles
      module procedure particles_set_cell, particles_set_cell_orthorhombic
   endinterface
 
+  public :: get_true_cell
+  interface get_true_cell
+    module procedure particles_get_true_cell
+  endinterface
+
   public :: set_lees_edwards
   interface set_lees_edwards
      module procedure particles_set_lees_edwards
+  endinterface
+
+  public :: volume
+  interface volume
+     module procedure particles_volume
   endinterface
 
   public :: in_bounds
@@ -394,6 +404,50 @@ contains
     call particles_set_cell(this, cell3x3, pbc=pbc, scale_atoms=scale_atoms, error=error)
 
   endsubroutine particles_set_cell_orthorhombic
+
+
+  !>
+  !! Get effective box and reciprocal box, with consideration of Lees-Edwards
+  !! boundary conditions.
+  !<
+  subroutine particles_get_true_cell(this, cell, rec_cell, error)
+    implicit none
+
+    type(particles_t),  intent(in)  :: this
+    real(DP),           intent(out) :: cell(3,3)
+    real(DP), optional, intent(out) :: rec_cell(3,3)
+    integer,  optional, intent(out) :: error
+
+    ! ---
+
+    real(DP) :: A(3,3)
+    integer  :: ipiv(3), info
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    if (any(this%shear_dx /= 0.0_DP)) then
+       cell = this%Abox
+       cell(3,1) = this%shear_dx(1)
+       cell(3,2) = this%shear_dx(2)
+
+       if (present(rec_cell)) then
+          A  = cell
+          call dgesv(3, 3, A, 3, ipiv, rec_cell, 3, info)
+
+          if (info /= 0) then
+             RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // cell(:, 1) // ", " // cell(:, 2) // ", " // cell(:, 3), error)
+          endif
+       endif
+    else
+       cell = this%Abox
+       if (present(rec_cell)) then
+          rec_cell = this%Bbox
+       endif
+    endif
+
+  endsubroutine particles_get_true_cell
 
 
   !**********************************************************************
@@ -772,6 +826,35 @@ contains
     endif
 
   endsubroutine particles_inbox
+
+
+  !>
+  !! Return the total cell volume
+  !<
+  real(DP) function particles_volume(p)
+    implicit none
+
+    type(particles_t), intent(in)  :: p
+
+    ! ---
+
+    real(DP)  :: vbox
+    real(DP)  :: cross(3)
+    integer   :: i
+
+    ! ---
+
+    cross(1) = p%Abox(2,2)*p%Abox(3,3)-p%Abox(3,2)*p%Abox(2,3)
+    cross(2) = p%Abox(3,2)*p%Abox(1,3)-p%Abox(1,2)*p%Abox(3,3)
+    cross(3) = p%Abox(1,2)*p%Abox(2,3)-p%Abox(2,2)*p%Abox(1,3)
+    vbox = 0.0_DP
+    do i = 1, 3
+       vbox = vbox + p%Abox(i,1)*cross(i)
+    enddo
+
+    particles_volume = vbox
+
+  endfunction particles_volume
 
 
   !**********************************************************************
