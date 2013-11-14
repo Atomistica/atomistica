@@ -71,6 +71,25 @@ py_atomistica_shutdown(PyObject *self, PyObject *args)
 }
 
 
+PyObject *
+py_set_logfile(PyObject *self, PyObject *args)
+{
+  if (!has_started) {
+    PyErr_SetString(PyExc_RuntimeError, "Please run _atomistica.startup() "
+                    "before changing the log file.");
+    return NULL;
+  }
+
+  char *fn;
+  if (!PyArg_ParseTuple(args, "s", &fn))
+    return NULL;
+
+  f_logging_start(fn);
+
+  Py_RETURN_NONE;
+}
+
+
 #if 0
 PyObject *
 read_atoms(PyObject *self, PyObject *args)
@@ -103,6 +122,8 @@ static PyMethodDef module_methods[] = {
     "File which to write log information to." },
   { "shutdown", py_atomistica_shutdown, METH_NOARGS,
     "Write timings and close log file." },
+  { "set_logfile", py_set_logfile, METH_VARARGS,
+    "Set name of log file." },
   { "pair_distribution", py_pair_distribution, METH_VARARGS,
     "Compute pair distribution function." },
   { "angle_distribution", py_angle_distribution, METH_VARARGS,
