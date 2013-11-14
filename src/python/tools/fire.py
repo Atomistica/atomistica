@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # ======================================================================
 # Atomistica - Interatomic potential library
 # https://github.com/pastewka/atomistica
@@ -20,7 +22,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
-#! /usr/bin/env python
+"""
+Command-line tool to run FIRE optimization.
+"""
 
 import sys
 
@@ -28,9 +32,9 @@ import numpy as np
 
 from ase.io import write
 from ase.optimize import FIRE
-from mdcore.io import read
+from atomistica.io import read
 
-import mdcore
+import atomistica
 
 ###
 
@@ -68,7 +72,7 @@ a = read(infn)
 
 print '{0} atoms.'.format(len(a))
 
-potclass = getattr(mdcore, potstr)
+potclass = getattr(atomistica, potstr)
 a.set_calculator(potclass())
 
 FIRE(a).run(fmax=fmax)
