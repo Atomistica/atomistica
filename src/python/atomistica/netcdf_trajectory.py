@@ -20,6 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
+import os
+
 import numpy as np
 
 import ase
@@ -46,6 +48,9 @@ class NetCDFTrajectory:
     VMD (http://www.ks.uiuc.edu/Research/vmd/)
     or Ovito (http://www.ovito.org/).
     """
+
+    # NetCDF format
+    _NetCDF_format = 'NETCDF3_64BIT'
 
     # Default dimension names
     _frame_dim = 'frame'
@@ -138,20 +143,22 @@ class NetCDFTrajectory:
         else:
             self.n_atoms = None
 
-        self.open(filename)
+        self._open(filename)
 
 
     def __del__(self):
         self.close()
 
 
-    def open(self, filename):
+    def _open(self, filename):
         """
         Opens the file.
 
         For internal use only.
         """
-        self.nc = Dataset(filename, self.mode, format='NETCDF3_64BIT')
+        if self.mode == 'a' and not os.path.exists(filename):
+            self.mode = 'w'
+        self.nc = Dataset(filename, self.mode, format=self._NetCDF_format)
 
         self.frame = 0
         if self.mode == 'r' or self.mode == 'a':
@@ -429,7 +436,10 @@ class NetCDFTrajectory:
 
 
     def __len__(self):
-        return len(self.nc.dimensions[self._frame_dim])
+        if self._frame_dim in self.nc.dimensions:
+            return len(self.nc.dimensions[self._frame_dim])
+        else:
+            return 0
 
 
     def pre_write_attach(self, function, interval=1, *args, **kwargs):
