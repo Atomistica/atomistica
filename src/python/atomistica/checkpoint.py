@@ -24,6 +24,11 @@
 Checkpointing class.
 """
 
+import os
+import atomistica.io as io
+
+###
+
 class Checkpoint(object):
     """
     Call function only if checkpoint file does not exist, otherwise read atoms
@@ -33,8 +38,8 @@ class Checkpoint(object):
 
     Example:
 
-    a = Checkpoint(optimize_geometry, 'optimized_geometry.traj')(a)
-    a = Checkpoint(compute_charge, 'charged_computed.traj')(a)
+    a = Checkpoint(optimize_geometry, 'geometry_optimized.traj')(a)
+    a = Checkpoint(compute_charge, 'charge_computed.traj')(a)
     """
 
     def __init__(self, func, fn):
@@ -43,8 +48,8 @@ class Checkpoint(object):
 
     def __call__(self, *args):
         if os.path.exists(self.fn):
+            print 'Reading configuration from checkpoint file %s...' % self.fn
             a = io.read(self.fn)
-            a.set_pbc(True)
         else:
             a = self.func(*args)
             io.write(self.fn, a)
