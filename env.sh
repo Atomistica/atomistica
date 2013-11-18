@@ -3,4 +3,4 @@
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PLATFORM=`python -c "from distutils.util import get_platform ; from distutils.sysconfig import get_python_version ; print '%s-%s' % ( get_platform(), get_python_version() )"`
 
-export PYTHONPATH="$PYTHONPATH:$ROOT/src/python:$ROOT/build/lib.$PLATFORM"
+export PYTHONPATH="$ROOT/src/python:$ROOT/build/lib.$PLATFORM:$PYTHONPATH"
