@@ -78,9 +78,9 @@ module cutoff_coulomb
      module procedure cutoff_coulomb_potential
   endinterface
 
-  public :: potential_and_field
-  interface potential_and_field
-     module procedure cutoff_coulomb_potential_and_field
+  public :: energy_and_forces
+  interface energy_and_forces
+     module procedure cutoff_coulomb_energy_and_forces
   endinterface
 
   public :: register
@@ -226,18 +226,17 @@ contains
   !! the total Coulomb energy. It uses the position from the associated Particles object
   !! and the charges from the respective charge array.
   !!<
-  subroutine cutoff_coulomb_potential_and_field(this, p, nl, q, phi, epot, E, wpot, ierror)
+  subroutine cutoff_coulomb_energy_and_forces(this, p, nl, q, epot, f, wpot, error)
     implicit none
 
-    type(cutoff_coulomb_t), intent(inout)  :: this
-    type(particles_t), intent(in)          :: p
-    type(neighbors_t), intent(inout)       :: nl
-    real(DP), intent(in)                   :: q(p%maxnatloc)
-    real(DP), intent(inout)                :: phi(p%maxnatloc)
-    real(DP), intent(inout)                :: epot
-    real(DP), intent(inout)                :: E(3, p%maxnatloc)
-    real(DP), intent(inout)                :: wpot(3, 3)
-    integer, intent(inout), optional       :: ierror
+    type(cutoff_coulomb_t), intent(inout) :: this
+    type(particles_t),      intent(in)    :: p
+    type(neighbors_t),      intent(inout) :: nl
+    real(DP),               intent(in)    :: q(p%maxnatloc)
+    real(DP),               intent(inout) :: epot
+    real(DP),               intent(inout) :: f(3, p%maxnatloc)
+    real(DP),               intent(inout) :: wpot(3, 3)
+    integer,      optional, intent(inout) :: error
 
     ! --
 
@@ -246,10 +245,10 @@ contains
 
     ! ---
 
-    call timer_start('cutoff_coulomb_potential_and_field')
+    call timer_start('cutoff_coulomb_energy_and_forces')
 
-    call update(nl, p, ierror)
-    PASS_ERROR(ierror)
+    call update(nl, p, error)
+    PASS_ERROR(error)
 
     cutoff_sq  = this%cutoff**2
     fac        = 1.0_DP/this%epsilon_r
@@ -263,16 +262,11 @@ contains
              abs_dr        = sqrt(abs_dr)
              df            = fac*dr/(abs_dr**3)
              if (i == j) then
-                phi(i)      = phi(i) + fac*q(j)/abs_dr
-
                 epot        = epot + 0.5_DP*fac*q_i*q(j)/abs_dr
                 wpot        = wpot - outer_product(dr, 0.5_DP*q_i*q(j)*df)
              else
-                phi(i)      = phi(i) + fac*q(j)/abs_dr
-                phi(j)      = phi(j) + fac*q_i/abs_dr
-
-                VEC3(E, i)  = VEC3(E, i) + q(j)*df
-                VEC3(E, j)  = VEC3(E, j) - q_i*df
+                VEC3(f, i)  = VEC3(f, i) + q_i*q(j)*df
+                VEC3(f, j)  = VEC3(f, j) - q_i*q(j)*df
 
                 epot        = epot + fac*q_i*q(j)/abs_dr
                 wpot        = wpot - outer_product(dr, q_i*q(j)*df)
@@ -281,9 +275,9 @@ contains
        enddo
     enddo
 
-    call timer_stop('cutoff_coulomb_potential_and_field')
+    call timer_stop('cutoff_coulomb_energy_and_forces')
 
-  endsubroutine cutoff_coulomb_potential_and_field
+  endsubroutine cutoff_coulomb_energy_and_forces
 
 
   !!>

@@ -19,6 +19,7 @@
 !! You should have received a copy of the GNU General Public License
 !! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !! ======================================================================
+
 ! @meta
 !   shared
 !   classtype:charge_overlap_t classname:ChargeOverlap interface:coulomb
@@ -29,23 +30,27 @@
 !!
 !! Gaussian or Slater-type broadening of charges.
 !!
-!! Assigns a shape to the charges on the atoms. Currently Gaussians and
-!! Slater-type (exponential) shapes are supported.
+!! Assigns a shape to the charges on the atoms. Charge distributions is given
 !!
-!! This module is required for both the TightBinding and VariableCharge modules.
+!! \f[
+!!   \rho(\vec{r}) = \sum_i \left( Z_i \delta^3(\vec{r}-\vec{r_i}) + (q_i-Z_i) f_i(\vec{r}-\vec{r_i}) \right)
+!! \f]
+!!
+!! where \f$Z_i\f$ is the effective nuclear charge and \f$f(\vec{r})\f$ the shape.
+!! Currently Gaussians and Slater-type (exponential) shapes are supported.
+!!
+!! Note that this module does not compute the electrostatic potential and field of the
+!! singular, long-ranged \f$1/r\f$ term.
+!!
+!! This module is required for both the TightBinding and VariableCharge modules. For
+!! tight-binding calculations, \f$Z_i=0\f$ for all \f$i\f$.
 !<
 
 #include "macros.inc"
 #include "filter.inc"
 
 module charge_overlap
-  use libAtoms_module
-
-  use c_f
-
-  use logging
-  use timer
-  use tls
+  use supplib
 
   use particles
   use neighbors
@@ -72,43 +77,60 @@ module charge_overlap
   public :: n_shapes, SELF_ENERGY_ONLY, GAUSSIAN, SLATER, len_shape_str
   public :: shape_strs
 
+  integer, parameter  :: CHARGE_TRANSFER_MAX_EL  = 3
+
   !
   ! The module for the computation of energies/potentials
   !
 
+  type charge_overlap_db_t
+
+     integer   :: nel = -1
+     integer   :: nU, nZ
+
+     character :: el(2, CHARGE_TRANSFER_MAX_EL)   !< Atom type
+
+     real(DP)  :: U(CHARGE_TRANSFER_MAX_EL)       !< Hubbard U
+     real(DP)  :: Z(CHARGE_TRANSFER_MAX_EL)       !< Nuclear charge
+
+  endtype charge_overlap_db_t
+
   public :: charge_overlap_t
   type charge_overlap_t
 
-     integer                :: shape = NONE
+     integer :: shape = NONE
 
      !
      ! Element on which to apply the force
      !
 
-     character(MAX_EL_STR)  :: elements = "*"
-     integer                :: els
+     character(MAX_EL_STR) :: elements = "*"
+     integer               :: els
 
      !
      ! real space sampling
      !
 
-     real(DP)               :: cutoff = 5.0_DP
-     real(DP)               :: cutoff_sq
+     real(DP) :: cutoff = 5.0_DP
+     real(DP) :: cutoff_sq
 
      !
-     ! other stuff
+     ! Hubbard-U
      !
 
-!     real(DP)            :: q_tot
-!     real(DP)            :: q_tot_gauss
-!     real(DP)            :: jellium_potential
+     real(DP), allocatable :: U(:)
 
      !
-     ! U in current units
+     ! Effective nuclear charge
      !
 
-     real(DP), allocatable  :: U_in(:)
-     real(DP), allocatable  :: U(:)
+     real(DP), allocatable :: Z(:)
+
+     !
+     ! Database
+     !
+     
+     type(charge_overlap_db_t) :: db
 
   endtype charge_overlap_t
 
@@ -138,9 +160,9 @@ module charge_overlap
      module procedure charge_overlap_potential
   endinterface
 
-  public :: potential_and_field
-  interface potential_and_field
-     module procedure charge_overlap_potential_and_field
+  public :: energy_and_forces
+  interface energy_and_forces
+     module procedure charge_overlap_energy_and_forces
   endinterface
 
   public :: register
@@ -201,42 +223,54 @@ contains
   subroutine charge_overlap_del(this)
     implicit none
 
-    type(charge_overlap_t), intent(inout)  :: this
+    type(charge_overlap_t), intent(inout) :: this
 
     ! ---
 
     if (allocated(this%U)) then
        deallocate(this%U)
     endif
+    if (allocated(this%Z)) then
+       deallocate(this%Z)
+    endif
 
   endsubroutine charge_overlap_del
 
 
   !>
-  !! Set the Hubbard U values object to this ChargeOverlap object
+  !! Set the Hubbard U values and nuclear charges
   !!
-  !! Assign a Neighbors object to this ChargeOverlap object. All subsequent operations
-  !! will use this Neighbors object. Only a pointer to the object
-  !! is copied, not the object itself.
+  !! Set the Hubbard U values and nuclear charges Z. U and Z values are passed
+  !! and stored per element, not per atom.
   !!
   !! Note that this needs to be called before *bind_to*!
   !<
-  subroutine charge_overlap_set_Hubbard_U(this, p, U, error)
+  subroutine charge_overlap_set_Hubbard_U(this, p, U, Z, error)
     implicit none
 
     type(charge_overlap_t), intent(inout) :: this  !> ChargeOverlap object
     type(particles_t),      intent(in)    :: p
     real(DP),               intent(in)    :: U(p%nel)
+    real(DP),     optional, intent(in)    :: Z(p%nel)
     integer,      optional, intent(out)   :: error
 
     ! ---
 
     INIT_ERROR(error)
 
-    if (allocated(this%U_in))  deallocate(this%U_in)
-    allocate(this%U_in(p%nel))
+    this%db%nel = p%nel
+    this%db%nU = p%nel
+    this%db%nZ = p%nel
 
-    this%U_in  = U
+    !call resize(this%U, p%nel)
+    this%db%U(1:p%nel) = U
+    
+    !call resize(this%Z, p%nel)
+    if (present(Z)) then
+       this%db%Z(1:p%nel) = Z
+    else
+       this%db%Z = 0.0_DP
+    endif
 
   endsubroutine charge_overlap_set_Hubbard_U
 
@@ -253,14 +287,14 @@ contains
   subroutine charge_overlap_bind_to(this, p, nl, ierror)
     implicit none
 
-    type(charge_overlap_t), intent(inout)  :: this
-    type(particles_t), intent(in)          :: p
-    type(neighbors_t), intent(inout)       :: nl
-    integer, intent(inout), optional       :: ierror
+    type(charge_overlap_t), intent(inout) :: this
+    type(particles_t),      intent(in)    :: p
+    type(neighbors_t),      intent(inout) :: nl
+    integer,      optional, intent(inout) :: ierror
 
     ! ---
 
-    integer   :: i
+    integer :: i, j, Z
 
     ! ---
 
@@ -271,26 +305,51 @@ contains
     PASS_ERROR(ierror)
 
     !
+    ! Copy parameters to per element array
+    !
+
+    if (this%db%nel /= this%db%nU .or. &
+        this%db%nel /= this%db%nZ) then
+
+       write (*, '(A,I2)')  "nel = ", this%db%nel
+       write (*, '(A,I2)')  "nU  = ", this%db%nU
+       write (*, '(A,I2)')  "nZ  = ", this%db%nZ
+
+       RAISE_ERROR("The number of entries must be identical for all parameters.", ierror)
+    endif
+
+    !
     ! Convert units of Hubbard U's
     !
 
-    if (.not. allocated(this%U_in)) then
-       RAISE_ERROR("charge_overlap_bind_to: No Hubbard-Us have been specified. Did you specify a tight-binding SCC or a classical variable charge model?", ierror)
-    endif
+    call resize(this%U, p%nel)
+    call resize(this%Z, p%nel)
 
-    if (allocated(this%U)) then
-       deallocate(this%U)
-    endif
-    allocate(this%U(p%nel))
+    this%U = 0.0_DP
+    this%Z = 0.0_DP
+    do j = 1, p%nel
+       do i = 1, this%db%nel
+          Z = atomic_number(a2s(this%db%el(:,i)))
+          if (Z <= 0 .or. Z > MAX_Z) then
+             RAISE_ERROR("Unknown element '" // trim(a2s(this%db%el(:,i))) // "'.", ierror)
+          endif
 
-    this%U = this%U_in / (Hartree*Bohr)
+          if (Z == p%el2Z(j)) then
+             call prlog("     " // ElementName(Z) // " - " // j)
+             call prlog("     - U = " // this%db%U(i) // ", Z = " // this%db%Z(i))
 
-    do i = 1, p%nel
-       write (ilog, '(5X,A2,A,F20.10)')  &
-            ElementName(p%el2Z(i)), ", U = ", this%U(i)
+             this%U(j)  = this%db%U(i) / (Hartree*Bohr)
+             this%Z(j)  = this%db%Z(i)
+          endif
+       enddo
     enddo
 
     if (this%shape == SLATER) then
+
+       ! Note: If shape == SLATER, then U_i has been converted such that the
+       ! charge is f_i(r) ~ exp(-U_i r), i.e. U_i = tau_i from Elstner's paper
+       ! or U_i = 2 zeta_i from Streitz-Mintmire's paper.
+
        this%U = 16*this%U/5
     endif
 
@@ -325,19 +384,19 @@ contains
   subroutine charge_overlap_potential(this, p, nl, q, phi, ierror)
     implicit none
 
-    type(charge_overlap_t), intent(inout)  :: this
-    type(particles_t), intent(in)          :: p
-    type(neighbors_t), intent(inout)       :: nl
-    real(DP), intent(in)                   :: q(p%maxnatloc)
-    real(DP), intent(inout)                :: phi(p%maxnatloc)
-    integer, intent(inout), optional       :: ierror
+    type(charge_overlap_t), intent(inout) :: this
+    type(particles_t),      intent(in)    :: p
+    type(neighbors_t),      intent(inout) :: nl
+    real(DP),               intent(in)    :: q(p%maxnatloc)
+    real(DP),               intent(inout) :: phi(p%maxnatloc)
+    integer,      optional, intent(inout) :: ierror
 
     !---
 
-    real(DP)  :: U_i_sq, abs_rij, hlp, expi, expj, src, fac, fac2, efac
-    real(DP)  :: avg, fi1, fj1, fi2, fj2, U_i, U_j, q_i
+    real(DP) :: U_i_sq, abs_rij, hlp, expi, expj, src, fac, fac2, efac
+    real(DP) :: avg, fi1, fj1, fi2, fj2, U_i, U_j, q_i, q_j, Z_i, Z_j
 
-    integer   :: i, ni, j
+    integer :: i, ni, j
 
     integer, parameter :: sqrt_pi_2 = sqrt(PI/2)
 
@@ -348,7 +407,7 @@ contains
     if (this%shape /= SELF_ENERGY_ONLY) then
        call update(nl, p, ierror)
        PASS_ERROR(ierror)
-    end if
+    endif
 
     if (this%shape == GAUSSIAN) then
 
@@ -433,9 +492,14 @@ contains
 
     else if (this%shape == SLATER) then
 
+       ! Note: If shape == SLATER, then U_i has been converted such that the
+       ! charge is f_i(r) ~ exp(-U_i r), i.e. U_i = tau_i from Elstner's paper
+       ! or U_i = 2 zeta_i from Streitz-Mintmire's paper.
+
        !$omp  parallel default(none) &
        !$omp& shared(nl, this, phi, p, q) &
-       !$omp& private(i, q_i, U_i, U_j, j, ni, abs_rij, hlp, src, fac, avg) &
+       !$omp& private(i, j, q_i, q_j, U_i, U_j, Z_i, Z_j) &
+       !$omp& private(ni, abs_rij, hlp, src, fac, avg) &
        !$omp& private(fac2, efac, fi1, fi2, fj1, fj2, expi, expj)
 
        call tls_init(size(phi), sca=1)  ! is called tls_sca1 (=phi)
@@ -447,6 +511,7 @@ contains
 
              q_i = q(i)
              U_i = this%U(p%el(i))
+             Z_i = this%Z(p%el(i))
 
              !
              ! Atom i has a Gaussian charge cloud
@@ -459,9 +524,24 @@ contains
                    abs_rij = GET_ABS_DRJ(p, nl, i, j, ni)
                    if (abs_rij < this%cutoff) then
 
+                      q_j = q(j)
                       U_j = this%U(p%el(j))
+                      Z_j = this%Z(p%el(j))
+
+                      !
+                      ! Nuclear repulsion integrals
+                      !
+
+                      hlp = -(0.5_DP*U_i+1.0_DP/abs_rij)*exp(-U_i*abs_rij)
+                      tls_sca1(i) = tls_sca1(i) + Z_j*hlp
+                      hlp = -(0.5_DP*U_j+1.0_DP/abs_rij)*exp(-U_j*abs_rij)
+                      tls_sca1(j) = tls_sca1(j) + Z_i*hlp
 
                       if (abs(U_i - U_j) < 1d-6) then
+
+                         !
+                         ! Coulomb integrals
+                         !
 
                          src = 1.0_DP/(U_i+U_j)
                          fac = U_i*U_j*src
@@ -471,10 +551,14 @@ contains
                          efac = exp(-fac)/(48*abs_rij)
 
                          hlp = -(48 + 33*fac + fac2*(9+fac))*efac
-                         tls_sca1(i) = tls_sca1(i) + q(j)*hlp
-                         tls_sca1(j) = tls_sca1(j) + q_i*hlp
+                         tls_sca1(i) = tls_sca1(i) + (q_j-Z_j)*hlp
+                         tls_sca1(j) = tls_sca1(j) + (q_i-Z_i)*hlp
 
                       else
+
+                         !
+                         ! Coulomb integrals
+                         !
 
                          fi1 = 1.0_DP/(2*(U_i**2-U_j**2)**2)
                          fj1 = -U_i**4*U_j*fi1
@@ -488,8 +572,8 @@ contains
                          expj = exp(-U_j*abs_rij)
 
                          hlp = expi*(fi1+fi2/abs_rij) + expj*(fj1+fj2/abs_rij)
-                         tls_sca1(i) = tls_sca1(i) + q(j)*hlp
-                         tls_sca1(j) = tls_sca1(j) + q_i*hlp
+                         tls_sca1(i) = tls_sca1(i) + (q_j-Z_j)*hlp
+                         tls_sca1(j) = tls_sca1(j) + (q_i-Z_i)*hlp
 
                       endif
                       
@@ -532,36 +616,33 @@ contains
   !! Difference between the Ewald (point charge) force and the force
   !! due to the Gaussian charge distribution
   !<
-  subroutine charge_overlap_potential_and_field(this, p, nl, q, phi, epot, E, &
-       wpot, ierror)
+  subroutine charge_overlap_energy_and_forces(this, p, nl, q, epot, f, wpot, error)
     implicit none
 
-    type(charge_overlap_t), intent(inout)  :: this
-    type(particles_t), intent(in)          :: p
-    type(neighbors_t), intent(inout)       :: nl
-    real(DP), intent(in)                   :: q(p%maxnatloc)
-!    real(DP), intent(inout)                :: epot
-    real(DP), intent(inout)                :: phi(p%maxnatloc)
-    real(DP), intent(inout)                :: epot
-    real(DP), intent(inout)                :: E(3, p%maxnatloc)
-    real(DP), intent(inout)                :: wpot(3, 3)
-    integer, intent(inout), optional       :: ierror
+    type(charge_overlap_t), intent(inout) :: this
+    type(particles_t),      intent(in)    :: p
+    type(neighbors_t),      intent(inout) :: nl
+    real(DP),               intent(in)    :: q(p%maxnatloc)
+    real(DP),               intent(inout) :: epot
+    real(DP),               intent(inout) :: f(3, p%maxnatloc)
+    real(DP),               intent(inout) :: wpot(3, 3)
+    integer,      optional, intent(inout) :: error
 
     !---
 
-    real(DP)  :: U_i_sq, q_i, rij(3), abs_rij, abs_rij_sq
-    real(DP)  :: c, df(3), hlp, sqrt_pi_2, src, fac, fac2, efac, expi, expj
-    real(DP)  :: avg, fi1, fj1, fi2, fj2, U_i, U_j
+    real(DP) :: U_i_sq, q_i, q_j, rij(3), abs_rij, abs_rij_sq
+    real(DP) :: c, df(3), hlp, sqrt_pi_2, src, fac, fac2, efac, expi, expj
+    real(DP) :: avg, e, ffac, fi1, fj1, fi2, fj2, U_i, U_j, Z_i, Z_j
 
-    integer   :: i, ni, j
+    integer :: i, ni, j
 
     !---
 
-    call timer_start('charge_overlap_potential_and_field')
+    call timer_start('charge_overlap_energy_and_forces')
 
     if (this%shape /= SELF_ENERGY_ONLY) then
-       call update(nl, p, ierror)
-       PASS_ERROR(ierror)
+       call update(nl, p, error)
+       PASS_ERROR(error)
     end if
 
     if (this%shape == GAUSSIAN) then
@@ -588,6 +669,8 @@ contains
                    if (i <= j .and. IS_EL(this%els, p, j)) then
                       DIST_SQ(p, nl, i, ni, rij, abs_rij_sq)
 
+                      q_j = q(j)
+
                       if (abs_rij_sq < this%cutoff_sq) then
                          abs_rij  = sqrt(abs_rij_sq)
 
@@ -609,23 +692,20 @@ contains
                               )
 
                          if (i == j) then
-                            phi(i)   = phi(i) + q_i*hlp
 
                             epot     = epot + 0.5_DP*q_i*q_i*hlp
-                            wpot     = wpot - outer_product(rij, 0.5_DP*q_i*q(j)*df)
+                            wpot     = wpot - outer_product(rij, 0.5_DP*q_i*q_j*df)
                          else
-                            phi(i)   = phi(i) + q(j)*hlp
-                            phi(j)   = phi(j) + q_i*hlp
 
-                            VEC3(E, i)  = VEC3(E, i) + q(j)*df
-                            VEC3(E, j)  = VEC3(E, j) - q_i*df
+                            VEC3(f, i)  = VEC3(f, i) + q_i*q_j*df
+                            VEC3(f, j)  = VEC3(f, j) - q_i*q_j*df
 
                             if (j > p%natloc) then
-                               epot  = epot + 0.5_DP*q_i*q(j)*hlp
-                               wpot  = wpot - outer_product(rij, 0.5_DP*q_i*q(j)*df)
+                               epot  = epot + 0.5_DP*q_i*q_j*hlp
+                               wpot  = wpot - outer_product(rij, 0.5_DP*q_i*q_j*df)
                             else
-                               epot  = epot + q_i*q(j)*hlp
-                               wpot  = wpot - outer_product(rij, q_i*q(j)*df)
+                               epot  = epot + q_i*q_j*hlp
+                               wpot  = wpot - outer_product(rij, q_i*q_j*df)
                             endif
                          endif
                       endif
@@ -646,6 +726,8 @@ contains
                       if (this%U(p%el(j)) > 0.0_DP) then
                          DIST_SQ(p, nl, i, ni, rij, abs_rij_sq)
 
+                         q_j = q(j)
+
                          if (abs_rij_sq < this%cutoff_sq) then
                             abs_rij  = sqrt(abs_rij_sq)
 
@@ -658,18 +740,15 @@ contains
                                  + 2*sqrt(c/PI)*exp(-c*abs_rij_sq)*abs_rij &
                                  )
 
-                            phi(i)      = phi(i) + q(j)*hlp
-                            phi(j)      = phi(j) + q(i)*hlp
-
-                            VEC3(E, i)  = VEC3(E, i) + q(j)*df
-                            VEC3(E, j)  = VEC3(E, j) - q_i*df
+                            VEC3(f, i)  = VEC3(f, i) + q_i*q_j*df
+                            VEC3(f, j)  = VEC3(f, j) - q_i*q_j*df
 
                             if (j > p%natloc) then
-                               epot  = epot + 0.5_DP*q_i*q(j)*hlp
-                               wpot  = wpot - outer_product(rij, 0.5_DP*q_i*q(j)*df)
+                               epot  = epot + 0.5_DP*q_i*q_j*hlp
+                               wpot  = wpot - outer_product(rij, 0.5_DP*q_i*q_j*df)
                             else
-                               epot  = epot + q_i*q(j)*hlp
-                               wpot  = wpot - outer_product(rij, q_i*q(j)*df)
+                               epot  = epot + q_i*q_j*hlp
+                               wpot  = wpot - outer_product(rij, q_i*q_j*df)
                             endif
                          endif
 
@@ -680,7 +759,6 @@ contains
 
              endif
 
-             phi(i) = phi(i) + q(i)*this%U(p%el(i))! - this%jellium_potential
              epot   = epot + 0.5_DP*q(i)*q(i)*this%U(p%el(i)) 
                       
           endif
@@ -689,12 +767,17 @@ contains
 
     else if (this%shape == SLATER) then
 
+       ! Note: If shape == SLATER, then U_i has been converted such that the
+       ! charge is f_i(r) ~ exp(-U_i r), i.e. U_i = tau_i from Elstner's paper
+       ! or U_i = 2 zeta_i from Streitz-Mintmire's paper.
+
        do i = 1, p%natloc
 
           if (IS_EL(this%els, p, i)) then
 
              q_i = q(i)
              U_i = this%U(p%el(i))
+             Z_i = this%Z(p%el(i))
 
              !
              ! Atom i has a Gaussian charge cloud
@@ -709,7 +792,31 @@ contains
                    if (abs_rij_sq < this%cutoff_sq) then
                       abs_rij  = sqrt(abs_rij_sq)
 
+                      q_j = q(j)
                       U_j = this%U(p%el(j))
+                      Z_j = this%Z(p%el(j))
+
+                      !
+                      ! Nuclear repulsion integrals
+                      !
+
+                      hlp = -(0.5_DP*U_i+1.0_DP/abs_rij)*exp(-U_i*abs_rij)
+                      fac2 = -(0.5_DP*U_i**2+U_i/abs_rij+1.0_DP/abs_rij**2) * &
+                           exp(-U_i*abs_rij)
+                      fac = q_i*Z_j
+                      ffac = fac*fac2
+                      e = fac*hlp
+
+                      hlp = -(0.5_DP*U_j+1.0_DP/abs_rij)*exp(-U_j*abs_rij)
+                      fac2 = -(0.5_DP*U_j**2+U_j/abs_rij+1.0_DP/abs_rij**2) * &
+                           exp(-U_j*abs_rij)
+                      fac = Z_i*q_j
+                      ffac = ffac + fac*fac2
+                      e = e + fac*hlp
+
+                      !
+                      ! Coulomb integrals
+                      !
 
                       if (abs(U_i - U_j) < 1d-6) then
 
@@ -721,9 +828,10 @@ contains
                          efac = exp(-fac)/(48*abs_rij)
                          hlp = -(48 + 33*fac + fac2*(9+fac))*efac
 
-                         df = ( hlp/abs_rij + avg*hlp &
+                         fac2 = &
+                              ( hlp/abs_rij + avg*hlp &
                               + (33*avg + 18*fac*avg + 3*fac2*avg)*efac &
-                              )*rij/abs_rij
+                              )
 
                       else
 
@@ -740,28 +848,31 @@ contains
 
                          hlp = expi*(fi1+fi2/abs_rij) + expj*(fj1+fj2/abs_rij)
 
-                         df = ( expi*( &
+                         fac2 = &
+                              ( expi*( &
                                 U_i*(fi1+fi2/abs_rij) + fi2/(abs_rij_sq) &
                                 ) &
                               + expj*( &
                                 U_j*(fj1+fj2/abs_rij) + fj2/(abs_rij_sq) &
                                 ) &
-                              )*rij/abs_rij
+                              )
 
                       endif
 
-                      phi(i) = phi(i) + q(j)*hlp
-                      phi(j) = phi(j) + q_i*hlp
+                      fac = q_i*q_j-q_i*Z_j-Z_i*q_j
+                      ffac = ffac + fac*fac2
+                      df = ffac * rij/abs_rij
+                      e = e + fac*hlp
 
-                      VEC3(E, i) = VEC3(E, i) + q(j)*df
-                      VEC3(E, j) = VEC3(E, j) - q_i*df
+                      VEC3(f, i) = VEC3(f, i) + df
+                      VEC3(f, j) = VEC3(f, j) - df
 
                       if (j > p%natloc) then
-                         epot  = epot + 0.5_DP*q_i*q(j)*hlp
-                         wpot  = wpot - outer_product(rij, 0.5_DP*q_i*q(j)*df)
+                         epot  = epot + 0.5_DP*e
+                         wpot  = wpot - outer_product(rij, 0.5_DP*df)
                       else
-                         epot  = epot + q_i*q(j)*hlp
-                         wpot  = wpot - outer_product(rij, q_i*q(j)*df)
+                         epot  = epot + e
+                         wpot  = wpot - outer_product(rij, df)
                       endif
                       
                    endif
@@ -769,7 +880,6 @@ contains
 
              enddo Slater_ni_loop
 
-             phi(i) = phi(i) + 5*q_i*U_i/16
              epot   = epot + 5*q_i*q_i*U_i/32
 
           endif
@@ -780,20 +890,19 @@ contains
 
        do i = 1, p%natloc
           if (IS_EL(this%els, p, i)) then
-             phi(i)  = phi(i) + q(i)*this%U(p%el(i))! - this%jellium_potential
              epot    = epot + 0.5_DP*q(i)*q(i)*this%U(p%el(i))
           endif
        enddo
           
     else
       
-       RAISE_ERROR("Fatal internal error: Unknown value (" // this%shape // ") for the shape parameter.", ierror)
+       RAISE_ERROR("Fatal internal error: Unknown value '" // this%shape // "' for the shape parameter.", error)
 
     endif
 
-    call timer_stop('charge_overlap_potential_and_field')
+    call timer_stop('charge_overlap_energy_and_forces')
 
-  endsubroutine charge_overlap_potential_and_field
+  endsubroutine charge_overlap_energy_and_forces
 
 
   !!>
@@ -804,9 +913,9 @@ contains
   subroutine charge_overlap_register(this, cfg, m)
     implicit none
 
-    type(charge_overlap_t), target, intent(inout)  :: this
-    type(c_ptr), intent(in)                :: cfg
-    type(c_ptr), intent(out)               :: m
+    type(charge_overlap_t), target, intent(inout) :: this
+    type(c_ptr),                    intent(in)    :: cfg
+    type(c_ptr),                    intent(out)   :: m
 
     ! ---
 
@@ -826,6 +935,17 @@ contains
     call ptrdict_register_real_property(m, c_loc(this%cutoff), &
          CSTR("cutoff"), &
          CSTR("Cutoff of the correction to the Coulomb potential."))
+
+    call ptrdict_register_string_list_property(m, &
+         c_loc11(this%db%el), 2, CHARGE_TRANSFER_MAX_EL, c_loc(this%db%nel), &
+         CSTR("el"), CSTR("List of element symbols."))
+
+    call ptrdict_register_list_property(m, &
+         c_loc1(this%db%U), CHARGE_TRANSFER_MAX_EL, c_loc(this%db%nU), &
+         CSTR("U"), CSTR("Hubbard U."))
+    call ptrdict_register_list_property(m, &
+         c_loc1(this%db%Z), CHARGE_TRANSFER_MAX_EL, c_loc(this%db%nZ), &
+         CSTR("Z"), CSTR("Nuclear charge."))
 
   endsubroutine charge_overlap_register
 

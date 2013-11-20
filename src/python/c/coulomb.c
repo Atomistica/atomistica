@@ -322,7 +322,7 @@ coulomb_bind_to(coulomb_t *self, PyObject *args)
 
 
 static PyObject *
-coulomb_potential_and_field(coulomb_t *self, PyObject *args, PyObject *kwargs)
+coulomb_energy_and_forces(coulomb_t *self, PyObject *args, PyObject *kwargs)
 {
   npy_intp dims[3];
   npy_intp strides[3];
@@ -334,8 +334,7 @@ coulomb_potential_and_field(coulomb_t *self, PyObject *args, PyObject *kwargs)
 
   double epot;
   PyObject *q_in, *q;
-  PyObject *phi = NULL;
-  PyObject *E = NULL;
+  PyObject *f = NULL;
   PyObject *wpot;
 
   PyObject *r;
@@ -345,12 +344,11 @@ coulomb_potential_and_field(coulomb_t *self, PyObject *args, PyObject *kwargs)
   /* --- */
 
 #ifdef DEBUG
-  printf("[coulomb_potential_and_field] self = %p\n", self);
+  printf("[coulomb_energy_and_forces] self = %p\n", self);
 #endif
 
-  if (!PyArg_ParseTuple(args, "O!O!O|O!O!", &particles_type, &a,
-			&neighbors_type, &n, &q_in, &PyArray_Type, &phi,
-			&PyArray_Type, &E))
+  if (!PyArg_ParseTuple(args, "O!O!O|O!", &particles_type, &a,
+						&neighbors_type, &n, &q_in, &PyArray_Type, &f))
     return NULL;
   
   q = PyArray_FROMANY(q_in, NPY_DOUBLE, 1, 1, 0);
@@ -359,25 +357,17 @@ coulomb_potential_and_field(coulomb_t *self, PyObject *args, PyObject *kwargs)
 
   epot = 0.0;
 
-  if (phi) {
-    Py_INCREF(phi);
-  }
-  else {
-    dims[0] = data_get_len(a->f90data);
-    phi = PyArray_ZEROS(1, dims, NPY_DOUBLE, 1);
-  }
-
-  if (E) {
-    Py_INCREF(E);
+  if (f) {
+    Py_INCREF(f);
   }
   else {
     dims[0] = data_get_len(a->f90data);
     dims[1] = 3;
     strides[0] = dims[1]*NPY_SIZEOF_DOUBLE;
     strides[1] = NPY_SIZEOF_DOUBLE;
-    E = (PyObject*) PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, strides,
+    f = (PyObject*) PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, strides,
 				NULL, 0, NPY_FARRAY, NULL);
-    memset(PyArray_DATA(E), 0, dims[0]*dims[1]*NPY_SIZEOF_DOUBLE);
+    memset(PyArray_DATA(f), 0, dims[0]*dims[1]*NPY_SIZEOF_DOUBLE);
   }
 
   dims[0] = 3;
@@ -385,25 +375,24 @@ coulomb_potential_and_field(coulomb_t *self, PyObject *args, PyObject *kwargs)
   wpot = PyArray_ZEROS(2, dims, NPY_DOUBLE, 1);
 
 #ifdef DEBUG
-  printf("[coulomb_potential_and_field] self->f90class->name = %s\n",
+  printf("[coulomb_energy_and_forces] self->f90class->name = %s\n",
 	 self->f90class->name);
-  printf("[coulomb_potential_and_field] self->f90obj = %p\n",
+  printf("[coulomb_energy_and_forces] self->f90obj = %p\n",
 	 self->f90obj);
-  printf("[coulomb_potential_and_field] a->f90obj = %p\n",
+  printf("[coulomb_energy_and_forces] a->f90obj = %p\n",
 	 a->f90obj);
-  printf("[coulomb_potential_and_field] n->f90obj = %p\n",
+  printf("[coulomb_energy_and_forces] n->f90obj = %p\n",
 	 n->f90obj);
-  printf("[coulomb_potential_and_field] self->f90class->potential_and_field = %p\n",
-	 self->f90class->potential_and_field);
+  printf("[coulomb_energy_and_forces] self->f90class->energy_and_forces = %p\n",
+	 self->f90class->energy_and_forces);
 #endif
 
-  self->f90class->potential_and_field(self->f90obj, a->f90obj, n->f90obj,
-				      PyArray_DATA(q), PyArray_DATA(phi), &epot,
-				      PyArray_DATA(E), PyArray_DATA(wpot),
-				      &ierror);
+  self->f90class->energy_and_forces(self->f90obj, a->f90obj, n->f90obj,
+									PyArray_DATA(q), &epot, PyArray_DATA(f),
+									PyArray_DATA(wpot), &ierror);
 
 #ifdef DEBUG
-  printf("[coulomb_potential_and_field] epot = %f\n", epot);
+  printf("[coulomb_energy_and_forces] epot = %f\n", epot);
 #endif
 
   if (error_to_py(ierror))
@@ -411,17 +400,16 @@ coulomb_potential_and_field(coulomb_t *self, PyObject *args, PyObject *kwargs)
 
   /* --- Compose return tuple --- */
 
-  r  = PyTuple_New(4);
+  r  = PyTuple_New(3);
   if (!r)
     return NULL;
 
-  PyTuple_SET_ITEM(r, 0, phi);
-  PyTuple_SET_ITEM(r, 1, PyFloat_FromDouble(epot));
-  PyTuple_SET_ITEM(r, 2, E);
-  PyTuple_SET_ITEM(r, 3, wpot);
+  PyTuple_SET_ITEM(r, 0, PyFloat_FromDouble(epot));
+  PyTuple_SET_ITEM(r, 1, f);
+  PyTuple_SET_ITEM(r, 2, wpot);
 
 #ifdef DEBUG
-  printf("{coulomb_potential_and_field}\n");
+  printf("{coulomb_energy_and_forces}\n");
 #endif
 
   Py_DECREF(q);
@@ -512,8 +500,8 @@ static PyMethodDef coulomb_methods[] = {
   { "bind_to", (PyCFunction) coulomb_bind_to, METH_VARARGS,
     "Bind this coulomb to a certain Particles and Neighbors object. This is to "
     "be called if either one changes." },
-  { "potential_and_field", (PyCFunction) coulomb_potential_and_field,
-    METH_VARARGS, "Compute the electrostatic potential and field." },
+  { "energy_and_forces", (PyCFunction) coulomb_energy_and_forces,
+    METH_VARARGS, "Compute the forces and return the potential energy." },
   { "potential", (PyCFunction) coulomb_potential,
     METH_VARARGS, "Compute the electrostatic potential." },
   { NULL, NULL, 0, NULL }  /* Sentinel */

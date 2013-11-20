@@ -171,8 +171,11 @@ class Atomistica(object):
                 else:
                     self.pots += [ pot ]
         else:
-            self.pots = [ self.potential_class(**convpar(kwargs)) ]
-            self.couls = [ ]
+            pot = self.potential_class(**convpar(kwargs))
+            if hasattr(pot, 'potential'):
+                self.couls += [ pot ]
+            else:
+                self.pots += [ pot ]
 
         if avgn:
             self.avgn = avgn
@@ -240,8 +243,9 @@ class Atomistica(object):
             pot.bind_to(self.particles, self.nl)
 
         if len(self.couls) > 0:
-            self.q = np.zeros(len(atoms))
-            self.phi = np.zeros(len(atoms))
+            self.q = atoms.get_charges()
+            if self.q is None:
+                self.q = np.zeros(len(atoms))
             self.E = np.zeros([3,len(atoms)])
             # Coulomb callback should be directed to this wrapper object
             for pot in self.pots:
@@ -414,29 +418,25 @@ class Atomistica(object):
                 self.wpot += _wpot
 
             # ... call Coulomb solvers to get potential and fields
-            self.phi = np.zeros(len(self.q))
             epot_coul = 0.0
-            self.E = np.zeros([len(self.q),3])
             wpot_coul = 0.0
 
             for coul in self.couls:
-                _phi, _epot, _E, _wpot = \
-                    coul.potential_and_field(self.particles, self.nl, self.q,
-                                             self.phi, self.E)
+                _epot, _forces, _wpot = \
+                    coul.energy_and_forces(self.particles, self.nl, self.q)
                 epot_coul += _epot
                 wpot_coul += _wpot
 
             # Convert units
-            self.phi *= Hartree * Bohr
             epot_coul *= Hartree * Bohr
-            self.E *= Hartree * Bohr
+            _forces *= Hartree * Bohr
             wpot_coul *= Hartree * Bohr
 
             self.epot += epot_coul
             self.wpot += wpot_coul
 
-            # Forces are charges time field
-            self.forces += self.q.reshape(-1,1) * self.E
+            # Sum forces
+            self.forces += _forces
             
             
     ### Convenience
@@ -512,7 +512,8 @@ exclude_list = [ 'TightBinding' ]
 spec_avgn = dict(Gupta=1000)
 
 for name, cls in inspect.getmembers(_atomistica):
-    if hasattr(cls, 'energy_and_forces') and not cls.__name__ in exclude_list:
+    if hasattr(cls, 'energy_and_forces') and \
+            not cls.__name__ in exclude_list:
         avgn = 100
         if cls.__name__ in spec_avgn.keys():
             avgn = spec_avgn[cls.__name__]

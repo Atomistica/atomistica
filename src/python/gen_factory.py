@@ -395,7 +395,7 @@ def write_coulomb_factory_f90(mods, str, fn):
                     "  call c_f_pointer(p_cptr, p)\n" +
                     "  if (.not. associated(this_fptr))   stop '[python_%s_set_Hubbard_U] *this_fptr* is NULL.'\n" % f90name +
                     "  if (.not. associated(p))   stop '[python_%s_set_Hubbard_U] *p* is NULL.'\n" % f90name +
-                    "  call set_Hubbard_U(this_fptr, p, U, error)\n" +
+                    "  call set_Hubbard_U(this_fptr, p, U, error=error)\n" +
                     "endsubroutine python_%s_set_Hubbard_U\n\n\n" % f90name)
 
         f.write("subroutine python_%s_bind_to(this_cptr, p_cptr, nl_cptr, error) bind(C)\n" % f90name +
@@ -418,16 +418,15 @@ def write_coulomb_factory_f90(mods, str, fn):
                 "  call bind_to(this_fptr, p, nl, error)\n" +
                 "endsubroutine python_%s_bind_to\n\n\n" % f90name)
 
-        f.write("subroutine python_%s_potential_and_field(this_cptr, p_cptr, nl_cptr, q, phi, epot, E, wpot, error) bind(C)\n" % f90name +
+        f.write("subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, q, epot, f, wpot, error) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
                 "  implicit none\n\n" +
                 "  type(c_ptr), value :: this_cptr\n" +
                 "  type(c_ptr), value :: p_cptr\n" +
                 "  type(c_ptr), value :: nl_cptr\n" +
                 "  real(c_double), intent(out) :: epot\n" +
-                "  real(c_double) :: phi(*)\n" +
                 "  real(c_double) :: q(*)\n" +
-                "  real(c_double) :: E(3, *)\n" +
+                "  real(c_double) :: f(3, *)\n" +
                 "  real(c_double) :: wpot(3, 3)\n" +
                 "  integer(c_int), intent(out) :: error\n\n" +
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
@@ -437,12 +436,12 @@ def write_coulomb_factory_f90(mods, str, fn):
                 "  call c_f_pointer(this_cptr, this_fptr)\n" +
                 "  call c_f_pointer(p_cptr, p)\n" +
                 "  call c_f_pointer(nl_cptr, nl)\n" +
-                "  if (.not. associated(this_fptr))   stop '[python_%s_potential_and_field] *this_fptr* is NULL.'\n" % f90name +
-                "  if (.not. associated(p))   stop '[python_%s_potential_and_field] *p* is NULL.'\n" % f90name +
-                "  if (.not. associated(nl))   stop '[python_%s_potential_and_field] *nl* is NULL.'\n" % f90name +
-                "  call potential_and_field(this_fptr, p, nl, q, phi, epot, E, wpot,&\n" +
+                "  if (.not. associated(this_fptr))   stop '[python_%s_energy_and_forces] *this_fptr* is NULL.'\n" % f90name +
+                "  if (.not. associated(p))   stop '[python_%s_energy_and_forces] *p* is NULL.'\n" % f90name +
+                "  if (.not. associated(nl))   stop '[python_%s_energy_and_forces] *nl* is NULL.'\n" % f90name +
+                "  call energy_and_forces(this_fptr, p, nl, q, epot, f, wpot,&\n" +
                 "    error)\n" +
-                "endsubroutine python_%s_potential_and_field\n\n\n" % f90name)
+                "endsubroutine python_%s_energy_and_forces\n\n\n" % f90name)
 
         f.write("subroutine python_%s_potential(this_cptr, p_cptr, nl_cptr, q, phi, error) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
@@ -493,7 +492,7 @@ def write_coulomb_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
         if set_Hubbard_U_ex:
             s += "void python_%s_set_hubbard_u(void *, void *, double *, int *);\n" % f90name
         s += "void python_%s_bind_to(void *, void *, void *, int *);\n" % f90name
-        s += "void python_%s_potential_and_field(void *, void *, void *, double *, double *, double *, double *, double *, int *);\n" % f90name
+        s += "void python_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, double *, double *, int *);\n" % f90name
         s += "void python_%s_potential(void *, void *, void *, double *, double *, int *);\n" % f90name
 
     d["prototypes"] = s
@@ -515,7 +514,7 @@ def write_coulomb_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
         else:
             s += "    NULL,\n"
         s += "    python_%s_bind_to,\n" % f90name
-        s += "    python_%s_potential_and_field,\n" % f90name
+        s += "    python_%s_energy_and_forces,\n" % f90name
         s += "    python_%s_potential,\n" % f90name
         s += "  },\n"
             

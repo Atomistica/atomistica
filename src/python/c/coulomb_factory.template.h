@@ -44,8 +44,8 @@ typedef struct __%(name)s_class_t {
   void (*init)(void *, int *);
   void (*set_Hubbard_U)(void *, void *, double *, int *);
   void (*bind_to)(void *, void *, void *, int *);
-  void (*potential_and_field)(void *, void *, void *, double *, double *,
-			      double *, double *, double *, int *);
+  void (*energy_and_forces)(void *, void *, void *, double *, double *,
+							double *, double *, int *);
   void (*potential)(void *, void *, void *, double *, double *, int *);
 
 } %(name)s_class_t;
