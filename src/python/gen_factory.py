@@ -492,7 +492,7 @@ def write_coulomb_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
         if set_Hubbard_U_ex:
             s += "void python_%s_set_hubbard_u(void *, void *, double *, int *);\n" % f90name
         s += "void python_%s_bind_to(void *, void *, void *, int *);\n" % f90name
-        s += "void python_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, double *, double *, int *);\n" % f90name
+        s += "void python_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, double *, int *);\n" % f90name
         s += "void python_%s_potential(void *, void *, void *, double *, double *, int *);\n" % f90name
 
     d["prototypes"] = s
