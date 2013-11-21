@@ -188,7 +188,7 @@ contains
   subroutine direct_coulomb_energy_and_forces(this, p, nl, q, epot, f, wpot, error)
     implicit none
 
-    type(direct_coulomb_t), intent(inout)  :: this
+    type(direct_coulomb_t), intent(inout) :: this
     type(particles_t),      intent(in)    :: p
     type(neighbors_t),      intent(inout) :: nl
     real(DP),               intent(in)    :: q(p%maxnatloc)
@@ -199,9 +199,9 @@ contains
 
     ! --
 
-    integer   :: i, j
-    real(DP)  :: abs_dr, dr(3), df(3), fac, q_i
-    real(DP)  :: energy, virial(3, 3)
+    integer  :: i, j
+    real(DP) :: abs_dr, dr(3), df(3), fac, q_i
+    real(DP) :: energy, virial(3, 3)
 
     ! ---
 
@@ -222,13 +222,13 @@ contains
        q_i  = q(i)
 
        do j = i+1, p%natloc
-          dr                 = POS3(p, i)-POS3(p, j)
-          abs_dr             = sqrt(dot_product(dr, dr))
-          df                 = fac*dr/(abs_dr**3)
-          VEC3(tls_vec1, i)  = VEC3(tls_vec1, i) + q_i*q(j)*df
-          VEC3(tls_vec1, j)  = VEC3(tls_vec1, j) - q_i*q(j)*df
-          energy             = energy + fac*q_i*q(j)/abs_dr
-          virial             = virial - outer_product(dr, fac*q_i*q(j)*df)
+          dr                = POS3(p, i)-POS3(p, j)
+          abs_dr            = sqrt(dot_product(dr, dr))
+          df                = fac*q_i*q(j)*dr/(abs_dr**3)
+          VEC3(tls_vec1, i) = VEC3(tls_vec1, i) + df
+          VEC3(tls_vec1, j) = VEC3(tls_vec1, j) - df
+          energy            = energy + fac*q_i*q(j)/abs_dr
+          virial            = virial - outer_product(dr, df)
        enddo
     enddo
 
