@@ -258,7 +258,7 @@ contains
 
     INIT_ERROR(error)
 
-    this%db%nel = p%nel
+    !this%db%nel = p%nel
     this%db%nU = p%nel
     this%db%nZ = p%nel
 
@@ -308,8 +308,9 @@ contains
     ! Copy parameters to per element array
     !
 
-    if (this%db%nel /= this%db%nU .or. &
-        this%db%nel /= this%db%nZ) then
+    if (this%db%nel > 0 .and. &
+         ( this%db%nel /= this%db%nU .or. &
+         this%db%nel /= this%db%nZ )) then
 
        write (*, '(A,I2)')  "nel = ", this%db%nel
        write (*, '(A,I2)')  "nU  = ", this%db%nU
@@ -327,22 +328,27 @@ contains
 
     this%U = 0.0_DP
     this%Z = 0.0_DP
-    do j = 1, p%nel
-       do i = 1, this%db%nel
-          Z = atomic_number(a2s(this%db%el(:,i)))
-          if (Z <= 0 .or. Z > MAX_Z) then
-             RAISE_ERROR("Unknown element '" // trim(a2s(this%db%el(:,i))) // "'.", ierror)
-          endif
+    if (this%db%nel > 0) then
+       do j = 1, p%nel
+          do i = 1, this%db%nel
+             Z = atomic_number(a2s(this%db%el(:,i)))
+             if (Z <= 0 .or. Z > MAX_Z) then
+                RAISE_ERROR("Unknown element '" // trim(a2s(this%db%el(:,i))) // "'.", ierror)
+             endif
 
-          if (Z == p%el2Z(j)) then
-             call prlog("     " // ElementName(Z) // " - " // j)
-             call prlog("     - U = " // this%db%U(i) // ", Z = " // this%db%Z(i))
+             if (Z == p%el2Z(j)) then
+                call prlog("     " // ElementName(Z) // " - " // j)
+                call prlog("     - U = " // this%db%U(i) // ", Z = " // this%db%Z(i))
 
-             this%U(j)  = this%db%U(i) / (Hartree*Bohr)
-             this%Z(j)  = this%db%Z(i)
-          endif
+                this%U(j)  = this%db%U(i) / (Hartree*Bohr)
+                this%Z(j)  = this%db%Z(i)
+             endif
+          enddo
        enddo
-    enddo
+    else
+       if (this%db%nU > 0)  this%U(1:this%db%nU) = this%db%U(1:this%db%nU)
+       if (this%db%nZ > 0)  this%Z(1:this%db%nU) = this%db%Z(1:this%db%nU)
+    endif
 
     if (this%shape == SLATER) then
 
