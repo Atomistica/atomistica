@@ -330,14 +330,17 @@ class Atomistica(object):
             self.particles.set_lees_edwards(self.lees_edwards_dx,
                                             self.lees_edwards_dv)
 
-        if pos_chgd or cell_chgd or lebc_chgd or self.force_update or \
-            force_update:
+        # Charges changed?
+        charges_chgd = False
+        if np.any(self.q != atoms.get_charges()):
+            self.q       = atoms.get_charges()
+            charges_chgd = True
+
+        if pos_chgd or cell_chgd or lebc_chgd or charges_chgd or \
+                self.force_update or force_update:
 
             self.calculate()
             self.force_update  = False
-
-            if self.q is not None:
-               atoms.set_charges(self.q)
 
 
     def get_potential_energy(self, atoms, force_consistent=False):
@@ -367,16 +370,10 @@ class Atomistica(object):
 
 
     def get_electrostatic_potential(self, atoms=None):
-        self.update(atoms)
+        self.phi = np.zeros(len(self.particles))
+        self.potential(self.particles, self.nl, self.q, self.phi)
 
         return self.phi
-
-
-    def get_electrostatic_field(self, atoms=None):
-        if atoms is not None:
-            self.update(atoms)
-
-        return self.E
 
 
     def calculate(self):
@@ -419,24 +416,26 @@ class Atomistica(object):
 
             # ... call Coulomb solvers to get potential and fields
             epot_coul = 0.0
-            wpot_coul = 0.0
+            forces_coul = np.zeros([len(self.particles),3])
+            wpot_coul = np.zeros([3,3])
 
             for coul in self.couls:
                 _epot, _forces, _wpot = \
-                    coul.energy_and_forces(self.particles, self.nl, self.q)
+                    coul.energy_and_forces(self.particles, self.nl, self.q,
+                                           forces_coul)
                 epot_coul += _epot
                 wpot_coul += _wpot
 
             # Convert units
             epot_coul *= Hartree * Bohr
-            _forces *= Hartree * Bohr
+            forces_coul *= Hartree * Bohr
             wpot_coul *= Hartree * Bohr
 
             self.epot += epot_coul
             self.wpot += wpot_coul
 
             # Sum forces
-            self.forces += _forces
+            self.forces += forces_coul
             
             
     ### Convenience
@@ -490,11 +489,6 @@ class Atomistica(object):
         assert p is self.particles
         for coul in self.couls:
             coul.set_Hubbard_U(p, U)
-
-
-    def potential_and_field(self, p, nl, q, phi, epot, E, wpot):
-        # It appears this callback is actually not needed. Remove?
-        raise NotImplementedError
 
 
     def potential(self, p, nl, q, phi):

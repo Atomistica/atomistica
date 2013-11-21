@@ -21,7 +21,7 @@
 # ======================================================================
 
 """
-Potential test suite (for MDCore).
+Potential test suite.
 """
 
 from math import sqrt
@@ -45,39 +45,38 @@ def test_forces(atoms, dx=1e-6):
        finite differences approach.
     """
 
-    f0   = atoms.get_forces().copy()
-    ffd  = f0.copy()
+    f0  = atoms.get_forces().copy()
+    ffd = f0.copy()
 
     for a in atoms:
         r0  = a.position.copy()
 
         a.x = r0[0]-dx
-        ex1  = atoms.get_potential_energy()
+        ex1 = atoms.get_potential_energy()
         a.x = r0[0]+dx
-        ex2  = atoms.get_potential_energy()
+        ex2 = atoms.get_potential_energy()
         a.x = r0[0]
 
         a.y = r0[1]-dx
-        ey1  = atoms.get_potential_energy()
+        ey1 = atoms.get_potential_energy()
         a.y = r0[1]+dx
-        ey2  = atoms.get_potential_energy()
+        ey2 = atoms.get_potential_energy()
         a.y = r0[1]
 
         a.z = r0[2]-dx
-        ez1  = atoms.get_potential_energy()
+        ez1 = atoms.get_potential_energy()
         a.z = r0[2]+dx
-        ez2  = atoms.get_potential_energy()
+        ez2 = atoms.get_potential_energy()
         a.z = r0[2]
 
-        ffd[a.index, 0]  = -(ex2-ex1)/(2*dx)
-        ffd[a.index, 1]  = -(ey2-ey1)/(2*dx)
-        ffd[a.index, 2]  = -(ez2-ez1)/(2*dx)
+        ffd[a.index, 0] = -(ex2-ex1)/(2*dx)
+        ffd[a.index, 1] = -(ey2-ey1)/(2*dx)
+        ffd[a.index, 2] = -(ez2-ez1)/(2*dx)
 
-    df     = ffd-f0
+    df    = ffd-f0
+    absdf = np.sum(df*df, axis=1)
 
-    absdf  = np.sum(df*df, axis=1)
-
-    return ( ffd, f0, np.max(absdf) )
+    return ffd, f0, np.max(absdf)
 
 
 def test_virial(atoms, de=1e-6):
@@ -85,37 +84,64 @@ def test_virial(atoms, de=1e-6):
        finite differences approach.
     """
 
-    s0   = atoms.get_stress().copy()
-    V0   = atoms.get_volume()
-    sfd  = np.zeros([ 3, 3 ])
-    c0   = atoms.get_cell().copy()
+    s0  = atoms.get_stress().copy()
+    V0  = atoms.get_volume()
+    sfd = np.zeros([ 3, 3 ])
+    c0  = atoms.get_cell().copy()
 
-    un       = np.zeros([3,3])
-    un[0,0]  = 1.0
-    un[1,1]  = 1.0
-    un[2,2]  = 1.0
+    un      = np.zeros([3,3])
+    un[0,0] = 1.0
+    un[1,1] = 1.0
+    un[2,2] = 1.0
 
 
     for i in range(3):
         for j in range(3):
-            c          = c0.copy()
-            eps        = un.copy()
+            c         = c0.copy()
+            eps       = un.copy()
 
-            eps[i, j]  = un[i, j]-de
-            c          = np.dot(c0, eps)
+            eps[i, j] = un[i, j]-de
+            c         = np.dot(c0, eps)
             atoms.set_cell(c, scale_atoms=True)
             e1  = atoms.get_potential_energy()
 
-            eps[i, j]  = un[i, j]+de
-            c          = np.dot(c0, eps)
+            eps[i, j] = un[i, j]+de
+            c         = np.dot(c0, eps)
             atoms.set_cell(c, scale_atoms=True)
             e2  = atoms.get_potential_energy()
 
-            sfd[i, j]  = (e2-e1)/(2*de)
+            sfd[i, j] = (e2-e1)/(2*de)
 
-    sfd  = np.array( [ sfd[0,0], sfd[1,1], sfd[2,2], (sfd[1,2]+sfd[2,1])/2, (sfd[0,2]+sfd[2,0])/2, (sfd[0,1]+sfd[1,0])/2 ] )/V0
+    sfd = np.array( [ sfd[0,0], sfd[1,1], sfd[2,2], (sfd[1,2]+sfd[2,1])/2,
+                      (sfd[0,2]+sfd[2,0])/2, (sfd[0,1]+sfd[1,0])/2 ] )/V0
 
-    return ( sfd, s0, np.max(sfd-s0) )
+    return sfd, s0, np.max(sfd-s0)
+
+
+def test_potential(atoms, dq=1e-6):
+    """
+    Compute electrostatic potential and compare to potential computed
+    numerically from a finite differences approach.
+    """
+
+    p0  = atoms.get_calculator().get_electrostatic_potential().copy()
+    pfd = p0.copy()
+
+    for a in atoms:
+        q0       = a.charge
+
+        a.charge = q0-dq
+        eq1      = atoms.get_potential_energy()
+        a.charge = q0+dq
+        eq2      = atoms.get_potential_energy()
+        a.charge = q0
+
+        pfd[a.index] = (eq2-eq1)/(2*dq)
+
+    dp    = pfd-p0
+    absdp = np.sum(dp*dp)
+
+    return pfd, p0, np.max(absdp)
 
 
 def cubic_elastic_constants(a, Minimizer=None, fmax=0.025, eps=0.001):

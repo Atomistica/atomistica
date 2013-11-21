@@ -31,10 +31,11 @@ from ase.units import mol
 
 from ase.lattice.cubic import Diamond, FaceCenteredCubic, SimpleCubic
 from ase.lattice.cubic import BodyCenteredCubic
-from ase.lattice.compounds import B1, B2, B3, L1_2
+from ase.lattice.compounds import B1, B2, B3, L1_2, NaCl
 
+import atomistica.native as native
 from atomistica import *
-from atomistica.tests import test_forces, test_virial
+from atomistica.tests import test_forces, test_potential, test_virial
 
 # import ase_ext_io as io
 
@@ -61,8 +62,17 @@ def random_solid(els, density):
 
     return a
 
+def assign_charges(a, els):
+    syms = np.array(a.get_chemical_symbols())
+    qs = np.zeros(len(a))
+    for el, q in els.iteritems():
+        qs[syms==el] = q
+    a.set_charges(qs)
+    return a
+
 ###
 
+# Potential tests
 tests  = [
     ( r6, dict(el1='Si', el2='Si', A=1.0, r0=1.0, cutoff=5.0),
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
@@ -107,6 +117,27 @@ tests  = [
     ( Rebo2Scr, None,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( 'random-C-H', random_solid( [('C',50),('H',10)], 3.0 ) ),
+        ] ),
+    ]
+
+# Coulomb potential tests
+tests += [
+    ( DirectCoulomb, None,
+      [ ( "sc-Na-Cl", assign_charges(NaCl(['Na','Cl'], latticeconstant=5.64,
+                                          size=[sx,sx,sx]),
+                                     dict(Na=1,Cl=-1)) ),
+        ( "random-Na-Cl", assign_charges(random_solid([('Na',50),('Cl',50)],
+                                                      2.16),
+                                         dict(Na=1,Cl=-1)) ),
+        ] ),
+    ( ChargeOverlap, dict(el=['Na','Cl'], U=[1.0,0.5], Z=[0.1,-0.2],
+                          shape='Slater', cutoff=5.0),
+      [ ( "sc-Na-Cl", assign_charges(NaCl(['Na','Cl'], latticeconstant=5.64,
+                                          size=[sx,sx,sx]),
+                                     dict(Na=1,Cl=-1)) ),
+        ( "random-Na-Cl", assign_charges(random_solid([('Na',50),('Cl',50)],
+                                                      2.16),
+                                         dict(Na=1,Cl=-1)) ),
         ] ),
     ]
 
@@ -167,7 +198,7 @@ def run_forces_and_virial_test(test=None):
                     if test is None:
                         print "...distorted..."
 
-                ffd, f0, maxdf  = test_forces(a, dx=dx)
+                ffd, f0, maxdf = test_forces(a, dx=dx)
         
                 if test is None:
                     if abs(maxdf) < tol:
@@ -185,7 +216,7 @@ def run_forces_and_virial_test(test=None):
                     test.assertTrue(abs(maxdf) < tol,
                                     msg=errmsg+'; forces')
 
-                sfd, s0, maxds  = test_virial(a, de=dx)
+                sfd, s0, maxds = test_virial(a, de=dx)
 
                 if test is None:
                     if abs(maxds) < tol:
@@ -199,6 +230,24 @@ def run_forces_and_virial_test(test=None):
                 
                         print "s - numerically"
                         print sfd
+                else:
+                    test.assertTrue(abs(maxds) < tol,
+                                    msg=errmsg+'; virial')
+
+                pfd, p0, maxdp = test_potential(a, dq=dx)
+
+                if test is None:
+                    if abs(maxdp) < tol:
+                        print "potential .ok."
+                    else:
+                        print "potential .failed."
+                        print "max(dp)  = %f" % maxdp
+                    
+                        print "p - from potential"
+                        print p0
+                
+                        print "p - numerically"
+                        print pfd
                 else:
                     test.assertTrue(abs(maxds) < tol,
                                     msg=errmsg+'; virial')
