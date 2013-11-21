@@ -35,7 +35,6 @@
 #include "particles.h"
 #include "neighbors.h"
 
-
 /* Python object types:
    Coulomb - Single coulomb
 */
@@ -348,7 +347,7 @@ coulomb_energy_and_forces(coulomb_t *self, PyObject *args, PyObject *kwargs)
 #endif
 
   if (!PyArg_ParseTuple(args, "O!O!O|O!", &particles_type, &a,
-						&neighbors_type, &n, &q_in, &PyArray_Type, &f))
+                        &neighbors_type, &n, &q_in, &PyArray_Type, &f))
     return NULL;
   
   q = PyArray_FROMANY(q_in, NPY_DOUBLE, 1, 1, 0);
@@ -376,20 +375,20 @@ coulomb_energy_and_forces(coulomb_t *self, PyObject *args, PyObject *kwargs)
 
 #ifdef DEBUG
   printf("[coulomb_energy_and_forces] self->f90class->name = %s\n",
-	 self->f90class->name);
+         self->f90class->name);
   printf("[coulomb_energy_and_forces] self->f90obj = %p\n",
-	 self->f90obj);
+         self->f90obj);
   printf("[coulomb_energy_and_forces] a->f90obj = %p\n",
-	 a->f90obj);
+         a->f90obj);
   printf("[coulomb_energy_and_forces] n->f90obj = %p\n",
-	 n->f90obj);
+         n->f90obj);
   printf("[coulomb_energy_and_forces] self->f90class->energy_and_forces = %p\n",
-	 self->f90class->energy_and_forces);
+         self->f90class->energy_and_forces);
 #endif
 
   self->f90class->energy_and_forces(self->f90obj, a->f90obj, n->f90obj,
-									PyArray_DATA(q), &epot, PyArray_DATA(f),
-									PyArray_DATA(wpot), &ierror);
+                                    PyArray_DATA(q), &epot, PyArray_DATA(f),
+                                    PyArray_DATA(wpot), &ierror);
 
 #ifdef DEBUG
   printf("[coulomb_energy_and_forces] epot = %f\n", epot);
