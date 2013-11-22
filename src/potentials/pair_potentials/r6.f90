@@ -268,9 +268,9 @@ contains
     m = ptrdict_register_section(cfg, CSTR("r6"), &
          CSTR("r^6 potential (London dispersion forces). Computes: A*(r0+r)^-6"))
 
-    call ptrdict_register_string_property(m, c_loc(this%element1), &
+    call ptrdict_register_string_property(m, c_locs(this%element1), &
          MAX_EL_STR, CSTR("el1"), CSTR("First element."))
-    call ptrdict_register_string_property(m, c_loc(this%element2), &
+    call ptrdict_register_string_property(m, c_locs(this%element2), &
          MAX_EL_STR, CSTR("el2"), CSTR("Second element."))
 
     call ptrdict_register_real_property(m, c_loc(this%A), CSTR("A"), &

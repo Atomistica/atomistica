@@ -290,6 +290,9 @@
 
 #endif
 
+    write (*, *) 'epot_per_at', present(epot_per_at)
+    write (*, *) 'epot_per_bond', present(epot_per_bond)
+
 
     this%it = this%it + 1
 

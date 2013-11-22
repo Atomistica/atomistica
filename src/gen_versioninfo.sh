@@ -7,7 +7,7 @@ h=`hostname`
 m=`uname -m`
 
 
-if [[ "$3" == "xlf_r" ]]; then
+if [[ "$3" == "bgxlf_r" ]]; then
     fortvers1=`$3 -qversion | head -n 1 | tail -n 1`
     fortvers2=`$3 -qversion | head -n 2 | tail -n 1`
     fortvers="$fortvers1; $fortvers2"

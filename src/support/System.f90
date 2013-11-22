@@ -84,7 +84,7 @@ module system_module
      module procedure string_cat_logical, string_cat_int, string_cat_real
      module procedure string_cat_real_array, string_cat_complex
      module procedure string_cat_int_array, string_cat_logical_array
-     module procedure string_cat_complex_array, string_cat_string_array
+     module procedure string_cat_complex_array!, string_cat_string_array
 !     module procedure logical_cat_string, logical_cat_logical, logical_cat_int, logical_cat_real
      module procedure int_cat_string!, int_cat_logical, int_cat_int, int_cat_real
      module procedure real_cat_string!, real_cat_logical, real_cat_int, real_cat_real
@@ -111,8 +111,8 @@ module system_module
 
   integer, save :: default_real_precision = 17
 
-  character(kind=C_CHAR), save, target :: dummy_string(6) = "(null)"
-  character(kind=C_CHAR), save, target :: one_string(2) = "?"
+  character(kind=C_CHAR), save, target :: dummy_string(6) = [ "(","n","u","l","l",")" ]
+  character(kind=C_CHAR), save, target :: one_string(2) = [ "?"," " ]
 
 contains
 
@@ -449,10 +449,11 @@ contains
   end function real_array_cat_string
 
   pure function real_format_length(r) result(len)
+    use ieee_arithmetic
     real(dp), intent(in)::r
     integer::len
 
-    if(isnan(r)) then
+    if(ieee_is_nan(r)) then
        len = 3
     else       !         sign                           int part         space?          decimal point                                                        fractional part
        len = int(0.5_dp-sign(0.5_dp,r)) + int(log10(max(1.0_dp,abs(r)))) + 1 + & 
@@ -475,6 +476,7 @@ contains
   end function complex_format_length
 
   function real_cat_string(r, string)
+    use ieee_arithmetic
     character(*),      intent(in)  :: string
     real(dp),          intent(in)  :: r
     ! we work out the exact length of the resultant string
@@ -483,7 +485,7 @@ contains
 
     if (default_real_precision > 0) then
        write(format,'(a,i0,a)')'(f0.',max(0,default_real_precision),',a)'
-       if (isnan(r)) then
+       if (ieee_is_nan(r)) then
           write(real_cat_string,'(a,a)') "NaN", string
        else
           write(real_cat_string,format) r, string
@@ -494,6 +496,7 @@ contains
   end function real_cat_string
 
   function string_cat_real(string, r)
+    use ieee_arithmetic
     character(*),      intent(in)  :: string
     real(dp),          intent(in)  :: r
     ! we work out the exact length of the resultant string
@@ -501,7 +504,7 @@ contains
     character(12) :: format
 
     if (default_real_precision > 0) then
-       if (isnan(r)) then
+       if (ieee_is_nan(r)) then
 	 write(string_cat_real,'(a,a)') string,"NaN"
        else
 	 write(format,'(a,i0,a)')'(a,f0.',max(0,default_real_precision),')'

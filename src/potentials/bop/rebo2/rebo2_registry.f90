@@ -48,7 +48,7 @@
          CSTR("The 2nd generation REBO (Brenner 2002) potential."))
 #endif
 
-    call ptrdict_register_string_property(m, c_loc(this%elements), MAX_EL_STR, &
+    call ptrdict_register_string_property(m, c_locs(this%elements), MAX_EL_STR, &
          CSTR("elements"), &
          CSTR("Elements for which to use this potential (default: C,H)."))
 

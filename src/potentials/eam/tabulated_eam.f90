@@ -458,11 +458,11 @@ contains
     m = ptrdict_register_section(cfg, CSTR("TabulatedEAM"), &
          CSTR("General tabulated EAM potential, see S.M. Foiles, M.I. Baskes, M.S. Daw, Phys. Rev. B 33, 7983 (1986)."))
 
-    call ptrdict_register_string_property(m, c_loc(this%elements), MAX_EL_STR, &
+    call ptrdict_register_string_property(m, c_locs(this%elements), MAX_EL_STR, &
          CSTR("elements"), &
          CSTR("Element for which to use this potential."))
 
-    call ptrdict_register_string_property(m, c_loc(this%fn), 100, CSTR("fn"), &
+    call ptrdict_register_string_property(m, c_locs(this%fn), 100, CSTR("fn"), &
          CSTR("Configuration file."))
 
   endsubroutine tabulated_eam_register

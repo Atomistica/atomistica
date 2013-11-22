@@ -78,8 +78,8 @@ module materials
 
      logical(C_BOOL)         :: exists = .false.
 
-     character(kind=C_CHAR,len=2)  :: name="XX"    ! name of element
-     character(kind=C_CHAR,len=10)  :: cname="noname"  ! common name of element
+     character(kind=C_CHAR)  :: name(2)=["X","X"]    ! name of element
+     character(kind=C_CHAR)  :: cname(10)=["n","o","n","a","m","e"," "," "," "," "]  ! common name of element
      integer(C_INT)          :: elem=10000      ! number of element (official)
      integer(C_INT)          :: no=10000        ! number of orbitals
      integer(C_INT)          :: l(9)=(/0,1,1,1,2,2,2,2,2/) !angular momenta of orbitals
@@ -345,7 +345,7 @@ contains
     r  = .false.
     do i = 1, this%nel
        if (this%e(i)%exists) then
-          if (trim(this%e(i)%name) == trim(sym)) then
+          if (trim(a2s(this%e(i)%name)) == trim(sym)) then
              if (present(el)) then
                 el  = this%e(i)
              endif
@@ -425,8 +425,8 @@ contains
        if (db%e(i1)%exists) then
           do i2=i1,db%nel
              if (db%e(i2)%exists) then
-                e1=trim(db%e(i1)%name)
-                e2=trim(db%e(i2)%name)
+                e1=trim(a2s(db%e(i1)%name))
+                e2=trim(a2s(db%e(i2)%name))
 
                 fil =trim(db%folder)//'/'//trim(e1)//'_'//trim(e2)//'.par'
                 fil2=trim(db%folder)//'/'//trim(e2)//'_'//trim(e1)//'.par'
@@ -548,8 +548,8 @@ contains
        if (db%e(i1)%exists) then
           do i2 = 1, db%nel
              if (db%e(i2)%exists) then
-                e1    = trim(db%e(i1)%name)
-                e2    = trim(db%e(i2)%name)
+                e1    = trim(a2s(db%e(i1)%name))
+                e2    = trim(a2s(db%e(i2)%name))
 
                 f1    = e1
                 call lowercase(f1)
@@ -827,7 +827,7 @@ contains
     do i=1,j
 
        if (hlp(i)%elem > 0 .and. hlp(i)%elem <= MAX_Z) then
-          if (trim(hlp(i)%name) /= trim(ElementName(hlp(i)%elem))) then
+          if (trim(a2s(hlp(i)%name)) /= trim(ElementName(hlp(i)%elem))) then
              write (ilog, '(5X,5A)')  "WARNING: Name '", hlp(i)%name, "' in 'elements.dat' not equal common element name '", hlp(i)%elem, "'."
           endif
 
@@ -917,7 +917,7 @@ contains
        inserted = .false.
        do i = 1, db%nel
           if (db%e(i)%exists) then
-             if(trim(db%e(i)%name) == el) then
+             if(trim(a2s(db%e(i)%name)) == el) then
                 db%e(i)%spin = .true.
                 db%e(i)%W(0,0) = W(1)
                 db%e(i)%W(0,1) = W(2)
@@ -1037,10 +1037,10 @@ contains
        do j = 1, this%nel
           if (this%e(i)%exists .and. this%e(j)%exists) then
              if (this%HS(i, j)%n > 0) then
-                call write(this%HS(i, j), trim(this%e(i)%name) // "-" // trim(this%e(j)%name) // "_HS.out")
+                call write(this%HS(i, j), trim(a2s(this%e(i)%name)) // "-" // trim(a2s(this%e(j)%name)) // "_HS.out")
              endif
              if (this%R(i, j)%n > 0) then
-                call write(this%R(i, j), trim(this%e(i)%name) // "-" // trim(this%e(j)%name) // "_rep.out")
+                call write(this%R(i, j), trim(a2s(this%e(i)%name)) // "-" // trim(a2s(this%e(j)%name)) // "_rep.out")
              endif
           endif
        enddo

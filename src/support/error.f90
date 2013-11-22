@@ -152,7 +152,7 @@ contains
     error_stack_position  = error_stack_position + 1
 
     if (error_stack_position > ERROR_STACK_SIZE) then
-       write(*,*), get_error_string_and_clear()
+       write(*,*)  get_error_string_and_clear()
        call system_abort("Fatal error: Error stack size too small.")
     endif
 
@@ -189,7 +189,7 @@ contains
     error_stack_position  = error_stack_position + 1
 
     if (error_stack_position > ERROR_STACK_SIZE) then
-       write(*,*), get_error_string_and_clear()
+       write(*,*)  get_error_string_and_clear()
        call system_abort("Fatal error: Error stack size too small.")
     endif
 

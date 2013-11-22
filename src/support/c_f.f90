@@ -27,8 +27,8 @@ module c_f
 
   private
 
-  character(kind=C_CHAR), save, target :: dummy_string(6) = "(null)"
-  character(kind=C_CHAR), save, target :: one_string(2) = "?"
+  character(kind=C_CHAR), save, target :: dummy_string(6) = "(null) "
+  character(kind=C_CHAR), save, target :: one_string(2) = "? "
 
   public :: c_f_string, a2s, s2a
 

@@ -170,6 +170,7 @@
 !>
 !! c_loc, but on an array. Circumvents a bug (compiler segfault) in gfortran
 !<
+#define c_locs(x) c_loc(x(1:1))
 #define c_loc1(x) c_loc(x(lbound(x,1)))
 #define c_loc11(x) c_loc(x(lbound(x,1),lbound(x,2)))
 #define c_loc111(x) c_loc(x(lbound(x,1),lbound(x,2),lbound(x,3)))

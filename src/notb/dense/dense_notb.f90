@@ -763,7 +763,7 @@ contains
     m = ptrdict_register_module(cfg, c_loc(this%enabled), CSTR("TightBinding"), &
          CSTR("Non-orthogonal tight-binding potential."))
 
-    call ptrdict_register_string_property(m, c_loc(this%elements), MAX_EL_STR, &
+    call ptrdict_register_string_property(m, c_locs(this%elements), MAX_EL_STR, &
          CSTR("elements"), &
          CSTR("Elements for which to activate this module."))
 
@@ -775,7 +775,7 @@ contains
          CSTR("output_tables"), &
          CSTR("Debug: Output Slater-Koster and repulsion tables to file."))
 
-    call ptrdict_register_string_property(m, c_loc(this%database_folder), &
+    call ptrdict_register_string_property(m, c_locs(this%database_folder), &
          DENSE_NOTB_MAX_FOLDER_STRING, CSTR("database_folder"), &
          CSTR("Folder containing the NOTB parametrization."))
 
