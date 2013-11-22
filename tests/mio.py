@@ -167,7 +167,7 @@ def run_mio_test(test=None):
                    log = True)
         ),
           native.DirectCoulomb(),
-          native.ChargeOverlap(shape='Slater', cutoff=10.0) ],
+          native.SlaterCharges(cutoff=10.0) ],
         avgn = 1000
         )
     check_db(calc, db2, test=test)
