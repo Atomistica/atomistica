@@ -305,12 +305,14 @@ contains
     
     ! ---
 
+    real(DP), parameter :: TOL = 1e-12
+
+    ! ---
+
     real(DP) :: A(3,3), fac(3, 3)
     integer  :: i, in, ipiv(3)
 
     ! --
-
-!    call info("- particles_set_cell")
 
     if (present(pbc)) then
        this%periodic  = pbc
@@ -338,17 +340,25 @@ contains
     enddo
 
     this%cell_is_orthorhombic = &
-         dot_product(this%Abox(1, :), this%Abox(2, :)) == 0.0_DP .and. &
-         dot_product(this%Abox(2, :), this%Abox(3, :)) == 0.0_DP .and. &
-         dot_product(this%Abox(3, :), this%Abox(1, :)) == 0.0_DP
+         abs(dot_product(this%Abox(1, :), this%Abox(2, :))) < TOL .and. &
+         abs(dot_product(this%Abox(2, :), this%Abox(3, :))) < TOL .and. &
+         abs(dot_product(this%Abox(3, :), this%Abox(1, :))) < TOL
 
-!    if (.not. this%cell_is_orthorhombic) then
-!       call info("     Cell is not orthorhombic.")
-!    endif
+    if (.not. all(this%periodic)) then
+       call require_orthorhombic_cell(this)
+    endif
 
-!    call info("     " // this%Abox(1, :))
-!    call info("     " // this%Abox(2, :))
-!    call info("     " // this%Abox(3, :))
+    if (.not. this%cell_is_orthorhombic .and. this%orthorhombic_cell_is_required) then
+       RAISE_ERROR("This cell is non-orthorhombic, however, an orthorhombic cell was required. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
+    endif
+
+    if (this%cell_is_orthorhombic) then
+       A = 0.0_DP
+       A(1,1) = this%Abox(1,1)
+       A(2,2) = this%Abox(2,2)
+       A(3,3) = this%Abox(3,3)
+       this%Abox = A
+    endif
 
     A  = this%Abox
     call dgesv(3, 3, A, 3, ipiv, this%Bbox, 3, in)
@@ -357,21 +367,11 @@ contains
        RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
     endif
 
-    if (.not. all(this%periodic)) then
-       call require_orthorhombic_cell(this)
-    endif
-
-    if (.not. this%cell_is_orthorhombic .and. this%orthorhombic_cell_is_required) then
-       RAISE_ERROR("This cell is non-orthorhombic, however, an orthorhombic cell was required.", error)
-    endif
-
     this%lower  = (/ 0.0, 0.0, 0.0 /)
     this%upper  = (/ this%Abox(1, 1), this%Abox(2, 2), this%Abox(3, 3) /)
 
     this%lower_with_border = this%lower
     this%upper_with_border = this%upper
-
-!    call info
 
   endsubroutine particles_set_cell
 
@@ -917,7 +917,7 @@ contains
     this%orthorhombic_cell_is_required  = .true.
 
     if (.not. this%cell_is_orthorhombic) then
-       RAISE_ERROR("Orthorhombic cell is requested, however cell is already non-orthorhombic.", error)
+       RAISE_ERROR("Orthorhombic cell is requested, however cell is already non-orthorhombic. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
     endif
 
   endsubroutine particles_require_orthorhombic_cell
