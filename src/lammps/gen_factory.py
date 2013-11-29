@@ -83,6 +83,7 @@ def write_factory_f90(mods, str, fn):
                 "  this_cptr = c_loc(this_fptr)\n" +
                 "endsubroutine lammps_%s_new\n\n\n" % f90name)
 
+
         f.write("subroutine lammps_%s_free(this_cptr) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
                 "  implicit none\n\n" +
@@ -139,7 +140,7 @@ def write_factory_f90(mods, str, fn):
                 "  call bind_to(this_fptr, p, nl, ierror=error)\n" +
                 "endsubroutine lammps_%s_bind_to\n\n\n" % f90name)
 
-        f.write("subroutine lammps_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, epot, f, wpot, epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, error) bind(C)\n" % f90name +
+        f.write("subroutine lammps_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, epot, f, wpot, epot_per_at_cptr, epot_per_bond_cptr, f_per_bond_cptr, wpot_per_at_cptr, wpot_per_bond_cptr, error) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
                 "  implicit none\n\n" +
                 "  type(c_ptr), value :: this_cptr\n" +
@@ -148,19 +149,37 @@ def write_factory_f90(mods, str, fn):
                 "  real(c_double), intent(out) :: epot\n" +
                 "  real(c_double) :: f(3, *)\n" +
                 "  real(c_double) :: wpot(3, 3)\n" +
-                "  real(c_double) :: epot_per_at(*)\n" +
-                "  real(c_double) :: epot_per_bond(*)\n" +
-                "  real(c_double) :: f_per_bond(3, *)\n" +
-                "  real(c_double) :: wpot_per_at(6, *)\n" +
-                "  real(c_double) :: wpot_per_bond(6, *)\n" +
+                "  type(c_ptr), value :: epot_per_at_cptr\n" +
+                "  type(c_ptr), value :: epot_per_bond_cptr\n" +
+                "  type(c_ptr), value :: f_per_bond_cptr\n" +
+                "  type(c_ptr), value :: wpot_per_at_cptr\n" +
+                "  type(c_ptr), value :: wpot_per_bond_cptr\n" +
                 "  integer(c_int), intent(out) :: error\n\n" +
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  type(particles_t), pointer :: p\n" +
                 "  type(neighbors_t), pointer :: nl\n" +
+                "  real(c_double), pointer :: epot_per_at(:), epot_per_bond(:), f_per_bond(:,:)\n" +
+                "  real(c_double), pointer :: wpot_per_at(:,:), wpot_per_bond(:,:)\n" +
                 "  error = ERROR_NONE\n" +
+                "  nullify(epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond)\n" +
                 "  call c_f_pointer(this_cptr, this_fptr)\n" +
                 "  call c_f_pointer(p_cptr, p)\n" +
                 "  call c_f_pointer(nl_cptr, nl)\n" +
+                "  if (c_associated(epot_per_at_cptr)) then\n" +
+                "     call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
+                "  endif\n" +
+                "  if (c_associated(epot_per_bond_cptr)) then\n" +
+                "     call c_f_pointer(epot_per_bond_cptr, epot_per_bond, [nl%neighbors_size])\n" +
+                "  endif\n" +
+                "  if (c_associated(f_per_bond_cptr)) then\n" +
+                "     call c_f_pointer(f_per_bond_cptr, f_per_bond, [3,p%nat])\n" +
+                "  endif\n" +
+                "  if (c_associated(wpot_per_at_cptr)) then\n" +
+                "     call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n" +
+                "  endif\n" +
+                "  if (c_associated(wpot_per_bond_cptr)) then\n" +
+                "     call c_f_pointer(wpot_per_bond_cptr, wpot_per_bond, [6,nl%neighbors_size])\n" +
+                "  endif\n" +
                 "  if (.not. associated(this_fptr))   stop '[lammps_%s_energy_and_forces] *this_fptr* is NULL.'\n" % f90name +
                 "  if (.not. associated(p))   stop '[lammps_%s_energy_and_forces] *p* is NULL.'\n" % f90name +
                 "  if (.not. associated(nl))   stop '[lammps_%s_energy_and_forces] *nl* is NULL.'\n" % f90name +
