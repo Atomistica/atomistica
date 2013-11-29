@@ -799,9 +799,12 @@ contains
        select case(trim(key))
        case("element")   ! starts the set for new element
           j=j+1
-          read(dat,*) hlp(j)%name
+          hlp(j)%name = ' '
+          hlp(j)%name(1:len_trim(dat)) = s2a(trim(dat))
        case("Z");     read(dat,*) hlp(j)%elem
-       case("common");read(dat,*) hlp(j)%cname
+       case("common");
+          hlp(j)%cname = ' '
+          hlp(j)%cname(1:len_trim(dat)) = s2a(trim(dat))
        case("m");     read(dat,*) hlp(j)%m
        case("q0");    read(dat,*) hlp(j)%q0
        case("no")
@@ -828,7 +831,7 @@ contains
 
        if (hlp(i)%elem > 0 .and. hlp(i)%elem <= MAX_Z) then
           if (trim(a2s(hlp(i)%name)) /= trim(ElementName(hlp(i)%elem))) then
-             write (ilog, '(5X,5A)')  "WARNING: Name '", hlp(i)%name, "' in 'elements.dat' not equal common element name '", hlp(i)%elem, "'."
+             write (ilog, '(5X,5A)')  "WARNING: Name '", hlp(i)%name, "' in 'elements.dat' not equal common element name '", ElementName(hlp(i)%elem), "'."
           endif
 
           hlp(i)%el_max = 0d0
