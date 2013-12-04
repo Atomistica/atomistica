@@ -41,11 +41,14 @@ module logging
 
 
   interface log_memory_estimate
-     module procedure log_memory_estimate_integer
-     module procedure log_memory_estimate_integer2
-     module procedure log_memory_estimate_integer3
      module procedure log_memory_estimate_integer4
-     module procedure log_memory_estimate_intptr_t
+     module procedure log_memory_estimate_integer4_2
+     module procedure log_memory_estimate_integer4_3
+     module procedure log_memory_estimate_integer4_4
+     module procedure log_memory_estimate_integer8
+     module procedure log_memory_estimate_integer8_2
+     module procedure log_memory_estimate_integer8_3
+     module procedure log_memory_estimate_integer8_4
      module procedure log_memory_estimate_logical
      module procedure log_memory_estimate_logical2
      module procedure log_memory_estimate_logical3
@@ -219,12 +222,15 @@ contains
   subroutine name(arr, str) ; implicit none ; data_type, intent(in)  :: arr(:, :, :, :) ; character(*), intent(in), optional  :: str ; call log_memory_general(size(arr)*elsize, str) ; endsubroutine name
 
 
-  LOG_MEMORY1(integer, log_memory_estimate_integer, 8)
-  LOG_MEMORY2(integer, log_memory_estimate_integer2, 8)
-  LOG_MEMORY3(integer, log_memory_estimate_integer3, 8)
-  LOG_MEMORY4(integer, log_memory_estimate_integer4, 8)
+  LOG_MEMORY1(integer(4), log_memory_estimate_integer4, 8)
+  LOG_MEMORY2(integer(4), log_memory_estimate_integer4_2, 8)
+  LOG_MEMORY3(integer(4), log_memory_estimate_integer4_3, 8)
+  LOG_MEMORY4(integer(4), log_memory_estimate_integer4_4, 8)
 
-  LOG_MEMORY1(integer(C_INTPTR_T), log_memory_estimate_intptr_t, C_INTPTR_T)
+  LOG_MEMORY1(integer(8), log_memory_estimate_integer8, 8)
+  LOG_MEMORY2(integer(8), log_memory_estimate_integer8_2, 8)
+  LOG_MEMORY3(integer(8), log_memory_estimate_integer8_3, 8)
+  LOG_MEMORY4(integer(8), log_memory_estimate_integer8_4, 8)
 
   LOG_MEMORY1(logical, log_memory_estimate_logical, 8)
   LOG_MEMORY2(logical, log_memory_estimate_logical2, 8)
