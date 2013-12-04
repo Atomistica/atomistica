@@ -332,9 +332,10 @@ class Atomistica(object):
 
         # Charges changed?
         charges_chgd = False
-        if np.any(self.q != atoms.get_charges()):
-            self.q       = atoms.get_charges()
-            charges_chgd = True
+        if self.q is not None:
+            if np.any(self.q != atoms.get_charges()):
+                self.q       = atoms.get_charges()
+                charges_chgd = True
 
         if pos_chgd or cell_chgd or lebc_chgd or charges_chgd or \
                 self.force_update or force_update:
