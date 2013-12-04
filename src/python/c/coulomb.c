@@ -338,8 +338,6 @@ coulomb_energy_and_forces(coulomb_t *self, PyObject *args, PyObject *kwargs)
 
   PyObject *r;
 
-  int i;
-
   /* --- */
 
 #ifdef DEBUG
@@ -421,7 +419,6 @@ static PyObject *
 coulomb_potential(coulomb_t *self, PyObject *args, PyObject *kwargs)
 {
   npy_intp dims[3];
-  npy_intp strides[3];
 
   particles_t *a;
   neighbors_t *n;
@@ -430,10 +427,6 @@ coulomb_potential(coulomb_t *self, PyObject *args, PyObject *kwargs)
 
   PyObject *q_in, *q;
   PyObject *phi = NULL;
-
-  PyObject *r;
-
-  int i;
 
   /* --- */
 
