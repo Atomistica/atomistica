@@ -66,6 +66,10 @@
 
 #include "error.inc"
 
+#ifndef __GFORTRAN__
+#define isnan ieee_is_nan
+#endif
+
 module system_module
   use, intrinsic :: iso_c_binding
 
@@ -449,11 +453,13 @@ contains
   end function real_array_cat_string
 
   pure function real_format_length(r) result(len)
+#ifndef __GFORTRAN__
     use ieee_arithmetic
+#endif
     real(dp), intent(in)::r
     integer::len
 
-    if(ieee_is_nan(r)) then
+    if(isnan(r)) then
        len = 3
     else       !         sign                           int part         space?          decimal point                                                        fractional part
        len = int(0.5_dp-sign(0.5_dp,r)) + int(log10(max(1.0_dp,abs(r)))) + 1 + & 
@@ -476,7 +482,9 @@ contains
   end function complex_format_length
 
   function real_cat_string(r, string)
+#ifndef __GFORTRAN__
     use ieee_arithmetic
+#endif
     character(*),      intent(in)  :: string
     real(dp),          intent(in)  :: r
     ! we work out the exact length of the resultant string
@@ -485,7 +493,7 @@ contains
 
     if (default_real_precision > 0) then
        write(format,'(a,i0,a)')'(f0.',max(0,default_real_precision),',a)'
-       if (ieee_is_nan(r)) then
+       if (isnan(r)) then
           write(real_cat_string,'(a,a)') "NaN", string
        else
           write(real_cat_string,format) r, string
@@ -496,7 +504,9 @@ contains
   end function real_cat_string
 
   function string_cat_real(string, r)
+#ifndef __GFORTRAN__
     use ieee_arithmetic
+#endif
     character(*),      intent(in)  :: string
     real(dp),          intent(in)  :: r
     ! we work out the exact length of the resultant string
@@ -504,7 +514,7 @@ contains
     character(12) :: format
 
     if (default_real_precision > 0) then
-       if (ieee_is_nan(r)) then
+       if (isnan(r)) then
 	 write(string_cat_real,'(a,a)') string,"NaN"
        else
 	 write(format,'(a,i0,a)')'(a,f0.',max(0,default_real_precision),')'
