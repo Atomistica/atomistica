@@ -4,15 +4,14 @@
 boundary p p p
 units metal
 atom_style atomic
-#newton off
 
-read_restart restart
+read_data data.lammps.gz
+velocity all create 5000 4384387
+
 
 #
 # Interaction
 #
-#pair_style mdcore Tersoff
-#pair_coeff * * Si
 pair_style tersoff
 pair_coeff * * SiC.tersoff Si
 
