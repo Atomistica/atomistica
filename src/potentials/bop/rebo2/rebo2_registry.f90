@@ -52,6 +52,57 @@
          CSTR("elements"), &
          CSTR("Elements for which to use this potential (default: C,H)."))
 
+!! ================= Added Some Parameters H-H =================
+
+    call ptrdict_register_real_property(m, c_loc(this%hh_Q), &
+         CSTR("HH_Q"), CSTR("Q for H-H interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%hh_A), &
+         CSTR("HH_A"), CSTR("A for H-H interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%hh_alpha), &
+         CSTR("HH_alpha"), CSTR("alpha for H-H interaction (inner)."))
+
+    call ptrdict_register_real_property(m, c_loc(this%hh_B1), &
+         CSTR("HH_B1"), CSTR("B1 for H-H interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%hh_beta1), &
+         CSTR("HH_beta1"), CSTR("beta1 for H-H interaction (inner)."))
+
+!! ================= C-H Parameters ====================
+
+    call ptrdict_register_real_property(m, c_loc(this%ch_Q), &
+         CSTR("CH_Q"), CSTR("Q for C-H interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%ch_A), &
+         CSTR("CH_A"), CSTR("A for C-H interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%ch_alpha), &
+         CSTR("CH_alpha"), CSTR("alpha for C-H interaction (inner)."))
+
+    call ptrdict_register_real_property(m, c_loc(this%ch_B1), &
+         CSTR("CH_B1"), CSTR("B1 for C-H interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%ch_beta1), &
+         CSTR("CH_beta1"), CSTR("beta1 for C-H interaction (inner)."))
+
+!! ================= C-C Parameters ====================
+
+    call ptrdict_register_real_property(m, c_loc(this%cc_Q), &
+         CSTR("CC_Q"), CSTR("Q for C-C interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%cc_A), &
+         CSTR("CC_A"), CSTR("A for C-C interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%cc_alpha), &
+         CSTR("CC_alpha"), CSTR("alpha for C-C interaction (inner)."))
+
+    call ptrdict_register_real_property(m, c_loc(this%cc_B1), &
+         CSTR("CC_B1"), CSTR("B1 for C-C interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%cc_B2), &
+         CSTR("CC_B2"), CSTR("B2 for C-C interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%cc_B3), &
+         CSTR("CC_B3"), CSTR("B3 for C-C interaction (inner)."))
+
+    call ptrdict_register_real_property(m, c_loc(this%cc_beta1), &
+         CSTR("CC_beta1"), CSTR("beta1 for C-C interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%cc_beta2), &
+         CSTR("CC_beta2"), CSTR("beta2 for C-C interaction (inner)."))
+    call ptrdict_register_real_property(m, c_loc(this%cc_beta3), &
+         CSTR("CC_beta3"), CSTR("beta3 for C-C interaction (inner)."))
+
 #ifdef SCREENING
     call ptrdict_register_real_property(m, c_loc(this%Cmin), CSTR("Cmin"), &
          CSTR("Lower screening cut-off (should be >= 1)."))
