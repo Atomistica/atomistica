@@ -24,10 +24,16 @@ OMP_FLAGS =
 
 
 #
+# Extract MPI path
+#
+MPIROOT=$(shell which mpicc | sed 's,bin/mpicc,,')
+
+
+#
 # *** Extra includes and libraries
 #
 #
-EXTRA_INCLUDE += -I/usr/mpi/intel/openmpi-1.4.3/include
+EXTRA_INCLUDE += -I$(MPIROOT)/include
 EXTRA_LIB += -cxxlib
 #
 # *** LAPACK and BLAS link options here.
