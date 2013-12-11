@@ -28,7 +28,10 @@ import os
 
 import ase.io
 
-from ase.calculators.lammps import write_lammps_data
+try:
+    from ase.calculators.lammps import write_lammps_data
+except:
+    from ase.calculators.lammpsrun import write_lammps_data
 
 from atomistica.mdcore_io import read_atoms, write_atoms
 from atomistica.netcdf_trajectory import NetCDFTrajectory
