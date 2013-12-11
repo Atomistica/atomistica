@@ -166,6 +166,12 @@ class Atomistica(object):
         # Coulomb solver. Create two separate lists.
         if potentials is not None:
             for pot in potentials:
+                if isinstance(pot, Atomistica):
+                    raise TypeError('Potential passed to Atomistica class is '
+                                    'already an Atomistica object. This does '
+                                    'not work. You need to pass native '
+                                    'potential from atomistica.native or '
+                                    '_atomistica.')
                 if hasattr(pot, 'potential'):
                     self.couls += [ pot ]
                 else:
@@ -243,7 +249,10 @@ class Atomistica(object):
             pot.bind_to(self.particles, self.nl)
 
         if len(self.couls) > 0:
-            self.q = atoms.get_charges()
+            if atoms.has('charges'):
+                self.q = atoms.get_array('charges')
+            else:
+                self.q = atoms.get_charges()
             if self.q is None:
                 self.q = np.zeros(len(atoms))
             self.E = np.zeros([3,len(atoms)])
@@ -333,8 +342,12 @@ class Atomistica(object):
         # Charges changed?
         charges_chgd = False
         if self.q is not None:
-            if np.any(self.q != atoms.get_charges()):
-                self.q       = atoms.get_charges()
+            if atoms.has('charges'):
+                q = atoms.get_array('charges')
+            else:
+                q = atoms.get_charges()
+            if np.any(self.q != q):
+                self.q = q
                 charges_chgd = True
 
         if pos_chgd or cell_chgd or lebc_chgd or charges_chgd or \
@@ -481,7 +494,7 @@ class Atomistica(object):
         for pot in self.pots:
             s += pot.__str__()+','
         for coul in self.couls:
-            s += pot.__str__()+','
+            s += coul.__str__()+','
         return s[:-1]+'])'
 
 
