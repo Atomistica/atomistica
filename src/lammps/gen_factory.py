@@ -158,34 +158,34 @@ def write_factory_f90(mods, str, fn):
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  type(particles_t), pointer :: p\n" +
                 "  type(neighbors_t), pointer :: nl\n" +
-                "  real(c_double), pointer :: epot_per_at(:), epot_per_bond(:), f_per_bond(:,:)\n" +
-                "  real(c_double), pointer :: wpot_per_at(:,:), wpot_per_bond(:,:)\n" +
+                "  real(c_double), pointer :: epot_per_at(:), wpot_per_at(:,:)\n" +
                 "  error = ERROR_NONE\n" +
-                "  nullify(epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond)\n" +
+                "  nullify(epot_per_at, wpot_per_at)\n" +
                 "  call c_f_pointer(this_cptr, this_fptr)\n" +
                 "  call c_f_pointer(p_cptr, p)\n" +
                 "  call c_f_pointer(nl_cptr, nl)\n" +
-                "  if (c_associated(epot_per_at_cptr)) then\n" +
-                "     call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
-                "  endif\n" +
-                "  if (c_associated(epot_per_bond_cptr)) then\n" +
-                "     call c_f_pointer(epot_per_bond_cptr, epot_per_bond, [nl%neighbors_size])\n" +
-                "  endif\n" +
-                "  if (c_associated(f_per_bond_cptr)) then\n" +
-                "     call c_f_pointer(f_per_bond_cptr, f_per_bond, [3,p%nat])\n" +
-                "  endif\n" +
-                "  if (c_associated(wpot_per_at_cptr)) then\n" +
-                "     call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n" +
-                "  endif\n" +
-                "  if (c_associated(wpot_per_bond_cptr)) then\n" +
-                "     call c_f_pointer(wpot_per_bond_cptr, wpot_per_bond, [6,nl%neighbors_size])\n" +
-                "  endif\n" +
                 "  if (.not. associated(this_fptr))   stop '[lammps_%s_energy_and_forces] *this_fptr* is NULL.'\n" % f90name +
                 "  if (.not. associated(p))   stop '[lammps_%s_energy_and_forces] *p* is NULL.'\n" % f90name +
                 "  if (.not. associated(nl))   stop '[lammps_%s_energy_and_forces] *nl* is NULL.'\n" % f90name +
-                "  call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
-                "    epot_per_at=epot_per_at, epot_per_bond=epot_per_bond, f_per_bond=f_per_bond, &\n" +
-                "    wpot_per_at=wpot_per_at, wpot_per_bond=wpot_per_bond, ierror=error)\n" +
+                "  ! Branch according to which arguments are present. Some compiler don't like passing NULL()\n" +
+                "  ! pointers to optional arguments, although supported in Fortran 2008.\n" +
+                "  if (c_associated(epot_per_at_cptr) .and. c_associated(wpot_per_at_cptr)) then\n" +
+                "     call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
+                "     call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n" +
+                "     call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
+                "       epot_per_at=epot_per_at, wpot_per_at=wpot_per_at, ierror=error)\n" +
+                "  else if (c_associated(epot_per_at_cptr)) then\n" +
+                "     call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
+                "     call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
+                "       epot_per_at=epot_per_at, ierror=error)\n" +
+                "  else if (c_associated(wpot_per_at_cptr)) then\n" +
+                "     call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n" +
+                "     call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
+                "       wpot_per_at=wpot_per_at, ierror=error)\n" +
+                "  else\n" +
+                "     call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
+                "       ierror=error)\n" +
+                "  endif\n" +
                 "endsubroutine lammps_%s_energy_and_forces\n\n\n" % f90name)
     
     f.write("endmodule %s_factory\n" % str)
