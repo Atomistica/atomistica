@@ -21,7 +21,7 @@ LD        = bgxlf2008_r
 # OpenMP parallelization or hybrid MPI/OpenMP
 #
 OMP_FLAGS = 
-#OMP_FLAGS = -fopenmp
+#OMP_FLAGS = -qsmp=omp
 
 
 #
