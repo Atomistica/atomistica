@@ -67,7 +67,10 @@ def assign_charges(a, els):
     qs = np.zeros(len(a))
     for el, q in els.iteritems():
         qs[syms==el] = q
-    a.set_charges(qs)
+    if hasattr(a, 'set_initial_charges'):
+        a.set_initial_charges(qs)
+    else:
+        a.set_charges(qs)
     return a
 
 ###
