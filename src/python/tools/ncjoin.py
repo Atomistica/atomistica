@@ -70,6 +70,7 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
     data_f = zip(trajfns, map(Dataset, trajfns))
     filtered_data_f = [ ]
 
+    fn2, data2 = data_f[0]
     last_time = None
     for i in range(len(data_f)-1):
         fn1, data1 = data_f[i]
