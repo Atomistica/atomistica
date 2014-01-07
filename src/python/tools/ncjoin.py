@@ -28,6 +28,7 @@ Join a individual NetCDF trajectory files into a single one.
 
 import os
 import sys
+from optparse import OptionParser
 
 import numpy as np
 
@@ -47,6 +48,7 @@ def get_nearest_indices(time, every):
     spaced time intervals of length *every*.
     """
 
+    time = np.asarray(time)
     r = [ ]
     m = int(np.max(time)/every)+1
     last_j = -1
@@ -79,12 +81,18 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         test_first2 = data2.variables[test_var][0]
 
         last1 = len(data1.variables[time_var])-1
-        while last1 >= 0 and np.any(np.abs(data1.variables[test_var][last1] - test_first2) > test_tol):
-            print 'Frame %i of %s does not agree with first frame of %s. Checking frame %i.' % ( last1, fn1, fn2, last1-1 )
+        maxdiff = np.max(np.abs(data1.variables[test_var][last1] - test_first2))
+        while last1 >= 0 and maxdiff > test_tol:
+            print 'Frame %i of %s does not agree with first frame of %s ' \
+                  '(maximum difference %e). Checking frame %i.' % \
+                  ( last1, fn1, fn2, maxdiff, last1-1 )
             last1 -= 1
+            maxdiff = np.max(np.abs(data1.variables[test_var][last1] -
+                                    test_first2))
 
         if last1 < 0:
-            raise RuntimeError('%s and %s are not consecutive.' % ( fn1, fn2 ))
+            raise RuntimeError('%s and %s are not consecutive. It may help to '
+                               'increase *test_tol*.' % ( fn1, fn2 ))
 
         data_slice = slice(0, last1)
         time = data1.variables[time_var][data_slice]
@@ -104,10 +112,14 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
 
 def filter_trajs(idata_f, every):
     # Create a list of all frames
-    idata_oframe = reduce(lambda a,b: a+b, [ [ ( fn, data, i, time[i] ) for i in range(len(time))[data_slice] ] for fn, data, data_slice, time in idata_f ], [])
+    idata_oframe = reduce(lambda a,b: a+b,
+                          [ [ ( fn, data, i, time[i] )
+                              for i in range(len(time))[data_slice] ]
+                            for fn, data, data_slice, time in idata_f ],
+                          [])
 
     # Get indices that corresponds to roughly equally spaced time slots
-    i = get_nearest_indices(np.array([time for fn, data, i, time in idata_oframe]), every)
+    i = get_nearest_indices([time for fn, data, i, time in idata_oframe], every)
     if len(i) == 0:
         raise RuntimeError('No frames left after filtering.')
     else:
@@ -132,27 +144,41 @@ def filter_trajs(idata_f, every):
                             np.array(cur_time) ) ]
     return filtered_idata_f
 
-###
+
+### Sanity check
 
 if os.path.exists('traj.nc'):
     raise RuntimeError('traj.nc exists already.')
 
-every = None
-if not os.path.exists(sys.argv[1]):
-    # File does not exists, assume this is dump interval
-    every = float(sys.argv[1])
-    trajfns = sys.argv[2:]
-else:
-    trajfns = sys.argv[1:]
+
+### Parse command line options
+
+parser = OptionParser()
+parser.add_option('-e', '--every', dest='every', type='float',
+                  help='copy only frames at times that are multiples of EVERY',
+                  metavar='EVERY')
+parser.add_option('-v', '--test_var', dest='test_var', default='coordinates',
+                  help='use variable VAR to test if two frames are identical',
+                  metavar='VAR')
+parser.add_option('-t', '--test_tol', dest='test_tol', type='float', default=1e-6,
+                  help='use tolerance TOL to test if two frames are identical',
+                  metavar='TOL')
+options, trajfns = parser.parse_args()
+print 'every =', options.every, ', test_var =', options.test_var, \
+      ', test_tol =', options.test_tol
 
 if len(trajfns) == 0:
     raise RuntimeError('Please provide one or more files to concatenate.')
 
-# Open input files and filter if requested
+
+### Open input files and filter if requested
+
 print 'Opening files and checking file order...'
-idata_f = open_trajs(trajfns)
-if every is not None:
-    idata_f = filter_trajs(idata_f, every)
+idata_f = open_trajs(trajfns, test_var=options.test_var,
+                     test_tol=options.test_tol)
+if options.every is not None:
+    idata_f = filter_trajs(idata_f, options.every)
+
 
 # Create output file
 odata = Dataset('traj.nc', 'w', clobber=False, format='NETCDF3_64BIT')
@@ -187,7 +213,8 @@ for trajfn, idata, data_slice, time in idata_f:
             odata.createVariable(var_str, var.dtype, var.dimensions)
             ovar = odata.variables[var_str]
             for attr_str in var.ncattrs():
-                print "> creating attribute '%s' of variable '%s'..." % ( attr_str, var_str )
+                print "> creating attribute '%s' of variable '%s'..." % \
+                      ( attr_str, var_str )
                 ovar.setncattr(attr_str, var.getncattr(attr_str))
 
         if var.dimensions[0] == FRAME_DIM:
@@ -202,7 +229,8 @@ for trajfn, idata, data_slice, time in idata_f:
                 print "Copying variable '%s'..." % var_str
                 odata.variables[var_str][:] = var[:]
             else:
-                print "Checking variable '%s' for consistency across files..." % var_str
+                print "Checking variable '%s' for consistency across files..."%\
+                      var_str
                 if np.any(last_data.variables[var_str][:] != var[:]):
                     raise RuntimeError("Data for per-file variable '%s' "
                                        "differs in '%s' and '%s'." % 
