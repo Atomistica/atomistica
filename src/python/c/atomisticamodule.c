@@ -128,6 +128,8 @@ static PyMethodDef module_methods[] = {
     "Compute pair distribution function." },
   { "angle_distribution", py_angle_distribution, METH_VARARGS,
     "Compute angular distribution functions." },
+  { "bond_angles", py_bond_angles, METH_VARARGS,
+    "Compute moments of the bond angle distribution (per-atom)." },
   /*
   { "read_atoms", read_atoms, METH_VARARGS,
       "Read atom data from an .dat-file." },

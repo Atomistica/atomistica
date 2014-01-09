@@ -204,3 +204,98 @@ py_angle_distribution(PyObject *self, PyObject *args)
 
   return Py_BuildValue("OO", h_arr, h2_arr);
 }
+
+
+PyObject *
+py_bond_angles(PyObject *self, PyObject *args)
+{
+  PyObject *i_arr, *j_arr, *r_arr;
+  int nat, moment;
+  double cutoff;
+
+  if (!PyArg_ParseTuple(args, "iiO!O!O!d", &moment, &nat, &PyArray_Type,
+			&i_arr,	&PyArray_Type, &j_arr, &PyArray_Type, &r_arr,
+			&cutoff))
+    return NULL;
+
+  if (PyArray_NDIM(i_arr) != 1 || PyArray_TYPE(i_arr) != NPY_INT) {
+    PyErr_SetString(PyExc_TypeError, "Third argument needs to be one-dimensional "
+                    "integer array.");
+    return NULL;
+  }
+  if (PyArray_NDIM(j_arr) != 1 || PyArray_TYPE(j_arr) != NPY_INT) {
+    PyErr_SetString(PyExc_TypeError, "Fourthargument needs to be one-dimensional "
+                    "integer array.");
+    return NULL;
+  }
+  if (PyArray_NDIM(r_arr) != 2 || PyArray_DIM(r_arr, 1) != 3 ||
+      PyArray_TYPE(r_arr) != NPY_DOUBLE) {
+    PyErr_SetString(PyExc_TypeError, "Fifth argument needs to be two-dimensional "
+                    "double array.");
+    return NULL;
+  }
+
+  npy_intp npairs = PyArray_DIM(i_arr, 0);
+  if (PyArray_DIM(j_arr, 0) != npairs || PyArray_DIM(r_arr, 0) != npairs) {
+    PyErr_SetString(PyExc_RuntimeError, "First three arguments need to be arrays of "
+                    "identical length.");
+    return NULL;
+  }
+
+  npy_intp dim = nat;
+  PyObject *m_arr = PyArray_ZEROS(1, &dim, NPY_DOUBLE, 1);
+
+  npy_int *i = PyArray_DATA(i_arr);
+  npy_int *j = PyArray_DATA(j_arr);
+  double *r = PyArray_DATA(r_arr);
+  double *m = PyArray_DATA(m_arr);
+
+  npy_int last_i = i[0], i_start = 0;
+  double accum = 0.0;
+  double cutoff_sq = cutoff*cutoff;
+  int nangle = 0, p;
+  for (p = 0; p < npairs; p++) {
+
+    if (last_i != i[p]) {
+      if (nangle > 0) {
+	m[last_i] = accum/nangle;
+      }
+      else {
+	m[last_i] = 0.0;
+      }
+      last_i = i[p];
+      i_start = p;
+      accum = 0.0;
+      nangle = 0;
+    }
+
+    double n = r[3*p]*r[3*p] + r[3*p+1]*r[3*p+1] + r[3*p+2]*r[3*p+2];
+
+    if (n < cutoff_sq) {
+      int p2;
+      for (p2 = i_start; i[p2] == last_i; p2++) {
+        if (p2 != p) {
+          double n2 = r[3*p2]*r[3*p2] + r[3*p2+1]*r[3*p2+1] + r[3*p2+2]*r[3*p2+2];
+          if (n2 < cutoff_sq) {
+            double angle = r[3*p]*r[3*p2] + r[3*p+1]*r[3*p2+1] + r[3*p+2]*r[3*p2+2];
+            angle = acos(angle/sqrt(n*n2));
+	    accum += pow(angle, moment);
+            nangle++;
+          } /* n2 < cutoff_sq */
+        } /* p!= p */
+      }
+    } /* n < cutoff_sq */
+
+  }
+
+  if (npairs > 0) {
+    if (nangle > 0) {
+      m[last_i] = accum/nangle;
+    }
+    else {
+      m[last_i] = 0.0;
+    }
+  }
+
+  return m_arr;
+}

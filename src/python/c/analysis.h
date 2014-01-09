@@ -19,6 +19,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ====================================================================== */
+
 #ifndef __ANALYSIS_H
 #define __ANALYSIS_H
 
@@ -26,5 +27,6 @@
 
 PyObject *py_pair_distribution(PyObject *, PyObject *);
 PyObject *py_angle_distribution(PyObject *, PyObject *);
+PyObject *py_bond_angles(PyObject *, PyObject *);
 
 #endif
