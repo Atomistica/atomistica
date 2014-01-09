@@ -159,9 +159,16 @@ parser.add_option('-e', '--every', dest='every', type='float',
 parser.add_option('-v', '--test_var', dest='test_var', default='coordinates',
                   help='use variable VAR to test if two frames are identical',
                   metavar='VAR')
-parser.add_option('-t', '--test_tol', dest='test_tol', type='float', default=1e-6,
+parser.add_option('-t', '--test_tol', dest='test_tol', type='float',
+                  default=1e-6,
                   help='use tolerance TOL to test if two frames are identical',
                   metavar='TOL')
+parser.add_option('-k', '--netcdf_format', dest='netcdf_format',
+                  default='NETCDF3_64BIT',
+                  help="use NetCDF format KIND; available formats are "
+                       "'NETCDF3_CLASSIC', 'NETCDF3_64BIT' (default), "
+                       "'NETCDF4_CLASSIC' and 'NETCDF4'",
+                  metavar='KIND')
 options, trajfns = parser.parse_args()
 print 'every =', options.every, ', test_var =', options.test_var, \
       ', test_tol =', options.test_tol
@@ -180,7 +187,7 @@ if options.every is not None:
 
 
 # Create output file
-odata = Dataset('traj.nc', 'w', clobber=False, format='NETCDF3_64BIT')
+odata = Dataset('traj.nc', 'w', clobber=False, format=options.netcdf_format)
 
 
 ### Copy global attributes
