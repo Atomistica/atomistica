@@ -207,40 +207,48 @@ for trajfn, idata, data_slice, time in idata_f:
 
     for var_str, var in idata.variables.iteritems():
         if var_str not in odata.variables:
-            print "> creating variable '%s'..." % var_str
-            for dim_str in var.dimensions:
-                if dim_str not in odata.dimensions:
-                    print "> creating dimension '%s'......" % dim_str
-                    dim = idata.dimensions[dim_str]
-                    if dim.isunlimited():
-                        odata.createDimension(dim_str)
-                    else:
-                        odata.createDimension(dim_str, len(dim))
-            odata.createVariable(var_str, var.dtype, var.dimensions)
-            ovar = odata.variables[var_str]
-            for attr_str in var.ncattrs():
-                print "> creating attribute '%s' of variable '%s'..." % \
-                      ( attr_str, var_str )
-                ovar.setncattr(attr_str, var.getncattr(attr_str))
+            if var_str in idata.dimensions:
+                # In NETCDF4 (HDF5) there cannot be dimension and variable of
+                # the same name
+                print "= skipping variable '%s' because there is a dimension " \
+                      "of the same name" % var_str
+            else:
+                print "> creating variable '%s'..." % var_str
+                for dim_str in var.dimensions:
+                    if dim_str not in odata.dimensions:
+                        print "> creating dimension '%s'......" % dim_str
+                        dim = idata.dimensions[dim_str]
+                        if dim.isunlimited():
+                            odata.createDimension(dim_str)
+                        else:
+                            odata.createDimension(dim_str, len(dim))
+                odata.createVariable(var_str, var.dtype, var.dimensions)
+                ovar = odata.variables[var_str]
+                for attr_str in var.ncattrs():
+                    print "> creating attribute '%s' of variable '%s'..." % \
+                          ( attr_str, var_str )
+                    ovar.setncattr(attr_str, var.getncattr(attr_str))
 
-        if var.dimensions[0] == FRAME_DIM:
-            print "Copying variable '%s'..." % var_str
-            if var_str == 'time':
-                var_data = time
-            else:
-                var_data = var[data_slice]
-            odata.variables[var_str][cursor:] = var_data
-        else:
-            if not last_data:
+    for var_str, var in idata.variables.iteritems():
+        if var_str not in idata.dimensions:
+            if var.dimensions[0] == FRAME_DIM:
                 print "Copying variable '%s'..." % var_str
-                odata.variables[var_str][:] = var[:]
+                if var_str == 'time':
+                    var_data = time
+                else:
+                    var_data = var[data_slice]
+                odata.variables[var_str][cursor:] = var_data
             else:
-                print "Checking variable '%s' for consistency across files..."%\
-                      var_str
-                if np.any(last_data.variables[var_str][:] != var[:]):
-                    raise RuntimeError("Data for per-file variable '%s' "
-                                       "differs in '%s' and '%s'." % 
-                                       ( var_str, trajfns[i-1], trajfns[i] ))
+                if not last_data:
+                    print "Copying variable '%s'..." % var_str
+                    odata.variables[var_str][:] = var[:]
+                else:
+                    print "Checking variable '%s' for consistency across files..."%\
+                          var_str
+                    if np.any(last_data.variables[var_str][:] != var[:]):
+                        raise RuntimeError("Data for per-file variable '%s' "
+                                           "differs in '%s' and '%s'." % 
+                                           ( var_str, trajfns[i-1], trajfns[i] ))
 
     cursor += len(time)
     last_time = time[-1]
