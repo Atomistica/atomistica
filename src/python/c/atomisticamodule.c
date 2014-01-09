@@ -90,33 +90,6 @@ py_set_logfile(PyObject *self, PyObject *args)
 }
 
 
-#if 0
-PyObject *
-read_atoms(PyObject *self, PyObject *args)
-{
-  char *at_fn;
-  particles_t *a;
-  int i;
-  FOR_INTEGER ierror = ERROR_NONE;
-
-  if (!PyArg_ParseTuple(args, "s", &at_fn))
-    return NULL;
-
-  a = (particles_t*) particles_type.tp_new(&particles_type, NULL, NULL);
-  i = strlen(at_fn);
-  CALL5(native_io, read_atoms, a->obj, at_fn, NULL, &ierror, i);
-  if (error_to_py(ierror))
-    return NULL;
-
-  a->initialized = 1;
-
-  particles_update_elements(a, NULL);
-
-  return (PyObject*) a;
-}
-#endif
-
-
 static PyMethodDef module_methods[] = {
   { "startup", py_atomistica_startup, METH_NOARGS,
     "File which to write log information to." },
@@ -130,10 +103,6 @@ static PyMethodDef module_methods[] = {
     "Compute angular distribution functions." },
   { "bond_angles", py_bond_angles, METH_VARARGS,
     "Compute moments of the bond angle distribution (per-atom)." },
-  /*
-  { "read_atoms", read_atoms, METH_VARARGS,
-      "Read atom data from an .dat-file." },
-  */
   { NULL, NULL, 0, NULL }  /* Sentinel */
 };
 
