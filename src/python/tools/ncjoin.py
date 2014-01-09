@@ -36,7 +36,6 @@ from netCDF4 import Dataset
 
 ###
 
-TIME_TOL = 1e-6
 FRAME_DIM = 'frame'
 ATOM_DIM = 'atom'
 
