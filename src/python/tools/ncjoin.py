@@ -144,12 +144,6 @@ def filter_trajs(idata_f, every):
     return filtered_idata_f
 
 
-### Sanity check
-
-if os.path.exists('traj.nc'):
-    raise RuntimeError('traj.nc exists already.')
-
-
 ### Parse command line options
 
 parser = OptionParser()
@@ -175,6 +169,12 @@ print 'every =', options.every, ', test_var =', options.test_var, \
 
 if len(trajfns) == 0:
     raise RuntimeError('Please provide one or more files to concatenate.')
+
+
+### Sanity check
+
+if os.path.exists('traj.nc'):
+    raise RuntimeError('traj.nc exists already.')
 
 
 ### Open input files and filter if requested
