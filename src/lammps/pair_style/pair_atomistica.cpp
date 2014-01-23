@@ -389,9 +389,15 @@ void PairAtomistica::Atomistica_neigh()
   numneigh = list->numneigh;
   firstneigh = list->firstneigh;
 
-  // Map seed and last arrays to point to the appropriate position in the native
-  // LAMMPS neighbor list
-  Atomistica_neighb_ = &firstneigh[0][0];
+  // Map seed and last arrays to point to the appropriate position in the
+  // native LAMMPS neighbor list. This avoids copying the full list.
+
+  // To avoid integer overflows, seed will be reported relative to the
+  // NULL pointer. All seed and last values are then effectively pointers to
+  // the respective memory location.
+  Atomistica_neighb_ = NULL;
+
+  // Fill seed and last arrays.
   Atomistica_nneighb_ = 0;
   for (ii = 0; ii < inum; ii++) {
     i = ilist[ii];
