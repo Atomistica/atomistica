@@ -1,0 +1,7 @@
+Unit tests use the FRUIT library:
+
+  http://fortranxunit.sourceforge.net/
+
+fruit.f90 and fruit_util.f90 are taken from that project.
+
+See LICENSE.txt in this file for FRUIT license.
