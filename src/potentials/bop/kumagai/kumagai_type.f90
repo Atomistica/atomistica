@@ -41,6 +41,12 @@
      ! Cut-off information required by BOP_KERNEL
      !
 
+#ifdef EXP_CUTOFF
+     type(exp_cutoff_t) :: cut_in(KUMAGAI_MAX_PAIRS)
+#else
+     type(trig_cutoff_t) :: cut_in(KUMAGAI_MAX_PAIRS)
+#endif
+
      real(DP)  :: cut_in_l(KUMAGAI_MAX_PAIRS)     !< Inner cutoff
      real(DP)  :: cut_in_h(KUMAGAI_MAX_PAIRS)     !< Outer cutoff
      real(DP)  :: cut_in_h2(KUMAGAI_MAX_PAIRS)    !< Outer cutoff squared
@@ -67,6 +73,14 @@
 
 ! The other cutoffs are identical!
 #define cut_ar_h  cut_out_h
+
+#ifdef EXP_CUTOFF
+     type(exp_cutoff_t) :: cut_out(KUMAGAI_MAX_PAIRS)
+     type(exp_cutoff_t) :: cut_bo(KUMAGAI_MAX_PAIRS)
+#else
+     type(trig_cutoff_t) :: cut_out(KUMAGAI_MAX_PAIRS)
+     type(trig_cutoff_t) :: cut_bo(KUMAGAI_MAX_PAIRS)
+#endif
 
      real(DP)  :: cut_out_h(KUMAGAI_MAX_PAIRS)
      real(DP)  :: cut_out_l(KUMAGAI_MAX_PAIRS)

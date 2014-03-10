@@ -86,13 +86,19 @@
     enddo
 
     do i = 1, npairs
+       call init(this%cut_in(i), this%db%r1(i), this%db%r2(i))
+
        this%cut_in_l(i)   = this%db%r1(i)
        this%cut_in_h(i)   = this%db%r2(i)
        this%cut_in_h2(i)  = this%db%r2(i)**2
 
 #ifdef SCREENING
+       call init(this%cut_out(i), this%db%or1(i), this%db%or2(i))
+
        this%cut_out_l(i)  = this%db%or1(i)
        this%cut_out_h(i)  = this%db%or2(i)
+
+       call init(this%cut_bo(i), this%db%bor1(i), this%db%bor2(i))
 
        this%cut_bo_l(i)   = this%db%bor1(i)
        this%cut_bo_h(i)   = this%db%bor2(i)

@@ -27,55 +27,15 @@
 subroutine fCin(this, ijpot, dr, val, dval)
   implicit none
 
-  type(BOP_TYPE), intent(in)  :: this
-  integer, intent(in)          :: ijpot
-  real(DP), intent(in)         :: dr
-  real(DP), intent(out)        :: val
-  real(DP), intent(out)        :: dval
+  type(BOP_TYPE), intent(in) :: this
+  integer, intent(in)        :: ijpot
+  real(DP), intent(in)       :: dr
+  real(DP), intent(out)      :: val
+  real(DP), intent(out)      :: dval
 
   ! ---
 
-  real(DP)  :: fac, x
-#ifdef EXP_CUTOFF
-  real(DP)  :: x2, val1, dval1, ddval1, c, d
-#endif
-
-  ! ---
-
-  if (dr < this%db%r1(ijpot)) then
-     val   = 1.0_DP
-     dval  = 0.0_DP
-  else if (dr > this%db%r2(ijpot)) then
-     val   = 0.0_DP
-     dval  = 0.0_DP
-#ifdef EXP_CUTOFF
-  else
-     ! This is f(x)=exp(-8*x**3), but corrected such that function, first
-     ! and second derivative go to zero at x=1.
-     ! Function is differentiable twice.
-     fac    = 1.0_DP/( this%db%r2(ijpot) - this%db%r1(ijpot) )
-     x      = fac*( dr-this%db%r1(ijpot) )
-     x2     = x*x
-     val    = exp(-8*x*x2)
-     dval   = -24*x2*val
-     val1   = exp(-8.0_DP)
-     dval1  = -24*val1
-     ddval1 = -48*val1-24*dval1
-     c      = (-3*dval1+ddval1)/3
-     d      = (2*dval1-ddval1)/4
-     dval   = fac*(dval+3*c*x2+4*d*x*x2)/(1-val1-c-d)
-     val    = (val+c*x*x2+d*x2*x2-val1-c-d)/(1-val1-c-d)
-  endif
-#else
-  else
-     ! This if f(x)=0.5(1+cos(pi*x)).
-     ! Function is differentiable once.
-     fac   = PI/( this%db%r2(ijpot) - this%db%r1(ijpot) )
-     x     = fac*( dr-this%db%r1(ijpot) )
-     val   = 0.5_DP *  ( 1.0_DP + cos( x ) )
-     dval  = -0.5_DP * fac * sin( x )
-  endif
-#endif
+  call fc(this%cut_in(ijpot), dr, val, dval)
 
 endsubroutine fCin
 
@@ -90,43 +50,15 @@ endsubroutine fCin
 subroutine fCar(this, ijpot, dr, val, dval)
   implicit none
 
-  type(BOP_TYPE), intent(in)  :: this
-  integer, intent(in)          :: ijpot
-  real(DP), intent(in)         :: dr
-  real(DP), intent(out)        :: val
-  real(DP), intent(out)        :: dval
+  type(BOP_TYPE), intent(in) :: this
+  integer, intent(in)        :: ijpot
+  real(DP), intent(in)       :: dr
+  real(DP), intent(out)      :: val
+  real(DP), intent(out)      :: dval
 
   ! ---
 
-  real(DP)  :: fac, arg
-#ifdef EXP_CUTOFF
-  real(DP)  :: arg2
-#endif
-
-  ! ---
-
-  if (dr < this%db%or1(ijpot)) then
-     val   = 1.0_DP
-     dval  = 0.0_DP
-#ifdef EXP_CUTOFF
-  else
-     fac  = 2.0_DP/( this%db%or2(ijpot) - this%db%or1(ijpot) )
-     arg  = fac*( dr-this%db%or1(ijpot) )
-     arg2 = arg*arg
-     val  = exp(-arg*arg2)
-     dval = -3*fac*arg2*val
-  endif
-#else
-  else if (dr > this%db%or2(ijpot)) then
-     val   = 0.0_DP
-     dval  = 0.0_DP
-  else
-     fac   = PI/( this%db%or2(ijpot) - this%db%or1(ijpot) )
-     arg   = fac*( dr-this%db%or1(ijpot) )
-     val   = 0.5_DP *  ( 1.0_DP + cos( arg ) )
-     dval  = -0.5_DP * fac * sin( arg )
-  endif
-#endif
+  call fc(this%cut_out(ijpot), dr, val, dval)
 
 endsubroutine fCar
 
@@ -139,43 +71,15 @@ endsubroutine fCar
 subroutine fCbo(this, ijpot, dr, val, dval)
   implicit none
 
-  type(BOP_TYPE), intent(in)  :: this
-  integer, intent(in)          :: ijpot
-  real(DP), intent(in)         :: dr
-  real(DP), intent(out)        :: val
-  real(DP), intent(out)        :: dval
+  type(BOP_TYPE), intent(in) :: this
+  integer, intent(in)        :: ijpot
+  real(DP), intent(in)       :: dr
+  real(DP), intent(out)      :: val
+  real(DP), intent(out)      :: dval
 
   ! ---
 
-  real(DP)  :: fac, arg
-#ifdef EXP_CUTOFF
-  real(DP)  :: arg2
-#endif
-
-  ! ---
-
-  if (dr < this%db%bor1(ijpot)) then
-     val   = 1.0_DP
-     dval  = 0.0_DP
-#ifdef EXP_CUTOFF
-  else
-     fac  = 2.0_DP/( this%db%bor2(ijpot) - this%db%bor1(ijpot) )
-     arg  = fac*( dr-this%db%bor1(ijpot) )
-     arg2 = arg*arg
-     val  = exp(-arg*arg2)
-     dval = -3*fac*arg2*val
-  endif
-#else
-  else if (dr > this%db%bor2(ijpot)) then
-     val   = 0.0_DP
-     dval  = 0.0_DP
-  else
-     fac   = PI/( this%db%bor2(ijpot) - this%db%bor1(ijpot) )
-     arg   = fac*( dr-this%db%bor1(ijpot) )
-     val   = 0.5_DP *  ( 1.0_DP + cos( arg ) )
-     dval  = -0.5_DP * fac * sin( arg )
-  endif
-#endif
+  call fc(this%cut_bo(ijpot), dr, val, dval)
 
 endsubroutine fCbo
 

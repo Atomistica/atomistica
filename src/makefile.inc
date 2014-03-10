@@ -46,13 +46,13 @@ VPATH = \
 ## LAMMPS support library
 LAMMPS_SUPPLIB = \
 	c_f.f90 \
-        error.f90 \
-        System.f90 \
-        MPI_context.f90 \
-        Units.f90 \
+	error.f90 \
+	System.f90 \
+	MPI_context.f90 \
+	Units.f90 \
 	c_linearalgebra.cpp \
-        f_linearalgebra.f90 \
-        PeriodicTable.f90 \
+	f_linearalgebra.f90 \
+	PeriodicTable.f90 \
 	f_ptrdict.f90 \
 	c_ptrdict.c \
 	io.f90 \
@@ -63,16 +63,17 @@ LAMMPS_SUPPLIB = \
 	tls.f90 \
 	simple_spline.f90 \
 	nonuniform_spline.f90 \
+	cutoff.f90 \
 	supplib.f90 \
 	table2d.f90 \
 	table3d.f90 \
 	table4d.f90 \
 	anderson_mixer.f90 \
 	lammps_particles.f90 \
-        lammps_neighbors.f90 \
+	lammps_neighbors.f90 \
 	lammps_filter.f90 \
 	coulomb_dispatch.f90 \
-        versioninfo.f90 \
+	versioninfo.f90 \
 	atomistica.f90
 
 

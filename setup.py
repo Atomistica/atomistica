@@ -87,6 +87,7 @@ lib_srcs += [ ('%s/support/' % srcdir)+i for i in
                 'nonuniform_spline.f90',
                 'supplib.f90',
                 'atomistica.f90',
+                'cutoff.f90',
                 ]
               ]
 
