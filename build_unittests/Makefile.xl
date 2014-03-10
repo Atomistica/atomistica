@@ -1,0 +1,112 @@
+# Makefile for IBM XLF/C on Blue Gene
+#
+# *** Paths
+# 
+# MDCORE
+#
+SRCDIR   = ../src
+
+
+#
+# *** Compilers and parallelization
+#
+# Serial / OpenMP execution (GNU)
+#
+FC        = bgxlf_r
+F90C      = bgxlf2008_r
+CC        = bgxlc_r
+CXX       = bgxlc++_r
+LD        = bgxlf2008_r
+#
+# OpenMP parallelization or hybrid MPI/OpenMP
+#
+OMP_FLAGS = 
+#OMP_FLAGS = -qsmp=omp
+
+
+#
+# *** Extra includes and libraries
+#
+#
+EXTRA_INCLUDE += 
+EXTRA_LIB += 
+
+#
+# *** Other settings that rarely need to be touched
+#
+LIBTOOL  = ar r
+#
+# * Optimization
+#
+# Normal
+#
+OPTFLAGS = -O3 -qstrict -qarch=qp -qtune=qp
+#
+# Debug
+#
+#OPTFLAGS = -g -qfullpath -qkeepparm
+
+#
+# * Defines
+#
+#   -DMDCORE_MONOLITHIC        Compile modules that work only in the standalone
+#                              version of MDCORE (i.e. HarmonicHook, etc.)
+#   -DMDCORE_PYTHON            Compile Python specific stuff
+#   -DLAMMPS                   Compute LAMMPS specific stuff
+#
+#   MDCORE_MONOLITHIC, MDCORE_PYTHON, and LAMMPS are (should be) mutually exclusive
+#
+#   -DHAVE_NETCDF              Compile with NetCDF output module
+#   -DHAVE_FFTW3               Compile PME module using FFTW3
+#   -DHAVE_MKL                 LAPACK implementation is the MKL
+#                              (switches printing of MKL version information)
+#   -DHAVE_IFPORT              Compiler is Intel Fortran and the ifport module
+#                              is present (switches writing of a restart file
+#                              upon SIGTERM, i.e. if wallclock time is reached)
+#   -DBROKEN_ISO_C_BINDING     c_loc implementation in iso_c_binding is 
+#                              broken (basically all gfortran versions)
+#   -DHAVE_CUDA                CUDA is available on the system. Compile code to
+#                              use CUDA GPU hardware.
+# 
+# * libAtoms defines
+#
+#   -DGETENV_F2003             Fortran 2003 getenv is present (define if you
+#                              get undefined references to _getenv_)
+#   -DGETARG_F2003             Fortran 2003 getarg is present (define if you
+#                              get undefined references to _getarg_)
+#
+#
+#   -DQUIP_ARCH=\"MDCORE\"     libAtoms/QUIP internal versioning
+#   -DSIZEOF_FORTRAN_T=8       for libAtoms/QUIP C interoperability
+#
+# - Would be nice to have all explained eventually.
+#
+DEFINES  = \
+	-WF,-DLAMMPS \
+	-WF,-DNO_BIND_C_OPTIONAL
+
+
+#
+# *** Compilation and linking flags
+#     (settings should be made mainly above, not here)
+#
+GFFLAGS  = \
+	$(DEFINES) \
+	$(OPTFLAGS) \
+	$(MPI_FLAGS) \
+	$(OMP_FLAGS)
+#
+# GNU
+#
+FFLAGS   = $(GFFLAGS) 
+F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE) -qsuffix=cpp=f90
+CFLAGS   = -O3 -qstrict -qarch=qp -qtune=qp
+
+#
+# Use LDFLAGS = -static if you want a static binary
+#
+LDFLAGS  = 
+LIBS     = $(EXTRA_LIB)
+
+include $(SRCDIR)/makefile.inc
+

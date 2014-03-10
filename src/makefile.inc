@@ -39,7 +39,8 @@ VPATH = \
 	$(SRCDIR)/notb/dense/analysis \
 	$(SRCDIR)/qeq \
 	$(SRCDIR)/special \
-	$(SRCDIR)/support
+	$(SRCDIR)/support \
+	$(SRCDIR)/unittests
 
 
 ## LAMMPS support library
@@ -94,6 +95,19 @@ LAMMPS_ALL_O2 = $(LAMMPS_ALL_O3:.f=.o)
 LAMMPS_ALL_O1 = $(LAMMPS_ALL_O2:.f90=.o)
 LAMMPS_ALL_O = $(LAMMPS_ALL_O1:.f90=.o)
 
+
+## Everything we need for unit tests
+UNITTESTS = \
+	fruit_util.f90 \
+	fruit.f90 \
+	c_f.f90 \
+	error.f90 \
+	System.f90 \
+	Units.f90 \
+	cutoff.f90 \
+	test_cutoff.f90 \
+	run_tests.f90
+UNITTESTS_O = $(UNITTESTS:.f90=.o)
 
 MAIN = \
 	main.f90
@@ -152,6 +166,9 @@ versioninfo:
 
 atomistica: versioninfo $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
+
+unittests: versioninfo $(UNITTESTS_O)
+	$(F90C) -o unittests $(UNITTESTS_O)
 
 clean:
 	rm -f *.o
