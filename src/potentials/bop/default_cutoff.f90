@@ -35,9 +35,9 @@ subroutine fCin(this, ijpot, dr, val, dval)
 
   ! ---
 
-  real(DP)  :: fac, arg
+  real(DP)  :: fac, x
 #ifdef EXP_CUTOFF
-  real(DP)  :: arg2
+  real(DP)  :: x2, val1, dval1, ddval1, c, d
 #endif
 
   ! ---
@@ -45,23 +45,35 @@ subroutine fCin(this, ijpot, dr, val, dval)
   if (dr < this%db%r1(ijpot)) then
      val   = 1.0_DP
      dval  = 0.0_DP
-#ifdef EXP_CUTOFF
-  else
-     fac  = 2.0_DP/( this%db%r2(ijpot) - this%db%r1(ijpot) )
-     arg  = fac*( dr-this%db%r1(ijpot) )
-     arg2 = arg*arg
-     val  = exp(-arg*arg2)
-     dval = -3*fac*arg2*val
-  endif
-#else
   else if (dr > this%db%r2(ijpot)) then
      val   = 0.0_DP
      dval  = 0.0_DP
+#ifdef EXP_CUTOFF
   else
+     ! This is f(x)=exp(-8*x**3), but corrected such that function, first
+     ! and second derivative go to zero at x=1.
+     ! Function is differentiable twice.
+     fac    = 1.0_DP/( this%db%r2(ijpot) - this%db%r1(ijpot) )
+     x      = fac*( dr-this%db%r1(ijpot) )
+     x2     = x*x
+     val    = exp(-8*x*x2)
+     dval   = -24*x2*val
+     val1   = exp(-8.0_DP)
+     dval1  = -24*val1
+     ddval1 = -48*val1-24*dval1
+     c      = (-3*dval1+ddval1)/3
+     d      = (2*dval1-ddval1)/4
+     dval   = fac*(dval+3*c*x2+4*d*x*x2)/(1-val1-c-d)
+     val    = (val+c*x*x2+d*x2*x2-val1-c-d)/(1-val1-c-d)
+  endif
+#else
+  else
+     ! This if f(x)=0.5(1+cos(pi*x)).
+     ! Function is differentiable once.
      fac   = PI/( this%db%r2(ijpot) - this%db%r1(ijpot) )
-     arg   = fac*( dr-this%db%r1(ijpot) )
-     val   = 0.5_DP *  ( 1.0_DP + cos( arg ) )
-     dval  = -0.5_DP * fac * sin( arg )
+     x     = fac*( dr-this%db%r1(ijpot) )
+     val   = 0.5_DP *  ( 1.0_DP + cos( x ) )
+     dval  = -0.5_DP * fac * sin( x )
   endif
 #endif
 
