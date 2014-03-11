@@ -49,7 +49,7 @@ module tersoff_scr
   private
 
 #define SCREENING
-#define EXP_CUTOFF
+#define CUTOFF_T             exp_cutoff_t
 
 #define TERSOFF_MAX_REF      TERSOFF_SCR_MAX_REF
 #define TERSOFF_MAX_EL       TERSOFF_SCR_MAX_EL

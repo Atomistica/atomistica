@@ -41,11 +41,7 @@
      ! Cut-off information required by BOP_KERNEL
      !
 
-#ifdef EXP_CUTOFF
-     type(exp_cutoff_t) :: cut_in(TERSOFF_MAX_PAIRS)
-#else
-     type(trig_cutoff_t) :: cut_in(TERSOFF_MAX_PAIRS)
-#endif
+     type(CUTOFF_T) :: cut_in(TERSOFF_MAX_PAIRS)
 
      real(DP)  :: cut_in_l(TERSOFF_MAX_PAIRS)     !< Inner cutoff
      real(DP)  :: cut_in_h(TERSOFF_MAX_PAIRS)     !< Outer cutoff
@@ -71,13 +67,8 @@
 
 #ifdef SCREENING
 
-#ifdef EXP_CUTOFF
-     type(exp_cutoff_t) :: cut_out(TERSOFF_MAX_PAIRS)
-     type(exp_cutoff_t) :: cut_bo(TERSOFF_MAX_PAIRS)
-#else
-     type(trig_cutoff_t) :: cut_out(TERSOFF_MAX_PAIRS)
-     type(trig_cutoff_t) :: cut_bo(TERSOFF_MAX_PAIRS)
-#endif
+     type(CUTOFF_T) :: cut_out(TERSOFF_MAX_PAIRS)
+     type(CUTOFF_T) :: cut_bo(TERSOFF_MAX_PAIRS)
 
 ! The other cutoffs are identical!
 #define cut_ar_h  cut_out_h

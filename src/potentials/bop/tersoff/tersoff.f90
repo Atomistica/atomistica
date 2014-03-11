@@ -47,6 +47,8 @@ module tersoff
 
   private
 
+#define CUTOFF_T             trig_cutoff_t
+
 #define BOP_NAME             tersoff
 #define BOP_NAME_STR         "tersoff"
 #define BOP_STR              "Tersoff"
