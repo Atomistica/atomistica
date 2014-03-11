@@ -89,10 +89,10 @@ contains
 
     ! ---
 
-    if (r < this%r1) then
+    if (r <= this%r1) then
        val  = 1.0_DP
        dval = 0.0_DP
-    else if (r > this%r2) then
+    else if (r >= this%r2) then
        val  = 0.0_DP
        dval = 0.0_DP
     else
@@ -151,10 +151,10 @@ contains
 
     ! ---
 
-    if (r < this%r1) then
+    if (r <= this%r1) then
        val  = 1.0_DP
        dval = 0.0_DP
-    else if (r > this%r2) then
+    else if (r >= this%r2) then
        val  = 0.0_DP
        dval = 0.0_DP
     else

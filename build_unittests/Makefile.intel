@@ -71,8 +71,7 @@ OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -fp-model fast
 DEFINES  = \
 	-DHAVE_IFPORT \
 	-DLAMMPS \
-	-DHAVE_MKL \
-	-D_MPI
+	-DHAVE_MKL
 
 
 #
