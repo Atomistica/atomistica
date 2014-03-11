@@ -45,7 +45,7 @@ module kumagai_scr
   private
 
 #define SCREENING
-#define EXP_CUTOFF
+#define CUTOFF_T             exp_cutoff_t
 
 #define KUMAGAI_MAX_REF      KUMAGAI_SCR_MAX_REF
 #define KUMAGAI_MAX_EL       KUMAGAI_SCR_MAX_EL
