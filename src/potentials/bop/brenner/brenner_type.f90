@@ -56,15 +56,16 @@
      ! Cutoff parameters
      !
 
+     type(CUTOFF_T) :: cut_in(BRENNER_MAX_PAIRS)
+
      real(DP)  :: cut_in_h(BRENNER_MAX_PAIRS)
      real(DP)  :: cut_in_h2(BRENNER_MAX_PAIRS)
      real(DP)  :: cut_in_l(BRENNER_MAX_PAIRS)
-     real(DP)  :: cut_in_fca(BRENNER_MAX_PAIRS)
-#ifndef EXP_BOP
-     real(DP)  :: cut_in_fc(BRENNER_MAX_PAIRS)
-#endif
 
 #ifdef SCREENING
+
+     type(CUTOFF_T) :: cut_out(BRENNER_MAX_PAIRS)
+     type(CUTOFF_T) :: cut_bo(BRENNER_MAX_PAIRS)
 
 ! The other cutoff are identical!
 #define cut_ar_h  cut_out_h

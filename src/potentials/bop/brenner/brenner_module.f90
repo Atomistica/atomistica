@@ -295,15 +295,11 @@
        ! cutoff constants.
        !
 
+       call init(this%cut_in(i), this%db%r1(i), this%db%r2(i))
+
        this%cut_in_l(i)    = this%db%r1(i)
        this%cut_in_h(i)    = this%db%r2(i)
        this%cut_in_h2(i)   = this%db%r2(i)**2
-#ifdef EXP_CUTOFF
-       this%cut_in_fca(i)  = 2.0_DP / ( this%db%r2(i) - this%db%r1(i) )
-#else
-       this%cut_in_fca(i)  = PI / ( this%db%r2(i) - this%db%r1(i) )
-       this%cut_in_fc(i)   = - 0.5_DP * this%cut_in_fca(i)
-#endif
 
 #ifdef SCREENING
 
@@ -311,23 +307,15 @@
        ! screening cutoffs
        !
 
+       call init(this%cut_out(i), this%db%or1(i), this%db%or2(i))
+
        this%cut_out_l(i)    = this%db%or1(i)
        this%cut_out_h(i)    = this%db%or2(i)
-#ifdef EXP_CUTOFF
-       this%cut_out_fca(i)  = 2.0_DP / ( this%db%or2(i) - this%db%or1(i) )
-#else
-       this%cut_out_fca(i)  = PI / ( this%db%or2(i) - this%db%or1(i) )
-       this%cut_out_fc(i)   = - 0.5_DP * this%cut_out_fca(i)
-#endif
+
+       call init(this%cut_bo(i), this%db%bor1(i), this%db%bor2(i))
 
        this%cut_bo_l(i)    = this%db%bor1(i)
        this%cut_bo_h(i)    = this%db%bor2(i)
-#ifdef EXP_CUTOFF
-       this%cut_bo_fca(i)  = 2.0_DP / ( this%db%bor2(i) - this%db%bor1(i) )
-#else
-       this%cut_bo_fca(i)  = PI / ( this%db%bor2(i) - this%db%bor1(i) )
-       this%cut_bo_fc(i)   = - 0.5_DP * this%cut_bo_fca(i)
-#endif
 
        this%max_cut_sq(i)   = max( &
             this%cut_in_h(i), &

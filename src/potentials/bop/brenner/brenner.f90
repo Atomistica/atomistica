@@ -51,6 +51,8 @@ module brenner
 
   private
 
+#define CUTOFF_T             trig_cutoff_t
+
 #define BOP_NAME             brenner
 #define BOP_NAME_STR         "brenner"
 #define BOP_STR              "Brenner"

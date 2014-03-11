@@ -52,11 +52,11 @@ module brenner_scr
   private
 
 #define SCREENING
-#define EXP_CUTOFF
+#define CUTOFF_T             exp_cutoff_t
 
-#define BRENNER_MAX_REF     BRENNER_SCR_MAX_REF
-#define BRENNER_MAX_EL      BRENNER_SCR_MAX_EL
-#define BRENNER_MAX_PAIRS   BRENNER_SCR_MAX_PAIRS
+#define BRENNER_MAX_REF      BRENNER_SCR_MAX_REF
+#define BRENNER_MAX_EL       BRENNER_SCR_MAX_EL
+#define BRENNER_MAX_PAIRS    BRENNER_SCR_MAX_PAIRS
 
 #define BOP_NAME             brenner_scr
 #define BOP_NAME_STR         "brenner_scr"
