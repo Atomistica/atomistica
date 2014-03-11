@@ -18,15 +18,15 @@ contains
     integer :: i ;                                                       \
     call init(cutoff, r1, r2) ;                                          \
     call fc(cutoff, r1, val, dval) ;                                     \
-    call assert_equals(1.0_DP, val, tol) ;                               \
-    call assert_equals(0.0_DP, dval, tol) ;                              \
+    call assert_equals(1.0_DP, val, tol, "upper val") ;                  \
+    call assert_equals(0.0_DP, dval, tol, "upper dval") ;                \
     call fc(cutoff, r2, val, dval) ;                                     \
-    call assert_equals(0.0_DP, val, tol) ;                               \
-    call assert_equals(0.0_DP, dval, tol) ;                              \
+    call assert_equals(0.0_DP, val, tol, "lower val") ;                  \
+    call assert_equals(0.0_DP, dval, tol, "lower dval") ;                \
     do i = 0, 100 ;                                                      \
        call fc(cutoff, r1+i*(r2-r1)/100.0_DP, val, dval) ;               \
-       call assert_true(val >= 0.0_DP .and. val <= 1.0_DP) ;             \
-       call assert_true(dval <= 0.0_DP) ;                                \
+       call assert_true(val >= 0.0_DP .and. val <= 1.0_DP, "in range") ; \
+       call assert_true(dval <= 0.0_DP, "derivative smaller zero") ;     \
     enddo ;                                                              \
     do i = 0, 99 ;                                                       \
        call fc(cutoff, r1+i*(r2-r1)/1000.0_DP, val, dval) ;              \
