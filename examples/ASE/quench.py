@@ -10,7 +10,7 @@ from ase.optimize import FIRE
 from ase.md import Langevin
 from ase.units import mol, fs, kB
 
-from mdcore.logger import MDLogger
+from atomistica.logger import MDLogger
 
 from liquid_tools import *
 
