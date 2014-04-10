@@ -79,7 +79,10 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
 
         test_first2 = data2.variables[test_var][0]
 
+        # Last element in previous file
         last1 = len(data1.variables[time_var])-1
+
+        # Maximum difference in test variable
         maxdiff = np.max(np.abs(data1.variables[test_var][last1] - test_first2))
         while last1 >= 0 and maxdiff > test_tol:
             print 'Frame %i of %s does not agree with first frame of %s ' \
@@ -89,19 +92,37 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
             maxdiff = np.max(np.abs(data1.variables[test_var][last1] -
                                     test_first2))
 
+        # Sanity check. Frame *last1* of previous file should be identica to
+        # frame 0 of current file.
         if last1 < 0:
             raise RuntimeError('%s and %s are not consecutive. It may help to '
                                'increase *test_tol*.' % ( fn1, fn2 ))
 
         data_slice = slice(0, last1)
         time = data1.variables[time_var][data_slice]
+        # Some files have a bug where the first time slot is zero. Fix by
+        # assuming constant time offset between frames.
+        if len(time) > 2 and abs(time[2]-time[1]-(time[1]-time[0])) > 1e-3:
+            time[0] = time[1]-(time[2]-time[1])
+
         if last_time is not None:
+            # These files are consecutive in the test_var, but may not be
+            # consecutive in time. Add an offset to the time.
             time += last_time - time[0]
         filtered_data_f += [ ( fn1, data1, data_slice, time ) ]
+
+        # This becomes the last time of the previous file when in the loop
         last_time = data1.variables[time_var][last1]
 
-    time = data2.variables[time_var]
+    time = data2.variables[time_var][:]
+    # Some files have a bug where the first time slot is zero. Fix by
+    # assuming constant time offset between frames.
+    if len(time) > 2 and abs(time[2]-time[1]-(time[1]-time[0])) > 1e-3:
+        time[0] = time[1]-(time[2]-time[1])
+
     if last_time is not None:
+        # These files are consecutive in the test_var, but may not be
+        # consecutive in time. Add an offset to the time.
         time += last_time - time[0]
     filtered_data_f += [ ( fn2, data2, slice(0, len(time)), time ) ]
 
