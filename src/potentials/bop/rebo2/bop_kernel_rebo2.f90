@@ -265,10 +265,12 @@
     integer  :: jdc,kdc,ldc,mdc,ndc
 #endif
     integer  :: ij,ik,jl,ln
+#ifdef SCREENING
 #ifdef LAMMPS
     integer(C_INTPTR_T) :: kn
 #else
     integer :: kn
+#endif
 #endif
 
 #ifdef NUM_NEIGHBORS
@@ -610,7 +612,10 @@
 #ifndef LAMMPS
     !$omp& private(jdc,kdc,ldc,mdc,ndc) &
 #endif
-    !$omp& private(ij,ik,jl,ln,kn) &
+    !$omp& private(ij,ik,jl,ln) &
+#ifdef SCREENING
+    !$omp& private(kn) &
+#endif
     !$omp& private(ikc,jlc,lnc) &
 #ifdef NUM_NEIGHBORS
     !$omp& private(km,kmc) &
