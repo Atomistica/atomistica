@@ -26,6 +26,7 @@ VPATH = \
 	$(SRCDIR)/potentials \
         $(SRCDIR)/potentials/bop \
         $(SRCDIR)/potentials/bop/brenner \
+	$(SRCDIR)/potentials/bop/juslin \
         $(SRCDIR)/potentials/bop/kumagai \
         $(SRCDIR)/potentials/bop/tersoff \
         $(SRCDIR)/potentials/pair_potentials \
