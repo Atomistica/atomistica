@@ -175,7 +175,9 @@
     if (this%neighbor_list_allocated) then
        deallocate(this%neb)
        deallocate(this%nbb)
+#ifndef LAMMPS
        deallocate(this%dcell)
+#endif
        deallocate(this%bndtyp)
        deallocate(this%bndlen)
        deallocate(this%bndnm)
