@@ -112,7 +112,9 @@
 
      integer, allocatable   :: neb(:)
      integer, allocatable   :: nbb(:)
+#ifndef LAMMPS
      integer, allocatable   :: dcell(:)
+#endif
 
      integer, allocatable   :: bndtyp(:)
      real(DP), allocatable  :: bndlen(:)
