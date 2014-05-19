@@ -30,8 +30,9 @@ trajectory.
 import os
 import sys
 
+from ase.io import NetCDFTrajectory
+
 from atomistica.analysis import voropp
-from atomistica.io import NetCDFTrajectory
 
 ###
 
