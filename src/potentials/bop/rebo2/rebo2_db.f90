@@ -283,6 +283,8 @@
        call table3d_prlog(this%Fch, indent=5)
        call prlog("     Fhh:")
        call table3d_prlog(this%Fhh, indent=5)
+       call prlog("     Pcc:")
+       call table2d_prlog(this%Pcc, indent=5)
        call prlog("     Pch:")
        call table2d_prlog(this%Pch, indent=5)
        call prlog("     Tcc:")
