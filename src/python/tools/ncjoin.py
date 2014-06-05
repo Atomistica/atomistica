@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/j1b/lb12/local/intel-XE.1/Python-2.7.6/bin/python
 
 # ======================================================================
 # Atomistica - Interatomic potential library
@@ -260,7 +260,7 @@ for trajfn, idata, data_slice, time in idata_f:
                     var_data = var[data_slice]
                 odata.variables[var_str][cursor:] = var_data
             else:
-                if not last_data:
+                if not last_data or var_str not in last_data.variables:
                     print "Copying variable '%s'..." % var_str
                     odata.variables[var_str][:] = var[:]
                 else:
