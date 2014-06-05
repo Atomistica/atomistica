@@ -77,9 +77,9 @@ LAPACK_LIB = -mkl=sequential
 #LAPACK_LIB = -llapack -lblas
 
 # ATOMISTICA stuff
-ATOMISTICA_FLAVOR = atomistica
-ATOMISTICA_INC = -I/W1/pas/source/$(ATOMISTICA_FLAVOR)/build_lammps -I/W1/pas/source/$(ATOMISTICA_FLAVOR)/src/support
-ATOMISTICA_PATH = -L/W1/pas/source/$(ATOMISTICA_FLAVOR)/build_lammps
+ATOMISTICA_ROOT = $(HOME)/Sources/atomistica
+ATOMISTICA_INC = -I$(ATOMISTICA_ROOT)/build_lammps -I$(ATOMISTICA_ROOT)/src/support
+ATOMISTICA_PATH = -L$(ATOMISTICA_ROOT)/build_lammps
 # The following lines should work for the Intel compilers
 ATOMISTICA_LIB = -latomistica -lifcore -lifport -lmpi_f77
 # For gcc/gfortran use
