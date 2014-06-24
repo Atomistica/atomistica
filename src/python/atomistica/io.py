@@ -80,7 +80,9 @@ def write(fn, a, **kwargs):
     if ext[0] == '.out' or ext[0] == '.dat':
         return write_atoms(fn, a)
     elif ext[0] == '.lammps':
-        return write_lammps_data(fn, a, **kwargs)
+        return write_lammps_data(fn, a, velocities=True, **kwargs)
+    elif ext[0] == '.nc':
+        return NetCDFTrajectory(fn, 'w').write(a)
     else:
         return ase.io.write(fn, a, **kwargs)
 
