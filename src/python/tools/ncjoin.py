@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/j1b/lb12/local/intel-XE.1/Python-2.7.6/bin/python
 
 # ======================================================================
 # Atomistica - Interatomic potential library
@@ -80,7 +80,7 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         test_first2 = data2.variables[test_var][0]
 
         # Last element in previous file
-        last1 = len(data1.variables[time_var])-1
+        last1 = data1.variables[test_var].shape[0]-1
 
         # Maximum difference in test variable
         maxdiff = np.max(np.abs(data1.variables[test_var][last1] - test_first2))
@@ -98,8 +98,14 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
             raise RuntimeError('%s and %s are not consecutive. It may help to '
                                'increase *test_tol*.' % ( fn1, fn2 ))
 
+        # Retrieve time information. If file has no time information number
+        # the individual frames consecutively.
+        if time_var in data1.variables:
+            time1 = data1.variables[time_var]
+        else:
+            time1 = np.arange(data1.variables[test_var].shape[0])
         data_slice = slice(0, last1)
-        time = data1.variables[time_var][data_slice]
+        time = time1[data_slice]
         # Some files have a bug where the first time slot is zero. Fix by
         # assuming constant time offset between frames.
         if len(time) > 2 and abs(time[2]-time[1]-(time[1]-time[0])) > 1e-3:
@@ -112,9 +118,12 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         filtered_data_f += [ ( fn1, data1, data_slice, time ) ]
 
         # This becomes the last time of the previous file when in the loop
-        last_time = data1.variables[time_var][last1]
+        last_time = time1[last1]
 
-    time = data2.variables[time_var][:]
+    if time_var in data2.variables:
+        time = data2.variables[time_var][:]
+    else:
+        time = np.arange(data2.variables[test_var].shape[0])
     # Some files have a bug where the first time slot is zero. Fix by
     # assuming constant time offset between frames.
     if len(time) > 2 and abs(time[2]-time[1]-(time[1]-time[0])) > 1e-3:
@@ -260,7 +269,7 @@ for trajfn, idata, data_slice, time in idata_f:
                     var_data = var[data_slice]
                 odata.variables[var_str][cursor:] = var_data
             else:
-                if not last_data:
+                if not last_data or var_str not in last_data.variables:
                     print "Copying variable '%s'..." % var_str
                     odata.variables[var_str][:] = var[:]
                 else:

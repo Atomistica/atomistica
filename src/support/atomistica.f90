@@ -88,7 +88,7 @@ contains
     call prscrlog("   Atomistica rev date:  " // trim(atomistica_date))
     call prscrlog("   Atomistica URL:       " // trim(atomistica_url))
 #ifdef HAVE_MKL
-    call mklgetversionstring(mklversion)
+    call mkl_get_version_string(mklversion)
     call prscrlog("   MKL version:          " // trim(mklversion))
 #endif
     call prscrlog
