@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/j1b/lb12/local/intel-XE.1/Python-2.7.6/bin/python
 
 # ======================================================================
 # Atomistica - Interatomic potential library
@@ -67,6 +67,18 @@ outfn   = args[1]
 
 a  = io.read(infn)
 
+if 'shear_dx' in a.info:
+    cx, cy, cz = a.cell
+    assert abs(cx[1]) < 1e-12
+    assert abs(cx[2]) < 1e-12
+    assert abs(cy[0]) < 1e-12
+    assert abs(cy[2]) < 1e-12
+    assert abs(cz[0]) < 1e-12
+    assert abs(cz[1]) < 1e-12
+    dx, dy, dz = a.info['shear_dx']
+    sx, sy, sz = a.cell.diagonal()
+    a.set_cell([[sx,0,0],[0,sy,0],[dx,dy,sz]], scale_atoms=False)
+    
 if opt.cell is not None:
     cell = map(float, opt.cell.split(','))
     a.set_cell(cell)
