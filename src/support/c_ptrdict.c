@@ -636,6 +636,82 @@ void ptrdict_set_property(property_t *p, char *value)
 
     free(str);
     break;
+  case PK_ARRAY2D:
+    point = (double*) p->ptr;
+    str = strdup(value);
+    c2 = str;
+
+    i = 0;
+    j = p->tag*p->tag2;
+    c1 = strchr(c2, ',');
+    while (c1 && i < j) {
+      c1[0] = 0;
+      point[i] = strtod(c2, &endptr);
+
+      while (isblank(*(++c1)));
+      c2 = c1;
+      c1 = strchr(c2, ',');
+      i++;
+    }
+    if (i >= j) {
+      printf("[ptrdict_set_property] Too many values for property '%s' of "
+	     "section '%s'.\n",
+             p->name, p->parent->name);
+    }
+    else if (i == 0) {
+        /* Fill whole array with this value. */
+        point[0] = strtod(c2, &endptr);
+        for (i = 1; i < j; i++)  point[i] = point[0];
+    }
+    else if (i < j-1) {
+      printf("[ptrdict_set_property] Too few values for property '%s' of "
+             "section '%s'.\n",
+             p->name, p->parent->name);
+    }
+    else {
+        point[i] = strtod(c2, &endptr);
+    }
+
+    free(str);
+    break;
+  case PK_ARRAY3D:
+    point = (double*) p->ptr;
+    str = strdup(value);
+    c2 = str;
+
+    i = 0;
+    j = p->tag*p->tag2*p->tag3;
+    c1 = strchr(c2, ',');
+    while (c1 && i < j) {
+      c1[0] = 0;
+      point[i] = strtod(c2, &endptr);
+
+      while (isblank(*(++c1)));
+      c2 = c1;
+      c1 = strchr(c2, ',');
+      i++;
+    }
+    if (i >= j) {
+      printf("[ptrdict_set_property] Too many values for property '%s' of "
+             "section '%s'.\n",
+             p->name, p->parent->name);
+    }
+    else if (i == 0) {
+        /* Fill whole array with this value. */
+        point[0] = strtod(c2, &endptr);
+        for (i = 1; i < j; i++)  point[i] = point[0];
+    }
+    else if (i < j-1) {
+      printf("[ptrdict_set_property] Too few values for property '%s' of "
+             "section '%s'.\n",
+             p->name, p->parent->name);
+    }
+    else {
+        point[i] = strtod(c2, &endptr);
+    }
+
+    free(str);
+    break;
   default:
     printf("[ptrdict_set_property] Internal error: Unknown kind %i of property '%s' of section '%s'.\n",
 	   p->kind, p->name, p->parent->name);
