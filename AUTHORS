@@ -13,14 +13,18 @@ Tim Kunze
     Helmholtz-Zentrum Dresden Rossendorf
     * LAMMPS interface
 
+Julian von Lautz
+    Fraunhofer-Institut fuer Werkstoffmechanikc IWM
+    * Atomic strain analysis
+
 Michael Moseler
     michael.moseler@iwm.fraunhofer.de
     Fraunhofer-Institut fuer Werkstoffmechanik IWM
     * Initial serial MD code
 
 Lars Pastewka
-    lars.pastewka@iwm.fraunhofer.de
-    Fraunhofer-Institut fuer Werkstoffmechanik IWM
+    lars.pastewka@kit.edu
+    Karlsruhe Institute of Technology, Institute of Applied Materials
 
 Parts of this code have been adopted from libAtoms.
 See http://www.libatoms.org/ for more information on contributors to
