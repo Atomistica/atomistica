@@ -27,6 +27,7 @@ See: Falk, Langer, Phys. Rev. B 57, 7192 (1998)
 
 import numpy as np
 
+import atomistica.native as native
 from atomistica.snippets import mic
 
 ###
@@ -121,21 +122,64 @@ def get_D_square_min(atoms_now, atoms_old, i_now, j_now, delta_plus_epsilon=None
 
     if delta_plus_epsilon is None:
         # Get minimum strain tensor
-        delta_plus_epsilon = get_delta_plus_epsilon(pos_now, pos_old, i_now, dr_now, dr_old)
+        delta_plus_epsilon = get_delta_plus_epsilon(pos_now, pos_old, i_now,
+                                                    dr_now, dr_old)
 
     # Spread epsilon out for each neighbor index
-    delta_plus_epsilon = delta_plus_epsilon[i_now]
+    delta_plus_epsilon_n = delta_plus_epsilon[i_now]
 
     # Compute D^2_min
     d_sq_n = np.sum(
         (
         dr_now-
-        np.sum(delta_plus_epsilon.reshape(-1,3,3)*dr_old.reshape(-1,1,3), axis=2)
+        np.sum(delta_plus_epsilon_n.reshape(-1,3,3)*dr_old.reshape(-1,1,3),
+               axis=2)
         )**2,
         axis=1)
 
     # For each atom, sum over all neighbors
     d_sq = np.bincount(i_now, weights=d_sq_n)
 
-    return d_sq
+    return delta_plus_epsilon, d_sq
 
+
+def atomic_strain(atoms_now, atoms_old, cutoff=None, i_now=None, j_now=None):
+    """
+    Calculate deformation gradient tensor and D^2_min measure for non-affine
+    displacements.
+    See: Falk, Langer, Phys. Rev. B 57, 7192 (1998)
+
+    Parameters:
+    -----------
+    atoms_now      Current atomic configuration
+    atoms_old      Reference atomic configuration
+    cutoff         Neighbor list cutoff.
+    i_now, j_now   Neighbor list. Automatically computed if not provided.
+
+    Returns:
+    --------
+    delta_plus_epsilon  Strain gradient tensor
+    d_sq                D^2_min norm
+    """
+
+    if i_now is None or j_now is None:
+        if cutoff is None:
+            raise ValueError('Please provide either neighbor list or neighbor '
+                             'list cutoff.')
+
+        # Create a particles object and set number of atoms and cell
+        p = native.from_atoms(a_now)
+        # create a neighbor list object and set it's cutoff
+        nl = native.Neighbors(avgn)
+        nl.request_interaction_range(cutoff)
+        # get neighbours and distance
+        i_now, j_now, abs_dr_now = nl.get_neighbors(p)
+    elif cutoff is not None:
+        raise ValueError('Please provide either neighbor list or neighbor '
+                         'list cutoff, not both.')
+
+    ### get the D square values
+    delta_plus_epsilon, d_sq = get_D_square_min(atoms_now, atoms_old, i_now,
+                                                j_now)
+
+    return delta_plus_epsilon, d_sq
