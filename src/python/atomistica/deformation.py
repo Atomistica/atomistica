@@ -24,6 +24,8 @@
 Tools related to homogenously deformed volumes.
 """
 
+import numpy as np
+
 ###
 
 def get_shear_distance(a):
@@ -33,18 +35,18 @@ def get_shear_distance(a):
     """
     cx, cy, cz = a.cell
     if 'shear_dx' in a.info:
-        assert abs(cx[1]) < 1e-12
-        assert abs(cx[2]) < 1e-12
-        assert abs(cy[0]) < 1e-12
-        assert abs(cy[2]) < 1e-12
-        assert abs(cz[0]) < 1e-12
-        assert abs(cz[1]) < 1e-12
+        assert abs(cx[1]) < 1e-12, 'cx[1] = {0}'.format(cx[1])
+        assert abs(cx[2]) < 1e-12, 'cx[2] = {0}'.format(cx[2])
+        assert abs(cy[0]) < 1e-12, 'cx[0] = {0}'.format(cy[0])
+        assert abs(cy[2]) < 1e-12, 'cy[2] = {0}'.format(cy[2])
+        assert abs(cz[0]) < 1e-12, 'cz[0] = {0}'.format(cz[0])
+        assert abs(cz[1]) < 1e-12, 'cz[1] = {0}'.format(cz[1])
         dx, dy, dz = a.info['shear_dx']
     else:
-        assert abs(cx[1]) < 1e-12
-        assert abs(cx[2]) < 1e-12
-        assert abs(cy[0]) < 1e-12
-        assert abs(cy[2]) < 1e-12
+        assert abs(cx[1]) < 1e-12, 'cx[1] = {0}'.format(cx[1])
+        assert abs(cx[2]) < 1e-12, 'cx[2] = {0}'.format(cx[2])
+        assert abs(cy[0]) < 1e-12, 'cy[0] = {0}'.format(cy[0])
+        assert abs(cy[2]) < 1e-12, 'cy[2] = {0}'.format(cy[2])
         dx, dy, sz = cz
     return dx, dy
 
@@ -102,8 +104,8 @@ class RemoveSimpleShearDeformation:
             # Store cells and shear distance
             self.last_d += [ ( last_dx, last_dy ) ]
 
-            self.sheared_cells += [ [[sx,0,0],[0,sy,0],[dx,dy,sz]] ]
-            self.unsheared_cells += [ [sx,sy,sz] ]
+            self.sheared_cells += [ np.array([[sx,0,0],[0,sy,0],[dx,dy,sz]]) ]
+            self.unsheared_cells += [ np.array([sx,sy,sz]) ]
 
 
     def __getitem__(self, i=-1):
@@ -123,6 +125,8 @@ class RemoveSimpleShearDeformation:
 
         # Wrap to cell
         a.set_scaled_positions(a.get_scaled_positions()%1.0)
+
+        a.info['true_cell'] = self.sheared_cells[i]
 
         return a
 
