@@ -38,7 +38,7 @@ class NeighborListTest(unittest.TestCase):
         a = io.read('aC.traj')
         an = native.from_atoms(a)
         nl = native.Neighbors(100)
-        nl.request_interaction_range(1.85)
+        nl.request_interaction_range(5.0)
 
         i, j, abs_dr_no_vec = nl.get_neighbors(an)
         i, j, dr, abs_dr = nl.get_neighbors(an, vec=True)
