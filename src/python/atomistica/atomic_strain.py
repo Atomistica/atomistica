@@ -32,14 +32,14 @@ from atomistica.snippets import mic
 
 ###
 
-def get_XIJ(pos_now, pos_old, i_now, dr_now, dr_old):
+def get_XIJ(nat, i_now, dr_now, dr_old):
     """
     Calculates the X_{ij} matrix
     """
     # Do an element-wise outer product
     dr_dr = dr_now.reshape(-1,3,1)*dr_old.reshape(-1,1,3)
 
-    xij = np.zeros([pos_old.shape[0],3,3])
+    xij = np.zeros([nat,3,3])
     for i in range(3):
         for j in range(3):
             # For each atom, sum over all neighbors
@@ -48,14 +48,14 @@ def get_XIJ(pos_now, pos_old, i_now, dr_now, dr_old):
     return xij
 
 
-def get_YIJ(pos_old, i_now, dr_old):
+def get_YIJ(nat, i_now, dr_old):
     """
-    Calculates the Y_{ij} matrix; see Falk, Langer
+    Calculates the Y_{ij} matrix
     """
     # Just do an element-wise outer product
     dr_dr = dr_old.reshape(-1,3,1)*dr_old.reshape(-1,1,3)
 
-    yij = np.zeros([pos_old.shape[0],3,3])
+    yij = np.zeros([nat,3,3])
     for i in range(3):
         for j in range(3):
             # For each atom, sum over all neighbors
@@ -87,12 +87,12 @@ def array_inverse(A):
     return np.array([lapack_inverse(a) for a in A])
 
 
-def get_delta_plus_epsilon(pos_now, pos_old, i_now, dr_now, dr_old):
+def get_delta_plus_epsilon(nat, i_now, dr_now, dr_old):
     """
     Calculate delta_ij+epsilon_ij, i.e. the deformation gradient matrix
     """
-    XIJ = get_XIJ(pos_now, pos_old, i_now, dr_now, dr_old)
-    YIJ = get_YIJ(pos_old, i_now, dr_old)
+    XIJ = get_XIJ(nat, i_now, dr_now, dr_old)
+    YIJ = get_YIJ(nat, i_now, dr_old)
 
     YIJ_invert = array_inverse(YIJ)
 
@@ -106,6 +106,9 @@ def get_D_square_min(atoms_now, atoms_old, i_now, j_now, delta_plus_epsilon=None
     """
     Calculate the D^2_min norm of Falk and Langer
     """
+    nat = len(atoms_now)
+    assert len(atoms_now) == len(atoms_old)
+
     pos_now = atoms_now.positions
     pos_old = atoms_old.positions
 
@@ -114,16 +117,15 @@ def get_D_square_min(atoms_now, atoms_old, i_now, j_now, delta_plus_epsilon=None
     # are calculated from the sheared cell while these distance need to come
     # from the unsheared cell. Taking the distance from the unsheared cell
     # make periodic boundary conditions (and flipping of cell) a lot easier.
-    dr_now = mic(pos_now[i_now]-pos_now[j_now], atoms_now.cell)
-    dr_old = mic(pos_old[i_now]-pos_old[j_now], atoms_old.cell)
+    dr_now = mic(pos_now[i_now] - pos_now[j_now], atoms_now.cell)
+    dr_old = mic(pos_old[i_now] - pos_old[j_now], atoms_old.cell)
 
     # Sanity check: Shape needs to be identical!
     assert dr_now.shape == dr_old.shape
 
     if delta_plus_epsilon is None:
         # Get minimum strain tensor
-        delta_plus_epsilon = get_delta_plus_epsilon(pos_now, pos_old, i_now,
-                                                    dr_now, dr_old)
+        delta_plus_epsilon = get_delta_plus_epsilon(nat, i_now, dr_now, dr_old)
 
     # Spread epsilon out for each neighbor index
     delta_plus_epsilon_n = delta_plus_epsilon[i_now]
