@@ -28,26 +28,7 @@ import numpy as np
 
 import atomistica.io as io
 import atomistica.native as native
-
-###
-
-def mic(dr, cell):
-    """
-    Apply minimum image convention.
-    """
-    # Check where distance larger than 1/2 cell. Particles have crossed
-    # periodic boundaries then and need to be unwrapped.
-    rec = np.linalg.inv(cell.T)
-    dri = np.round(np.dot(dr, rec))
-
-    # Unwrap
-    dr -= np.dot(dri, cell.T)
-
-    # Sanity check
-    dri = np.round(np.dot(dr, rec))
-    assert np.all(np.abs(dri-0.0) < 1e-6)
-
-    return dr
+from atomistica.snippets import mic
 
 ###
 
