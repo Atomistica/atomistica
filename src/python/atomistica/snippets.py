@@ -29,15 +29,17 @@ from numpy.linalg import inv
 
 ###
 
-def mic(dr, cell):
+def mic(dr, cell, pbc=None):
     """
     Apply minimum image convention to an array of distance vectors.
     """
     # Check where distance larger than 1/2 cell. Particles have crossed
     # periodic boundaries then and need to be unwrapped.
     rec = np.linalg.inv(cell)
-    dri = np.around(np.dot(dr, rec))
+    if pbc is not None:
+        rec *= np.array(pbc, dtype=int).reshape(3,1)
+    dri = np.round(np.dot(dr, rec))
 
     # Unwrap
-    return dr-np.dot(dri, cell)
+    return dr - np.dot(dri, cell)
 
