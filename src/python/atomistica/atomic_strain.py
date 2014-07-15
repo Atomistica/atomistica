@@ -37,7 +37,7 @@ def get_XIJ(pos_now, pos_old, i_now, dr_now, dr_old):
     Calculates the X_{ij} matrix
     """
     # Do an element-wise outer product
-    dr_dr = dr_now.reshape(-1,1,3)*dr_old.reshape(-1,3,1)
+    dr_dr = dr_now.reshape(-1,3,1)*dr_old.reshape(-1,1,3)
 
     xij = np.zeros([pos_old.shape[0],3,3])
     for i in range(3):
@@ -53,7 +53,7 @@ def get_YIJ(pos_old, i_now, dr_old):
     Calculates the Y_{ij} matrix; see Falk, Langer
     """
     # Just do an element-wise outer product
-    dr_dr = dr_old.reshape(-1,1,3)*dr_old.reshape(-1,3,1)
+    dr_dr = dr_old.reshape(-1,3,1)*dr_old.reshape(-1,1,3)
 
     yij = np.zeros([pos_old.shape[0],3,3])
     for i in range(3):
