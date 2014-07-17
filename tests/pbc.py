@@ -53,9 +53,11 @@ class PBCTest(unittest.TestCase):
         a.set_cell([sx,sy,2*sz])
         e3 = a.get_potential_energy()
 
-        ase.io.write('test.cfg', a)
-
         self.assertEqual(e2, e3)
+
+        # This should give the unrelaxed surface energy
+        esurf = (e2-e1)/(2*sx*sy) * Jm2
+        self.assertTrue(abs(esurf-2.309) < 0.001)
 
 ###
 
