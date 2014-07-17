@@ -57,6 +57,7 @@ module particles
 
   character(MAX_NAME_STR), parameter  :: SHEAR_DX_STR     = "shear_dx"
   character(MAX_NAME_STR), parameter  :: CELL_STR         = "cell"
+  character(MAX_NAME_STR), parameter  :: PBC_STR          = "pbc"
 
   character(MAX_NAME_STR), parameter  :: V_STR            = "velocities"
 
@@ -122,8 +123,7 @@ module particles
      ! Periodicity
      !
 
-     logical                :: periodic(3)
-     logical                :: locally_periodic(3)
+     integer, pointer       :: pbc(:)
 
      !
      ! Lees-Edwards boundary conditions
@@ -315,10 +315,14 @@ contains
     ! --
 
     if (present(pbc)) then
-       this%periodic  = pbc
+       where (pbc)
+          this%pbc = 1
+       elsewhere
+          this%pbc = 0
+       endwhere
     endif
 
-    if (.not. all(this%periodic)) then
+    if (.not. all(this%pbc /= 0)) then
        call require_orthorhombic_cell(this)
     endif
 
@@ -344,7 +348,7 @@ contains
          abs(dot_product(this%Abox(2, :), this%Abox(3, :))) < TOL .and. &
          abs(dot_product(this%Abox(3, :), this%Abox(1, :))) < TOL
 
-    if (.not. all(this%periodic)) then
+    if (.not. all(this%pbc /= 0)) then
        call require_orthorhombic_cell(this)
     endif
 
@@ -534,9 +538,6 @@ contains
 
     this%accum_max_dr      = 0.0_DP
 
-    this%periodic          = (/ .true., .true., .true. /)
-    this%locally_periodic  = (/ .true., .true., .true. /)
-
     this%border = 0.0_DP
 
     allocate(this%data)
@@ -545,6 +546,9 @@ contains
     call add_real3x3_attr( &
          this%data, &
          CELL_STR)
+    call add_integer3_attr( &
+         this%data, &
+         PBC_STR)
     call add_real3_attr( &
          this%data, &
          SHEAR_DX_STR)
@@ -582,14 +586,13 @@ contains
     this%initialized                    = .true.
     this%orthorhombic_cell_is_required  = from%orthorhombic_cell_is_required
     
-    this%periodic          = (/ .true., .true., .true. /)
-    this%locally_periodic  = (/ .true., .true., .true. /)
+    this%pbc = (/ 1, 1, 1 /)
 
     this%border = 0.0_DP
 
     call init(this%data, from%data)
 
-    call set_cell(this, from%Abox, from%periodic, error=error)
+    call set_cell(this, from%Abox, from%pbc /= 0, error=error)
 
   endsubroutine particles_init_from_particles
 
@@ -645,7 +648,8 @@ contains
 
     this%Z             = 1
 
-    call set_cell(this, (/ 1.0_DP, 1.0_DP, 1.0_DP /), error=error)
+    call set_cell(this, (/ 1.0_DP, 1.0_DP, 1.0_DP /), &
+         (/ .true., .true., .true. /), error=error)
 
     call update_elements(this)
 
@@ -699,6 +703,7 @@ contains
     ! ---
 
     call attr_by_name(this%data, CELL_STR, this%Abox)
+    call attr_by_name(this%data, PBC_STR, this%pbc)
     call attr_by_name(this%data, SHEAR_DX_STR, this%shear_dx)
 
     call ptr_by_name(this%data, Z_STR, this%Z)
@@ -801,7 +806,7 @@ contains
 
        do j = 1, 3
           
-          if (this%locally_periodic(j)) then
+          if (this%pbc(j) /= 0) then
              do k = 1, this%natloc
 
                 do while (PNC(this, k, j) < 0.0_DP)

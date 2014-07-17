@@ -311,6 +311,60 @@ contains
 
 
   !>
+  !! Return a pointer to the field data
+  !<
+  subroutine integer_attr_by_name(this_cptr, name, ptr_cptr, ierror) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(c_ptr),                  value          :: this_cptr
+    character(kind=c_char, len=1)                :: name(*)
+    type(c_ptr),                  intent(out)    :: ptr_cptr
+    integer(c_int),               intent(inout)  :: ierror
+
+    ! ---
+
+    type(data_t),   pointer  :: this
+    integer(c_int), pointer  :: ptr
+
+    ! ---
+
+    call c_f_pointer(this_cptr, this)
+    call attr_by_name(this, z2s(name), ptr, ierror)
+    ptr_cptr = c_loc(ptr)
+
+  endsubroutine integer_attr_by_name
+
+
+  !>
+  !! Return a pointer to the field data
+  !<
+  subroutine integer3_attr_by_name(this_cptr, name, ptr_cptr, ierror) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(c_ptr),                  value          :: this_cptr
+    character(kind=c_char, len=1)                :: name(*)
+    type(c_ptr),                  intent(out)    :: ptr_cptr
+    integer(c_int),               intent(inout)  :: ierror
+
+    ! ---
+
+    type(data_t),   pointer  :: this
+    integer(c_int), pointer  :: ptr(:)
+
+    ! ---
+
+    call c_f_pointer(this_cptr, this)
+    call attr_by_name(this, z2s(name), ptr, ierror)
+    ptr_cptr = c_loc(ptr(1))
+
+  endsubroutine integer3_attr_by_name
+
+
+  !>
   !! Open log file
   !<
   subroutine f_logging_start(fn) bind(C)

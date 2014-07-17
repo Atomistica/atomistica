@@ -307,14 +307,6 @@ data_array_by_name(particles_t *self, char *key)
       r  = PyFloat_FromDouble(*((double*) array));
       break;
 
-      /*
-    case TYPE_INT_ATTR:
-      __data_ptr_by_name_integer_attr(self->data, for_array_name, &array, MAX_STR);
-
-      r  = PyInt_FromLong(*((int*) array.ptr));
-      break;
-      */
-
     case TYPE_REAL3_ATTR:
       real3_attr_by_name(self->f90data, key, &array, &ierror);
       if (error_to_py(ierror))
@@ -341,6 +333,30 @@ data_array_by_name(particles_t *self, char *key)
 #endif
       r  = PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, NULL, array, 0,
 		       NPY_FARRAY, NULL);
+      break;
+
+    case TYPE_INTEGER_ATTR:
+      integer_attr_by_name(self->f90data, key, &array, &ierror);
+      if (error_to_py(ierror))
+        return NULL;
+
+#ifdef DEBUG
+      printf("[data_array_by_name] TYPE_INTEGER_ATTR\n");
+#endif
+      r  = PyInt_FromLong(*((int*) array));
+      break;
+
+    case TYPE_INTEGER3_ATTR:
+      integer3_attr_by_name(self->f90data, key, &array, &ierror);
+      if (error_to_py(ierror))
+        return NULL;
+
+      dims[0] = 3;
+#ifdef DEBUG
+      printf("[data_array_by_name] TYPE_INTEGER3_ATTR, dim = %i\n", dims[0]);
+#endif
+      r  = PyArray_New(&PyArray_Type, 1, dims, NPY_INT, NULL, array, 0,
+                       NPY_FARRAY, NULL);
       break;
 
     default:

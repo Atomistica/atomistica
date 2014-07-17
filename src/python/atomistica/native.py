@@ -37,7 +37,7 @@ _lees_edwards_info_str = 'shear_dx'
 ###
 
 def from_atoms(atoms):
-    pbc = np.array( [ True, True, True ] )
+    pbc = np.array(atoms.get_pbc())
     particles = Particles()
     particles.allocate(len(atoms))
     particles.set_cell(atoms.get_cell(), pbc)
