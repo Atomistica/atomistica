@@ -24,14 +24,40 @@
 
 import unittest
 
-from neighbor_list import *
-from pbc import *
-from bulk_properties import *
-from forces_and_virial import *
-from rebo2_molecules import *
-from mio import *
+import numpy as np
+
+import ase
+import ase.io
+from ase.lattice.cubic import Diamond
+
+from atomistica import Tersoff
 
 ###
 
-unittest.main()
+Jm2 = 1e23/ase.units.kJ
 
+###
+
+class PBCTest(unittest.TestCase):
+
+    def test_pbc(self):
+        a = Diamond('Si', latticeconstant=5.432, size=[2,2,2])
+        sx, sy, sz = a.get_cell().diagonal()
+        a.set_calculator(Tersoff())
+        e1 = a.get_potential_energy()
+
+        a.set_pbc([True,True,False])
+        e2 = a.get_potential_energy()
+
+        a.set_pbc(True)
+        a.set_cell([sx,sy,2*sz])
+        e3 = a.get_potential_energy()
+
+        ase.io.write('test.cfg', a)
+
+        self.assertEqual(e2, e3)
+
+###
+
+if __name__ == '__main__':
+    unittest.main()
