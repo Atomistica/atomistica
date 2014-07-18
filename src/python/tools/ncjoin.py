@@ -61,6 +61,13 @@ def get_nearest_indices(time, every):
 
 ###
 
+def strip_fn(fn):
+    if len(fn) > 0 and fn[0] == '+':
+        return fn[1:]
+    return fn
+
+###
+
 def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
     """
     Open multiple NetCDF trajectory files and check that they are in order.
@@ -68,7 +75,7 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         filename, netCDF4 Dataset object, first frame, last frame
     """
 
-    data_f = zip(trajfns, map(Dataset, trajfns))
+    data_f = zip(trajfns, map(Dataset, map(strip_fn, trajfns)))
     filtered_data_f = [ ]
 
     fn2, data2 = data_f[0]
@@ -82,15 +89,19 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         # Last element in previous file
         last1 = data1.variables[test_var].shape[0]-1
 
-        # Maximum difference in test variable
-        maxdiff = np.max(np.abs(data1.variables[test_var][last1] - test_first2))
-        while last1 >= 0 and maxdiff > test_tol:
-            print 'Frame %i of %s does not agree with first frame of %s ' \
-                  '(maximum difference %e). Checking frame %i.' % \
-                  ( last1, fn1, fn2, maxdiff, last1-1 )
-            last1 -= 1
-            maxdiff = np.max(np.abs(data1.variables[test_var][last1] -
-                                    test_first2))
+        if fn2[0] == '+':
+            # Skip test and use all frames, including last
+            last1 += 1
+        else:
+            # Maximum difference in test variable
+            maxdiff = np.max(np.abs(data1.variables[test_var][last1] - test_first2))
+            while last1 >= 0 and maxdiff > test_tol:
+                print 'Frame %i of %s does not agree with first frame of %s ' \
+                      '(maximum difference %e). Checking frame %i.' % \
+                      ( last1, fn1, fn2, maxdiff, last1-1 )
+                last1 -= 1
+                maxdiff = np.max(np.abs(data1.variables[test_var][last1] -
+                                        test_first2))
 
         # Sanity check. Frame *last1* of previous file should be identical to
         # frame 0 of current file.
@@ -118,7 +129,10 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         filtered_data_f += [ ( fn1, data1, data_slice, time ) ]
 
         # This becomes the last time of the previous file when in the loop
-        last_time = time1[last1]
+        if last1 >= len(time1):
+            last_time = None
+        else:
+            last_time = time1[last1]
 
     if time_var in data2.variables:
         time = data2.variables[time_var][:]
