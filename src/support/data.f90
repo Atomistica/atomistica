@@ -41,7 +41,8 @@ module data
 
   public :: MAX_NAME_STR
   public :: TYPE_REAL_ATTR, TYPE_REAL3_ATTR, TYPE_REAL3x3_ATTR
-  public :: TYPE_INTEGER_ATTR, TYPE_REAL, TYPE_INTEGER, TYPE_LOGICAL
+  public :: TYPE_INTEGER_ATTR, TYPE_INTEGER3_ATTR
+  public :: TYPE_REAL, TYPE_INTEGER, TYPE_LOGICAL
   public :: TYPE_REAL3, TYPE_REAL6, TYPE_REAL3x3
 
   integer, parameter                  :: MAX_NAME_STR = 100
@@ -53,11 +54,12 @@ module data
   integer, parameter                  :: TYPE_REAL3x3_ATTR  = 3
   integer, parameter                  :: TYPE_REAL          = 4
   integer, parameter                  :: TYPE_INTEGER_ATTR  = 5
-  integer, parameter                  :: TYPE_INTEGER       = 6
-  integer, parameter                  :: TYPE_LOGICAL       = 7
-  integer, parameter                  :: TYPE_REAL3         = 8
-  integer, parameter                  :: TYPE_REAL6         = 9
-  integer, parameter                  :: TYPE_REAL3x3       = 10
+  integer, parameter                  :: TYPE_INTEGER3_ATTR = 6
+  integer, parameter                  :: TYPE_INTEGER       = 7
+  integer, parameter                  :: TYPE_LOGICAL       = 8
+  integer, parameter                  :: TYPE_REAL3         = 9
+  integer, parameter                  :: TYPE_REAL6         = 10
+  integer, parameter                  :: TYPE_REAL3x3       = 11
 
   public :: data_t
   type data_t
@@ -89,6 +91,11 @@ module data
      character(MAX_NAME_STR), pointer  :: name_integer_attr(:)
      integer, pointer                  :: data_integer_attr(:)
      integer, pointer                  :: tag_integer_attr(:)
+
+     integer                           :: n_integer3_attr
+     character(MAX_NAME_STR), pointer  :: name_integer3_attr(:)
+     integer, pointer                  :: data_integer3_attr(:, :)
+     integer, pointer                  :: tag_integer3_attr(:)
 
      !
      ! Fields
@@ -180,6 +187,11 @@ module data
      module procedure data_add_integer_attr
   endinterface
 
+  public :: add_integer3_attr
+  interface add_integer3_attr
+     module procedure data_add_integer3_attr
+  endinterface
+
   public :: add_real
   interface add_real
      module procedure data_add_real
@@ -221,6 +233,7 @@ module data
      module procedure data_ptr_by_name_real3_attr
      module procedure data_ptr_by_name_real3x3_attr
      module procedure data_ptr_by_name_integer_attr
+     module procedure data_ptr_by_name_integer3_attr
   endinterface
 
   public :: ptr_by_name
@@ -293,21 +306,25 @@ contains
     this%n_real3_attr       = 0
     this%n_real3x3_attr     = 0
     this%n_integer_attr     = 0
+    this%n_integer3_attr     = 0
 
     this%name_real_attr     => NULL()
     this%name_real3_attr    => NULL()
     this%name_real3x3_attr  => NULL()
     this%name_integer_attr  => NULL()
+    this%name_integer3_attr => NULL()
 
     this%data_real_attr     => NULL()
     this%data_real3_attr    => NULL()
     this%data_real3x3_attr  => NULL()
     this%data_integer_attr  => NULL()
+    this%data_integer3_attr => NULL()
 
     this%tag_real_attr      => NULL()
     this%tag_real3_attr     => NULL()
     this%tag_real3x3_attr   => NULL()
     this%tag_integer_attr   => NULL()
+    this%tag_integer3_attr  => NULL()
 
     this%n_real             = 0
     this%n_integer          = 0
@@ -371,21 +388,25 @@ contains
     this%n_real3_attr       = from%n_real3_attr
     this%n_real3x3_attr     = from%n_real3x3_attr
     this%n_integer_attr     = from%n_integer_attr
+    this%n_integer3_attr    = from%n_integer3_attr
 
     this%name_real_attr     => NULL()
     this%name_real3_attr    => NULL()
     this%name_real3x3_attr  => NULL()
     this%name_integer_attr  => NULL()
+    this%name_integer3_attr => NULL()
 
     this%data_real_attr     => NULL()
     this%data_real3_attr    => NULL()
     this%data_real3x3_attr  => NULL()
     this%data_integer_attr  => NULL()
+    this%data_integer3_attr => NULL()
 
     this%tag_real_attr     => NULL()
     this%tag_real3_attr    => NULL()
     this%tag_real3x3_attr  => NULL()
     this%tag_integer_attr  => NULL()
+    this%tag_integer3_attr => NULL()
 
     if (this%n_real_attr > 0) then
        allocate(this%name_real_attr(this%n_real_attr))
@@ -406,6 +427,11 @@ contains
        allocate(this%name_integer_attr(this%n_integer_attr))
        this%name_integer_attr(:)  = from%name_integer_attr(:)
        this%tag_integer_attr(:)   = from%tag_integer_attr(:)
+    endif
+    if (this%n_integer3_attr > 0) then
+       allocate(this%name_integer3_attr(this%n_integer3_attr))
+       this%name_integer3_attr(:)  = from%name_integer3_attr(:)
+       this%tag_integer3_attr(:)   = from%tag_integer3_attr(:)
     endif
 
 
@@ -551,6 +577,11 @@ contains
        this%data_integer_attr(:)  = 0
     endif
 
+    if (this%n_integer3_attr > 0) then
+       allocate(this%data_integer3_attr(3, this%n_integer3_attr))
+       this%data_integer3_attr(:, :)  = 0
+    endif
+
     if (this%n_real > 0) then
        allocate(this%data_real(this%len, this%n_real))
        this%data_real(:, :)  = 0.0_DP
@@ -606,6 +637,7 @@ contains
     data_allocated  = this%len > 0
 
   endfunction data_allocated
+
 
   !**********************************************************************
   ! Destructor
@@ -749,6 +781,15 @@ contains
           data_exists = .true.
           if (present(data_type)) then
              data_type  = TYPE_INTEGER_ATTR
+          endif
+       endif
+    endif
+
+    if (associated(this%name_integer3_attr)) then
+       if ( index_by_name(this%n_integer3_attr, this%name_integer3_attr, name) > 0 ) then
+          data_exists = .true.
+          if (present(data_type)) then
+             data_type  = TYPE_INTEGER3_ATTR
           endif
        endif
     endif
@@ -1089,6 +1130,71 @@ contains
     endif
 
   endsubroutine data_add_integer_attr
+
+
+  !**********************************************************************
+  ! Add a new (integer3) attribute
+  !********************************************************************** 
+  subroutine data_add_integer3_attr(this, name, tag, ierror)
+    implicit none
+
+    type(data_t), intent(inout)       :: this
+    character(*), intent(in)          :: name
+    integer, intent(in), optional     :: tag
+    integer, intent(inout), optional  :: ierror
+
+    ! ---
+
+    character(MAX_NAME_STR), pointer  :: old_name(:)
+    integer, pointer                  :: old_data(:, :)
+    integer, pointer                  :: old_tag(:)
+
+    ! ---
+
+    if (this%len > 0 .and. .not. this%allow_def) then
+       RAISE_ERROR("Cannot modify the data structure after it was initialized.", ierror)
+    endif
+
+    call data_name_check(this, name)
+
+    old_name => this%name_integer3_attr
+    old_data => this%data_integer3_attr
+    old_tag  => this%tag_integer3_attr
+
+    this%n_integer3_attr  = this%n_integer3_attr + 1
+
+    allocate(this%name_integer3_attr(this%n_integer3_attr))
+    allocate(this%tag_integer3_attr(this%n_integer3_attr))
+
+    this%name_integer3_attr(this%n_integer3_attr)    = name
+    this%tag_integer3_attr(this%n_integer3_attr)     = 0
+    if (present(tag)) then
+       this%tag_integer3_attr(this%n_integer3_attr)  = tag
+    endif
+
+    if (associated(old_name)) then
+       this%name_integer3_attr(1:this%n_integer3_attr-1)  = old_name(1:this%n_integer3_attr-1)
+       deallocate(old_name)
+    endif
+    if (associated(old_tag)) then
+       this%tag_integer3_attr(1:this%n_integer3_attr-1)  = old_tag(1:this%n_integer3_attr-1)
+       deallocate(old_tag)
+    endif
+
+    if (this%len > 0) then
+
+       allocate(this%data_integer3_attr(3, this%n_integer3_attr))
+
+       this%data_integer3_attr(:, this%n_integer3_attr)  = 0
+
+       if (associated(old_data)) then
+          this%data_integer3_attr(:, 1:this%n_integer3_attr-1)  = old_data(:, 1:this%n_integer3_attr-1)
+          deallocate(old_data)
+       endif
+
+    endif
+
+  endsubroutine data_add_integer3_attr
 
 
   !**********************************************************************
@@ -1687,6 +1793,34 @@ contains
     ptr => this%data_integer_attr(i)
 
   endsubroutine data_ptr_by_name_integer_attr
+
+
+  !**********************************************************************
+  ! Return a pointer to the field data
+  !********************************************************************** 
+  subroutine data_ptr_by_name_integer3_attr(this, name, ptr, ierror)
+    implicit none
+
+    type(data_t), intent(in)          :: this
+    character(*), intent(in)          :: name
+    integer, pointer, intent(out)     :: ptr(:)
+    integer, intent(inout), optional  :: ierror
+
+    ! ---
+
+    integer  :: i
+
+    ! ---
+
+    i = index_by_name(this%n_integer3_attr, this%name_integer3_attr(:), name)
+
+    if (i < 0) then
+       RAISE_ERROR("Unknown integer attribute: '" // trim(name) // "'.", ierror)
+    endif
+
+    ptr => this%data_integer3_attr(:, i)
+
+  endsubroutine data_ptr_by_name_integer3_attr
 
 
   !**********************************************************************

@@ -212,10 +212,8 @@ class Atomistica(object):
         
 
     def initialize(self, atoms):
-        # For now, length and elements are fixed
-        # FIXME! Override pbc since code exits when atom moves out of the box!
-        pbc = np.array( [ True, True, True ] )
-        self.particles  = _atomistica.Particles()
+        pbc = atoms.get_pbc()
+        self.particles = _atomistica.Particles()
 
         for pot in self.pots:
             pot.register_data(self.particles)
@@ -300,11 +298,10 @@ class Atomistica(object):
         # Cell changed? FIXME! Add PBC,LEBC changed
         cell_chgd  = False
         cell       = self.particles.cell
-        pbc        = atoms.get_pbc()
+        pbc        = self.particles.pbc
         #if np.any(np.abs(cell - atoms.get_cell()) > self.CELL_TOL):
-        if np.any(cell != atoms.get_cell()):
-            cell[:, :]  = atoms.get_cell()[:, :]
-            self.particles.set_cell(cell, pbc)
+        if np.any(cell != atoms.get_cell()) or np.any(pbc != atoms.get_pbc()):
+            self.particles.set_cell(atoms.get_cell(), atoms.get_pbc())
             cell_chgd  = True
 
         pos_chgd   = False

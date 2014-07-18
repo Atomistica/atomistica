@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # ======================================================================
 # Atomistica - Interatomic potential library
 # https://github.com/pastewka/atomistica
@@ -20,48 +22,44 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
-"""
-Native MDCore interface.
-"""
+import unittest
 
 import numpy as np
 
-from ase.data import atomic_numbers
+import ase
+import ase.io
+from ase.lattice.cubic import Diamond
 
-from _atomistica import *
-
-###
-
-_lees_edwards_info_str = 'shear_dx'
+from atomistica import Tersoff
 
 ###
 
-def from_atoms(atoms):
-    pbc = np.array(atoms.get_pbc())
-    particles = Particles()
-    particles.allocate(len(atoms))
-    particles.set_cell(atoms.get_cell(), pbc)
+Jm2 = 1e23/ase.units.kJ
 
-    Z  = particles.Z
-    for i, at in enumerate(atoms):
-        Z[i]   = atomic_numbers[at.symbol]
+###
 
-    particles.coordinates[:, :]  = atoms.get_positions()[:, :]
-    if _lees_edwards_info_str in atoms.info:
-        particles.set_lees_edwards(atoms.info[_lees_edwards_info_str])
-    
-    # Notify the Particles object of a change
-    particles.I_changed_positions()
+class PBCTest(unittest.TestCase):
 
-    particles.update_elements()
+    def test_pbc(self):
+        a = Diamond('Si', latticeconstant=5.432, size=[2,2,2])
+        sx, sy, sz = a.get_cell().diagonal()
+        a.set_calculator(Tersoff())
+        e1 = a.get_potential_energy()
 
-    return particles
+        a.set_pbc([True,True,False])
+        e2 = a.get_potential_energy()
 
+        a.set_pbc(True)
+        a.set_cell([sx,sy,2*sz])
+        e3 = a.get_potential_energy()
 
-def neighbor_list(particles, cutoff, avgn=100):
-    neighbors = Neighbors(avgn)
-    neighbors.request_interaction_range(cutoff)
-    neighbors.update(particles)
+        self.assertEqual(e2, e3)
 
-    return neighbors
+        # This should give the unrelaxed surface energy
+        esurf = (e2-e1)/(2*sx*sy) * Jm2
+        self.assertTrue(abs(esurf-2.309) < 0.001)
 
+###
+
+if __name__ == '__main__':
+    unittest.main()

@@ -26,6 +26,8 @@ import unittest
 
 import numpy as np
 
+import ase
+
 import atomistica.io as io
 import atomistica.native as native
 from atomistica.snippets import mic
@@ -38,7 +40,7 @@ class NeighborListTest(unittest.TestCase):
         a = io.read('aC.traj')
         an = native.from_atoms(a)
         nl = native.Neighbors(100)
-        nl.request_interaction_range(1.85)
+        nl.request_interaction_range(5.0)
 
         i, j, abs_dr_no_vec = nl.get_neighbors(an)
         i, j, dr, abs_dr = nl.get_neighbors(an, vec=True)
@@ -55,6 +57,51 @@ class NeighborListTest(unittest.TestCase):
         self.assertTrue(np.all(np.abs(abs_dr-abs_dr_direct) < 1e-12))
 
         self.assertTrue(np.all(np.abs(dr-dr_direct) < 1e-12))
+
+    def test_pbc(self):
+        a = ase.Atoms('CC',
+                      positions=[[0.1, 0.5, 0.5],
+                                 [0.9, 0.5, 0.5]],
+                      cell=[1, 1, 1],
+                      pbc=True)
+        an = native.from_atoms(a)
+        nl = native.Neighbors(100)
+        nl.request_interaction_range(0.3)
+
+        # with pbc
+
+        i, j, abs_dr = nl.get_neighbors(an)
+        self.assertEqual(len(i), 2)
+
+        a.set_pbc(False)
+        an = native.from_atoms(a)
+        nl = native.Neighbors(100)
+        nl.request_interaction_range(0.3)
+
+        # no pbc
+
+        i, j, abs_dr = nl.get_neighbors(an)
+        self.assertEqual(len(i), 0)
+
+        a.set_pbc([False,False,True])
+        an = native.from_atoms(a)
+        nl = native.Neighbors(100)
+        nl.request_interaction_range(0.3)
+
+        # partial pbc
+
+        i, j, abs_dr = nl.get_neighbors(an)
+        self.assertEqual(len(i), 0)
+
+        a.set_pbc([True,False,False])
+        an = native.from_atoms(a)
+        nl = native.Neighbors(100)
+        nl.request_interaction_range(0.3)
+
+        # partial pbc
+
+        i, j, abs_dr = nl.get_neighbors(an)
+        self.assertEqual(len(i), 2)
 
 ###
 

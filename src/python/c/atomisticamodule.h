@@ -42,11 +42,12 @@
 #define TYPE_REAL3x3_ATTR   3
 #define TYPE_REAL           4
 #define TYPE_INTEGER_ATTR   5
-#define TYPE_INTEGER        6
-#define TYPE_LOGICAL        7
-#define TYPE_REAL3          8
-#define TYPE_REAL6          9
-#define TYPE_REAL3x3        10
+#define TYPE_INTEGER3_ATTR  6
+#define TYPE_INTEGER        7
+#define TYPE_LOGICAL        8
+#define TYPE_REAL3          9
+#define TYPE_REAL6          10
+#define TYPE_REAL3x3        11
 
 
 /* Prototypes, implementation found in python_helper.f90 */
