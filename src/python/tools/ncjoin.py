@@ -80,34 +80,50 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
 
     fn2, data2 = data_f[0]
     last_time = None
+    first1 = 0
     for i in range(len(data_f)-1):
         fn1, data1 = data_f[i]
         fn2, data2 = data_f[i+1]
 
-        test_first2 = data2.variables[test_var][0]
+        print '... %s and %s ...' % ( fn1, fn2 )
 
-        # Last element in previous file
-        last1 = data1.variables[test_var].shape[0]-1
+        max_maxdiff = 0
+        min_maxdiff = test_tol+1e12
 
         if fn2[0] == '+':
             # Skip test and use all frames, including last
-            last1 += 1
+            first2 = 0
+            last1 = data1.variables[test_var].shape[0]
         else:
-            # Maximum difference in test variable
-            maxdiff = np.max(np.abs(data1.variables[test_var][last1] - test_first2))
-            while last1 >= 0 and maxdiff > test_tol:
-                print 'Frame %i of %s does not agree with first frame of %s ' \
-                      '(maximum difference %e). Checking frame %i.' % \
-                      ( last1, fn1, fn2, maxdiff, last1-1 )
-                last1 -= 1
-                maxdiff = np.max(np.abs(data1.variables[test_var][last1] -
-                                        test_first2))
+            maxdiff = test_tol+1.0
+            first2 = -1
+            while first2 < min(data2.variables[test_var].shape[0], 5) and \
+                      maxdiff > test_tol:
+                first2 += 1
+                # Last element in previous file
+                last1 = data1.variables[test_var].shape[0]-1
+                # Maximum difference in test variable
+                maxdiff = np.max(np.abs(data1.variables[test_var][last1] - 
+                                        data2.variables[test_var][first2]))
+                while last1 >= 0 and maxdiff > test_tol:
+                    #print 'Frame %i of %s does not agree with frame %i of %s ' \
+                    #      '(maximum difference %e). Checking frame %i.' % \
+                    #      ( last1, fn1, first2, fn2, maxdiff, last1-1 )
+                    max_maxdiff = max(maxdiff, max_maxdiff)
+                    min_maxdiff = min(maxdiff, min_maxdiff)
+                    last1 -= 1
+                    maxdiff = np.max(np.abs(data1.variables[test_var][last1] -
+                                            data2.variables[test_var][first2]))
+                max_maxdiff = max(maxdiff, max_maxdiff)
+                min_maxdiff = min(maxdiff, min_maxdiff)
 
         # Sanity check. Frame *last1* of previous file should be identical to
         # frame 0 of current file.
         if last1 < 0:
-            raise RuntimeError('%s and %s are not consecutive. It may help to '
-                               'increase *test_tol*.' % ( fn1, fn2 ))
+            raise RuntimeError('%s and %s are not consecutive. Minimum '
+                               'residual found was %e, maximum residual %e. '
+                               'It may help to increase *test_tol*.' % 
+                               ( fn1, fn2, min_maxdiff, max_maxdiff ))
 
         # Retrieve time information. If file has no time information number
         # the individual frames consecutively.
@@ -115,7 +131,7 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
             time1 = data1.variables[time_var]
         else:
             time1 = np.arange(data1.variables[test_var].shape[0])
-        data_slice = slice(0, last1)
+        data_slice = slice(first1, last1)
         time = time1[data_slice]
         # Some files have a bug where the first time slot is zero. Fix by
         # assuming constant time offset between frames.
@@ -134,6 +150,9 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         else:
             last_time = time1[last1]
 
+        # Start next file where we think it should start
+        first1 = first2
+
     if time_var in data2.variables:
         time = data2.variables[time_var][:]
     else:
@@ -147,7 +166,7 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         # These files are consecutive in the test_var, but may not be
         # consecutive in time. Add an offset to the time.
         time += last_time - time[0]
-    filtered_data_f += [ ( fn2, data2, slice(0, len(time)), time ) ]
+    filtered_data_f += [ ( fn2, data2, slice(first1, len(time)), time ) ]
 
     return filtered_data_f
 
