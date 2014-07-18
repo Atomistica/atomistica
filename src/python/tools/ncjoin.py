@@ -92,7 +92,7 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
             maxdiff = np.max(np.abs(data1.variables[test_var][last1] -
                                     test_first2))
 
-        # Sanity check. Frame *last1* of previous file should be identica to
+        # Sanity check. Frame *last1* of previous file should be identical to
         # frame 0 of current file.
         if last1 < 0:
             raise RuntimeError('%s and %s are not consecutive. It may help to '
