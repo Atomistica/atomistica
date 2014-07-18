@@ -32,22 +32,6 @@
 #include "mkl_lapack.h"
 #endif
 
-
-bool is_Hermitian(int dim, double_complex *mat)
-{
-  bool Hermitian = true;
-
-  int m = 0;
-  for (int i = 0; i < dim; i++){
-    int n = i;
-    for (int j = 0; j < dim; j++, m++, n+=dim)
-      Hermitian = Hermitian && ( cabs(mat[m] - conj(mat[n])) < 1e-6 );
-  }
-
-  return Hermitian;
-}
-
-
 /* ----------------------------------------------------------------------
  * print a complex vector to screen
  * --------------------------------------------------------------------*/
