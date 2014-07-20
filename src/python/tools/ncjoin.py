@@ -97,7 +97,7 @@ def open_trajs(trajfns, time_var='time', test_var='coordinates', test_tol=1e-6):
         else:
             maxdiff = test_tol+1.0
             first2 = -1
-            while first2 < min(data2.variables[test_var].shape[0], 5) and \
+            while first2 < min(data2.variables[test_var].shape[0]-1, 5) and \
                       maxdiff > test_tol:
                 first2 += 1
                 # Last element in previous file
