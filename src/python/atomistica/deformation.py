@@ -90,10 +90,10 @@ class RemoveSimpleShearDeformation:
         for a in self.traj[i0:i+1]:
             sx, sy, sz = a.cell.diagonal()
             cur_dx, cur_dy = get_shear_distance(a)
-            if cur_dx-last_dx < -sx/2:
+            while cur_dx-last_dx < -sx/2:
                 cur_dx += sx
             dx += cur_dx-last_dx
-            if cur_dy-last_dy < -sy/2:
+            while cur_dy-last_dy < -sy/2:
                 cur_dy += sy
             dy += cur_dy-last_dy
 
