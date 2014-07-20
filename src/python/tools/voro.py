@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/j1b/lb12/local/intel-XE.1/Python-2.7.6/bin/python
 
 # ======================================================================
 # Atomistica - Interatomic potential library
@@ -39,7 +39,7 @@ from atomistica.analysis import voropp
 traj = NetCDFTrajectory(sys.argv[1], 'a')
 
 for i, a in enumerate(traj):
-    print 'Frame {0}...'.format(i)
+    sys.stdout.write('=== {0}/{1} ===\r'.format(i+1, len(traj)))
 
     vol, area = voropp(a, q='%v %F', fast=True)
 
