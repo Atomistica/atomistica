@@ -43,7 +43,7 @@ from atomistica.tests import test_forces, test_potential, test_virial
 
 sx = 2
 dx = 1e-6
-tol = 1e-4
+tol = 1e-3
 
 ###
 
@@ -79,6 +79,10 @@ def assign_charges(a, els):
 tests  = [
     ( r6, dict(el1='Si', el2='Si', A=1.0, r0=1.0, cutoff=5.0),
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
+    ( LJCut, dict(el1='He', el2='He', epsilon=10.2, sigma=2.28, cutoff=5.0,
+                  shift=True),
+      [ ( "fcc-He", FaceCenteredCubic("He", size=[sx,sx,sx],
+                                      latticeconstant=3.5) ) ] ),
     ( Brenner, Erhart_PRB_71_035211_SiC,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
