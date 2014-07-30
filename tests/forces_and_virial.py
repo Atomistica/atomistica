@@ -77,6 +77,9 @@ def assign_charges(a, els):
 
 # Potential tests
 tests  = [
+    ( Harmonic, dict(el1='He', el2='He', k=1.0, r0=1.0, cutoff=1.5),
+      [ ( "fcc-He", FaceCenteredCubic("He", size=[sx,sx,sx],
+                                      latticeconstant=1.0) ) ] ),
     ( r6, dict(el1='Si', el2='Si', A=1.0, r0=1.0, cutoff=5.0),
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
     ( LJCut, dict(el1='He', el2='He', epsilon=10.2, sigma=2.28, cutoff=5.0,
