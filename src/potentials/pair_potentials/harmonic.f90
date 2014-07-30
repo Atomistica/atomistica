@@ -240,7 +240,7 @@ contains
                    abs_dr = sqrt(abs_dr)
 
                    for = this%k*(this%r0-abs_dr)
-                   en  = 0.5_DP*for*(this%r0-abs_dr)
+                   en  = 0.5_DP*for*(this%r0-abs_dr) - this%offset
 
                    epot = epot + en
                    df   = for * dr/abs_dr
