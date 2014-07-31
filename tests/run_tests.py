@@ -27,6 +27,7 @@ import unittest
 from neighbor_list import *
 from pbc import *
 from bulk_properties import *
+from surface_properties import *
 from forces_and_virial import *
 from rebo2_molecules import *
 from mio import *
