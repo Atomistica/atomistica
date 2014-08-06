@@ -36,6 +36,7 @@ import numpy as np
 
 import ase
 import ase.constraints
+from ase.units import GPa
 
 from atomistica import *
 from atomistica.tests import test_cubic_elastic_constants
@@ -52,6 +53,16 @@ dev_thres = 5
 k0 = ase.units.GPa
 
 tests  = [
+    ( Harmonic, dict(k=1.0, r0=1.0, cutoff=1.3, shift=True),
+      [ dict( name="fcc", struct=FaceCenteredCubic("He", size=[sx,sx,sx],
+                                                   latticeconstant=sqrt(2)),
+              C11=sqrt(2)/GPa, C12=1./sqrt(2)/GPa, C44=1./sqrt(2)/GPa )
+        ] ),
+    ( DoubleHarmonic, dict(k1=1.0, r1=1.0, k2=1.0, r2=sqrt(2), cutoff=1.6),
+      [ dict( name="sc", struct=SimpleCubic("He", size=[sx,sx,sx],
+                                            latticeconstant=1.0),
+              C11=3./GPa, C12=1./GPa, C44=1./GPa )
+        ] ),
     ( Brenner,   Brenner_PRB_42_9458_C_I,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]),
           # Ec    a0     C11   C12   C44   B    Cp
