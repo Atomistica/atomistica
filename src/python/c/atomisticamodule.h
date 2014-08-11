@@ -53,7 +53,7 @@
 /* Prototypes, implementation found in python_helper.f90 */
 
 /* data_t */
-BOOL data_exists(void *, char *, int *);
+BOOL f_data_exists(void *, char *, int *);
 int data_get_len(void *);
 void real_ptr_by_name(void *, char *, void **, int *);
 void integer_ptr_by_name(void *, char *, void **, int *);

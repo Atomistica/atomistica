@@ -222,7 +222,7 @@ data_array_by_name(particles_t *self, char *key)
   printf("[data_array_by_name] key = %s\n", key);
 #endif
 
-  ex = data_exists(self->f90data, key, &data_type);
+  ex = f_data_exists(self->f90data, key, &data_type);
 
 #ifdef DEBUG
   printf("[data_array_by_name] ex = %i\n", ex);

@@ -74,7 +74,7 @@ contains
   !>
   !! Check if a field with this name already exists
   !<
-  function data_exists(this_cptr, name, data_type) bind(C)
+  function f_data_exists(this_cptr, name, data_type) bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -83,7 +83,7 @@ contains
     character(kind=c_char, len=1)               :: name(*)
     integer(c_int),                intent(out)  :: data_type
 
-    logical(c_bool)                             :: data_exists
+    logical(c_bool)                             :: f_data_exists
 
     ! ---
 
@@ -92,9 +92,9 @@ contains
     ! ---
 
     call c_f_pointer(this_cptr, this)
-    data_exists = exists(this, z2s(name), data_type)
+    f_data_exists = exists(this, z2s(name), data_type)
 
-  endfunction data_exists
+  endfunction f_data_exists
 
 
   !>
