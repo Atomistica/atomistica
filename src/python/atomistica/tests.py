@@ -152,7 +152,7 @@ def cubic_elastic_constants(a, Minimizer=None, fmax=0.025, eps=0.001):
 
     ## C11
     T = np.diag( [ eps, 0.0, 0.0 ] )
-    a.set_cell( np.dot(np.eye(3)+T, cell), scale_atoms=True )
+    a.set_cell( np.dot(np.eye(3)+T, cell.T).T, scale_atoms=True )
     if Minimizer is not None:
         Minimizer(a, logfile=None).run(fmax=fmax)
     sxx11, syy11, szz11, syz11, szx11, sxy11  = a.get_stress()
@@ -161,7 +161,7 @@ def cubic_elastic_constants(a, Minimizer=None, fmax=0.025, eps=0.001):
 
     ## C12 (C)
     T = np.diag( [ eps, -eps/2, -eps/2 ] )
-    a.set_cell( np.dot(np.eye(3)+T, cell), scale_atoms=True )
+    a.set_cell( np.dot(np.eye(3)+T, cell.T).T, scale_atoms=True )
     if Minimizer is not None:
         Minimizer(a, logfile=None).run(fmax=fmax)
     sxx12, syy12, szz12, syz12, szx12, sxy12  = a.get_stress()
@@ -171,7 +171,7 @@ def cubic_elastic_constants(a, Minimizer=None, fmax=0.025, eps=0.001):
 
     ## C44
     T = np.array( [ [ 0.0, 0.5*eps, 0.5*eps ], [ 0.5*eps, 0.0, 0.5*eps ], [ 0.5*eps, 0.5*eps, 0.0 ] ] )
-    a.set_cell( np.dot(np.eye(3)+T, cell), scale_atoms=True )
+    a.set_cell( np.dot(np.eye(3)+T, cell.T).T, scale_atoms=True )
     if Minimizer is not None:
         Minimizer(a, logfile=None).run(fmax=fmax)
     sxx44, syy44, szz44, syz44, szx44, sxy44  = a.get_stress()
