@@ -359,6 +359,14 @@ class Atomistica(object):
         return self.epot
 
 
+    def get_potential_energies(self, atoms):
+        self.update(atoms)
+        if not self.compute_epot_per_at:
+            self.compute_epot_per_at = True
+            self.calculate()
+        return self.epot_per_at
+
+
     def get_forces(self, atoms):
         self.update(atoms)
 
@@ -372,6 +380,20 @@ class Atomistica(object):
 
         return np.array( [ st[0,0], st[1,1], st[2,2], (st[1,2]+st[2,1])/2,
                            (st[0,2]+st[2,0])/2, (st[0,1]+st[1,0])/2 ] )
+
+
+    def get_stresses(self, atoms):
+        self.update(atoms)
+        if not self.compute_wpot_per_at:
+            self.compute_wpot_per_at = True
+            self.calculate()
+        return np.transpose([
+                self.wpot_per_at[:,0,0],
+                self.wpot_per_at[:,1,1],
+                self.wpot_per_at[:,2,2],
+                (self.wpot_per_at[:,1,2]+self.wpot_per_at[:,2,1])/2,
+                (self.wpot_per_at[:,0,2]+self.wpot_per_at[:,2,0])/2,
+                (self.wpot_per_at[:,0,1]+self.wpot_per_at[:,1,0])/2])
 
 
     def get_charges(self, atoms=None):
