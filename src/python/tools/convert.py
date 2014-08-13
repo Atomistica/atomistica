@@ -50,6 +50,7 @@ parser.add_option("--center", action="store_true", dest="center", default=False)
 parser.add_option("--acf", action="store", dest="acf")
 parser.add_option("--clear-velocities", action="store_true", dest="clear_velocities", default=False)
 parser.add_option("--specorder", action="store", dest="specorder")
+parser.add_option("--format", action="store", dest="format")
 
 (opt, args)  = parser.parse_args()
 
@@ -109,5 +110,8 @@ if opt.supercell is not None:
 d = { }
 if opt.specorder is not None:
     d['specorder'] = opt.specorder.split(',')
+
+if opt.format is not None:
+    d['format'] = opt.format
 
 io.write(outfn, a, **d)
