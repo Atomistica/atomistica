@@ -226,9 +226,18 @@ parser.add_option('-k', '--netcdf_format', dest='netcdf_format',
                        "'NETCDF3_CLASSIC', 'NETCDF3_64BIT' (default), "
                        "'NETCDF4_CLASSIC' and 'NETCDF4'",
                   metavar='KIND')
+parser.add_option('-x', '--exclude', dest='exclude',
+                  help='exclude variables EXCLUDE (comman separated list) from '
+                       'being written to the output file',
+                  metavar='EXCLUDE')
+parser.add_option('-i', '--index', dest='index', default='id',
+                  help="variable INDEX contains particle ids (default: "
+                       "INDEX='id')",
+                  metavar='INDEX')
 options, trajfns = parser.parse_args()
 print 'every =', options.every, ', test_var =', options.test_var, \
-      ', test_tol =', options.test_tol
+      ', test_tol =', options.test_tol, ', exclude =', options.exclude, \
+      ', index =', options.index
 
 if len(trajfns) == 0:
     raise RuntimeError('Please provide one or more files to concatenate.')
@@ -260,6 +269,13 @@ for attr_str in idata_f[0][1].ncattrs():
     odata.setncattr(attr_str, idata_f[0][1].getncattr(attr_str))
 
 
+### Prepare exclude list
+
+exclude_list = set([options.index])
+if options.exclude is not None:
+    exclude_list = exclude_list.union(set(options.exclude.split(',')))
+
+
 ### Copy everything else
 
 cursor = 0
@@ -268,7 +284,18 @@ for trajfn, idata, data_slice, time in idata_f:
     print "Appending '%s' starting at frame %i..." % ( trajfn, cursor )
     print 'File contains %i relevant time slots: ' % len(time), time
 
+    index = None
+    if options.index in idata.variables:
+        index = idata.variables[options.index]
+        if len(index.dimensions) != 2 or index.dimensions[0] != FRAME_DIM or \
+            index.dimensions[1] != ATOM_DIM:
+            raise RuntimeError('*INDEX* variable must have dimensions (frame, '
+                               'atom).')
+
     for var_str, var in idata.variables.iteritems():
+        if var_str in exclude_list:
+            continue
+
         if var_str not in odata.variables:
             if var_str in idata.dimensions:
                 # In NETCDF4 (HDF5) there cannot be dimension and variable of
@@ -293,6 +320,9 @@ for trajfn, idata, data_slice, time in idata_f:
                     ovar.setncattr(attr_str, var.getncattr(attr_str))
 
     for var_str, var in idata.variables.iteritems():
+        if var_str in exclude_list:
+            continue
+
         if var_str not in idata.dimensions:
             if var.dimensions[0] == FRAME_DIM:
                 print "Copying variable '%s'..." % var_str
@@ -300,6 +330,9 @@ for trajfn, idata, data_slice, time in idata_f:
                     var_data = time
                 else:
                     var_data = var[data_slice]
+                if index is not None and len(var.dimensions) > 1 and \
+                    var.dimensions[1] == ATOM_DIM:
+                    var_data = var_data[index]
                 odata.variables[var_str][cursor:] = var_data
             else:
                 if not last_data or var_str not in last_data.variables:
