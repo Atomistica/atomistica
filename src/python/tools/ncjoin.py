@@ -11,7 +11,7 @@
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
+# (at your argument) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,7 +28,7 @@ Join a individual NetCDF trajectory files into a single one.
 
 import os
 import sys
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 import numpy as np
 
@@ -207,40 +207,45 @@ def filter_trajs(idata_f, every):
     return filtered_idata_f
 
 
-### Parse command line options
+### Parse command line arguments
 
-parser = OptionParser()
-parser.add_option('-e', '--every', dest='every', type='float',
-                  help='copy only frames at times that are multiples of EVERY',
-                  metavar='EVERY')
-parser.add_option('-v', '--test_var', dest='test_var', default='coordinates',
-                  help='use variable VAR to test if two frames are identical',
-                  metavar='VAR')
-parser.add_option('-t', '--test_tol', dest='test_tol', type='float',
-                  default=1e-6,
-                  help='use tolerance TOL to test if two frames are identical',
-                  metavar='TOL')
-parser.add_option('-k', '--netcdf_format', dest='netcdf_format',
-                  default='NETCDF3_64BIT',
-                  help="use NetCDF format KIND; available formats are "
-                       "'NETCDF3_CLASSIC', 'NETCDF3_64BIT' (default), "
-                       "'NETCDF4_CLASSIC' and 'NETCDF4'",
-                  metavar='KIND')
-parser.add_option('-x', '--exclude', dest='exclude',
-                  help='exclude variables EXCLUDE (comman separated list) from '
-                       'being written to the output file',
-                  metavar='EXCLUDE')
-parser.add_option('-i', '--index', dest='index', default='id',
-                  help="variable INDEX contains particle ids (default: "
-                       "INDEX='id')",
-                  metavar='INDEX')
-options, trajfns = parser.parse_args()
-print 'every =', options.every, ', test_var =', options.test_var, \
-      ', test_tol =', options.test_tol, ', exclude =', options.exclude, \
-      ', index =', options.index
-
-if len(trajfns) == 0:
-    raise RuntimeError('Please provide one or more files to concatenate.')
+parser = ArgumentParser(description='Join multiple NetCDF trajectory files '
+                                    'into a single one. The code uses some '
+                                    'heuristics to determine if files are '
+                                    'consecutive.')
+parser.add_argument('filenames', metavar='FN', nargs='+',
+                    help='file to concatenate')
+parser.add_argument('-e', '--every', dest='every', type=float,
+                    help='copy only frames at times that are multiples of '
+                         'EVERY',
+                    metavar='EVERY')
+parser.add_argument('-v', '--test_var', dest='test_var', default='coordinates',
+                    help="use variable VAR to test if two frames are "
+                         "identical (default: 'coordinates')",
+                    metavar='VAR')
+parser.add_argument('-t', '--test_tol', dest='test_tol', type=float,
+                    default=1e-6,
+                    help='use tolerance TOL to test if two frames are '
+                         'identical',
+                    metavar='TOL')
+parser.add_argument('-k', '--netcdf_format', dest='netcdf_format',
+                    default='NETCDF3_64BIT',
+                    help="use NetCDF format KIND; available formats are "
+                         "'NETCDF3_CLASSIC', 'NETCDF3_64BIT' (default), "
+                         "'NETCDF4_CLASSIC' and 'NETCDF4'",
+                    metavar='KIND')
+parser.add_argument('-x', '--exclude', dest='exclude',
+                    help='exclude variables EXCLUDE (comman separated list) '
+                         'from being written to the output file',
+                    metavar='EXCLUDE')
+parser.add_argument('-i', '--index', dest='index', default='id',
+                    help="variable INDEX contains particle ids (default: "
+                         "INDEX='id')",
+                    metavar='INDEX')
+arguments = parser.parse_args()
+print 'every =', arguments.every, ', test_var =', arguments.test_var, \
+      ', test_tol =', arguments.test_tol, ', exclude =', arguments.exclude, \
+      ', index =', arguments.index
 
 
 ### Sanity check
@@ -252,14 +257,14 @@ if os.path.exists('traj.nc'):
 ### Open input files and filter if requested
 
 print 'Opening files and checking file order...'
-idata_f = open_trajs(trajfns, test_var=options.test_var,
-                     test_tol=options.test_tol)
-if options.every is not None:
-    idata_f = filter_trajs(idata_f, options.every)
+idata_f = open_trajs(arguments.filenames, test_var=arguments.test_var,
+                     test_tol=arguments.test_tol)
+if arguments.every is not None:
+    idata_f = filter_trajs(idata_f, arguments.every)
 
 
 # Create output file
-odata = Dataset('traj.nc', 'w', clobber=False, format=options.netcdf_format)
+odata = Dataset('traj.nc', 'w', clobber=False, format=arguments.netcdf_format)
 
 
 ### Copy global attributes
@@ -271,9 +276,9 @@ for attr_str in idata_f[0][1].ncattrs():
 
 ### Prepare exclude list
 
-exclude_list = set([options.index])
-if options.exclude is not None:
-    exclude_list = exclude_list.union(set(options.exclude.split(',')))
+exclude_list = set([arguments.index])
+if arguments.exclude is not None:
+    exclude_list = exclude_list.union(set(arguments.exclude.split(',')))
 
 
 ### Copy everything else
@@ -285,8 +290,8 @@ for trajfn, idata, data_slice, time in idata_f:
     print 'File contains %i relevant time slots: ' % len(time), time
 
     index = None
-    if options.index in idata.variables:
-        index = idata.variables[options.index]
+    if arguments.index in idata.variables:
+        index = idata.variables[arguments.index]
         if len(index.dimensions) != 2 or index.dimensions[0] != FRAME_DIM or \
             index.dimensions[1] != ATOM_DIM:
             raise RuntimeError('*INDEX* variable must have dimensions (frame, '
