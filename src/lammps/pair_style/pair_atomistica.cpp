@@ -228,7 +228,7 @@ void PairAtomistica::coeff(int narg, char **arg)
       int Z, ierror;
       particles_set_element(particles_,arg[i],n,i-1,&Z,&ierror);
       error2lmp(error,FLERR,ierror);
-      map[i-1] = Z;
+      map[i-2] = Z;
     }
   }
 
@@ -243,7 +243,7 @@ void PairAtomistica::coeff(int narg, char **arg)
   int count = 0;
   for (int i = 1; i <= n; i++)
     for (int j = i; j <= n; j++)
-      if (map[i] >= 0 && map[j] >= 0) {
+      if (map[i-1] >= 0 && map[j-1] >= 0) {
 	setflag[i][j] = 1;
 	count++;
       }
