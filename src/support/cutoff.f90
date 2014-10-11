@@ -32,6 +32,8 @@ module cutoff
 
   private
 
+  public :: trig_cutoff, exp_cutoff
+
   public :: trig_cutoff_t
   type trig_cutoff_t
      real(DP) :: r1, r2, fac
@@ -105,6 +107,36 @@ contains
 
 
   !>
+  !! This if f(x)=0.5(1+cos(pi*x)).
+  !! Function is differentiable once.
+  !<
+  subroutine trig_cutoff(r1, r2, r, val, dval)
+    implicit none
+
+    real(DP), intent(in)  :: r1, r2, r
+    real(DP), intent(out) :: val, dval
+
+    ! ---
+
+    type(trig_cutoff_t) :: this
+
+    ! ---
+
+    if (r <= r1) then
+       val  = 1.0_DP
+       dval = 0.0_DP
+    else if (r >= r2) then
+       val  = 0.0_DP
+       dval = 0.0_DP
+    else
+       call init(this, r1, r2)
+       call fc(this, r, val, dval)
+    endif
+
+  endsubroutine trig_cutoff
+
+
+  !>
   !! Initialize exponential cutoff
   !<
   elemental subroutine exp_cutoff_init(this, r1, r2)
@@ -167,5 +199,36 @@ contains
     endif
 
   endsubroutine exp_cutoff_f
+
+
+  !>
+  !! This is f(x)=exp(-8*x**3), but corrected such that function, first
+  !! and second derivative go to zero at x=1.
+  !! Function is differentiable twice.
+  !<
+  subroutine exp_cutoff(r1, r2, r, val, dval)
+    implicit none
+
+    real(DP), intent(in)  :: r1, r2, r
+    real(DP), intent(out) :: val, dval
+
+    ! ---
+
+    type(exp_cutoff_t) :: this
+
+    ! ---
+
+    if (r <= r1) then
+       val  = 1.0_DP
+       dval = 0.0_DP
+    else if (r >= r2) then
+       val  = 0.0_DP
+       dval = 0.0_DP
+    else
+       call init(this, r1, r2)
+       call fc(this, r, val, dval)
+    endif
+
+  endsubroutine exp_cutoff
 
 endmodule cutoff
