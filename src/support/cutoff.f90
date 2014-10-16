@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 !! ======================================================================
 !! Atomistica - Interatomic potential library
 !! https://github.com/pastewka/atomistica
