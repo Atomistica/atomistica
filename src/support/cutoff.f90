@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 !! ======================================================================
 !! Atomistica - Interatomic potential library
 !! https://github.com/pastewka/atomistica
@@ -194,6 +195,8 @@ contains
        x2     = x*x
        val    = exp(-8*x*x2)
        dval   = -24*x2*val
+       ! The following two lines are the correction that forces the cutoff to
+       ! zero.
        dval   = this%fac1*this%fac2*(dval+3*this%c*x2+4*this%d*x*x2)
        val    = this%fac2*(val+this%c*x*x2+this%d*x2*x2-this%off)
     endif
