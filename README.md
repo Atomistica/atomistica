@@ -88,5 +88,4 @@ usage of this particular compiler.
 Contact
 -------
 
-Please write to Lars Pastewka (lars.pastewka@iwm.fraunhofer.de) for questions
-and suggestions.
+This software is mainly developed at [Fraunhofer IWM](http://www.en.iwm.fraunhofer.de/business-units/tribology/multiscale-modeling-and-tribosimulation/) and [Karlsruhe Institute of Technology](http://www.iam.kit.edu/zbs/english/). Please write to Lars Pastewka (lars.pastewka@kit.edu) for questions and suggestions.
