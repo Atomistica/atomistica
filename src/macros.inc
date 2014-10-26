@@ -39,7 +39,6 @@
 
 #else
 
-#define DC(x, y, z)  (sgn(x) + 3*sgn(y) + 9*sgn(z))
 #define IS_PAIR(nl, i, ni, j)  ((DC(VEC(nl%dc, ni, 1), VEC(nl%dc, ni, 2), VEC(nl%dc, ni, 3)) == 0 .and. i < j) .or. DC(VEC(nl%dc, ni, 1), VEC(nl%dc, ni, 2), VEC(nl%dc, ni, 3)) > 0)
 
 #endif
