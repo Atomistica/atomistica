@@ -88,4 +88,4 @@ usage of this particular compiler.
 Contact
 -------
 
-This software is mainly developed at [Fraunhofer IWM](http://www.en.iwm.fraunhofer.de/business-units/tribology/multiscale-modeling-and-tribosimulation/) and [Karlsruhe Institute of Technology](http://www.iam.kit.edu/zbs/english/). Please write to Lars Pastewka (lars.pastewka@kit.edu) for questions and suggestions. A detailed list of contributor can be found [here](AUTHORS.md).
+This software is mainly developed at [Fraunhofer IWM](http://www.en.iwm.fraunhofer.de/business-units/tribology/multiscale-modeling-and-tribosimulation/) and [Karlsruhe Institute of Technology](http://www.iam.kit.edu/zbs/english/). Please write to Lars Pastewka (lars.pastewka@kit.edu) for questions and suggestions. A detailed list of contributors can be found [here](AUTHORS.md).
