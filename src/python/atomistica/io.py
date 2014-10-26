@@ -27,7 +27,10 @@ I/O convenience functions.
 import os
 
 import ase.io
-from ase.io import NetCDFTrajectory
+try:
+    from ase.io import NetCDFTrajectory
+except:
+    pass
 
 try:
     from ase.calculators.lammps import write_lammps_data
