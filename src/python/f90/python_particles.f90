@@ -91,8 +91,9 @@ module particles
 
      logical                :: initialized  = .false.
 
-     integer                :: pos_rev          = 0          !> Have the positions been changed?
-     integer                :: other_rev        = 0          !> Has anything else been changed?
+     integer                :: pos_rev = 0          !> Have the positions been changed?
+     integer                :: cell_rev = 0          !> Has the cell been changed?
+     integer                :: other_rev = 0          !> Has anything else been changed?
 
      !
      ! Simulation box
@@ -220,6 +221,16 @@ module particles
      module procedure particles_have_positions_changed
   endinterface
 
+  public :: I_changed_cell
+  interface I_changed_cell
+     module procedure particles_I_changed_cell
+  endinterface
+
+  public :: has_cell_changed
+  interface has_cell_changed
+     module procedure particles_has_cell_changed
+  endinterface
+
   public :: I_changed_other
   interface I_changed_other
      module procedure particles_I_changed_other
@@ -305,7 +316,7 @@ contains
     
     ! ---
 
-    real(DP), parameter :: TOL = 1e-12
+    real(DP), parameter :: TOL = 1e-9
 
     ! ---
 
@@ -322,10 +333,6 @@ contains
        endwhere
     endif
 
-    if (.not. all(this%pbc /= 0)) then
-       call require_orthorhombic_cell(this)
-    endif
-
     if (present(scale_atoms) .and. scale_atoms) then
        fac = matmul(Abox, this%Bbox)
        !$omp  parallel do default(none) &
@@ -335,7 +342,6 @@ contains
        enddo
     endif
 
-!    this%Abox  = ( Abox + transpose(Abox) )/2
     this%Abox  = Abox
 
     this%Bbox  = 0.0_DP
@@ -376,6 +382,8 @@ contains
 
     this%lower_with_border = this%lower
     this%upper_with_border = this%upper
+
+    call I_changed_cell(this)
 
   endsubroutine particles_set_cell
 
@@ -977,6 +985,46 @@ contains
   !!
   !! Internally, a counter is increased by one every time this function is called.
   !<
+  subroutine particles_I_changed_cell(this)
+    implicit none
+
+    type(particles_t), intent(inout)  :: this
+
+    ! ---
+
+    this%cell_rev  = this%cell_rev + 1
+
+  endsubroutine particles_I_changed_cell
+
+
+  !>
+  !! Check if a change to the particles object has occured
+  !!
+  !! Internally, this compares the counter to a reference.
+  !<
+  logical function particles_has_cell_changed(this, last_rev)
+    implicit none
+
+    type(particles_t), intent(in)  :: this
+    integer, intent(inout)         :: last_rev
+
+    ! ---
+
+    particles_has_cell_changed  = last_rev /= this%cell_rev
+    last_rev                    = this%cell_rev
+
+  endfunction particles_has_cell_changed
+
+
+  !>
+  !! Notify the particles object of a change
+  !!
+  !! This function has to be called every time a change is made to the Particles object.
+  !! For example, the neighbor list will only update if it detects a change to the
+  !! Particles object.
+  !!
+  !! Internally, a counter is increased by one every time this function is called.
+  !<
   subroutine particles_I_changed_other(this)
     implicit none
 
@@ -1003,7 +1051,7 @@ contains
     ! ---
 
     particles_has_other_changed  = last_rev /= this%other_rev
-    last_rev                     = this%other_rev
+    last_rev                    = this%other_rev
 
   endfunction particles_has_other_changed
 

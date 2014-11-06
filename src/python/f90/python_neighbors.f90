@@ -54,6 +54,7 @@ module neighbors
 
      type(particles_t), pointer  :: p      => NULL()       !< Associated particles object
      integer                     :: p_rev  = -1            !< Number of changes reference counter
+     integer                     :: cell_rev  = -1         !< Number of changes reference counter
 
      !
      ! Current status
@@ -230,9 +231,10 @@ contains
     ! Initialize
     !
 
-    this%initialized         = .false.
-    this%p                   => NULL()
-    this%p_rev               = -1
+    this%initialized  = .false.
+    this%p            => NULL()
+    this%p_rev        = -1
+    this%cell_rev     = -1
 
     !
     ! Default values
@@ -402,8 +404,9 @@ contains
 
     call del(this)
 
-    this%p      => p
-    this%p_rev  = p%pos_rev-1
+    this%p         => p
+    this%p_rev     = p%pos_rev-1
+    this%cell_rev  = p%cell_rev-1
 
   endsubroutine neighbors_set_particles
 
@@ -429,7 +432,9 @@ contains
        call set_particles(this, p)
     endif
 
-    if (.not. this%initialized .or. have_positions_changed(p, this%p_rev)) then
+    ! We need to update if positions or cell has changed
+    if (.not. this%initialized .or. have_positions_changed(p, this%p_rev) .or. &
+         has_cell_changed(p, this%cell_rev)) then
        call refresh_neighbor_list(this, p, error)
        PASS_ERROR(error)
     endif
