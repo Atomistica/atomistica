@@ -20,6 +20,12 @@ Potentials that employ the Tersoff functional form:
         from atomistica import Tersoff, Tersoff_PRB_39_5566_Si_C  
         calc = Tersoff(**Tersoff_PRB_39_5566_Si_C)
 
+    Note: This is the default parameter set for this potential. It gets loaded
+    by the following code.  
+
+        from atomistica import Tersoff  
+        calc = Tersoff()
+
 *   Souraya Goumri-Said, Mohammed Benali Kanoun, Abdelkarim E Merad, Ghouti Merad, Hafid Aourag  
     "Prediction of structural and thermodynamic properties of zinc-blende AlN: molecular dynamics simulation"
     Chem. Phys. 302, 135 (2004) - http://dx.doi.org/10.1016/j.chemphys.2004.03.030
@@ -42,6 +48,12 @@ Potentials that employ Brenner's functional form:
 
         from atomistica import Brenner, Erhart_PRB_71_035211_SiC  
         calc = Brenner(**Erhart_PRB_71_035211_SiC)
+
+    Note: This is the default parameter set for this potential. It gets loaded
+    by the following code.  
+
+        from atomistica import Brenner  
+        calc = Brenner()
 
 *   Donald Brenner  
     "Empirical potential for hydrocarbons for use in simulating the chemical vapor deposition of diamond films"  
@@ -100,12 +112,24 @@ Special potentials:
         from atomistica import Juslin, Juslin_JAP_98_123520_WCH  
         calc = Juslin(**Juslin_JAP_98_123520_WCH)
 
+    Note: This is the default parameter set for this potential. It gets loaded
+    by the following code.  
+
+        from atomistica import Kumagai  
+        calc = Kumagai()
+
 *   T. Kumagai, S. Izumi, S. Hara, S. Sakai  
     "Development of bond-order potentials that can reproduce the elastic constants and melting point of silicon for classical molecular dynamics simulation"  
     Comp. Mater. Sci. 39, 457 (2007) - http://dx.doi.org/10.1016/j.commatsci.2006.07.013  
 
         from atomistica import Kumagai, Kumagai_CompMaterSci_39_457_Si  
         calc = Kumagai(**Kumagai_CompMaterSci_39_457_Si)
+
+    Note: This is the default parameter set for this potential. It gets loaded
+    by the following code.  
+
+        from atomistica import Kumagai  
+        calc = Kumagai()
 
 Screened empirical bond-order potentials
 ----------------------------------------
