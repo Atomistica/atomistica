@@ -4,7 +4,7 @@ Atomistica
 Atomistica is a library of interatomic potentials written in Fortran. It is
 designed to be used with different computational engines. Currently supported
 are ASE and LAMMPS (see below). A list of supported interatomic potentials can
-be found [here](POTENTIALS.md)
+be found [here](POTENTIALS.md).
 
 
 Usage
