@@ -735,6 +735,8 @@ contains
 
     ! ---
 
+    write (ilog, *)  "- particles_update_elements -"
+
     this%nZ  = 0
 
     do i = 1, this%natloc
@@ -755,6 +757,13 @@ contains
     do i = 1, this%natloc
        this%el(i)  = this%Z2el(this%Z(i))
     enddo
+
+    write (ilog, '(4X,I2,A)')  this%nel, " elements found."
+    do i = 1, this%nel
+       write (ilog, '(4X,I2,A,A2,A,I6,A)')  i, " = ", ElementName(this%el2Z(i)), " (", this%nZ(this%el2Z(i)), " atoms found)"
+    enddo
+
+    write (ilog, *)
 
   endsubroutine particles_update_elements
 
