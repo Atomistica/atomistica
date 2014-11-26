@@ -45,7 +45,8 @@ Potentials that employ Brenner's functional form:
 
 *   Donald Brenner  
     "Empirical potential for hydrocarbons for use in simulating the chemical vapor deposition of diamond films"  
-    Phys. Rev. B 42, 9458 (1990) - http://dx.doi.org/Phys. Rev. B 42, 9458 (1990)  
+    Phys. Rev. B 42, 9458 (1990) - http://dx.doi.org/10.1103/PhysRevB.42.9458  
+    and Erratum Phys. Rev. B 46, 1948 (1992) - http://dx.doi.org/10.1103/PhysRevB.46.1948.2  
     Warning: The original formulation uses look-up tables to correct the
     energies for radicals and hydrocarbons. This potential is implemented
     without these lookup tables.  
