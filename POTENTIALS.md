@@ -60,8 +60,8 @@ Screened empirical bond-order potentials:
     "Screened empirical bond-order potential for Si-C"  
     Phys. Rev. B 87, 205410 (2013) - http://dx.doi.org/10.1103/PhysRevB.87.205410  
     arXiv:1301.2142 - http://arxiv.org/abs/1301.2142  
-    This paper describes screened version of the Tersoff, Erhart & Albe and Kumagai
-    potentials.
+    This paper describes screened versions of the Tersoff, Erhart & Albe and
+    Kumagai potentials.
 
         from atomistica import TersoffScr, Tersoff_PRB_39_5566_Si_C__Scr  
         calc = TersoffScr(**Tersoff_PRB_39_5566_Si_C__Scr)  
@@ -78,5 +78,6 @@ Screened empirical bond-order potentials:
 Embedded-atom method potentials:
 
 *   General EAM potentials tabulated in the DYNAMO 'setfl' format.  
-    See http://www.ctcms.nist.gov/~cbecker/ for a database of potential datafiles.
+    See http://www.ctcms.nist.gov/~cbecker/ for a database of potential
+    datafiles.
 
