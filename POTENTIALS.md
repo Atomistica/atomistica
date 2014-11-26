@@ -43,6 +43,23 @@ Potentials that employ Brenner's functional form:
         from atomistica import Brenner, Erhart_PRB_71_035211_SiC  
         calc = Brenner(**Erhart_PRB_71_035211_SiC)
 
+*   Donald Brenner  
+    "Empirical potential for hydrocarbons for use in simulating the chemical vapor deposition of diamond films"  
+    Phys. Rev. B 42, 9458 (1990) - http://dx.doi.org/Phys. Rev. B 42, 9458 (1990)  
+    Warning: The original formulation uses look-up tables to correct the
+    energies for radicals and hydrocarbons. This potential is implemented
+    without these lookup tables.  
+    Note: The paper describes two parameter sets, denoted as I and II.  
+    Parameter set I:
+
+        from atomistica import Brenner, Brenner_PRB_42_9458_C_I  
+        calc = Brenner(**Brenner_PRB_42_9458_C_I)
+
+    Parameter set II:
+
+        from atomistica import Brenner, Brenner_PRB_42_9458_C_II  
+        calc = Brenner(**Brenner_PRB_42_9458_C_II)
+
 *   Karsten Albe, Kai Nordlund, Robert S. Averback  
     "Analytical bond-order potential for platinum-carbon"  
     Phys. Rev. B 65, 195124 (2002) - http://dx.doi.org/10.1103/PhysRevB.65.195124  
