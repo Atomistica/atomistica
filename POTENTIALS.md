@@ -13,14 +13,14 @@ Empirical bond-order potentials
 
 Potentials that employ the Tersoff functional form:
 
-*   J. Tersoff  
+*   Jerry Tersoff  
     "Modeling solid-state chemistry: Interatomic potentials for multicomponent systems"  
     Phys. Rev. B 39, 5566 (1989) - http://dx.doi.org/10.1103/PhysRevB.39.5566  
 
         from atomistica import Tersoff, Tersoff_PRB_39_5566_Si_C  
         calc = Tersoff(**Tersoff_PRB_39_5566_Si_C)
 
-*   S. Goumri-Said, M.B. Kanoun, A.E. Merad, G. Merad, H. Aourag  
+*   Souraya Goumri-Said, Mohammed Benali Kanoun, Abdelkarim E Merad, Ghouti Merad, Hafid Aourag  
     "Prediction of structural and thermodynamic properties of zinc-blende AlN: molecular dynamics simulation"
     Chem. Phys. 302, 135 (2004) - http://dx.doi.org/10.1016/j.chemphys.2004.03.030
 
@@ -68,7 +68,7 @@ Potentials that employ Brenner's functional form:
         from atomistica import Brenner, Albe_PRB_65_195124_PtC  
         calc = Brenner(**Albe_PRB_65_195124_PtC)
 
-*   K.O.E. Henriksson, Kai Nordlund  
+*   Krister O.E. Henriksson, Kai Nordlund  
     "Simulations of cementite: An analytical potential for the Fe-C system"  
     Phys. Rev. B 79, 144107 (2009) - http://dx.doi.org/10.1103/PhysRevB.79.144107  
 
