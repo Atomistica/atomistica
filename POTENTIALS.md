@@ -5,7 +5,7 @@ This file contains a list of implemented interatomic potentials and parameters
 set provided. The code fragments show Python code necessary to instantiate an
 ASE calculator object for the respective potential/parameterization. Note that
 for all potentials listed below there is a default parameter set that is used
-if instatiated without and explicit database dictionary. This default is the 
+if instantiated without and explicit database dictionary. This default is the 
 first potential listed below.
 
 Empirical bond-order potentials
@@ -107,7 +107,8 @@ Special potentials:
         from atomistica import Kumagai, Kumagai_CompMaterSci_39_457_Si  
         calc = Kumagai(**Kumagai_CompMaterSci_39_457_Si)
 
-Screened empirical bond-order potentials:
+Screened empirical bond-order potentials
+----------------------------------------
 
 *   Lars Pastewka, Pablo Pou, Ruben Perez, Peter Gumbsch, Michael Moseler   
     "Describing bond-breaking processes by reactive potentials: Importance of an environment-dependent interaction range"  
