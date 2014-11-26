@@ -20,6 +20,20 @@ Potentials that employ the Tersoff functional form:
         from atomistica import Tersoff, Tersoff_PRB_39_5566_Si_C  
         calc = Tersoff(**Tersoff_PRB_39_5566_Si_C)
 
+*   S. Goumri-Said, M.B. Kanoun, A.E. Merad, G. Merad, H. Aourag  
+    "Prediction of structural and thermodynamic properties of zinc-blende AlN: molecular dynamics simulation"
+    Chem. Phys. 302, 135 (2004) - http://dx.doi.org/10.1016/j.chemphys.2004.03.030
+
+        from atomistica import Tersoff, Goumri_Said_ChemPhys_302_135_Al_N  
+        calc = Tersoff(**Goumri_Said_ChemPhys_302_135_Al_N)
+
+*   Katsuyuki Matsunaga, Craig Fisher, Hideaki Matsubara  
+    "Tersoff potential parameters for simulating cubic boron carbonitrides"  
+    Jpn. J. Appl. Phys. 39, 48 (2000) - http://dx.doi.org/10.1143/JJAP.39.L48  
+
+        from atomistica import Tersoff, Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N  
+        calc = Tersoff(**Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N)
+
 Potentials that employ Brenner's functional form:
 
 *   Paul Erhart, Karsten Albe  
@@ -28,6 +42,27 @@ Potentials that employ Brenner's functional form:
 
         from atomistica import Brenner, Erhart_PRB_71_035211_SiC  
         calc = Brenner(**Erhart_PRB_71_035211_SiC)
+
+*   Karsten Albe, Kai Nordlund, Robert S. Averback  
+    "Analytical bond-order potential for platinum-carbon"  
+    Phys. Rev. B 65, 195124 (2002) - http://dx.doi.org/10.1103/PhysRevB.65.195124  
+
+        from atomistica import Brenner, Albe_PRB_65_195124_PtC  
+        calc = Brenner(**Albe_PRB_65_195124_PtC)
+
+*   K.O.E. Henriksson, Kai Nordlund  
+    "Simulations of cementite: An analytical potential for the Fe-C system"  
+    Phys. Rev. B 79, 144107 (2009) - http://dx.doi.org/10.1103/PhysRevB.79.144107  
+
+        from atomistica import Brenner, Henriksson_PRB_79_114107_FeC  
+        calc = Brenner(**Henriksson_PRB_79_114107_FeC)
+
+*   J. Kioseoglou, Ph. Komninou, Th. Karakostas  
+    "Interatomic potential calculations of III (Al, In)-N planar defects with a III‐species environment approach"  
+    Phys. Stat. Sol. (b) 245, 1118 (2008) - http://dx.doi.org/10.1002/pssb.200844122  
+
+        from atomistica import Brenner, Kioseoglou_PSSb_245_1118_AlN  
+        calc = Brenner(**Kioseoglou_PSSb_245_1118_AlN)
 
 Potentials that employ the REBO2 functional form:
 
@@ -39,6 +74,13 @@ Potentials that employ the REBO2 functional form:
         calc = Rebo2()
 
 Special potentials:
+
+*   N. Juslin, Paul Erhart, P. Traskelin, J. Nord, Krister O.E. Henriksson, Kai Nordlund, E. Salonen, Karsten Albe  
+    "Analytical interatomic potential for modeling nonequilibrium processes in the W–C–H system"  
+    J. Appl. Phys. 98, 123520 (2005) - http://dx.doi.org/10.1063/1.2149492  
+
+        from atomistica import Juslin, Juslin_JAP_98_123520_WCH  
+        calc = Juslin(**Juslin_JAP_98_123520_WCH)
 
 *   T. Kumagai, S. Izumi, S. Hara, S. Sakai  
     "Development of bond-order potentials that can reproduce the elastic constants and melting point of silicon for classical molecular dynamics simulation"  
