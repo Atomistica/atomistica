@@ -1,3 +1,5 @@
-quench.py will carry out a series of amorphous carbon quenches and compute
+quench.py --- will carry out a series of amorphous carbon quenches and compute
 the hybridization. hyb.out will contain the hybridization as a function of
-density.
+density. calcs.py and liquid_tools.py are helper scripts.
+
+fcc.py --- will find the lattice constant for the Grochola Au potential. Au-Grochola-JCP05.eam.alloy was downloaded Nov. 28, 2014, from the NIST interatomic potentials repository project, see: http://www.ctcms.nist.gov/potentials/Au.html
