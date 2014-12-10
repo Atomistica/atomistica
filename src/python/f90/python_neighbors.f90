@@ -950,12 +950,14 @@ contains
 
     ! ---
 
-    integer   :: i, j, cell(3)
-!    real(DP)  :: s(3)
+    integer :: i, j, cell(3)
+    logical :: pbc(3)
 
     ! ---
 
     INIT_ERROR(error)
+
+    pbc = p%pbc /= 0
 
     this%next_particle  = -1
 
@@ -965,24 +967,25 @@ contains
     do i = 1, p%nat
        cell  = floor(matmul(this%rec_cell_size, PNC3(p, i)-p%lower_with_border))+1
 
-!       s     = floor(matmul(p%Bbox, PNC3(p, i)-p%lower_with_border))
-!       s     = s - floor(s)
-!       cell  = s*this%n_cells + 1
-
-!       Proposed fix for the Particle outside simulation domain problem
        do j = 1, 3
-           if (cell(j) < 1) then
-              cell(j) = cell(j) + this%n_cells(j)
-              PNC3(p, i) = PNC3(p, i) + p%Abox(:, j)
-           else if (cell(j) > this%n_cells(j)) then
-              cell(j) = cell(j) - this%n_cells(j)
-              PNC3(p, i) = PNC3(p, i) - p%Abox(:, j)
-           endif
+          if (pbc(j)) then
+             if (cell(j) < 1) then
+                cell(j) = cell(j) + this%n_cells(j)
+                PNC3(p, i) = PNC3(p, i) + p%Abox(:, j)
+             else if (cell(j) > this%n_cells(j)) then
+                cell(j) = cell(j) - this%n_cells(j)
+                PNC3(p, i) = PNC3(p, i) - p%Abox(:, j)
+             endif
+          else
+             if (cell(j) < 1) then
+                cell(j) = 1
+             else if (cell(j) > this%n_cells(j)) then
+                cell(j) = this%n_cells(j)
+             endif
+          endif
        enddo
 
        if (any(cell < 1) .or. any(cell > this%n_cells)) then
-!          write (ilog, '(A,3F20.10)')  "s = ", s
-          
           call particles_dump_info(p, i, cell)
           RAISE_ERROR("Particle outside simulation domain.", error)
        endif
