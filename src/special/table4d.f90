@@ -497,9 +497,9 @@ contains
     
     ! ---
 
-    integer          :: i, j, k, l
-    real(DP)         :: row(0:this%nx), dummy1, dummy2, dummy3, dummy4
-    character(1000)  :: fmt, fmthdr
+    integer          :: i, j, k, l, m
+    real(DP)         :: row(0:this%nx), val, dummy1, dummy2, dummy3, dummy4
+    character(1000)  :: fmt, fmthdr, fmtstart
 
     ! ---
 
@@ -510,9 +510,9 @@ contains
     endif
 
     if (present(indent)) then
-       fmt = "(" // indent // "X,I3,' -'," // (this%nx+1) // "ES20.10)"
+       fmtstart = "(" // indent // "X,I3,' -'"
     else
-       fmt = "(4I,1X," // (this%nx+1) // "ES20.10)"
+       fmtstart = "(4I,1X"
     endif
 
     do l = 0, this%nt
@@ -520,12 +520,22 @@ contains
           write (un, fmthdr)  "[:,:,"//k//","//l//"]", &
                (/ ( i, i=0, this%nx ) /)
           do j = 0, this%ny
+             fmt = fmtstart
+             m = 0
              do i = 0, this%nx
                 call eval(this, i*1.0_DP, j*1.0_DP, k*1.0_DP, l*1.0_DP, &
-                     row(i), dummy1, dummy2, dummy3, dummy4)
+                     val, dummy1, dummy2, dummy3, dummy4)
+                if (abs(val) > 1e-12) then
+                   fmt = trim(fmt) // ",ES20.10"
+                   row(m) = val
+                   m = m+1
+                else
+                   fmt = trim(fmt) // ",'       ----------   '"
+                endif
              enddo
+             fmt = trim(fmt) // ")"
 
-             write (un, fmt)  j, row
+             write (un, fmt)  j, row(0:m-1)
           enddo
 
           write (un, *)

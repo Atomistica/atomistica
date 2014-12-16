@@ -369,9 +369,9 @@ contains
     
     ! ---
 
-    integer               :: i, j
-    real(DP)              :: row(0:this%nx), dummy1, dummy2
-    character(1000)       :: fmt
+    integer               :: i, j, k
+    real(DP)              :: row(0:this%nx), val, dummy1, dummy2
+    character(1000)       :: fmtstart, fmt
 
     ! ---
 
@@ -384,17 +384,27 @@ contains
     write (un, fmt)  (/ ( i, i=0, this%nx ) /)
 
     if (present(indent)) then
-       fmt = "(" // indent // "X,I3,' -'," // (this%nx+1) // "ES20.10)"
+       fmtstart = "(" // indent // "X,I3,' -'"
     else
-       fmt = "(4I,1X," // (this%nx+1) // "ES20.10)"
+       fmtstart = "(4I,1X"
     endif
 
-    do i = 0, this%ny
-       do j = 0, this%nx
-          call eval(this, i*1.0_DP, j*1.0_DP, row(j), dummy1, dummy2)
+    do j = 0, this%ny
+       fmt = fmtstart
+       k = 0
+       do i = 0, this%nx
+          call eval(this, i*1.0_DP, j*1.0_DP, val, dummy1, dummy2)
+          if (abs(val) > 1e-12) then
+             fmt = trim(fmt) // ",ES20.10"
+             row(k) = val
+             k = k+1
+          else
+             fmt = trim(fmt) // ",'       ----------   '"
+          endif
        enddo
+       fmt = trim(fmt) // ")"
 
-       write (un, fmt)  i, row
+       write (un, fmt)  i, row(0:k-1)
     enddo
 
   endsubroutine table2d_print_un
