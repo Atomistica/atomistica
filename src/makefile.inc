@@ -21,19 +21,20 @@ include _Makefile.modules
 ## Source search paths
 VPATH = \
 	. \
-        $(SRCDIR) \
+	$(SRCDIR) \
 	$(SRCDIR)/lammps \
 	$(SRCDIR)/potentials \
-        $(SRCDIR)/potentials/bop \
-        $(SRCDIR)/potentials/bop/brenner \
+	$(SRCDIR)/potentials/bop \
+	$(SRCDIR)/potentials/bop/brenner \
 	$(SRCDIR)/potentials/bop/juslin \
-        $(SRCDIR)/potentials/bop/kumagai \
-        $(SRCDIR)/potentials/bop/tersoff \
-        $(SRCDIR)/potentials/pair_potentials \
-        $(SRCDIR)/potentials/bop/rebo2 \
-        $(SRCDIR)/potentials/bop/rebo2x \
+	$(SRCDIR)/potentials/bop/kumagai \
+	$(SRCDIR)/potentials/bop/tersoff \
+	$(SRCDIR)/potentials/pair_potentials \
+	$(SRCDIR)/potentials/bop/rebo2 \
+	$(SRCDIR)/potentials_nonfree/bop/rebo2x \
+	$(SRCDIR)/potentials_nonfree/bop/rebo2sich \
 	$(SRCDIR)/potentials/coulomb \
-        $(SRCDIR)/potentials/eam \
+	$(SRCDIR)/potentials/eam \
 	$(SRCDIR)/notb \
 	$(SRCDIR)/notb/dense \
 	$(SRCDIR)/notb/dense/solver \
@@ -44,8 +45,8 @@ VPATH = \
 	$(SRCDIR)/unittests
 
 
-## LAMMPS support library
-LAMMPS_SUPPLIB = \
+### Core support library
+CORE_SUPPLIB = \
 	c_f.f90 \
 	error.f90 \
 	System.f90 \
@@ -69,7 +70,11 @@ LAMMPS_SUPPLIB = \
 	table2d.f90 \
 	table3d.f90 \
 	table4d.f90 \
-	anderson_mixer.f90 \
+    anderson_mixer.f90
+
+## LAMMPS support library
+LAMMPS_SUPPLIB = \
+    $(CORE_SUPPLIB) \
 	lammps_particles.f90 \
 	lammps_neighbors.f90 \
 	lammps_filter.f90 \
@@ -102,14 +107,16 @@ LAMMPS_ALL_O = $(LAMMPS_ALL_O1:.f90=.o)
 UNITTESTS = \
 	fruit_util.f90 \
 	fruit.f90 \
-	c_f.f90 \
-	error.f90 \
-	System.f90 \
-	Units.f90 \
-	cutoff.f90 \
+	$(CORE_SUPPLIB) \
 	test_cutoff.f90 \
+	test_table2d.f90 \
 	run_tests.f90
-UNITTESTS_O = $(UNITTESTS:.f90=.o)
+UNITTESTS_O4 = $(UNITTESTS:.cpp=.o)
+UNITTESTS_O3 = $(UNITTESTS_O4:.c=.o)
+UNITTESTS_O2 = $(UNITTESTS_O3:.f=.o)
+UNITTESTS_O1 = $(UNITTESTS_O2:.f90=.o)
+UNITTESTS_O = $(UNITTESTS_O1:.f90=.o)
+
 
 MAIN = \
 	main.f90
@@ -166,11 +173,11 @@ factories:
 versioninfo:
 	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(OPTFLAGS)
 
-atomistica: versioninfo $(LAMMPS_ALL_O)
+atomistica: versioninfo factories $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
 
 unittests: versioninfo $(UNITTESTS_O)
-	$(F90C) -o unittests $(UNITTESTS_O)
+	$(F90C) -o unittests $(UNITTESTS_O) $(LIBS)
 
 clean:
 	rm -f *.o

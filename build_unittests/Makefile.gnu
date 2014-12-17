@@ -24,23 +24,11 @@ OMP_FLAGS =
 
 
 #
-# Extract MPI path
-#
-MPIROOT=$(shell which mpicc | sed 's,bin/mpicc,,')
-
-
-#
-# *** Extra includes and libraries
-#
-#
-EXTRA_INCLUDE += -I$(MPIROOT)/include
-EXTRA_LIB += -cxxlib
-#
 # *** LAPACK and BLAS link options here.
 #
 # cygwin lapack/blas
 #
-#EXTRA_LIB += -llapack -lblas
+EXTRA_LIB += -llapack -lblas -lstdc++
 
 #
 # *** Other settings that rarely need to be touched
@@ -117,7 +105,7 @@ CFLAGS   = -O0
 #
 # Use LDFLAGS = -static if you want a static binary
 #
-LDFLAGS  = 
+LDFLAGS  =
 LIBS     = $(EXTRA_LIB)
 
 include $(SRCDIR)/makefile.inc
