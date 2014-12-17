@@ -82,14 +82,15 @@ contains
   !! copyright: Keith Beardmore 30/11/93.
   !!            Lars Pastewka 05/07
   !<
-  subroutine table2d_init(t, nx, ny, values, error)
+  subroutine table2d_init(t, nx, ny, values, dvdx, dvdy, error)
     implicit none
 
-    type(table2d_t), intent(inout)    :: t
-    integer, intent(in)               :: nx
-    integer, intent(in)               :: ny
-    real(DP), intent(in)              :: values(0:, 0:)
-    integer, intent(inout), optional  :: error
+    type(table2d_t),    intent(inout) :: t
+    integer,            intent(in)    :: nx
+    integer,            intent(in)    :: ny
+    real(DP),           intent(in)    :: values(0:, 0:)
+    real(DP), optional, intent(in)    :: dvdx(0:nx, 0:ny), dvdy(0:nx, 0:ny)
+    integer,  optional, intent(inout) :: error
 
     ! ---
 
@@ -176,6 +177,7 @@ contains
     ! loop through boxes.
     !
 
+    B = 0.0_DP
     do nhbox = 0, nx-1
        do ncbox = 0, ny-1
 
@@ -188,10 +190,13 @@ contains
              nx2  = ix2(icorn)+ncbox
              !   values of function and derivatives at corner.
              B(irow   ,icol) = values(nx1, nx2)
-             B(irow+4 ,icol) = 0.0
-             B(irow+8 ,icol) = 0.0
-             B(irow+12,icol) = 0.0
-
+             !   all derivatives are supposed to be zero
+             if (present(dvdx)) then
+                B(irow+ ncorn  ,icol) = dvdx(nx1, nx2)
+             endif
+             if (present(dvdy)) then
+                B(irow+ 2*ncorn,icol) = dvdy(nx1, nx2)
+             endif
           enddo
        enddo
     enddo
