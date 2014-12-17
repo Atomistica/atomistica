@@ -379,12 +379,12 @@ contains
 
     if (cutoff > this%interaction_range) then
 
-       this%interaction_range  = cutoff
-
        call prlog("- neighbors_request_interaction_range -")
+       call prlog("     old interaction range  = " // this%interaction_range)
        call prlog("     request                = " // cutoff)
-       call prlog("     new interaction range  = " // this%interaction_range)
        call prlog
+
+       this%interaction_range  = cutoff
 
     endif
 
