@@ -46,6 +46,8 @@ for k, v in np.__config__.__dict__.iteritems():
             print "    libraries = '%s'" % v['libraries']
             lib_dirs += v['library_dirs']
             libs += v['libraries']
+            # We use whichever lapack_*_info comes first
+            break
 
 ###
 
