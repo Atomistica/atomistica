@@ -1,0 +1,14 @@
+# Configuration file for the Intel compilers (icc/ifort) with OpenMP
+# parallelization.
+# Rename to setup.cfg.
+
+[config_fc]
+fcompiler=intelem
+f90flags=-fpp -fPIC -openmp -DHAVE_IFPORT -DHAVE_MKL
+f77flags=-fpp -fPIC -openmp -DHAVE_IFPORT -DHAVE_MKL
+ 
+[config_cc]
+compiler=intel
+
+[build_ext]
+libraries=ifcore,ifport,iomp5,pthread
