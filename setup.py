@@ -1,6 +1,7 @@
 import glob
 import os
 import sys
+import re
 
 sys.path += [ 'src/python', 'tools' ]
 
@@ -33,24 +34,22 @@ extra_link_args = [ ]
 ###
 
 #
-# Get MKL configuration
+# LAPACK configuration from numpy
 #
 
-mklroot = os.getenv('MKLROOT')
-if mklroot is None:
-    mklroot = os.getenv('MKL_ROOT')
-if mklroot is not None:
-    for lib_dir in [ '%s/lib/em64t' % mklroot, 
-                     '%s/lib/intel64' % mklroot ]:
-        if os.path.exists(lib_dir):
-            lib_dirs += [ lib_dir ]
-    #libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
-    #          'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
-    #          'stdc++' ]
-    libs += [ 'iomp5', 'ifcore', 'ifport', 'mkl_rt' ]
-    #extra_link_args += [ '-mkl=sequential' ]
-else:
-    libs += [ 'blas', 'lapack' ]
+for k, v in np.__config__.__dict__.iteritems():
+    if re.match('lapack_.*_info', k):
+        if 'library_dirs' in v:
+            print "* Using LAPACK information from '%s' dictionary in " \
+                "numpy.__config__" % k
+            print "    library_dirs = '%s'" % v['library_dirs']
+            print "    libraries = '%s'" % v['libraries']
+            lib_dirs += v['library_dirs']
+            libs += v['libraries']
+
+# Add additional libraries here - e.g. you may need to link to 'gomp' if
+# compiled with gfortran and OpenMP support, etc.
+libs += []
 
 ###
 
