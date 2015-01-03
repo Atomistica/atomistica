@@ -47,10 +47,6 @@ for k, v in np.__config__.__dict__.iteritems():
             lib_dirs += v['library_dirs']
             libs += v['libraries']
 
-# Add additional libraries here - e.g. you may need to link to 'gomp' if
-# compiled with gfortran and OpenMP support, etc.
-libs += []
-
 ###
 
 #
