@@ -1208,7 +1208,16 @@ contains
 
     ! ---
 
-    this%border = max(border, this%border)
+    if (border > this%border) then
+
+       call prlog("- particles_request_border -")
+       call prlog("     old border  = " // this%border)
+       call prlog("     request     = " // border)
+       call prlog
+
+       this%border = border
+
+    endif
 
   endsubroutine particles_request_border
 

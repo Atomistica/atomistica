@@ -70,6 +70,26 @@ def dia_111(sym, a0):
     return a
 
 
+def dia_111_glide(sym, a0):
+    sym = string2symbols(sym)
+    if len(sym) == 1:
+        a = Diamond(sym[0],
+                    size             = [nx, nx, nz],
+                    latticeconstant  = a0,
+                    directions=[ [1,-1,0], [1,1,-2], [1,1,1] ]
+                    )
+    else:
+        a = B3(sym,
+               size             = [nx, nx, nz],
+               latticeconstant  = a0,
+               directions=[ [1,-1,0], [1,1,-2], [1,1,1] ]
+               )
+    sx, sy, sz = a.get_cell().diagonal()
+    a.translate([sx/(12*nx), sy/(4*nx), sz/(12*nz)-0.2])
+    a.set_scaled_positions(a.get_scaled_positions()%1.0)
+    return a
+
+
 def dia_111_pandey(sym, a0):
     """2x1 Pandey reconstructed (111) surface."""
     ref_a0 = 5.4455
@@ -180,12 +200,21 @@ tests = [
         ] ),
     ( Rebo2, {},
       [ dict( name="dia-C-111", struct=dia_111('C', 3.566) ),
+        dict( name="dia-C-111-glide", struct=dia_111_glide('C', 3.566) ),
+        dict( name="dia-C-110", struct=dia_110('C', 3.566) ),
+        dict( name="dia-C-100", struct=dia_100('C', 3.566) ),
+        dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566) ),
+        ] ),
+    ( Rebo2Scr, {},
+      [ dict( name="dia-C-111", struct=dia_111('C', 3.566) ),
+        dict( name="dia-C-111-glide", struct=dia_111_glide('C', 3.566) ),
         dict( name="dia-C-110", struct=dia_110('C', 3.566) ),
         dict( name="dia-C-100", struct=dia_100('C', 3.566) ),
         dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566) ),
         ] ),
     ( Tersoff, Tersoff_PRB_39_5566_Si_C,
       [ dict( name="dia-C-111", struct=dia_111('C', 3.566) ),
+        dict( name="dia-C-111-glide", struct=dia_111_glide('C', 3.566) ),
         dict( name="dia-C-110", struct=dia_110('C', 3.566) ),
         dict( name="dia-C-100", struct=dia_100('C', 3.566) ),
         dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566) ),
