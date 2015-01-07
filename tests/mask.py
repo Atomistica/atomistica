@@ -40,6 +40,8 @@ class MaskTest(unittest.TestCase):
     def random_mask_test(self, a):
         c = a.get_calculator()
         e = a.get_potential_energy()
+        f = a.get_forces()
+        w = a.get_stress()
 
         mask = np.random.random_integers(0, len(a)-1, size=len(a)) < \
             len(a)/2
@@ -47,14 +49,21 @@ class MaskTest(unittest.TestCase):
 
         c.set_mask(mask)
         e1 = a.get_potential_energy()
+        f1 = a.get_forces()
+        w1 = a.get_stress()
 
         c.set_mask(imask)
         e2 = a.get_potential_energy()
+        f2 = a.get_forces()
+        w2 = a.get_stress()
 
         c.set_mask(None)
         e3 = a.get_potential_energy()
 
         self.assertTrue(abs(e-e1-e2) < 1e-6)
+        self.assertTrue(abs(e-e3) < 1e-6)
+        self.assertTrue(np.max(np.abs(f-f1-f2)) < 1e-6)
+        self.assertTrue(np.max(np.abs(w-w1-w2)) < 1e-6)
 
     def test_mask_decomposition_bop(self):
         a = io.read('aC.traj')
