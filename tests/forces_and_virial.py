@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
+import math
 import sys
 
 import unittest
@@ -79,7 +80,7 @@ def assign_charges(a, els):
 tests  = [
     ( Harmonic, dict(el1='He', el2='He', k=1.0, r0=1.0, cutoff=1.5),
       [ ( "fcc-He", FaceCenteredCubic("He", size=[sx,sx,sx],
-                                      latticeconstant=1.0) ) ] ),
+                                      latticeconstant=math.sqrt(2.0)) ) ] ),
     ( r6, dict(el1='Si', el2='Si', A=1.0, r0=1.0, cutoff=5.0),
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
     ( LJCut, dict(el1='He', el2='He', epsilon=10.2, sigma=2.28, cutoff=5.0,
@@ -128,6 +129,9 @@ tests  = [
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( 'random-C-H', random_solid( [('C',50),('H',10)], 3.0 ) ),
         ] ),
+    ( TabulatedAlloyEAM, dict(fn='Au-Grochola-JCP05.eam.alloy'),
+      [ dict( name="fcc-Au", struct=FaceCenteredCubic("Au", size=[sx,sx,sx]),
+              rattle=0.1 ) ] ),
     ]
 
 # Coulomb potential tests
@@ -205,11 +209,14 @@ def run_forces_and_virial_test(test=None):
                 print "    %s" % par["__ref__"]
 
         for imat in mats:
+            rattle = 0.5
             if isinstance(imat, tuple):
                 name, a = imat
             else:
                 name = imat['name']
                 a = imat['struct']
+                if 'rattle' in imat:
+                    rattle = imat['rattle']
             if test is None:
                 print "Material:  ", name
             a.translate([0.1,0.1,0.1])
@@ -281,7 +288,7 @@ def run_forces_and_virial_test(test=None):
                     test.assertTrue(abs(maxds) < tol,
                                     msg=errmsg+'; virial')
             
-                a.rattle(0.5)
+                a.rattle(rattle)
 
 ###
 
