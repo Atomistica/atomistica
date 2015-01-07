@@ -181,7 +181,7 @@
     real(DP)  :: rij(3)
     real(DP)  :: rlij, rlijr, rlik
     real(DP)  :: rnij(3), rnik(3)
-    real(DP)  :: maskfac, df(3)
+    real(DP)  :: df(3)
     real(DP)  :: fcarij,dfcarijr,fcik,dfcikr
     real(DP)  :: VAij,dVAij_drij,VRij,dVRij_drij
     real(DP)  :: zij
@@ -234,6 +234,7 @@
     integer  :: ij,ik
 
     integer  :: ikc
+    integer  :: maskfac
     integer  :: eli,elj,elk
     integer  :: el2ij,ikpot
     ! seed for the "short" neighbor list
@@ -1054,13 +1055,12 @@
           ij_loop: do ij = istart, ifinsh
              j    = this%neb(ij)
 
-             maskfac = 1.0_DP
+             maskfac = 2
              if (present(mask)) then
                 if (mask(i) == 0 .and. mask(j) == 0) then
-                   continue
-                endif
-                if (mask(i) == 0 .or. mask(j) == 0) then
-                   maskfac = 0.5_DP
+                   maskfac = 0
+                else if (mask(i) == 0 .or. mask(j) == 0) then
+                   maskfac = 1
                 endif
              endif 
 
@@ -1071,7 +1071,8 @@
              el2ij    = this%bndtyp(ij)
              rlij     = this%bndlen(ij)
 
-             ar_within_cutoff: if (rlij < this%cut_ar_h(el2ij)) then
+             ar_within_cutoff: if (maskfac > 0 .and. &
+                                   rlij < this%cut_ar_h(el2ij)) then
 
                 fj       = 0.0_DP
 
@@ -1094,6 +1095,11 @@
 
                 call VA(this, el2ij, rlij, VAij, dVAij_drij)
                 call VR(this, el2ij, rlij, VRij, dVRij_drij)
+
+                VAij       = 0.5_DP*maskfac*VAij
+                dVAij_drij = 0.5_DP*maskfac*dVAij_drij
+                VRij       = 0.5_DP*maskfac*VRij
+                dVRij_drij = 0.5_DP*maskfac*dVRij_drij
 
 #ifdef BO_WITH_D
                 !
@@ -1321,7 +1327,6 @@
                 ! 
 
                 dffac  = 0.5_DP * fcarij * ( VRij + bij * VAij )
-                dffac  = maskfac * dffac
                 pe(i)  = pe(i) + dffac
                 pe(j)  = pe(j) + dffac
 
@@ -1338,19 +1343,18 @@
 
 #ifdef BO_WITH_D
                 dffac = &
-                     0.5 * ( dVRij_drij * fcarij + &
-                             bij * dVAij_drij * fcarij + &
-                             VRij * dfcarijr + &
-                             bij * VAij * dfcarijr ) &
+                     0.5_DP * ( dVRij_drij * fcarij + &
+                                bij * dVAij_drij * fcarij + &
+                                VRij * dfcarijr + &
+                                bij * VAij * dfcarijr ) &
                      + dDij_drij * dbij_dDij
 #else
                 dffac = &
-                     0.5 * ( dVRij_drij * fcarij + &
-                             bij * dVAij_drij * fcarij + &
-                             VRij * dfcarijr + &
-                             bij * VAij * dfcarijr )
+                     0.5_DP * ( dVRij_drij * fcarij + &
+                                bij * dVAij_drij * fcarij + &
+                                VRij * dfcarijr + &
+                                bij * VAij * dfcarijr )
 #endif
-                dffac = maskfac * dffac
 
                 !
                 ! compute force without bond order term
@@ -1373,7 +1377,7 @@
                 !     0.5 * fcarij * VAij * ( dbij / drwi + dbji / drwi )
                 !
 
-                df  = - maskfac*dbij_dzij*dbidi
+                df  = - dbij_dzij*dbidi
                 fi  = fi + df
 
                 !
@@ -1381,7 +1385,7 @@
                 !     0.5 * fcarij * VAij * ( dbij / drwj + dbji / drwj )
                 !
 
-                df  = - maskfac*dbij_dzij*dbidj
+                df  = - dbij_dzij*dbidj
                 fj  = fj + df
 
                 !
@@ -1401,7 +1405,7 @@
                       ! - ( 0.5 * fcarij * VAij * dbij / drwk ).
                       !
 
-                      df          = - maskfac * dbij_dzij * dbidk(1:3, ikc)
+                      df          = - dbij_dzij * dbidk(1:3, ikc)
                       VEC3(f, k)  = VEC3(f, k) + df
 
 #ifdef SCREENING
@@ -1415,7 +1419,7 @@
                          !
 
                          this%sfacbo(i1:i2) = this%sfacbo(i1:i2) + &
-                              maskfac * zfaci(ikc) * dbij_dzij
+                              zfaci(ikc) * dbij_dzij
 
                       endif
 
@@ -1431,7 +1435,7 @@
                 ! calculate forces on neighbors of i and j due to screening.
                 !
 
-                dffac = maskfac * 0.5_DP * ( VRij + bij * VAij )
+                dffac = 0.5_DP * ( VRij + bij * VAij )
 
                 do nijc = this%sneb_seed(ij), this%sneb_last(ij)
 
