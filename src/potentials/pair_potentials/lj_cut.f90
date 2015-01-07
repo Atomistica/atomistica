@@ -22,7 +22,7 @@
 ! @meta
 !   shared
 !   classtype:lj_cut_t classname:LJCut interface:potentials
-!   features:per_at
+!   features:mask,per_at
 ! @endmeta
 
 !>
@@ -191,27 +191,28 @@ contains
   !!
   !! Compute the force
   !<
-  subroutine lj_cut_energy_and_forces(this, p, nl, epot, f, wpot, epot_per_at, &
-       wpot_per_at, ierror)
+  subroutine lj_cut_energy_and_forces(this, p, nl, epot, f, wpot, mask, &
+       epot_per_at, wpot_per_at, ierror)
     implicit none
 
     type(lj_cut_t),     intent(inout) :: this
     type(particles_t),  intent(in)    :: p
     type(neighbors_t),  intent(inout) :: nl
     real(DP),           intent(inout) :: epot
-    real(DP),           intent(inout) :: f(3, p%maxnatloc)  !< forces
+    real(DP),           intent(inout) :: f(3, p%nat)  !< forces
     real(DP),           intent(inout) :: wpot(3, 3)
-    real(DP), optional, intent(inout) :: epot_per_at(p%maxnatloc)
+    integer,  optional, intent(in)    :: mask(p%nat)
+    real(DP), optional, intent(inout) :: epot_per_at(p%nat)
 #ifdef LAMMPS
-    real(DP), optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
+    real(DP), optional, intent(inout) :: wpot_per_at(6, p%nat)
 #else
-    real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
+    real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%nat)
 #endif
     integer,  optional, intent(inout) :: ierror
 
     ! ---
 
-    integer   :: i, jn, j
+    integer   :: i, jn, j, maskfaci, maskfac
     real(DP)  :: dr(3), df(3), dw(3, 3)
     real(DP)  :: cut_sq, abs_dr, for, en, fac12, fac6
 
@@ -225,12 +226,24 @@ contains
     cut_sq = this%cutoff**2
 
     do i = 1, p%nat
+       maskfaci = 1
+       if (present(mask) .and. mask(i) == 0) then
+          maskfaci = 0
+       endif
+
        do jn = nl%seed(i), nl%last(i)
           j = nl%neighbors(jn)
 
           if (i > j) then
-             if ( ( IS_EL(this%el1, p, i) .and. IS_EL(this%el2, p, j) ) .or. &
-                  ( IS_EL(this%el2, p, i) .and. IS_EL(this%el1, p, j) ) ) then
+             if (present(mask) .and. mask(j) == 0) then
+                maskfac = maskfaci
+             else
+                maskfac = maskfaci + 1
+             endif
+
+             if ( maskfac > 0 .and. &
+                  ( (IS_EL(this%el1, p, i) .and. IS_EL(this%el2, p, j)) .or. &
+                    (IS_EL(this%el2, p, i) .and. IS_EL(this%el1, p, j)) ) ) then
 
                 DIST_SQ(p, nl, i, jn, dr, abs_dr)
 
@@ -240,8 +253,8 @@ contains
                    fac12 = (this%sigma/abs_dr)**12
                    fac6  = (this%sigma/abs_dr)**6
 
-                   en  = 4*this%epsilon*(fac12-fac6)-this%offset
-                   for = this%epsilon*(48*fac12-24*fac6)/abs_dr
+                   en  = 0.5_DP*maskfac*4*this%epsilon*(fac12-fac6)-this%offset
+                   for = 0.5_DP*maskfac*this%epsilon*(48*fac12-24*fac6)/abs_dr
 
                    epot = epot + en
                    df   = for * dr/abs_dr
