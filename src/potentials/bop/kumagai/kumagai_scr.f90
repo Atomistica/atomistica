@@ -20,8 +20,9 @@
 !! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !! ======================================================================
 ! @meta
-!    public:directory
-!    classtype:kumagai_scr_t classname:KumagaiScr interface:potentials
+!   public:directory
+!   classtype:kumagai_scr_t classname:KumagaiScr interface:potentials
+!   features:mask,per_at,per_bond
 ! @endmeta
 
 !>
