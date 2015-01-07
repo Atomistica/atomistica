@@ -22,6 +22,7 @@
 ! @meta
 !   shared
 !   classtype:tabulated_alloy_eam_t classname:TabulatedAlloyEAM interface:potentials
+!   features:per_at
 ! @endmeta
 
 !#define AVOID_SQRT
@@ -335,26 +336,23 @@ contains
   !!
   !! Compute energy and force
   !<
-  subroutine tabulated_alloy_eam_energy_and_forces(this, p, nl, epot, f, wpot, epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, ierror)
+  subroutine tabulated_alloy_eam_energy_and_forces(this, p, nl, epot, f, wpot, &
+       epot_per_at, wpot_per_at, ierror)
     implicit none
 
-    type(tabulated_alloy_eam_t), intent(inout)  :: this
-    type(particles_t), intent(in)         :: p
-    type(neighbors_t), intent(inout)      :: nl
-    real(DP), intent(inout)               :: epot
-    real(DP), intent(inout)               :: f(3, p%maxnatloc)
-    real(DP), intent(inout)               :: wpot(3, 3)
-    real(DP), intent(inout), optional     :: epot_per_at(p%maxnatloc)
-    real(DP), intent(inout), optional     :: epot_per_bond(nl%neighbors_size)
-    real(DP), intent(inout), optional     :: f_per_bond(3, nl%neighbors_size)
+    type(tabulated_alloy_eam_t), intent(inout) :: this
+    type(particles_t),           intent(in)    :: p
+    type(neighbors_t),           intent(inout) :: nl
+    real(DP),                    intent(inout) :: epot
+    real(DP),                    intent(inout) :: f(3, p%maxnatloc)
+    real(DP),                    intent(inout) :: wpot(3, 3)
+    real(DP),          optional, intent(inout) :: epot_per_at(p%maxnatloc)
 #ifdef LAMMPS
-    real(DP), intent(inout), optional     :: wpot_per_at(6, p%maxnatloc)
-    real(DP), intent(inout), optional     :: wpot_per_bond(6, nl%neighbors_size)
+    real(DP),          optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
 #else
-    real(DP), intent(inout), optional     :: wpot_per_at(3, 3, p%maxnatloc)
-    real(DP), intent(inout), optional     :: wpot_per_bond(3, 3, nl%neighbors_size)
+    real(DP),          optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
 #endif
-    integer, intent(inout), optional      :: ierror
+    integer,           optional, intent(inout) :: ierror
 
     ! ---
 
