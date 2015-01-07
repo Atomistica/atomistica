@@ -503,7 +503,7 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
   if (q)  q_data = PyArray_DATA(q);
   self->f90class->energy_and_forces(self->f90obj, a->f90obj, n->f90obj,
 									q_data, &epot, PyArray_DATA(f),
-									PyArray_DATA(wpot), epot_per_at_ptr,
+									PyArray_DATA(wpot), NULL, epot_per_at_ptr,
 									epot_per_bond_ptr, f_per_bond_ptr,
 									wpot_per_at_ptr, wpot_per_bond_ptr,
 									&ierror);

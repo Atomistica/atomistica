@@ -45,8 +45,7 @@ typedef struct __%(name)s_class_t {
   void (*del)(void *);
   void (*bind_to)(void *, void *, void *, int *);
   void (*energy_and_forces)(void *, void *, void *, double *, double *,
-			    double *, double *, double *, double *, double *,
-			    double *, int *);
+                            double *, int *, double *, double *, int *);
 
 } %(name)s_class_t;
 

@@ -48,7 +48,7 @@ def read_module_list(fn):
     while l:
         l  = l.strip()
         if len(l) > 0 and l[0] != '!' and l[0] != '#':
-            mods += [ l.split(':')[0:4] ]
+            mods += [ l.split(':')[0:5] ]
         l = f.readline()
     f.close()
 
@@ -64,12 +64,13 @@ def write_factory_f90(mods, str, fn):
             '  use libAtoms_module\n' +
             '  use particles\n' +
             '  use neighbors\n')
-    for f90name, f90class, name, register_data_ex in mods:
+    for f90name, f90class, name, features, register_data_ex in mods:
         f.write('  use %s\n' % f90name)
     f.write("  implicit none\n\n" +
             "contains\n\n")
 
-    for f90name, f90class, name, register_data_ex in mods:
+    for f90name, f90class, name, features, register_data_ex in mods:
+        features = set(features.split(','))
         f.write("subroutine lammps_%s_new(this_cptr, cfg, m) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
                 "  implicit none\n\n" +
@@ -140,7 +141,7 @@ def write_factory_f90(mods, str, fn):
                 "  call bind_to(this_fptr, p, nl, ierror=error)\n" +
                 "endsubroutine lammps_%s_bind_to\n\n\n" % f90name)
 
-        f.write("subroutine lammps_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, epot, f, wpot, epot_per_at_cptr, epot_per_bond_cptr, f_per_bond_cptr, wpot_per_at_cptr, wpot_per_bond_cptr, error) bind(C)\n" % f90name +
+        f.write("subroutine lammps_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, epot, f, wpot, mask_cptr, epot_per_at_cptr, wpot_per_at_cptr, error) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
                 "  implicit none\n\n" +
                 "  type(c_ptr), value :: this_cptr\n" +
@@ -149,43 +150,44 @@ def write_factory_f90(mods, str, fn):
                 "  real(c_double), intent(out) :: epot\n" +
                 "  real(c_double) :: f(3, *)\n" +
                 "  real(c_double) :: wpot(3, 3)\n" +
+                "  type(c_ptr), value :: mask_cptr\n" +
                 "  type(c_ptr), value :: epot_per_at_cptr\n" +
-                "  type(c_ptr), value :: epot_per_bond_cptr\n" +
-                "  type(c_ptr), value :: f_per_bond_cptr\n" +
                 "  type(c_ptr), value :: wpot_per_at_cptr\n" +
-                "  type(c_ptr), value :: wpot_per_bond_cptr\n" +
                 "  integer(c_int), intent(out) :: error\n\n" +
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  type(particles_t), pointer :: p\n" +
-                "  type(neighbors_t), pointer :: nl\n" +
-                "  real(c_double), pointer :: epot_per_at(:), wpot_per_at(:,:)\n" +
-                "  error = ERROR_NONE\n" +
-                "  nullify(epot_per_at, wpot_per_at)\n" +
+                "  type(neighbors_t), pointer :: nl\n")
+        if 'mask' in features:
+                f.write("  integer(c_int), pointer :: mask(:)\n")
+        if 'per_at' in features:
+                f.write("  real(c_double), pointer :: epot_per_at(:), wpot_per_at(:,:)\n")
+        f.write("  error = ERROR_NONE\n" +
                 "  call c_f_pointer(this_cptr, this_fptr)\n" +
                 "  call c_f_pointer(p_cptr, p)\n" +
                 "  call c_f_pointer(nl_cptr, nl)\n" +
                 "  if (.not. associated(this_fptr))   stop '[lammps_%s_energy_and_forces] *this_fptr* is NULL.'\n" % f90name +
                 "  if (.not. associated(p))   stop '[lammps_%s_energy_and_forces] *p* is NULL.'\n" % f90name +
-                "  if (.not. associated(nl))   stop '[lammps_%s_energy_and_forces] *nl* is NULL.'\n" % f90name +
-                "  ! Branch according to which arguments are present. Some compiler don't like passing NULL()\n" +
-                "  ! pointers to optional arguments, although supported in Fortran 2008.\n" +
-                "  if (c_associated(epot_per_at_cptr) .and. c_associated(wpot_per_at_cptr)) then\n" +
-                "     call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
-                "     call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n" +
-                "     call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
-                "       epot_per_at=epot_per_at, wpot_per_at=wpot_per_at, ierror=error)\n" +
-                "  else if (c_associated(epot_per_at_cptr)) then\n" +
-                "     call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
-                "     call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
-                "       epot_per_at=epot_per_at, ierror=error)\n" +
-                "  else if (c_associated(wpot_per_at_cptr)) then\n" +
-                "     call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n" +
-                "     call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
-                "       wpot_per_at=wpot_per_at, ierror=error)\n" +
-                "  else\n" +
-                "     call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &\n" +
-                "       ierror=error)\n" +
-                "  endif\n" +
+                "  if (.not. associated(nl))   stop '[lammps_%s_energy_and_forces] *nl* is NULL.'\n" % f90name)
+        optargs = ''
+        if 'mask' in features:
+            f.write("  call c_f_pointer(mask_cptr, mask, [p%nat])\n")
+            optargs += 'mask=mask, '
+        else:
+            f.write('  if (c_associated(mask_cptr)) then\n' +
+                    '     RETURN_ERROR("*mask* argument present but not supported by potential %s.", error)\n' % name +
+                    '  endif\n')
+        if 'per_at' in features:
+            f.write("  call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
+                    "  call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n")
+            optargs += 'epot_per_at=epot_per_at, wpot_per_at=wpot_per_at, '
+        else:
+            f.write('  if (c_associated(epot_per_at_cptr)) then\n' +
+                    '     RETURN_ERROR("*epot_per_at* argument present but not supported by potential %s.", error)\n' % name +
+                    '  endif\n' +
+                    '  if (c_associated(wpot_per_at_cptr)) then\n' +
+                    '     RETURN_ERROR("*wpot_per_at* argument present but not supported by potential %s.", error)\n' % name +
+                    '  endif\n')
+        f.write("  call energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)\n" % optargs +
                 "endsubroutine lammps_%s_energy_and_forces\n\n\n" % f90name)
     
     f.write("endmodule %s_factory\n" % str)
@@ -207,13 +209,13 @@ def write_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = ""
-    for f90name, f90class, name, register_data_ex in mods:
+    for f90name, f90class, name, features, register_data_ex in mods:
         s += "void lammps_%s_new(void **, section_t *, section_t **);\n" % f90name
         s += "void lammps_%s_free(void *);\n" % f90name
         s += "void lammps_%s_init_without_parameters(void *);\n" % f90name
         s += "void lammps_%s_del(void *);\n" % f90name
         s += "void lammps_%s_bind_to(void *, void *, void *, int *);\n" % f90name
-        s += "void lammps_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, double *, double *, double *, double *, double *, int *);\n" % f90name
+        s += "void lammps_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, int *, double *, double *, int *);\n" % f90name
 
     d["prototypes"] = s
 
@@ -222,7 +224,7 @@ def write_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = "%s_class_t %s_classes[N_POTENTIAL_CLASSES] = {\n" % ( str, str )
-    for f90name, f90class, name, register_data_ex in mods:
+    for f90name, f90class, name, features, register_data_ex in mods:
         s += "  {\n"
         s += "    \"%s\",\n" % name
         s += "    lammps_%s_new,\n" % f90name
