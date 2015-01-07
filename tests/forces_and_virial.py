@@ -27,6 +27,8 @@ import sys
 
 import unittest
 
+from numpy.random import random_integers
+
 import ase
 from ase.units import mol
 
@@ -85,8 +87,9 @@ tests  = [
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
     ( LJCut, dict(el1='He', el2='He', epsilon=10.2, sigma=2.28, cutoff=5.0,
                   shift=True),
-      [ ( "fcc-He", FaceCenteredCubic("He", size=[sx,sx,sx],
-                                      latticeconstant=3.5) ) ] ),
+      [ dict( name="fcc-He", struct=FaceCenteredCubic("He", size=[sx,sx,sx],
+                                                      latticeconstant=3.5),
+              mask=True ) ] ),
     ( Brenner, Erhart_PRB_71_035211_SiC,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
@@ -98,18 +101,21 @@ tests  = [
         ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
                           size=[sx,sx,sx]) ) ] ),
     ( Brenner, Henriksson_PRB_79_114107_FeC,
-      [ dict( name='dia-C', struct=Diamond('C', size=[sx,sx,sx]) ),
+      [ dict( name='dia-C', struct=Diamond('C', size=[sx,sx,sx]), mask=True ),
         dict( name='bcc-Fe',
-              struct=BodyCenteredCubic('Fe', size=[sx,sx,sx]) ),
+              struct=BodyCenteredCubic('Fe', size=[sx,sx,sx]), mask=True ),
         dict( name='fcc-Fe',
               struct=FaceCenteredCubic('Fe', size=[sx,sx,sx],
-                                       latticeconstant=3.6) ),
+                                       latticeconstant=3.6), mask=True ),
         dict( name='sc-Fe',
-              struct=SimpleCubic('Fe', size=[sx,sx,sx], latticeconstant=2.4) ),
+              struct=SimpleCubic('Fe', size=[sx,sx,sx], latticeconstant=2.4),
+              mask=True ),
         dict( name='B1-Fe-C',
-              struct=B1( [ 'Fe', 'C' ], size=[sx,sx,sx], latticeconstant=3.9) ),
+              struct=B1( [ 'Fe', 'C' ], size=[sx,sx,sx], latticeconstant=3.9),
+              mask=True ),
         dict( name='B3-Fe-C',
-              struct=B3( [ 'Fe', 'C' ], size=[sx,sx,sx], latticeconstant=4.0) ),
+              struct=B3( [ 'Fe', 'C' ], size=[sx,sx,sx], latticeconstant=4.0),
+              mask=True ),
         ] ),
     ( Kumagai, Kumagai_CompMaterSci_39_457_Si,
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
@@ -131,7 +137,7 @@ tests  = [
         ] ),
     ( TabulatedAlloyEAM, dict(fn='Au-Grochola-JCP05.eam.alloy'),
       [ dict( name="fcc-Au", struct=FaceCenteredCubic("Au", size=[sx,sx,sx]),
-              rattle=0.1 ) ] ),
+              rattle=0.1, mask=True ) ] ),
     ]
 
 # Coulomb potential tests
@@ -210,6 +216,7 @@ def run_forces_and_virial_test(test=None):
 
         for imat in mats:
             rattle = 0.5
+            mask = False
             if isinstance(imat, tuple):
                 name, a = imat
             else:
@@ -217,76 +224,88 @@ def run_forces_and_virial_test(test=None):
                 a = imat['struct']
                 if 'rattle' in imat:
                     rattle = imat['rattle']
+                if 'mask' in imat:
+                    mask = imat['mask']
             if test is None:
                 print "Material:  ", name
             a.translate([0.1,0.1,0.1])
             a.set_calculator(c)
+
+            masks = [None]
+            if mask:
+                masks += [random_integers(0, len(a)-1, size=len(a)) < len(a)/2,
+                          random_integers(0, len(a)-1, size=len(a)) < len(a)/4]
 
             for dummy in range(2):
                 if dummy == 0:
                     errmsg = 'potential: {0}; material: {1}; equilibrium' \
                         .format(potname, name)
                     if test is None:
-                        print "...equilibrium..."
+                        print '=== equilibrium ==='
                 else:
                     errmsg = 'potential: {0}; material: {1}; distorted' \
                         .format(potname, name)
                     if test is None:
-                        print "...distorted..."
+                        print '=== distorted ==='
 
-                ffd, f0, maxdf = test_forces(a, dx=dx)
+                for mask in masks:
+                    if mask is not None:
+                        print '--- using random mask ---'
+                        c.set_mask(mask)
+
+                    ffd, f0, maxdf = test_forces(a, dx=dx)
         
-                if test is None:
-                    if abs(maxdf) < tol:
-                        print "forces .ok."
+                    if test is None:
+                        if abs(maxdf) < tol:
+                            print "forces .ok."
+                        else:
+                            print "forces .failed."
+                            print "max(df)  = %f" % maxdf
+
+                            print "f - from potential"
+                            print f0
+
+                            print "f - numerically"
+                            print ffd
                     else:
-                        print "forces .failed."
-                        print "max(df)  = %f" % maxdf
+                      test.assertTrue(abs(maxdf) < tol,
+                                        msg=errmsg+'; forces')
 
-                        print "f - from potential"
-                        print f0
+                    sfd, s0, maxds = test_virial(a, de=dx)
 
-                        print "f - numerically"
-                        print ffd
-                else:
-                    test.assertTrue(abs(maxdf) < tol,
-                                    msg=errmsg+'; forces')
-
-                sfd, s0, maxds = test_virial(a, de=dx)
-
-                if test is None:
-                    if abs(maxds) < tol:
-                        print "virial .ok."
-                    else:
-                        print "virial .failed."
-                        print "max(ds)  = %f" % maxds
+                    if test is None:
+                        if abs(maxds) < tol:
+                            print "virial .ok."
+                        else:
+                            print "virial .failed."
+                            print "max(ds)  = %f" % maxds
                     
-                        print "s - from potential"
-                        print s0
+                            print "s - from potential"
+                            print s0
                 
-                        print "s - numerically"
-                        print sfd
-                else:
-                    test.assertTrue(abs(maxds) < tol,
-                                    msg=errmsg+'; virial')
-
-                pfd, p0, maxdp = test_potential(a, dq=dx)
-
-                if test is None:
-                    if abs(maxdp) < tol:
-                        print "potential .ok."
+                            print "s - numerically"
+                            print sfd
                     else:
-                        print "potential .failed."
-                        print "max(dp)  = %f" % maxdp
+                        test.assertTrue(abs(maxds) < tol,
+                                        msg=errmsg+'; virial')
+
+                    pfd, p0, maxdp = test_potential(a, dq=dx)
+
+                    if test is None:
+                        if abs(maxdp) < tol:
+                            print "potential .ok."
+                        else:
+                            print "potential .failed."
+                            print "max(dp)  = %f" % maxdp
                     
-                        print "p - from potential"
-                        print p0
+                            print "p - from potential"
+                            print p0
                 
-                        print "p - numerically"
-                        print pfd
-                else:
-                    test.assertTrue(abs(maxds) < tol,
-                                    msg=errmsg+'; virial')
+                            print "p - numerically"
+                            print pfd
+                    else:
+                        test.assertTrue(abs(maxds) < tol,
+                                        msg=errmsg+'; virial')
             
                 a.rattle(rattle)
 
