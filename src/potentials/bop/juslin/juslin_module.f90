@@ -404,26 +404,27 @@
   !!
   !! Compute the force
   !<
-  subroutine COMPUTE_FUNC(this, p, nl, epot, f, wpot, epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, ierror)
+  subroutine COMPUTE_FUNC(this, p, nl, epot, f, wpot, mask, epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, ierror)
     implicit none
 
-    type(BOP_TYPE), intent(inout)      :: this
-    type(particles_t), intent(inout)   :: p
-    type(neighbors_t), intent(inout)   :: nl
-    real(DP), intent(inout)            :: epot
-    real(DP), intent(inout)            :: f(3, p%maxnatloc)  !< forces
-    real(DP), intent(inout)            :: wpot(3, 3)
-    real(DP), intent(inout), optional  :: epot_per_at(p%maxnatloc)
-    real(DP), intent(inout), optional  :: epot_per_bond(nl%neighbors_size)
-    real(DP), intent(inout), optional  :: f_per_bond(3, nl%neighbors_size)
+    type(BOP_TYPE),     intent(inout) :: this
+    type(particles_t),  intent(inout) :: p
+    type(neighbors_t),  intent(inout) :: nl
+    real(DP),           intent(inout) :: epot
+    real(DP),           intent(inout) :: f(3, p%maxnatloc)  !< forces
+    real(DP),           intent(inout) :: wpot(3, 3)
+    integer,  optional, intent(in)    :: mask(p%maxnatloc)
+    real(DP), optional, intent(inout) :: epot_per_at(p%maxnatloc)
+    real(DP), optional, intent(inout) :: epot_per_bond(nl%neighbors_size)
+    real(DP), optional, intent(inout) :: f_per_bond(3, nl%neighbors_size)
 #ifdef LAMMPS
-    real(DP), intent(inout), optional  :: wpot_per_at(6, p%maxnatloc)
-    real(DP), intent(inout), optional  :: wpot_per_bond(6, nl%neighbors_size)
+    real(DP), optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
+    real(DP), optional, intent(inout) :: wpot_per_bond(6, nl%neighbors_size)
 #else
-    real(DP), intent(inout), optional  :: wpot_per_at(3, 3, p%maxnatloc)
-    real(DP), intent(inout), optional  :: wpot_per_bond(3, 3, nl%neighbors_size)
+    real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
+    real(DP), optional, intent(inout) :: wpot_per_bond(3, 3, nl%neighbors_size)
 #endif
-    integer, intent(inout), optional   :: ierror
+    integer,  optional, intent(inout) :: ierror
 
     ! ---
 
@@ -453,7 +454,7 @@
          p%maxnatloc, p%natloc, p%nat, p%r_non_cyc, &
          el, &
          nl%seed, nl%last, nl%neighbors, nl%neighbors_size, &
-         epot, f, wpot, &
+         epot, f, wpot, mask, &
          epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
          ierror)
 #else
@@ -462,7 +463,7 @@
          p%maxnatloc, p%natloc, p%nat, p%r_non_cyc, &
          el, &
          nl%seed, nl%last, nl%neighbors, nl%neighbors_size, nl%dc, p%shear_dx, &
-         epot, f, wpot, &
+         epot, f, wpot, mask, &
          epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
          ierror)
 #endif

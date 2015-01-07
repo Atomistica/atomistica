@@ -23,6 +23,7 @@
 ! @meta
 !   public:directory
 !   classtype:juslin_scr_t classname:JuslinScr interface:potentials
+!   features:mask,per_at,per_bond
 ! @endmeta
 
 !>
