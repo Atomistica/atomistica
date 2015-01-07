@@ -191,6 +191,8 @@ class Atomistica(object):
 
         self.q = None
 
+        self.mask = None
+
         self.force_update = True
 
         self.kwargs = kwargs
@@ -263,6 +265,11 @@ class Atomistica(object):
 
         # Force re-computation of energies/forces the next time these are
         # requested
+        self.force_update = True
+
+
+    def set_mask(self, mask):
+        self.mask = mask
         self.force_update = True
 
 
@@ -414,19 +421,22 @@ class Atomistica(object):
         self.forces = np.zeros([len(self.particles),3])
         self.wpot = np.zeros([3,3])
 
+        kwargs = dict(epot_per_at = self.compute_epot_per_at,
+                      epot_per_bond = self.compute_epot_per_bond,
+                      f_per_bond = self.compute_f_per_bond,
+                      wpot_per_at = self.compute_wpot_per_at,
+                      wpot_per_bond = self.compute_wpot_per_bond)
+
+        if self.mask is not None:
+            kwargs['mask'] = self.mask
         if self.q is None:
             # No charges? Just call the potentials...
             for pot in self.pots:
                 _epot, _forces, _wpot, self.epot_per_at, self.epot_per_bond, \
                     self.f_per_bond, self.wpot_per_at, self.wpot_per_bond  = \
-                        pot.energy_and_forces(
-                            self.particles, self.nl, forces = self.forces,
-                            epot_per_at = self.compute_epot_per_at,
-                            epot_per_bond = self.compute_epot_per_bond,
-                            f_per_bond = self.compute_f_per_bond,
-                            wpot_per_at = self.compute_wpot_per_at,
-                            wpot_per_bond = self.compute_wpot_per_bond)
-
+                        pot.energy_and_forces(self.particles, self.nl,
+                                              forces = self.forces,
+                                              **kwargs)
                 self.epot += _epot
                 self.wpot += _wpot
 
@@ -435,15 +445,10 @@ class Atomistica(object):
             for pot in self.pots:
                 _epot, _forces, _wpot, self.epot_per_at, self.epot_per_bond, \
                     self.f_per_bond, self.wpot_per_at, self.wpot_per_bond  = \
-                        pot.energy_and_forces(
-                            self.particles, self.nl, forces = self.forces,
-                            charges = self.q,
-                            epot_per_at = self.compute_epot_per_at,
-                            epot_per_bond = self.compute_epot_per_bond,
-                            f_per_bond = self.compute_f_per_bond,
-                            wpot_per_at = self.compute_wpot_per_at,
-                            wpot_per_bond = self.compute_wpot_per_bond)
-
+                        pot.energy_and_forces(self.particles, self.nl,
+                                              forces = self.forces,
+                                              charges = self.q,
+                                              **kwargs)
                 self.epot += _epot
                 self.wpot += _wpot
 
