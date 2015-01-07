@@ -22,6 +22,7 @@
 ! @meta
 !   shared
 !   classtype:lj_cut_t classname:LJCut interface:potentials
+!   features:per_at
 ! @endmeta
 
 !>
@@ -190,7 +191,8 @@ contains
   !!
   !! Compute the force
   !<
-  subroutine lj_cut_energy_and_forces(this, p, nl, epot, f, wpot, epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, ierror)
+  subroutine lj_cut_energy_and_forces(this, p, nl, epot, f, wpot, epot_per_at, &
+       wpot_per_at, ierror)
     implicit none
 
     type(lj_cut_t),     intent(inout) :: this
@@ -200,14 +202,10 @@ contains
     real(DP),           intent(inout) :: f(3, p%maxnatloc)  !< forces
     real(DP),           intent(inout) :: wpot(3, 3)
     real(DP), optional, intent(inout) :: epot_per_at(p%maxnatloc)
-    real(DP), optional, intent(inout) :: epot_per_bond(nl%neighbors_size)
-    real(DP), optional, intent(inout) :: f_per_bond(3, nl%neighbors_size)
 #ifdef LAMMPS
     real(DP), optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
-    real(DP), optional, intent(inout) :: wpot_per_bond(6, nl%neighbors_size)
 #else
     real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
-    real(DP), optional, intent(inout) :: wpot_per_bond(3, 3, nl%neighbors_size)
 #endif
     integer,  optional, intent(inout) :: ierror
 
@@ -253,6 +251,12 @@ contains
 
                    dw    = -outer_product(dr, df)
                    wpot  = wpot + dw
+
+                   if (present(epot_per_at)) then
+                      en = en/2
+                      epot_per_at(i) = epot_per_at(i) + en
+                      epot_per_at(j) = epot_per_at(j) + en
+                   endif
 
                    if (present(wpot_per_at)) then
                       dw = dw/2
