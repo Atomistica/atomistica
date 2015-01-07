@@ -67,9 +67,3 @@ interface to Atomistica.
      python bulk_properties.py
      python forces_and_virial.py
      python rebo2_molecules.py
-
-X. NOTE FOR OS X USERS.
-
-   There seems to be a problem with "ar" on OS X not adding all module to the
-   library properly. Use the tools/relink_osx.sh script to relink your
-   _atomistica.so on OS X as a temporary fix.
