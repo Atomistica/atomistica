@@ -172,9 +172,9 @@ lib_srcs += [ 'build/potentials_factory_f90.f90',
 f = open('build/have.inc', 'w')
 print >> f, '#ifndef __HAVE_INC'
 print >> f, '#define __HAVE_INC'
-for classabbrev, classname, classtype, s, s2 in mods1:
+for classabbrev, classname, classtype, classfeatures, s, s2 in mods1:
     print >> f, '#define HAVE_%s' % (classabbrev.upper())
-for classabbrev, classname, classtype, s1, s2 in mods2:
+for classabbrev, classname, classtype, classfeatures, s1, s2 in mods2:
     print >> f, '#define HAVE_%s' % (classabbrev.upper())
 print >> f, '#endif'
 f.close()
