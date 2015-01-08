@@ -22,6 +22,7 @@
 
 #! /usr/bin/env python
 
+import itertools
 import sys
 
 ###
@@ -53,6 +54,30 @@ def read_module_list(fn):
     f.close()
 
     return mods
+
+###
+
+def switch_optargs(funcstr, optargs):
+    s = ''
+    if len(optargs) == 0:
+        s += '  call %s\n' % (funcstr % '')
+    else:
+        for perm in itertools.product(*([[True,False]]*len(optargs))):
+            cond = '.true.'
+            args = ''
+            for condp, arg in zip(perm, optargs):
+                if condp:
+                    cond += ' .and. associated(%s)' % arg
+                    args += '%s=%s, ' % (arg, arg)
+                else:
+                    cond += ' .and. .not. associated(%s)' % arg
+            s += '  if (%s) then\n' % cond
+            s += '     call %s\n' % (funcstr % args)
+            s += '  else\n'
+        s += '     stop "Fatal internal error: Dispatch should not have ended up here."\n'
+        for perm in itertools.product(*([[True,False]]*len(optargs))):
+            s += '  endif\n'
+    return s
 
 ###
 
@@ -225,16 +250,17 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
   if (.not. associated(p))   stop '[python_%s_energy_and_forces] *p* is NULL.'
   if (.not. associated(nl))   stop '[python_%s_energy_and_forces] *nl* is NULL.'
 """ % ( f90name, f90name, f90name )
-        optargs = ''
+        addargs = ''
+        optargs = []
         if set_Coulomb_ex:
-            optargs += 'q=q, '
+            addargs += 'q=q, '
         if 'mask' in features:
             s += '  if (c_associated(mask_cptr)) then\n'
             s += '     call c_f_pointer(mask_cptr, mask, [p%nat])\n'
             s += '  else\n'
             s += '     nullify(mask)\n'
             s += '  endif\n'
-            optargs += 'mask=mask, '
+            optargs += ['mask']
         else:
             s += '  if (c_associated(mask_cptr)) then\n'
             s += '     RETURN_ERROR("*mask* argument present but not supported by potential %s.", error)\n' % name
@@ -250,7 +276,7 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
             s += '  else\n'
             s += '     nullify(wpot_per_at)\n'
             s += '  endif\n'
-            optargs += 'epot_per_at=epot_per_at, wpot_per_at=wpot_per_at, '
+            optargs += ['epot_per_at', 'wpot_per_at']
         else:
             s += '  if (c_associated(epot_per_at_cptr)) then\n'
             s += '     RETURN_ERROR("*epot_per_at* argument present but not supported by potential %s.", error)\n' % name
@@ -274,7 +300,7 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
             s += '  else\n'
             s += '     nullify(wpot_per_bond)\n'
             s += '  endif\n'
-            optargs += 'epot_per_bond=epot_per_bond, f_per_bond=f_per_bond, wpot_per_bond=wpot_per_bond, '
+            optargs += ['epot_per_bond', 'f_per_bond', 'wpot_per_bond']
         else:
             s += '  if (c_associated(epot_per_bond_cptr)) then\n'
             s += '     RETURN_ERROR("*epot_per_bond* argument present but not supported by potential %s.", error)\n' % name
@@ -285,7 +311,7 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
             s += '  if (c_associated(wpot_per_bond_cptr)) then\n'
             s += '     RETURN_ERROR("*wpot_per_bond* argument present but not supported by potential %s.", error)\n' % name
             s += '  endif\n'
-        s += '  call energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)\n' % optargs
+        s += switch_optargs('energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)' % (addargs+'%s'), optargs)
         s += 'endsubroutine python_%s_energy_and_forces\n\n\n' % f90name
 
         f.write(s)
