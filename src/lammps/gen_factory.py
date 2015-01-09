@@ -22,6 +22,7 @@
 
 #! /usr/bin/env python
 
+import itertools
 import sys
 
 ###
@@ -53,6 +54,30 @@ def read_module_list(fn):
     f.close()
 
     return mods
+
+###
+
+def switch_optargs(funcstr, optargs):
+    s = ''
+    if len(optargs) == 0:
+        s += '  call %s\n' % (funcstr % '')
+    else:
+        for perm in itertools.product(*([[True,False]]*len(optargs))):
+            cond = '.true.'
+            args = ''
+            for condp, arg in zip(perm, optargs):
+                if condp:
+                    cond += ' .and. associated(%s)' % arg
+                    args += '%s=%s, ' % (arg, arg)
+                else:
+                    cond += ' .and. .not. associated(%s)' % arg
+            s += '  if (%s) then\n' % cond
+            s += '     call %s\n' % (funcstr % args)
+            s += '  else\n'
+        s += '     stop "Fatal internal error: Dispatch should not have ended up here."\n'
+        for perm in itertools.product(*([[True,False]]*len(optargs))):
+            s += '  endif\n'
+    return s
 
 ###
 
@@ -168,10 +193,10 @@ def write_factory_f90(mods, str, fn):
                 "  if (.not. associated(this_fptr))   stop '[lammps_%s_energy_and_forces] *this_fptr* is NULL.'\n" % f90name +
                 "  if (.not. associated(p))   stop '[lammps_%s_energy_and_forces] *p* is NULL.'\n" % f90name +
                 "  if (.not. associated(nl))   stop '[lammps_%s_energy_and_forces] *nl* is NULL.'\n" % f90name)
-        optargs = ''
+        optargs = []
         if 'mask' in features:
             f.write("  call c_f_pointer(mask_cptr, mask, [p%nat])\n")
-            optargs += 'mask=mask, '
+            optargs += ['mask']
         else:
             f.write('  if (c_associated(mask_cptr)) then\n' +
                     '     RETURN_ERROR("*mask* argument present but not supported by potential %s.", error)\n' % name +
@@ -179,7 +204,7 @@ def write_factory_f90(mods, str, fn):
         if 'per_at' in features:
             f.write("  call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
                     "  call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n")
-            optargs += 'epot_per_at=epot_per_at, wpot_per_at=wpot_per_at, '
+            optargs += ['epot_per_at', 'wpot_per_at']
         else:
             f.write('  if (c_associated(epot_per_at_cptr)) then\n' +
                     '     RETURN_ERROR("*epot_per_at* argument present but not supported by potential %s.", error)\n' % name +
@@ -187,8 +212,8 @@ def write_factory_f90(mods, str, fn):
                     '  if (c_associated(wpot_per_at_cptr)) then\n' +
                     '     RETURN_ERROR("*wpot_per_at* argument present but not supported by potential %s.", error)\n' % name +
                     '  endif\n')
-        f.write("  call energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)\n" % optargs +
-                "endsubroutine lammps_%s_energy_and_forces\n\n\n" % f90name)
+        f.write(switch_optargs("energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)", optargs))
+        f.write("endsubroutine lammps_%s_energy_and_forces\n\n\n" % f90name)
     
     f.write("endmodule %s_factory\n" % str)
     f.close()
