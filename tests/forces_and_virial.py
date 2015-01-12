@@ -249,7 +249,7 @@ def run_forces_and_virial_test(test=None):
                         print '=== distorted ==='
 
                 for mask in masks:
-                    if mask is not None:
+                    if test is None and mask is not None:
                         print '--- using random mask ---'
                         c.set_mask(mask)
 
