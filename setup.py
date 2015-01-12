@@ -1,6 +1,7 @@
 import glob
 import os
 import sys
+import re
 
 sys.path += [ 'src/python', 'tools' ]
 
@@ -33,24 +34,20 @@ extra_link_args = [ ]
 ###
 
 #
-# Get MKL configuration
+# LAPACK configuration from numpy
 #
 
-mklroot = os.getenv('MKLROOT')
-if mklroot is None:
-    mklroot = os.getenv('MKL_ROOT')
-if mklroot is not None:
-    for lib_dir in [ '%s/lib/em64t' % mklroot, 
-                     '%s/lib/intel64' % mklroot ]:
-        if os.path.exists(lib_dir):
-            lib_dirs += [ lib_dir ]
-    #libs += [ 'mkl_intel_lp64', 'mkl_intel_thread', 'mkl_lapack',
-    #          'mkl_core', 'mkl_def', 'irc_s', 'iomp5', 'ifcore', 'ifport',
-    #          'stdc++' ]
-    libs += [ 'iomp5', 'ifcore', 'ifport', 'mkl_rt' ]
-    #extra_link_args += [ '-mkl=sequential' ]
-else:
-    libs += [ 'blas', 'lapack' ]
+for k, v in np.__config__.__dict__.iteritems():
+    if re.match('lapack_.*_info', k):
+        if 'library_dirs' in v:
+            print "* Using LAPACK information from '%s' dictionary in " \
+                "numpy.__config__" % k
+            print "    library_dirs = '%s'" % v['library_dirs']
+            print "    libraries = '%s'" % v['libraries']
+            lib_dirs += v['library_dirs']
+            libs += v['libraries']
+            # We use whichever lapack_*_info comes first
+            break
 
 ###
 
@@ -175,9 +172,9 @@ lib_srcs += [ 'build/potentials_factory_f90.f90',
 f = open('build/have.inc', 'w')
 print >> f, '#ifndef __HAVE_INC'
 print >> f, '#define __HAVE_INC'
-for classabbrev, classname, classtype, s, s2 in mods1:
+for classabbrev, classname, classtype, classfeatures, s, s2 in mods1:
     print >> f, '#define HAVE_%s' % (classabbrev.upper())
-for classabbrev, classname, classtype, s1, s2 in mods2:
+for classabbrev, classname, classtype, classfeatures, s1, s2 in mods2:
     print >> f, '#define HAVE_%s' % (classabbrev.upper())
 print >> f, '#endif'
 f.close()

@@ -22,6 +22,7 @@
 
 #! /usr/bin/env python
 
+import itertools
 import sys
 
 ###
@@ -48,11 +49,35 @@ def read_module_list(fn):
     while l:
         l  = l.strip()
         if len(l) > 0 and l[0] != '!' and l[0] != '#':
-            mods += [ l.split(':')[0:4] ]
+            mods += [ l.split(':')[0:5] ]
         l = f.readline()
     f.close()
 
     return mods
+
+###
+
+def switch_optargs(funcstr, optargs):
+    s = ''
+    if len(optargs) == 0:
+        s += '  call %s\n' % (funcstr % '')
+    else:
+        for perm in itertools.product(*([[True,False]]*len(optargs))):
+            cond = '.true.'
+            args = ''
+            for condp, arg in zip(perm, optargs):
+                if condp:
+                    cond += ' .and. associated(%s)' % arg
+                    args += '%s=%s, ' % (arg, arg)
+                else:
+                    cond += ' .and. .not. associated(%s)' % arg
+            s += '  if (%s) then\n' % cond
+            s += '     call %s\n' % (funcstr % args)
+            s += '  else\n'
+        s += '     stop "Fatal internal error: Dispatch should not have ended up here."\n'
+        for perm in itertools.product(*([[True,False]]*len(optargs))):
+            s += '  endif\n'
+    return s
 
 ###
 
@@ -64,12 +89,13 @@ def write_factory_f90(mods, str, fn):
             '  use libAtoms_module\n' +
             '  use particles\n' +
             '  use neighbors\n')
-    for f90name, f90class, name, register_data_ex, set_Coulomb_ex in mods:
+    for f90name, f90class, name, features, register_data_ex, set_Coulomb_ex in mods:
         f.write('  use %s\n' % f90name)
     f.write("  implicit none\n\n" +
             "contains\n\n")
 
-    for f90name, f90class, name, register_data_ex, set_Coulomb_ex in mods:
+    for f90name, f90class, name, features, register_data_ex, set_Coulomb_ex in mods:
+        features = set(features.split(','))
         f.write("subroutine python_%s_new(this_cptr, cfg, m) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
                 "  implicit none\n\n" +
@@ -175,8 +201,8 @@ def write_factory_f90(mods, str, fn):
 
         s = """
 subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
-  q, epot, f, wpot, epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, &
-  wpot_per_bond, error) bind(C)
+  q, epot, f, wpot, mask_cptr, epot_per_at_cptr, epot_per_bond_cptr, &
+  f_per_bond_cptr, wpot_per_at_cptr, wpot_per_bond_cptr, error) bind(C)
   use, intrinsic :: iso_c_binding
 
   implicit none
@@ -184,21 +210,38 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
   type(c_ptr), value :: this_cptr
   type(c_ptr), value :: p_cptr
   type(c_ptr), value :: nl_cptr
-  real(C_DOUBLE) :: q(*)
+  real(c_double) :: q(*)
   real(c_double), intent(out) :: epot
   real(c_double) :: f(3, *)
   real(c_double) :: wpot(3, 3)
-  real(c_double) :: epot_per_at(*)
-  real(c_double) :: epot_per_bond(*)
-  real(c_double) :: f_per_bond(3, *)
-  real(c_double) :: wpot_per_at(3, 3, *)
-  real(c_double) :: wpot_per_bond(3, 3, *)
+  type(c_ptr), value :: mask_cptr
+  type(c_ptr), value :: epot_per_at_cptr
+  type(c_ptr), value :: epot_per_bond_cptr
+  type(c_ptr), value :: f_per_bond_cptr
+  type(c_ptr), value :: wpot_per_at_cptr
+  type(c_ptr), value :: wpot_per_bond_cptr
   integer(c_int), intent(out) :: error
 
   type(%s_t), pointer :: this_fptr
   type(particles_t), pointer :: p
   type(neighbors_t), pointer :: nl
-
+        """ % ( f90name, f90name )
+        if 'mask' in features:
+            s += """
+  integer(c_int), pointer :: mask(:)
+            """
+        if 'per_at' in features:
+            s += """
+  real(c_double), pointer :: epot_per_at(:)
+  real(c_double), pointer :: wpot_per_at(:, :, :)
+            """
+        if 'per_bond' in features:
+            s += """
+  real(c_double), pointer :: epot_per_bond(:)
+  real(c_double), pointer :: f_per_bond(:, :)
+  real(c_double), pointer :: wpot_per_bond(:, :, :)
+            """
+        s += """
   error = ERROR_NONE
   call c_f_pointer(this_cptr, this_fptr)
   call c_f_pointer(p_cptr, p)
@@ -206,23 +249,70 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
   if (.not. associated(this_fptr))   stop '[python_%s_energy_and_forces] *this_fptr* is NULL.'
   if (.not. associated(p))   stop '[python_%s_energy_and_forces] *p* is NULL.'
   if (.not. associated(nl))   stop '[python_%s_energy_and_forces] *nl* is NULL.'
-        """ % ( f90name, f90name, f90name, f90name, f90name )
+""" % ( f90name, f90name, f90name )
+        addargs = ''
+        optargs = []
         if set_Coulomb_ex:
-            s += """
-  call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &
-    q=q, epot_per_at=epot_per_at, &
-    epot_per_bond=epot_per_bond, &
-    f_per_bond=f_per_bond, wpot_per_at=wpot_per_at, &
-    wpot_per_bond=wpot_per_bond, ierror=error)
-            """
+            addargs += 'q=q, '
+        if 'mask' in features:
+            s += '  if (c_associated(mask_cptr)) then\n'
+            s += '     call c_f_pointer(mask_cptr, mask, [p%nat])\n'
+            s += '  else\n'
+            s += '     nullify(mask)\n'
+            s += '  endif\n'
+            optargs += ['mask']
         else:
-            s += """
-  call energy_and_forces(this_fptr, p, nl, epot, f, wpot, &
-    epot_per_at=epot_per_at, epot_per_bond=epot_per_bond, &
-    f_per_bond=f_per_bond, wpot_per_at=wpot_per_at, &
-    wpot_per_bond=wpot_per_bond, ierror=error)
-            """
-        s += "endsubroutine python_%s_energy_and_forces\n\n\n" % f90name
+            s += '  if (c_associated(mask_cptr)) then\n'
+            s += '     RETURN_ERROR("*mask* argument present but not supported by potential %s.", error)\n' % name
+            s += '  endif\n'
+        if 'per_at' in features:
+            s += '  if (c_associated(epot_per_at_cptr)) then\n'
+            s += '     call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n'
+            s += '  else\n'
+            s += '     nullify(epot_per_at)\n'
+            s += '  endif\n'
+            s += '  if (c_associated(wpot_per_at_cptr)) then\n'
+            s += '     call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [3,3,p%nat])\n'
+            s += '  else\n'
+            s += '     nullify(wpot_per_at)\n'
+            s += '  endif\n'
+            optargs += ['epot_per_at', 'wpot_per_at']
+        else:
+            s += '  if (c_associated(epot_per_at_cptr)) then\n'
+            s += '     RETURN_ERROR("*epot_per_at* argument present but not supported by potential %s.", error)\n' % name
+            s += '  endif\n'
+            s += '  if (c_associated(wpot_per_at_cptr)) then\n'
+            s += '     RETURN_ERROR("*wpot_per_at* argument present but not supported by potential %s.", error)\n' % name
+            s += '  endif\n'
+        if 'per_bond' in features:
+            s += '  if (c_associated(epot_per_bond_cptr)) then\n'
+            s += '     call c_f_pointer(epot_per_bond_cptr, epot_per_bond, [nl%neighbors_size])\n'
+            s += '  else\n'
+            s += '     nullify(epot_per_bond)\n'
+            s += '  endif\n'
+            s += '  if (c_associated(f_per_bond_cptr)) then\n'
+            s += '     call c_f_pointer(f_per_bond_cptr, f_per_bond, [3,nl%neighbors_size])\n'
+            s += '  else\n'
+            s += '     nullify(f_per_bond)\n'
+            s += '  endif\n'
+            s += '  if (c_associated(wpot_per_bond_cptr)) then\n'
+            s += '     call c_f_pointer(wpot_per_bond_cptr, wpot_per_bond, [3,3,nl%neighbors_size])\n'
+            s += '  else\n'
+            s += '     nullify(wpot_per_bond)\n'
+            s += '  endif\n'
+            optargs += ['epot_per_bond', 'f_per_bond', 'wpot_per_bond']
+        else:
+            s += '  if (c_associated(epot_per_bond_cptr)) then\n'
+            s += '     RETURN_ERROR("*epot_per_bond* argument present but not supported by potential %s.", error)\n' % name
+            s += '  endif\n'
+            s += '  if (c_associated(f_per_bond_cptr)) then\n'
+            s += '     RETURN_ERROR("*f_per_bond* argument present but not supported by potential %s.", error)\n' % name
+            s += '  endif\n'
+            s += '  if (c_associated(wpot_per_bond_cptr)) then\n'
+            s += '     RETURN_ERROR("*wpot_per_bond* argument present but not supported by potential %s.", error)\n' % name
+            s += '  endif\n'
+        s += switch_optargs('energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)' % (addargs+'%s'), optargs)
+        s += 'endsubroutine python_%s_energy_and_forces\n\n\n' % f90name
 
         f.write(s)
     
@@ -245,7 +335,7 @@ def write_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = ""
-    for f90name, f90class, name, register_data_ex, set_Coulomb_ex in mods:
+    for f90name, f90class, name, features, register_data_ex, set_Coulomb_ex in mods:
         s += """
 void python_%s_new(void **, section_t *, section_t **);
 void python_%s_free(void *);
@@ -258,7 +348,7 @@ void python_%s_bind_to(void *, void *, void *, int *);
 void python_%s_set_coulomb(void *, void *, int *);
             """ % f90name
         s += """
-void python_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, double *, double *, double *, double *, double *, double *, int *);
+void python_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, int *, double *, double *, double *, double *, double *, double *, int *);
         """ % f90name
 
     d["prototypes"] = s
@@ -268,7 +358,7 @@ void python_%s_energy_and_forces(void *, void *, void *, double *, double *, dou
     #
 
     s = "%s_class_t %s_classes[N_POTENTIAL_CLASSES] = {\n" % ( str, str )
-    for f90name, f90class, name, register_data_ex, set_Coulomb_ex in mods:
+    for f90name, f90class, name, features, register_data_ex, set_Coulomb_ex in mods:
         s += "  {\n"
         s += "    \"%s\",\n" % name
         s += "    python_%s_new,\n" % f90name
@@ -306,12 +396,12 @@ def write_coulomb_factory_f90(mods, str, fn):
             '  use libAtoms_module\n' +
             '  use particles\n' +
             '  use neighbors\n')
-    for f90name, f90class, name, register_data_ex, set_Hubbard_U_ex in mods:
+    for f90name, f90class, name, features, register_data_ex, set_Hubbard_U_ex in mods:
         f.write('  use %s\n' % f90name)
     f.write('  implicit none\n\n' +
             'contains\n\n')
 
-    for f90name, f90class, name, register_data_ex, set_Hubbard_U_ex in mods:
+    for f90name, f90class, name, features, register_data_ex, set_Hubbard_U_ex in mods:
         f.write("subroutine python_%s_new(this_cptr, cfg, m) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
                 "  implicit none\n\n" +
@@ -386,7 +476,7 @@ def write_coulomb_factory_f90(mods, str, fn):
                     "  implicit none\n\n" +
                     "  type(c_ptr), value :: this_cptr\n" +
                     "  type(c_ptr), value :: p_cptr\n" +
-                    "  real(C_DOUBLE), intent(in) :: U(*)\n" +
+                    "  real(c_double), intent(in) :: U(*)\n" +
                     "  integer(c_int), intent(out) :: error\n\n" +
                     "  type(%s_t), pointer :: this_fptr\n" % f90name +
                     "  type(particles_t), pointer :: p\n" +
@@ -484,7 +574,7 @@ def write_coulomb_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = ""
-    for f90name, f90class, name, register_data_ex, set_Hubbard_U_ex in mods:
+    for f90name, f90class, name, features, register_data_ex, set_Hubbard_U_ex in mods:
         s += "void python_%s_new(void **, section_t *, section_t **);\n" % f90name
         s += "void python_%s_free(void *);\n" % f90name
         s += "void python_%s_register_data(void *, void *, int *);\n" % f90name
@@ -502,7 +592,7 @@ def write_coulomb_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = "%s_class_t %s_classes[N_COULOMB_CLASSES] = {\n" % ( str, str )
-    for f90name, f90class, name, register_data_ex, set_Hubbard_U_ex in mods:
+    for f90name, f90class, name, features, register_data_ex, set_Hubbard_U_ex in mods:
         s += "  {\n"
         s += "    \"%s\",\n" % name
         s += "    python_%s_new,\n" % f90name

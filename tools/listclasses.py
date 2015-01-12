@@ -44,6 +44,10 @@ def get_module_list(metadata, interface, finterface_list=[], exclude_list=[]):
                 if meta['interface'] == interface:
                     classtype = meta['classtype']
                     classname = meta['classname']
+                    try:
+                        features = meta['features']
+                    except:
+                        features = ''                   
                     if not classname in exclude_list:
                         s = [ ]
                         if len(finterface_list) > 0:
@@ -53,7 +57,8 @@ def get_module_list(metadata, interface, finterface_list=[], exclude_list=[]):
                                     s += [ True ]
                                 else:
                                     s += [ False ]
-                        mods += [ [ classtype[:-2], classtype, classname ] + s ]
+                        mods += [ [ classtype[:-2], classtype, classname,
+                                    features ] + s ]
                         if 'dependencies' in meta:
                             dependencies = meta['dependencies'].split(',')
                             for depfn in dependencies:
@@ -83,6 +88,10 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
                 if meta['interface'] == interface:
                     classtype = meta['classtype']
                     classname = meta['classname']
+                    try:
+                        features = meta['features']
+                    except:
+                        features = ''
                     if not classname in exclude_list:
                         s = ''
                         if len(finterface_list) > 0:
@@ -92,8 +101,9 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
                                     s += ':1'
                                 else:
                                     s += ':0'
-                        print >> deff, '%s:%s:%s%s' % (classtype[:-2],
-                                                       classtype, classname, s)
+                        print >> deff, '%s:%s:%s:%s%s' % (classtype[:-2],
+                                                          classtype, classname,
+                                                          features, s)
                         if 'dependencies' in meta:
                             dependencies = meta['dependencies'].split(',')
                             for depfn in dependencies:

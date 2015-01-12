@@ -53,7 +53,7 @@
        maxnat, natloc, nat, r, &
        el, &
        aptr, a2ptr, bptr, ptrmax, &
-       epot, f_inout, wpot_inout, &
+       epot, f_inout, wpot_inout, mask, &
        epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
        ierror)
 #else
@@ -62,13 +62,12 @@
        maxnat, natloc, nat, r, &
        el, &
        aptr, a2ptr, bptr, ptrmax, dc, shear_dx, &
-       epot, f_inout, wpot_inout, &
+       epot, f_inout, wpot_inout, mask, &
        epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
        ierror)
 #endif
 
     ! 
-    ! donald brenner's hydrocarbon potential.
     ! copyright: keith beardmore 28/11/93.
     ! - algorithm from : phys. rev. b 42, 9458-9471(1990).
     ! - plus corrections : phys. rev. b 46, 1948(1990).
@@ -78,8 +77,6 @@
     ! 
     ! copyright: lars pastewka 2006-2009
     ! - made Fortran 90 compliant
-    ! - new parametrization
-    !     D. W. Brenner et al., J. Phys. Cond. Mat. 14, 783 (2002)
     ! - screening functions
     !     M. I. Baskes et al., Modelling Simul. Mater. Sci. Eng. 2, 505 (1994)
     !     L. Pastewka et al., Phys. Rev. B 78, 161402(R) (2008)
@@ -141,6 +138,9 @@
     real(DP)                           :: wpot(3, 3)
 
     integer,             intent(in)    :: el(maxnat)
+
+    integer,   optional, intent(in)    :: mask(maxnat)
+
     real(DP),  optional, intent(inout) :: epot_per_at(nat)
     real(DP),  optional, intent(inout) :: epot_per_bond(ptrmax)
 
@@ -234,6 +234,7 @@
     integer  :: ij,ik
 
     integer  :: ikc
+    integer  :: maskfac
     integer  :: eli,elj,elk
     integer  :: el2ij,ikpot
     ! seed for the "short" neighbor list
@@ -431,7 +432,7 @@
     !$omp& shared(cell, dc, shear_dx) &
 #endif
     !$omp& shared(nat, natloc, neb_last, neb_seed) &
-    !$omp& shared(neb_max, epot_per_at, epot_per_bond) &
+    !$omp& shared(neb_max, mask, epot_per_at, epot_per_bond) &
     !$omp& shared(r, this, f_per_bond, wpot_per_at, wpot_per_bond) &
 #ifdef SCREENING
     !$omp& shared(sneb_max) &
@@ -443,7 +444,7 @@
     !$omp& private(rij, rik) &
     !$omp& private(rlij, rlijr, rlik) &
     !$omp& private(rnij, rnik) &
-    !$omp& private(df) &
+    !$omp& private(maskfac,df) &
 #ifdef BO_WITH_D
     !$omp& private(Dij, dDij_drij, dbij_dDij) &
 #endif
@@ -1053,6 +1054,16 @@
 
           ij_loop: do ij = istart, ifinsh
              j    = this%neb(ij)
+
+             maskfac = 2
+             if (present(mask)) then
+                if (mask(i) == 0 .and. mask(j) == 0) then
+                   maskfac = 0
+                else if (mask(i) == 0 .or. mask(j) == 0) then
+                   maskfac = 1
+                endif
+             endif 
+
 #ifndef LAMMPS
              jdc  = this%dcell(ij)
 #endif
@@ -1060,7 +1071,8 @@
              el2ij    = this%bndtyp(ij)
              rlij     = this%bndlen(ij)
 
-             ar_within_cutoff: if (rlij < this%cut_ar_h(el2ij)) then
+             ar_within_cutoff: if (maskfac > 0 .and. &
+                                   rlij < this%cut_ar_h(el2ij)) then
 
                 fj       = 0.0_DP
 
@@ -1083,6 +1095,11 @@
 
                 call VA(this, el2ij, rlij, VAij, dVAij_drij)
                 call VR(this, el2ij, rlij, VRij, dVRij_drij)
+
+                VAij       = 0.5_DP*maskfac*VAij
+                dVAij_drij = 0.5_DP*maskfac*dVAij_drij
+                VRij       = 0.5_DP*maskfac*VRij
+                dVRij_drij = 0.5_DP*maskfac*dVRij_drij
 
 #ifdef BO_WITH_D
                 !
@@ -1309,7 +1326,7 @@
                 ! hlfvij = fcarij * vfac / 2.0
                 ! 
 
-                dffac  = 0.5 * fcarij * ( VRij + bij * VAij )
+                dffac  = 0.5_DP * fcarij * ( VRij + bij * VAij )
                 pe(i)  = pe(i) + dffac
                 pe(j)  = pe(j) + dffac
 
@@ -1326,17 +1343,17 @@
 
 #ifdef BO_WITH_D
                 dffac = &
-                     0.5 * ( dVRij_drij * fcarij + &
-                             bij * dVAij_drij * fcarij + &
-                             VRij * dfcarijr + &
-                             bij * VAij * dfcarijr ) &
+                     0.5_DP * ( dVRij_drij * fcarij + &
+                                bij * dVAij_drij * fcarij + &
+                                VRij * dfcarijr + &
+                                bij * VAij * dfcarijr ) &
                      + dDij_drij * dbij_dDij
 #else
                 dffac = &
-                     0.5 * ( dVRij_drij * fcarij + &
-                             bij * dVAij_drij * fcarij + &
-                             VRij * dfcarijr + &
-                             bij * VAij * dfcarijr )
+                     0.5_DP * ( dVRij_drij * fcarij + &
+                                bij * dVAij_drij * fcarij + &
+                                VRij * dfcarijr + &
+                                bij * VAij * dfcarijr )
 #endif
 
                 !
@@ -1418,7 +1435,7 @@
                 ! calculate forces on neighbors of i and j due to screening.
                 !
 
-                dffac = 0.5 * ( VRij + bij * VAij )
+                dffac = 0.5_DP * ( VRij + bij * VAij )
 
                 do nijc = this%sneb_seed(ij), this%sneb_last(ij)
 

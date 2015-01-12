@@ -322,6 +322,7 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
     "particles",
     "neighbors",
     "forces",
+    "mask",
     "charges",
     "epot_per_at",
     "epot_per_bond",
@@ -348,6 +349,7 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
   PyObject *f = NULL;
   PyObject *wpot;
   PyObject *q = NULL;
+  PyObject *mask = NULL;
   PyObject *epot_per_at = NULL;
   PyObject *epot_per_bond = NULL;
   PyObject *f_per_bond = NULL;
@@ -370,9 +372,10 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
   printf("[potential_energy_and_forces] self = %p\n", self);
 #endif
 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|O!O!O!O!O!O!O!", kwlist,
-				   &particles_type, &a, &neighbors_type, &n,
-				   &PyArray_Type, &f, &PyArray_Type, &q,
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!|O!O!O!O!O!O!O!O!",
+           kwlist,
+				   &particles_type, &a, &neighbors_type, &n, &PyArray_Type, &f,
+           &PyArray_Type, &mask, &PyArray_Type, &q,
 				   &PyBool_Type, &return_epot_per_at, 
 				   &PyBool_Type, &return_epot_per_bond, 
 				   &PyBool_Type, &return_f_per_bond,
@@ -381,6 +384,15 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
     return NULL;
 
   epot = 0.0;
+
+  if (mask) {
+    if (mask == Py_None) {
+      Py_DECREF(Py_None);
+    }
+    else {
+      mask = PyArray_FROMANY(mask, NPY_INT, 1, 1, 0);
+    }
+  }
 
   if (f) {
     Py_INCREF(f);
@@ -499,11 +511,13 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
 	 self->f90class->energy_and_forces);
 #endif
 
+  double *mask_data = NULL;
+  if (mask)  mask_data = PyArray_DATA(mask);
   double *q_data = NULL;
   if (q)  q_data = PyArray_DATA(q);
   self->f90class->energy_and_forces(self->f90obj, a->f90obj, n->f90obj,
 									q_data, &epot, PyArray_DATA(f),
-									PyArray_DATA(wpot), epot_per_at_ptr,
+									PyArray_DATA(wpot), mask_data, epot_per_at_ptr,
 									epot_per_bond_ptr, f_per_bond_ptr,
 									wpot_per_at_ptr, wpot_per_bond_ptr,
 									&ierror);
@@ -584,6 +598,8 @@ potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
 #ifdef DEBUG
   printf("{potential_energy_and_forces}\n");
 #endif
+
+  Py_XDECREF(mask);
 
   return r;
 }

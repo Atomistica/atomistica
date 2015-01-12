@@ -26,6 +26,18 @@ contains
           call assert_equals(0.0_DP, dvaldj, tol, "dvaldj")
        enddo
     enddo
+    call del(tab)
+
+    call init(tab, 2, 2, vals, vals)
+    do i = 0, 2
+       do j = 0, 2
+          call eval(tab, 1.0_DP*i, 1.0_DP*j, val, dvaldi, dvaldj)
+          call assert_equals(vals(i, j), val, tol, "val")
+          call assert_equals(vals(i, j), dvaldi, tol, "dvaldi")
+          call assert_equals(0.0_DP, dvaldj, tol, "dvaldj")
+       enddo
+    enddo
+    call del(tab)
   endsubroutine test_table2d_f_and_df
 
 endmodule test_table2d

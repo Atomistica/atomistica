@@ -58,6 +58,8 @@
 #define INIT_ERROR(error)  if (present(error)) then ; error = ERROR_NONE ; endif
 #define ASSERT(condition, message, error)   if (.not. (condition)) then ; RAISE_ERROR(message, error) ; endif
 
+#define RETURN_ERROR(message, error)  if (.true.) then ; call push_error_with_info(message, __FILE__, __LINE__) ; error = ERROR_UNSPECIFIED ; return ; endif
+
 #define RAISE_ERROR(message, error)   if (.true.) then ; call push_error_with_info(message, __FILE__, __LINE__) ; if (present(error)) then ; error = ERROR_UNSPECIFIED ; return ; else ; call error_abort(error) ; endif ; endif
 
 #define RAISE_ERROR_WITH_KIND(kind, message, error)   if (.true.) then ; call push_error_with_info(message, __FILE__, __LINE__, kind) ; if (present(error)) then ; error = kind ; return ; else ; call error_abort(error) ; endif ; endif

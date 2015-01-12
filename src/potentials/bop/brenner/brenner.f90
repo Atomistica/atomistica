@@ -23,6 +23,7 @@
 ! @meta
 !   public:directory
 !   classtype:brenner_t classname:Brenner interface:potentials
+!   features:mask,per_at,per_bond
 ! @endmeta
 
 !>

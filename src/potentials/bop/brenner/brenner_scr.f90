@@ -23,6 +23,7 @@
 ! @meta
 !   public:directory
 !   classtype:brenner_scr_t classname:BrennerScr interface:potentials
+!   features:mask,per_at,per_bond
 ! @endmeta
 
 !>

@@ -128,6 +128,10 @@ tests  = [
       [ dict( name='dia-C', struct=Diamond('C', size=[sx,sx,sx]),
               Ec=7.370, a0=3.566, C11=1080, C12=130, C44=720 )
         ] ),
+    ( TabulatedAlloyEAM, dict(fn='Au-Grochola-JCP05.eam.alloy'),
+       [ dict( name='fcc-Au', struct=FaceCenteredCubic('Au', size=[sx,sx,sx]),
+               Ec=3.924, a0=4.070, C11=202, C12=170, C44=47, C440=46)
+         ] ),
     ( Tersoff,    Tersoff_PRB_39_5566_Si_C,
       [ dict( name="dia-C", struct=Diamond("C", size=[sx,sx,sx]),
               Ec=7.396-0.0250, a0=3.566, C11=1067, C12=104, C44=636,

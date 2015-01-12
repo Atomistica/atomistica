@@ -183,7 +183,7 @@ void PairAtomistica::settings(int narg, char **arg)
 {
   if (narg != 1 && narg != 2)
     error->all(FLERR,"pair_style atomistica expects potential name and "
-	       "configuration file as parameters");
+           "configuration file as parameters");
 
   if (name_)  free(name_);
   if (fn_)  free(fn_);
@@ -207,7 +207,7 @@ void PairAtomistica::coeff(int narg, char **arg)
   if (narg != 2 + n) {
     char errstr[1024];
     sprintf(errstr,"Incorrect number of arguments for pair coefficients. "
-	    "There are %i atom types in this system.", n);
+        "There are %i atom types in this system.", n);
     error->all(FLERR,errstr);
   }
 
@@ -244,12 +244,12 @@ void PairAtomistica::coeff(int narg, char **arg)
   for (int i = 1; i <= n; i++)
     for (int j = i; j <= n; j++)
       if (map[i-1] >= 0 && map[j-1] >= 0) {
-	setflag[i][j] = 1;
-	count++;
+    setflag[i][j] = 1;
+    count++;
       }
 
   if (count == 0) error->all(FLERR,"Incorrect args for pair coefficients -> "
-			     "count = 0");
+                 "count = 0");
 }
 
 /* ----------------------------------------------------------------------
@@ -295,7 +295,7 @@ void PairAtomistica::init_style()
   if (!class_) {
     char errstr[1024];
     sprintf(errstr,"Could not find potential '%s' in the Atomistica potential "
-	    "database",name_);
+        "database",name_);
     error->all(FLERR,errstr);
   }
 
@@ -310,7 +310,7 @@ void PairAtomistica::init_style()
 
   // set pointers in particles object
   particles_set_pointers(particles_,atom->nlocal+atom->nghost,atom->nlocal,
-			 atom->nmax,atom->tag,atom->type,&atom->x[0][0]);
+                         atom->nmax,atom->tag,atom->type,&atom->x[0][0]);
 
   class_->init(potential_);
 
@@ -418,29 +418,29 @@ void PairAtomistica::Atomistica_neigh()
       // Check if i is neighbor of j
       n = 0;
       for (jj = Atomistica_seed_[j]-1; jj < Atomistica_last_[j]; jj++) {
-	if (Atomistica_neighb_[jj]-1 == i) {
-	  n = 1;
-	}
+    if (Atomistica_neighb_[jj]-1 == i) {
+      n = 1;
+    }
       }
       if (!n) {
-	printf("i = %i, j = %i\n", i, j);
-	printf("Neighbors of i\n");
-	for (jj = Atomistica_seed_[i]-1; jj < Atomistica_last_[i]; jj++) {
-	  j = Atomistica_neighb_[jj]-1;
-	  delx = xtmp - x[j][0];
-	  dely = ytmp - x[j][1];
-	  delz = ztmp - x[j][2];
-	  printf("   %i  %f\n", j, sqrt(delx*delx+dely*dely+delz*delz));
-	}
-	printf("Neighbors of j\n");
-	for (jj = Atomistica_seed_[j]-1; jj < Atomistica_last_[j]; jj++) {
-	  j = Atomistica_neighb_[jj]-1;
-	  delx = xtmp - x[j][0];
-	  dely = ytmp - x[j][1];
-	  delz = ztmp - x[j][2];
-	  printf("   %i  %f\n", j, sqrt(delx*delx+dely*dely+delz*delz));
-	}
-	error->one(FLERR,"Neighbor list not symmetric");
+    printf("i = %i, j = %i\n", i, j);
+    printf("Neighbors of i\n");
+    for (jj = Atomistica_seed_[i]-1; jj < Atomistica_last_[i]; jj++) {
+      j = Atomistica_neighb_[jj]-1;
+      delx = xtmp - x[j][0];
+      dely = ytmp - x[j][1];
+      delz = ztmp - x[j][2];
+      printf("   %i  %f\n", j, sqrt(delx*delx+dely*dely+delz*delz));
+    }
+    printf("Neighbors of j\n");
+    for (jj = Atomistica_seed_[j]-1; jj < Atomistica_last_[j]; jj++) {
+      j = Atomistica_neighb_[jj]-1;
+      delx = xtmp - x[j][0];
+      dely = ytmp - x[j][1];
+      delz = ztmp - x[j][2];
+      printf("   %i  %f\n", j, sqrt(delx*delx+dely*dely+delz*delz));
+    }
+    error->one(FLERR,"Neighbor list not symmetric");
       }
     }
   }
@@ -475,17 +475,16 @@ void PairAtomistica::FAtomistica(int eflag, int vflag)
 
   // set pointers in particles object
   particles_set_pointers(particles_,nall,atom->nlocal,atom->nmax,tag,
-			 type,&x[0][0]);
+             type,&x[0][0]);
 
   // set pointers in neighbor list object
   neighbors_set_pointers(neighbors_,nall,Atomistica_seed_,Atomistica_last_,
-			 Atomistica_nneighb_,Atomistica_neighb_);
+                         Atomistica_nneighb_,Atomistica_neighb_);
 
   int ierror;
   epot = 0.0;
-  class_->energy_and_forces(potential_,particles_,neighbors_,&epot,
-			    &f[0][0],&wpot[0][0],epot_per_at,NULL,NULL,
-			    wpot_per_at,NULL,&ierror);
+  class_->energy_and_forces(potential_,particles_,neighbors_,&epot,&f[0][0],
+                            &wpot[0][0],NULL,epot_per_at,wpot_per_at,&ierror);
   error2lmp(error,FLERR,ierror);
 
   if (evflag) {

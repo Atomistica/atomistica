@@ -22,6 +22,7 @@
 ! @meta
 !   shared
 !   classtype:tabulated_alloy_eam_t classname:TabulatedAlloyEAM interface:potentials
+!   features:mask,per_at
 ! @endmeta
 
 !#define AVOID_SQRT
@@ -335,26 +336,24 @@ contains
   !!
   !! Compute energy and force
   !<
-  subroutine tabulated_alloy_eam_energy_and_forces(this, p, nl, epot, f, wpot, epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, ierror)
+  subroutine tabulated_alloy_eam_energy_and_forces(this, p, nl, epot, f, wpot, &
+       mask, epot_per_at, wpot_per_at, ierror)
     implicit none
 
-    type(tabulated_alloy_eam_t), intent(inout)  :: this
-    type(particles_t), intent(in)         :: p
-    type(neighbors_t), intent(inout)      :: nl
-    real(DP), intent(inout)               :: epot
-    real(DP), intent(inout)               :: f(3, p%maxnatloc)
-    real(DP), intent(inout)               :: wpot(3, 3)
-    real(DP), intent(inout), optional     :: epot_per_at(p%maxnatloc)
-    real(DP), intent(inout), optional     :: epot_per_bond(nl%neighbors_size)
-    real(DP), intent(inout), optional     :: f_per_bond(3, nl%neighbors_size)
+    type(tabulated_alloy_eam_t), intent(inout) :: this
+    type(particles_t),           intent(in)    :: p
+    type(neighbors_t),           intent(inout) :: nl
+    real(DP),                    intent(inout) :: epot
+    real(DP),                    intent(inout) :: f(3, p%nat)
+    real(DP),                    intent(inout) :: wpot(3, 3)
+    integer,           optional, intent(in)    :: mask(p%nat)
+    real(DP),          optional, intent(inout) :: epot_per_at(p%nat)
 #ifdef LAMMPS
-    real(DP), intent(inout), optional     :: wpot_per_at(6, p%maxnatloc)
-    real(DP), intent(inout), optional     :: wpot_per_bond(6, nl%neighbors_size)
+    real(DP),          optional, intent(inout) :: wpot_per_at(6, p%nat)
 #else
-    real(DP), intent(inout), optional     :: wpot_per_at(3, 3, p%maxnatloc)
-    real(DP), intent(inout), optional     :: wpot_per_bond(3, 3, nl%neighbors_size)
+    real(DP),          optional, intent(inout) :: wpot_per_at(3, 3, p%nat)
 #endif
-    integer, intent(inout), optional      :: ierror
+    integer,           optional, intent(inout) :: ierror
 
     ! ---
 
@@ -403,7 +402,7 @@ contains
     !$omp& private(i, j, ni, phi, ri, seedi, lasti) &
     !$omp& private(neb_n, neb, neb_dr, neb_abs_dr) &
     !$omp& private(dbi, dbj, wij) &
-    !$omp& shared(nl, f, p) &
+    !$omp& shared(mask, nl, f, p) &
     !$omp& shared(epot_per_at, wpot_per_at, this) &
     !$omp& reduction(+:e) reduction(+:w)
 
@@ -411,117 +410,121 @@ contains
 
     !$omp do
     do i = 1, p%natloc
-       eli  = p%el(i)
-       dbi  = this%el2db(eli)
+       if (.not. present(mask) .or. mask(i) /= 0) then
 
-       if (IS_EL2(els, eli) .and. dbi > 0) then
-          ri     = PNC3(p, i)
+          eli  = p%el(i)
+          dbi  = this%el2db(eli)
 
-          !
-          ! Compute embedding density
-          !
+          if (IS_EL2(els, eli) .and. dbi > 0) then
+             ri     = PNC3(p, i)
 
-          rho    = 0.0_DP
+             !
+             ! Compute embedding density
+             !
 
-          seedi  = nl%seed(i)
-          lasti  = nl%last(i)
+             rho    = 0.0_DP
 
-          neb_n  = 0
-          do ni = seedi, lasti
-             j    = GET_NEIGHBOR(nl, ni)
-             elj  = p%el(j)
-             dbj  = this%el2db(elj)
+             seedi  = nl%seed(i)
+             lasti  = nl%last(i)
 
-             if (IS_EL2(els, elj) .and. dbj > 0) then
-                dr      = GET_DRJ(p, nl, i, j, ni)
-                abs_dr  = dot_product(dr, dr)
+             neb_n  = 0
+             do ni = seedi, lasti
+                j    = GET_NEIGHBOR(nl, ni)
+                elj  = p%el(j)
+                dbj  = this%el2db(elj)
 
-                if (abs_dr < cutoff_sq) then
+                if (IS_EL2(els, elj) .and. dbj > 0) then
+                   dr      = GET_DRJ(p, nl, i, j, ni)
+                   abs_dr  = dot_product(dr, dr)
+
+                   if (abs_dr < cutoff_sq) then
 #ifndef AVOID_SQRT
-                   abs_dr  = sqrt(abs_dr)
+                      abs_dr  = sqrt(abs_dr)
 #endif
 #ifdef _OPENMP
-                   drho    = func(this%frho(dbj), abs_dr)
+                      drho    = func(this%frho(dbj), abs_dr)
 #else
-                   drho    = func(this%frho(dbj), abs_dr, ierror=ierror)
-                   PASS_ERROR_WITH_INFO("Error while computing density for atom " // i // ".", ierror)
+                      drho    = func(this%frho(dbj), abs_dr, ierror=ierror)
+                      PASS_ERROR_WITH_INFO("Error while computing density for atom " // i // ".", ierror)
 #endif
-                   rho     = rho + drho
+                      rho     = rho + drho
 
-                   ! Add to neighbor list cache
-                   neb_n               = neb_n + 1
-                   neb(neb_n)          = j
-                   neb_dr(1:3, neb_n)  = dr
-                   neb_abs_dr(neb_n)   = abs_dr
+                      ! Add to neighbor list cache
+                      neb_n               = neb_n + 1
+                      neb(neb_n)          = j
+                      neb_dr(1:3, neb_n)  = dr
+                      neb_abs_dr(neb_n)   = abs_dr
+                   endif
+
                 endif
+             enddo
 
-             endif
-          enddo
-
-          !
-          ! Embedding energy
-          !
+             !
+             ! Embedding energy
+             !
 
 #ifdef _OPENMP
-          call f_and_df(this%fF(dbi), rho, Fi, dFi)
+             call f_and_df(this%fF(dbi), rho, Fi, dFi)
 #else
-          call f_and_df(this%fF(dbi), rho, Fi, dFi, ierror=ierror)
-          PASS_ERROR_WITH_INFO("Error evaluating the embedding energy for atom " // i // ". Is the density too large?", ierror)
+             call f_and_df(this%fF(dbi), rho, Fi, dFi, ierror=ierror)
+             PASS_ERROR_WITH_INFO("Error evaluating the embedding energy for atom " // i // ". Is the density too large?", ierror)
 #endif
-          tls_sca1(i)  = tls_sca1(i) + Fi
+             tls_sca1(i)  = tls_sca1(i) + Fi
 
-          !
-          ! Loop over neighbors and compute pair terms
-          !
+             !
+             ! Loop over neighbors and compute pair terms
+             !
 
-          fori  = 0.0_DP
-          do ni = 1, neb_n
-             ! Pull from neighbor list cache
-             j       = neb(ni)
-             elj     = p%el(j)
-             dbj     = this%el2db(elj)
-             dr      = neb_dr(1:3, ni)
-             abs_dr  = neb_abs_dr(ni)
+             fori  = 0.0_DP
+             do ni = 1, neb_n
+                ! Pull from neighbor list cache
+                j       = neb(ni)
+                elj     = p%el(j)
+                dbj     = this%el2db(elj)
+                dr      = neb_dr(1:3, ni)
+                abs_dr  = neb_abs_dr(ni)
         
-             !
-             ! Repulsive energy and forces
-             !
+                !
+                ! Repulsive energy and forces
+                !
 
 #ifdef _OPENMP
-             call f_and_df(this%fphi(dbi, dbj), abs_dr, phi, dphi)
+                call f_and_df(this%fphi(dbi, dbj), abs_dr, phi, dphi)
 #else
-             call f_and_df(this%fphi(dbi, dbj), abs_dr, phi, dphi, &
+                call f_and_df(this%fphi(dbi, dbj), abs_dr, phi, dphi, &
                   ierror=ierror)
-             PASS_ERROR(ierror)
+                PASS_ERROR(ierror)
 #endif
-             r_abs_dr     = 1.0_DP/abs_dr
-             tls_sca1(i)  = tls_sca1(i) + phi*r_abs_dr
+                r_abs_dr     = 1.0_DP/abs_dr
+                tls_sca1(i)  = tls_sca1(i) + phi*r_abs_dr
 
-             !
-             ! Forces due to embedding
-             !
+                !
+                ! Forces due to embedding
+                !
 
 #ifdef _OPENMP
-             fac  = dfunc(this%frho(dbj), abs_dr)
+                fac  = dfunc(this%frho(dbj), abs_dr)
 #else
-             fac  = dfunc(this%frho(dbj), abs_dr, ierror=ierror)
-             PASS_ERROR(ierror)
+                fac  = dfunc(this%frho(dbj), abs_dr, ierror=ierror)
+                PASS_ERROR(ierror)
 #endif
-             df   = - ( dFi * fac + (dphi-phi*r_abs_dr)*r_abs_dr )*r_abs_dr * dr
+                df   = - ( dFi * fac + (dphi-phi*r_abs_dr)*r_abs_dr )* &
+                     r_abs_dr * dr
 
-             fori              = fori       + df
-             VEC3(tls_vec1, j) = VEC3(tls_vec1, j) - df
-             wij               = - outer_product(dr, df)
-             w                 = w + wij
+                fori              = fori              + df
+                VEC3(tls_vec1, j) = VEC3(tls_vec1, j) - df
+                wij               = - outer_product(dr, df)
+                w                 = w + wij
 
-             if (present(wpot_per_at)) then
-                wij = wij/2
-                SUM_VIRIAL(wpot_per_at, i, wij)
-                SUM_VIRIAL(wpot_per_at, j, wij)
-             endif
-          enddo
-          VEC3(tls_vec1, i)  = VEC3(tls_vec1, i) + fori
+                if (present(wpot_per_at)) then
+                   wij = wij/2
+                   SUM_VIRIAL(wpot_per_at, i, wij)
+                   SUM_VIRIAL(wpot_per_at, j, wij)
+                endif
+             enddo
+             VEC3(tls_vec1, i)  = VEC3(tls_vec1, i) + fori
 
+          endif
        endif
     enddo
 
