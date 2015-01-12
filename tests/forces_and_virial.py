@@ -89,7 +89,7 @@ tests  = [
                   shift=True),
       [ dict( name="fcc-He", struct=FaceCenteredCubic("He", size=[sx,sx,sx],
                                                       latticeconstant=3.5),
-              mask=True ) ] ),
+              mask=True, rattle=0.1 ) ] ),
     ( Brenner, Erhart_PRB_71_035211_SiC,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
