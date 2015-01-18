@@ -66,7 +66,7 @@ module sliding_p
   use dynamics
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -256,7 +256,7 @@ contains
     ! ---
 
 #ifdef _MP
-    if (mod_parallel_3d%mpi%my_proc == ROOT) then
+    if (mod_communicator%mpi%my_proc == ROOT) then
 #endif
 
     if (this%log) then
@@ -318,8 +318,8 @@ contains
     this%n_top  = count(p%g(1:p%natloc) == this%top)
 
 #ifdef _MP
-    call sum_in_place(mod_parallel_3d%mpi, this%n_bot)
-    call sum_in_place(mod_parallel_3d%mpi, this%n_top)
+    call sum_in_place(mod_communicator%mpi, this%n_bot)
+    call sum_in_place(mod_communicator%mpi, this%n_top)
 #endif
 
     if (this%n_bot == 0) then
@@ -339,8 +339,8 @@ contains
     h2  = maxval(POS(p, 1:p%natloc, 3), p%g(1:p%natloc) == this%bot)
 
 #ifdef _MP
-    h1 = min(mod_parallel_3d%mpi, h1)
-    h2 = max(mod_parallel_3d%mpi, h2)
+    h1 = min(mod_communicator%mpi, h1)
+    h2 = max(mod_communicator%mpi, h2)
 #endif
 
     h   = h1 - h2
@@ -389,7 +389,7 @@ contains
     end select
 
 #ifdef _MP
-    call sum_in_place(mod_parallel_3d%mpi, curM)
+    call sum_in_place(mod_communicator%mpi, curM)
 #endif
 
     call prlog("     * M      = " // this%M // " ( current mass of " // curM // " times " // (this%M/curM) // " )")
@@ -492,8 +492,8 @@ contains
     h2  = maxval(POS(p, 1:p%natloc, 3), p%g(1:p%natloc) == this%bot)
 
 #ifdef _MP
-    h1 = min(mod_parallel_3d%mpi, h1)
-    h2 = max(mod_parallel_3d%mpi, h2)
+    h1 = min(mod_communicator%mpi, h1)
+    h2 = max(mod_communicator%mpi, h2)
 #endif
 
     h  = h1 - h2
@@ -506,7 +506,7 @@ contains
     enddo
 
 #ifdef _MP
-    call sum_in_place(mod_parallel_3d%mpi, f_top)
+    call sum_in_place(mod_communicator%mpi, f_top)
 
     if (mpi_id() == ROOT) then
 #endif
@@ -543,7 +543,7 @@ contains
 
        vz  = sum(VEC(this%v_arr, 1:p%natloc, 3), p%g == this%top) / this%n_top
 #ifdef _MP
-       call sum_in_place(mod_parallel_3d%mpi, vz)
+       call sum_in_place(mod_communicator%mpi, vz)
 #endif
        az  = ( f_top(3) - this%Pz*p%Abox(1, 1)*p%Abox(2, 2) - this%gamma*vz )
 

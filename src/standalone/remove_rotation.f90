@@ -42,7 +42,7 @@ module remove_rotation
 
 #ifdef _MP
   use mpi
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none

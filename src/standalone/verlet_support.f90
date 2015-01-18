@@ -38,7 +38,7 @@ module verlet_support
   use particles
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -102,7 +102,7 @@ contains
           endif
 
 #ifdef _MP
-          dt = min(mod_parallel_3d%mpi, dt, error)
+          dt = min(mod_communicator%mpi, dt, error)
           PASS_ERROR(error)
 #endif
 

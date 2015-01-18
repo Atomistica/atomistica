@@ -39,7 +39,7 @@ module slicing
   use dynamics
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -833,9 +833,9 @@ contains
           call add(this%spatial_avg_real(i), POS(dyn%p, 1:dyn%p%natloc, this%d), dyn%p%data%data_real(1:dyn%p%natloc, i))
 
 #ifdef _MP
-          call average(this%spatial_avg_real(i), mod_parallel_3d%mpi)
+          call average(this%spatial_avg_real(i), mod_communicator%mpi)
 
-          if (mod_parallel_3d%mpi%my_proc == 0) then
+          if (mod_communicator%mpi%my_proc == 0) then
 #else
           call average(this%spatial_avg_real(i))
 #endif
@@ -861,11 +861,11 @@ contains
           call add(this%spatial_avg_real3(3, i), POS(dyn%p, 1:dyn%p%natloc, this%d), dyn%p%data%data_real3(3, 1:dyn%p%natloc, i))
 
 #ifdef _MP
-          call average(this%spatial_avg_real3(1, i), mod_parallel_3d%mpi)
-          call average(this%spatial_avg_real3(2, i), mod_parallel_3d%mpi)
-          call average(this%spatial_avg_real3(3, i), mod_parallel_3d%mpi)
+          call average(this%spatial_avg_real3(1, i), mod_communicator%mpi)
+          call average(this%spatial_avg_real3(2, i), mod_communicator%mpi)
+          call average(this%spatial_avg_real3(3, i), mod_communicator%mpi)
 
-          if (mod_parallel_3d%mpi%my_proc == ROOT) then
+          if (mod_communicator%mpi%my_proc == ROOT) then
 #else
           call average(this%spatial_avg_real3(1, i))
           call average(this%spatial_avg_real3(2, i))
@@ -910,14 +910,14 @@ contains
                ( dyn%p%data%data_real3x3(3, 1, 1:dyn%p%natloc, i) + dyn%p%data%data_real3x3(1, 3, 1:dyn%p%natloc, i) )/2)
 
 #ifdef _MP
-          call average(this%spatial_avg_real3x3(1, i), mod_parallel_3d%mpi)
-          call average(this%spatial_avg_real3x3(2, i), mod_parallel_3d%mpi)
-          call average(this%spatial_avg_real3x3(3, i), mod_parallel_3d%mpi)
-          call average(this%spatial_avg_real3x3(4, i), mod_parallel_3d%mpi)
-          call average(this%spatial_avg_real3x3(5, i), mod_parallel_3d%mpi)
-          call average(this%spatial_avg_real3x3(6, i), mod_parallel_3d%mpi)
+          call average(this%spatial_avg_real3x3(1, i), mod_communicator%mpi)
+          call average(this%spatial_avg_real3x3(2, i), mod_communicator%mpi)
+          call average(this%spatial_avg_real3x3(3, i), mod_communicator%mpi)
+          call average(this%spatial_avg_real3x3(4, i), mod_communicator%mpi)
+          call average(this%spatial_avg_real3x3(5, i), mod_communicator%mpi)
+          call average(this%spatial_avg_real3x3(6, i), mod_communicator%mpi)
 
-          if (mod_parallel_3d%mpi%my_proc == 0) then
+          if (mod_communicator%mpi%my_proc == 0) then
 #else
           call average(this%spatial_avg_real3x3(1, i))
           call average(this%spatial_avg_real3x3(2, i))
@@ -1068,11 +1068,11 @@ contains
     endif compute_histograms_3
 
 #ifdef _MP
-    call average(this%spatial_avg_T(1), mod_parallel_3d%mpi)
-    call average(this%spatial_avg_T(2), mod_parallel_3d%mpi)
-    call average(this%spatial_avg_T(3), mod_parallel_3d%mpi)
+    call average(this%spatial_avg_T(1), mod_communicator%mpi)
+    call average(this%spatial_avg_T(2), mod_communicator%mpi)
+    call average(this%spatial_avg_T(3), mod_communicator%mpi)
 
-    if (mod_parallel_3d%mpi%my_proc == 0) then
+    if (mod_communicator%mpi%my_proc == 0) then
 #else
     call average(this%spatial_avg_T(1))
     call average(this%spatial_avg_T(2))
@@ -1234,29 +1234,29 @@ contains
        !
 
 #ifdef _MP
-       call sum_in_place(mod_parallel_3d%mpi, this%time_avg_rho)
+       call sum_in_place(mod_communicator%mpi, this%time_avg_rho)
        do i = 1, dyn%p%nel
-          call sum_in_place(mod_parallel_3d%mpi, this%time_avg_el(:, i))
+          call sum_in_place(mod_communicator%mpi, this%time_avg_el(:, i))
        enddo
 !!$       do i = 1, dyn%p%data%n_real
 !!$          if (iand(dyn%p%data%tag_real(i), F_VERBOSE_ONLY) == 0) then
-!!$             call dmp_sum_realarr(this%n_bins, this%time_avg_real(:, i), mod_parallel_3d%mpi)
-!!$             call dmp_sum_realarr(this%n_bins, this%time_var_real(:, i), mod_parallel_3d%mpi)
-!!$             call dmp_sum_realarr(this%n_bins, this%time_avg_real_var(:, i), mod_parallel_3d%mpi)
+!!$             call dmp_sum_realarr(this%n_bins, this%time_avg_real(:, i), mod_communicator%mpi)
+!!$             call dmp_sum_realarr(this%n_bins, this%time_var_real(:, i), mod_communicator%mpi)
+!!$             call dmp_sum_realarr(this%n_bins, this%time_avg_real_var(:, i), mod_communicator%mpi)
 !!$          endif
 !!$       enddo
 !!$       do i = 1, dyn%p%data%n_real3
 !!$          if (iand(dyn%p%data%tag_real3(i), F_VERBOSE_ONLY) == 0) then
-!!$             call dmp_sum_vecarr(this%n_bins, this%time_avg_real3(:, :, i), mod_parallel_3d%mpi)
-!!$             call dmp_sum_vecarr(this%n_bins, this%time_var_real3(:, :, i), mod_parallel_3d%mpi)
-!!$             call dmp_sum_vecarr(this%n_bins, this%time_avg_real3_var(:, :, i), mod_parallel_3d%mpi)
+!!$             call dmp_sum_vecarr(this%n_bins, this%time_avg_real3(:, :, i), mod_communicator%mpi)
+!!$             call dmp_sum_vecarr(this%n_bins, this%time_var_real3(:, :, i), mod_communicator%mpi)
+!!$             call dmp_sum_vecarr(this%n_bins, this%time_avg_real3_var(:, :, i), mod_communicator%mpi)
 !!$          endif
 !!$       enddo
 !!$       do i = 1, dyn%p%data%n_real3x3
 !!$          EXIT_ON_ERROR("Implement for real3x3 and the variance.", i)
 !!$       enddo
 
-       if (mod_parallel_3d%mpi%my_proc == ROOT) then
+       if (mod_communicator%mpi%my_proc == ROOT) then
 #endif
 
        !

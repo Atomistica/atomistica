@@ -39,7 +39,7 @@ module fire
   use verlet_support
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -255,9 +255,9 @@ contains
     !
 
 #ifdef _MP
-    if (mod_parallel_3d%communicate_forces) then
+    if (mod_communicator%communicate_forces) then
        DEBUG_WRITE("- communicate_forces -")
-       call communicate_forces(mod_parallel_3d, p)
+       call communicate_forces(mod_communicator, p)
     endif
 #endif
 
@@ -298,9 +298,9 @@ contains
     enddo
 
 #ifdef _MP
-    call sum_in_place(mod_parallel_3d%mpi, vf)
-    call sum_in_place(mod_parallel_3d%mpi, vg_dot_vg)
-    call sum_in_place(mod_parallel_3d%mpi, Fg_dot_Fg)
+    call sum_in_place(mod_communicator%mpi, vf)
+    call sum_in_place(mod_communicator%mpi, vg_dot_vg)
+    call sum_in_place(mod_communicator%mpi, Fg_dot_Fg)
 #endif
 
     help = this%mix*sqrt(vg_dot_vg/Fg_dot_Fg)

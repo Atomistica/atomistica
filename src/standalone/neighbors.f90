@@ -35,7 +35,7 @@ module neighbors
 #endif
 
 #ifdef _MP
-  use parallel_3d, ONLY: mod_parallel_3d, communicate_ghosts, communicate_particles, request_border
+  use communicator, ONLY: mod_communicator, communicate_ghosts, communicate_particles, request_border
 #endif
 
   implicit none
@@ -503,7 +503,7 @@ contains
        write (ilog, *)
 
 #ifdef _MP
-       call request_border(mod_parallel_3d, p, this%interaction_range, &
+       call request_border(mod_communicator, p, this%interaction_range, &
             verlet_shell = this%verlet_shell, &
             error = error)
        PASS_ERROR(error)
@@ -515,7 +515,7 @@ contains
 
        if (any(this%Abox /= p%Abox)) then
 #ifdef _MP
-          call request_border(mod_parallel_3d, p, this%interaction_range, &
+          call request_border(mod_communicator, p, this%interaction_range, &
                verlet_shell = this%verlet_shell, &
                error = error)
           PASS_ERROR(error)
@@ -539,7 +539,7 @@ contains
     update_now  = 2*p%accum_max_dr >= this%verlet_shell
 
 #ifdef _MP
-    update_now = any(mod_parallel_3d%mpi, update_now, error=error)
+    update_now = any(mod_communicator%mpi, update_now, error=error)
     PASS_ERROR(error)
 #endif
 
@@ -555,9 +555,9 @@ contains
 
 #ifdef _MP
        DEBUG_WRITE("- communicate_particles -")
-       call communicate_particles(mod_parallel_3d, p)
+       call communicate_particles(mod_communicator, p)
        DEBUG_WRITE("- communicate_ghosts -")
-       call communicate_ghosts(mod_parallel_3d, p, .true.)
+       call communicate_ghosts(mod_communicator, p, .true.)
 #endif
 
        this%it         = 0
@@ -572,7 +572,7 @@ contains
 
 #ifdef _MP
        DEBUG_WRITE("- communicate_ghosts -")
-       call communicate_ghosts(mod_parallel_3d, p, .false.)
+       call communicate_ghosts(mod_communicator, p, .false.)
 #endif
 
        this%it  = this%it + 1

@@ -40,7 +40,7 @@ module constraints
   use dynamics
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -113,10 +113,10 @@ contains
           enddo
 
 #ifdef _MP
-          call sum_in_place(mod_parallel_3d%mpi, mass)
-          call sum_in_place(mod_parallel_3d%mpi, momentum)
-          call sum_in_place(mod_parallel_3d%mpi, force)
-          call sum_in_place(mod_parallel_3d%mpi, n)
+          call sum_in_place(mod_communicator%mpi, mass)
+          call sum_in_place(mod_communicator%mpi, momentum)
+          call sum_in_place(mod_communicator%mpi, force)
+          call sum_in_place(mod_communicator%mpi, n)
 #endif
 
           if (n > 0) then
@@ -172,9 +172,9 @@ contains
           enddo
 
 #ifdef _MP
-          call sum_in_place(mod_parallel_3d%mpi, Ltot)
-          call sum_in_place(mod_parallel_3d%mpi, Mtot)
-          call sum_in_place(mod_parallel_3d%mpi, Iij)
+          call sum_in_place(mod_communicator%mpi, Ltot)
+          call sum_in_place(mod_communicator%mpi, Mtot)
+          call sum_in_place(mod_communicator%mpi, Iij)
 #endif
 
           !

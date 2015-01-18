@@ -43,7 +43,7 @@ program main
   use signal_handler
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -242,7 +242,7 @@ contains
     if (abs_cutoff > 0.0_DP) then
        stop "abs_cutoff > 0.0 and parallel computation. Does not work yet. Please implement."
     endif
-    call init(mod_parallel_3d, p, &
+    call init(mod_communicator, p, &
          verlet_shell  = cutoff_add)
 #endif
 
@@ -271,7 +271,7 @@ contains
 
 #ifdef _MP
     DEBUG_WRITE("- computing dof -")
-    call sum_in_place(mod_parallel_3d%mpi, p%dof)
+    call sum_in_place(mod_communicator%mpi, p%dof)
 #endif
 
     p%dof = p%dof-3
@@ -324,7 +324,7 @@ contains
     endif
 
 #ifdef _MP
-    call allocate(mod_parallel_3d, p)
+    call allocate(mod_communicator, p)
 #endif
 
     !
@@ -338,7 +338,7 @@ contains
     HANDLE_ERROR(ierror)
 
 #ifdef _MP
-    call update(dyn, advance_time=.false., mpi=mod_parallel_3d%mpi)
+    call update(dyn, advance_time=.false., mpi=mod_communicator%mpi)
 #else
     call update(dyn, advance_time=.false.)
 #endif
@@ -349,7 +349,7 @@ contains
     !
     
 #ifdef _MP
-    if (mod_parallel_3d%mpi%my_proc == ROOT) then
+    if (mod_communicator%mpi%my_proc == ROOT) then
 #endif
     write (*, *)
 #ifdef _MP
@@ -410,7 +410,7 @@ contains
     HANDLE_ERROR(ierror)
 
 #ifdef _MP
-    call update(dyn, advance_time=.false., mpi=mod_parallel_3d%mpi)
+    call update(dyn, advance_time=.false., mpi=mod_communicator%mpi)
 #else
     call update(dyn, advance_time=.false.)
 #endif
@@ -474,7 +474,7 @@ contains
        HANDLE_ERROR(ierror)
 
 #ifdef _MP
-       call update(dyn, it, mpi=mod_parallel_3d%mpi)
+       call update(dyn, it, mpi=mod_communicator%mpi)
 #else
        call update(dyn, it)
 #endif
@@ -519,7 +519,7 @@ contains
        ! This barrier is necessary for user requested aborts
        !
 
-       call barrier(mod_parallel_3d%mpi, ierror)
+       call barrier(mod_communicator%mpi, ierror)
        HANDLE_ERROR(ierror)
 #endif
 
@@ -546,7 +546,7 @@ contains
     call del(dyn)
     call del(nl)
 #ifdef _MP
-    call del(mod_parallel_3d)
+    call del(mod_communicator)
 #endif
     call del(p)
 
@@ -702,12 +702,12 @@ contains
     call callables_factory_register(ptrdict_file, cals)
 
 #ifdef _MP
-    call register(mod_parallel_3d, ptrdict_file)
+    call register(mod_communicator, ptrdict_file)
     m = ptrdict_register_section(ptrdict_file, CSTR("Parallel3D"), &
          CSTR("Domain decomposition module."))
 
     call ptrdict_register_intpoint_property(m, &
-         c_loc(mod_parallel_3d%decomposition(1)), CSTR("decomposition"), &
+         c_loc(mod_communicator%decomposition(1)), CSTR("decomposition"), &
          CSTR("Number of domains in each direction, i.e. type of the decomposition."))
 #endif
 

@@ -46,7 +46,7 @@ module verlet_langevin_1d
   use verlet_support
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -321,9 +321,9 @@ contains
     !
 
 #ifdef _MP
-    if (mod_parallel_3d%communicate_forces) then
+    if (mod_communicator%communicate_forces) then
        DEBUG_WRITE("- communicate_forces -")
-       call communicate_forces(mod_parallel_3d, p)
+       call communicate_forces(mod_communicator, p)
     endif
 #endif
 

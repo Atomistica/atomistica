@@ -44,7 +44,7 @@ module confinement
   use filter
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -168,7 +168,7 @@ contains
     this%shift = (this%sigma/this%cutoff)**10-(this%sigma/this%cutoff)**4
 
 #ifdef _MP
-    if (mod_parallel_3d%mpi%my_proc == ROOT) then
+    if (mod_communicator%mpi%my_proc == ROOT) then
 #endif
 
     if (this%output_force) then
@@ -197,7 +197,7 @@ contains
     ! ---
 
 #ifdef _MP
-    if (mod_parallel_3d%mpi%my_proc == ROOT) then
+    if (mod_communicator%mpi%my_proc == ROOT) then
 #endif
 
     if (this%output_force) then
@@ -301,10 +301,10 @@ contains
 
 #ifdef _MP
     if (this%output_force) then
-       call sum_in_place(mod_parallel_3d%mpi, f_tot)
+       call sum_in_place(mod_communicator%mpi, f_tot)
     endif
   
-    if (mod_parallel_3d%mpi%my_proc == ROOT) then
+    if (mod_communicator%mpi%my_proc == ROOT) then
 #endif
 
     if (this%output_force) then

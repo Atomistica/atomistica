@@ -45,7 +45,7 @@ module settle
   use verlet_support
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
@@ -188,8 +188,8 @@ contains
 
 #ifdef _MP
     ! The forces need to be correct for a water right at the boundary
-    call request_border(mod_parallel_3d, p, max(this%d_OH, this%d_HH))
-    mod_parallel_3d%communicate_forces  = .true.
+    call request_border(mod_communicator, p, max(this%d_OH, this%d_HH))
+    mod_communicator%communicate_forces  = .true.
 #endif
 
     !
@@ -559,9 +559,9 @@ contains
     !
 
 #ifdef _MP
-    if (mod_parallel_3d%communicate_forces) then
+    if (mod_communicator%communicate_forces) then
        DEBUG_WRITE("- communicate_forces -")
-       call communicate_forces(mod_parallel_3d, p)
+       call communicate_forces(mod_communicator, p)
     endif
 #endif
 

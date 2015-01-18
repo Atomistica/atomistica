@@ -43,7 +43,7 @@ module output_energy
   use coulomb
 
 #ifdef _MP
-  use parallel_3d
+  use communicator
 #endif
 
   implicit none
