@@ -151,7 +151,7 @@ contains
 
     ! ---
 
-    integer :: i, j, k
+    integer :: i, j
 
     ! ---
 
@@ -198,14 +198,14 @@ contains
     type(particles_t),  intent(in)    :: p
     type(neighbors_t),  intent(inout) :: nl
     real(DP),           intent(inout) :: epot
-    real(DP),           intent(inout) :: f(3, p%nat)  !< forces
+    real(DP),           intent(inout) :: f(3, p%maxnatloc)  !< forces
     real(DP),           intent(inout) :: wpot(3, 3)
-    integer,  optional, intent(in)    :: mask(p%nat)
-    real(DP), optional, intent(inout) :: epot_per_at(p%nat)
+    integer,  optional, intent(in)    :: mask(p%maxnatloc)
+    real(DP), optional, intent(inout) :: epot_per_at(p%maxnatloc)
 #ifdef LAMMPS
-    real(DP), optional, intent(inout) :: wpot_per_at(6, p%nat)
+    real(DP), optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
 #else
-    real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%nat)
+    real(DP), optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
 #endif
     integer,  optional, intent(inout) :: ierror
 
@@ -224,7 +224,7 @@ contains
 
     cut_sq = this%cutoff**2
 
-    do i = 1, p%nat
+    do i = 1, p%natloc
        maskfaci = 1
        if (present(mask) .and. mask(i) == 0) then
           maskfaci = 0
