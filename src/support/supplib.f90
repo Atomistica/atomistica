@@ -44,4 +44,5 @@ module supplib
   use ptrdict
 !  use signal_handler
   use cutoff
+  use histogram1d_module
 endmodule supplib
