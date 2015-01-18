@@ -1,0 +1,144 @@
+#
+# *** Paths
+# 
+# MDCORE
+#
+SRCDIR   = ../src
+
+
+#
+# *** Compilers and parallelization
+#
+# Serial / OpenMP execution (Intel)
+#
+FC        = ifort
+F90C      = ifort
+CC        = icc
+CXX       = icpc
+NVCC      = nvcc
+LD        = ifort
+
+
+#
+# Initial EXTRA_INCLUDE and EXTRA_LIB
+#
+# -cxxlib links to the C++ runtime
+#
+HAVE_NETCDF = 0
+EXTRA_FLAGS =
+EXTRA_INCLUDE =
+EXTRA_LIB = -cxxlib
+
+#
+# OpenMP parallelization
+#
+OPENMP ?= 0
+ifneq ($(OPENMP),0)
+OMP_FLAGS = -openmp -openmp-report2
+EXTRA_LIB += -openmp
+else
+OMP_FLAGS =
+endif
+
+
+#
+# *** Extra includes and libraries
+#
+# Check for NetCDF
+#
+ifneq ("$(shell which nf-config)","") 
+HAVE_NETCDF = 1
+EXTRA_FLAGS += -DHAVE_NETCDF
+EXTRA_INCLUDE += $(shell nf-config --fflags)
+EXTRA_LIB += $(shell nf-config --flibs)
+else
+ifneq ("$(shell which nc-config)","")
+HAVE_NETCDF = 1
+EXTRA_FLAGS += -DHAVE_NETCDF
+EXTRA_INCLUDE += $(shell nc-config --fflags)
+EXTRA_LIB += $(shell nc-config --flibs)
+endif
+endif
+
+#
+# FIXME!!! Implement FFTW check
+#
+HAVE_FFTW3 = 0
+#EXTRA_FLAGS += -DHAVE_FFTW3
+#EXTRA_INCLUDE += -I/j1a/pas/applications/fftw-3.3/include
+#EXTRA_LIB += -L/j1a/pas/applications/fftw-3.3/lib -lfftw3
+
+#
+# *** LAPACK and BLAS link options here.
+#
+# Intel MKL
+#
+DEBUG ?= 0
+ifneq ($(OPENMP),0)
+EXTRA_FLAGS += $(shell ${FC} --version | python ${SRCDIR}/../tools/lapack.py --fflags --parallel)
+EXTRA_LIB += $(shell ${FC} --version | python ${SRCDIR}/../tools/lapack.py --flibs --parallel)
+else
+EXTRA_FLAGS += $(shell ${FC} --version | python ${SRCDIR}/../tools/lapack.py --fflags)
+EXTRA_LIB += $(shell ${FC} --version | python ${SRCDIR}/../tools/lapack.py --flibs)
+endif
+
+#
+# *** Other settings that rarely need to be touched
+#
+LIBTOOL  = ar r
+
+#
+# * Optimization
+#
+ifneq ($(DEBUG),0)
+OPT_FLAGS = -g -O0 -check bounds -check arg_temp_created -check uninit -ftrapuv -implicitnone -warn all
+else
+OPT_FLAGS = -g -xHost -O3 -ip -funroll-loops -unroll-aggressive -no-prec-div \
+	-no-prec-sqrt
+endif
+
+#
+# * Defines
+#
+#   -DMDCORE_MONOLITHIC        Compile modules that work only in the standalone
+#                              version of MDCORE (i.e. HarmonicHook, etc.)
+#   -DMDCORE_PYTHON            Compile Python specific stuff
+#
+#   -DHAVE_NETCDF              Compile with NetCDF output module
+#   -DHAVE_FFTW3               Compile PME module using FFTW3
+#   -DHAVE_MKL                 LAPACK implementation is the MKL
+#                              (switches printing of MKL version information)
+#   -DHAVE_IFPORT              Compiler is Intel Fortran and the ifport module
+#                              is present (switches writing of a restart file
+#                              upon SIGTERM, i.e. if wallclock time is reached)
+#   -DHAVE_CUDA                CUDA is available on the system. Compile code to
+#                              use CUDA GPU hardware.
+#
+DEFINES  = \
+	-DHAVE_IFPORT \
+	-DMDCORE_MONOLITHIC
+
+#
+# *** Compilation and linking flags
+#     (settings should be made mainly above, not here)
+#
+GFFLAGS  = \
+	$(DEFINES) \
+	$(OPT_FLAGS) \
+	$(OMP_FLAGS) \
+	$(EXTRA_FLAGS)
+
+GFFLAGS += -fpp -warn unused -fPIC -traceback
+FFLAGS   = $(GFFLAGS)
+F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE)
+CFLAGS   = -O3 -fPIC $(DEFINES) $(EXTRA_INCLUDE) #-I/usr/site/cuda/include
+CUFLAGS  = -O3 -arch=sm_20 $(DEFINES)
+
+#
+# Use LDFLAGS = -static if you want a static binary
+#
+LDFLAGS  = 
+LIBS     = $(EXTRA_LIB) #-lcudart -lcublas
+
+include $(SRCDIR)/makefile.inc
+
