@@ -110,9 +110,9 @@ contains
     INIT_ERROR(error)
     DEBUG_WRITE("===> read_atoms " // fn)
 
-    write (ilog, '(A)')  "- read_atoms -"
+    call prlog("- read_atoms -")
     if(.not. present(mol)) then
-       write (ilog, '(5X,A)')  "No molecules object specified, ignoring molecule information (next)"
+       call prlog("     No molecules object specified, ignoring molecule information (next)")
     end if
 
     if (.not. initialized(p)) then
@@ -252,8 +252,8 @@ contains
           p%Z(j) = Z
 
        else
-          write (ilog, '(5X,A,F20.10)')  "m    = ", p%m(j)
-          write (ilog, '(5X,A,A)')       "sym  = ", p%sym(j)
+          call prlog("     m    = "//p%m(j))
+          call prlog("     sym  = "//p%sym(j))
           RAISE_ERROR("Mass negative or equal to zero and atom symbol '" // p%sym(j) // "' unknown.", error)
        endif
 
@@ -335,9 +335,9 @@ contains
 
     p%dof = 3*p%totnat-3
 
-    write (ilog, '(5X,A,I10)')  "nat        = ", p%nat
-    write (ilog, '(5x,A,I10)')  "maxnatloc  = ", p%maxnatloc
-    write (ilog, '(5X,A,I10)')  "totnat     = ", totnat
+    call prlog("     nat        = "//p%nat)
+    call prlog("     maxnatloc  = "//p%maxnatloc)
+    call prlog("     totnat     = "//totnat)
 
     if (totnat /= nat) then
        RAISE_ERROR("Something wrong: Different number of particles (totnat = " // totnat // ") loaded than defined in the input (nat = " // nat // "). Are some particles outside of the simulation cell?", error)
@@ -576,10 +576,10 @@ contains
     if (any(p%shear_dx /= 0.0_DP)) then
        call set_lees_edwards(p, p%shear_dx, error=error)
        PASS_ERROR(error)
-       write (ilog, '(5X,A,3ES20.10)')  "shear_dx   = ", p%shear_dx
+       call prlog("     shear_dx   = "//p%shear_dx)
     endif
 
-    write (ilog, *)
+    call prlog
 
     DEBUG_WRITE("<=== read_atoms")
 
@@ -605,7 +605,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- read_cell_from_atoms -"
+    call prlog("- read_cell_from_atoms -")
 
     un = fopen(fn, F_READ, error=error)
     PASS_ERROR(error)
@@ -658,7 +658,7 @@ contains
     call set_cell(p, p%Abox, error=error)
     PASS_ERROR(error)
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine read_cell_from_atoms
 
@@ -686,7 +686,7 @@ contains
 
     INIT_ERROR(error)
 
-    write (ilog, '(A)')  "- read_Z_and_groups_from_atoms -"
+    call prlog("- read_Z_and_groups_from_atoms -")
 
     T            => NULL()
     dissipation  => NULL()
@@ -753,8 +753,8 @@ contains
           p%Z(j) = Z
 
        else
-          write (ilog, '(5X,A,F20.10)')  "m    = ", p%m(j)
-          write (ilog, '(5X,A,A)')       "sym  = ", p%sym(j)
+          call prlog("     m    = "//p%m(j))
+          call prlog("     sym  = "//p%sym(j))
           RAISE_ERROR("Mass negative or equal to zero and atom symbol unknown.", error)
        endif
 
@@ -793,7 +793,7 @@ contains
 
     call update_elements(p)
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine read_Z_and_groups_from_atoms
 
