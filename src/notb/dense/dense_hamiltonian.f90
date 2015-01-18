@@ -85,15 +85,6 @@ contains
 
     this%mat = c_loc(mat)
 
-#ifdef _MP
-    if (mod(this%nk, mpi_n_procs()) /= 0) then
-       RAISE_ERROR("The number of k-points (" // this%nk // ") must be a multiple of the number of processes (" // mpi_n_procs() // ".", error)
-    endif
-
-    this%startk = int(this%nk/mpi_n_procs())*mpi_id()+1
-    this%endk = int(this%nk/mpi_n_procs())*(mpi_id()+1)
-#endif
-
     this%f = 0
     if (present(f)) then
        this%f = f
