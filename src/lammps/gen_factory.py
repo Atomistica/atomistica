@@ -48,7 +48,9 @@ def read_module_list(fn):
     while l:
         l  = l.strip()
         if len(l) > 0 and l[0] != '!' and l[0] != '#':
-            mods += [ l.split(':')[0:5] ]
+            s = l.split(':')[0:5]
+            s[4] = s[4].split(',')
+            mods += [s]
         l = f.readline()
     f.close()
 
@@ -88,12 +90,12 @@ def write_factory_f90(mods, str, fn):
             '  use libAtoms_module\n' +
             '  use particles\n' +
             '  use neighbors\n')
-    for f90name, f90class, name, features, register_data_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         f.write('  use %s\n' % f90name)
     f.write("  implicit none\n\n" +
             "contains\n\n")
 
-    for f90name, f90class, name, features, register_data_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         features = set(features.split(','))
         f.write("subroutine lammps_%s_new(this_cptr, cfg, m) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
@@ -120,7 +122,7 @@ def write_factory_f90(mods, str, fn):
                 "  deallocate(this_fptr)\n"  +
                 "endsubroutine lammps_%s_free\n\n\n" % f90name)
 
-        if register_data_ex == "1":
+        if 'register_data' in methods:
             raise RuntimeError('MDCORE potential {0} has register_data '
                                'interface. Cannot interface that to LAMMPS.'
                                .format(f90name))
@@ -233,7 +235,7 @@ def write_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = ""
-    for f90name, f90class, name, features, register_data_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         s += "void lammps_%s_new(void **, section_t *, section_t **);\n" % f90name
         s += "void lammps_%s_free(void *);\n" % f90name
         s += "void lammps_%s_init_without_parameters(void *);\n" % f90name
@@ -248,7 +250,7 @@ def write_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = "%s_class_t %s_classes[N_POTENTIAL_CLASSES] = {\n" % ( str, str )
-    for f90name, f90class, name, features, register_data_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         s += "  {\n"
         s += "    \"%s\",\n" % name
         s += "    lammps_%s_new,\n" % f90name

@@ -14,28 +14,40 @@ from meta import scanallmeta
 
 ###
 
-def get_finterfaces(fn):
+def get_finterfaces(fn, include_list=None, tmpfilename='_cpp.tmp'):
+    include_str = ''
+    if include_list is not None:
+        include_str = reduce(lambda x,y: x+' -I'+y, include_list, '')
+    os.system('gfortran -cpp -E {} {} > {}'.format(fn, include_str,
+                                                   tmpfilename))
+
     iface = re.compile('^\ *interface\ ',re.IGNORECASE)
 
-    finterfaces = [ ]
+    finterfaces = []
 
-    f = open(fn, 'r')
+    f = open(tmpfilename, 'r')
     l = f.readline()
     while l:
         l = f.readline()
         if re.match(iface, l):
             l = iface.sub('', l).strip().lower()
-            finterfaces += [ l ]
+            finterfaces += [l]
     f.close()
 
-    return finterfaces
+    os.remove(tmpfilename)
+    # gfortran generates and empty .s file when just preprocessing
+    fnroot, fnext = os.path.splitext(fn)
+    os.remove(fnroot+'.s')
+
+    return [finterface.lower() for finterface in finterfaces]
 
 ###
 
-def get_module_list(metadata, interface, finterface_list=[], exclude_list=[]):
-    mods = [ ]
-    fns = [ ]
-    depalready = [ ]
+def get_module_list(metadata, interface, finterface_list=[], exclude_list=[],
+                    include_list=[]):
+    mods = []
+    fns = []
+    depalready = []
 
     # Loop over all files and find modules
     for path, metapath in metadata.iteritems():
@@ -49,16 +61,11 @@ def get_module_list(metadata, interface, finterface_list=[], exclude_list=[]):
                     except:
                         features = ''                   
                     if not classname in exclude_list:
-                        s = [ ]
-                        if len(finterface_list) > 0:
-                            finterfaces_present = get_finterfaces(path+'/'+fn)
-                            for finterface in finterface_list:
-                                if finterface.lower() in finterfaces_present:
-                                    s += [ True ]
-                                else:
-                                    s += [ False ]
-                        mods += [ [ classtype[:-2], classtype, classname,
-                                    features ] + s ]
+                        s = []
+                        finterfaces_present = get_finterfaces(path+'/'+fn,
+                                                              include_list)
+                        mods += [ ( classtype[:-2], classtype, classname,
+                                    features, finterfaces_present ) ]
                         if 'dependencies' in meta:
                             dependencies = meta['dependencies'].split(',')
                             for depfn in dependencies:
@@ -72,8 +79,8 @@ def get_module_list(metadata, interface, finterface_list=[], exclude_list=[]):
 ###
 
 def write_interface_info(metadata, interface, finterface_list, exclude_list,
-                         deffn, mkfn, cfgfn):
-    fns = [ ]
+                         include_list, deffn, mkfn, cfgfn):
+    fns = []
 
     deff = open(deffn, 'a')
     mkf = open(mkfn, 'a')
@@ -81,7 +88,7 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
 
     print >> mkf, '%s_MODS = \\' % interface.upper()
 
-    depalready = [ ]
+    depalready = []
     for path, metapath in metadata.iteritems():
         for fn, meta in metapath.iteritems():
             if 'interface' in meta:
@@ -94,14 +101,12 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
                         features = ''
                     if not classname in exclude_list:
                         s = ''
-                        if len(finterface_list) > 0:
-                            finterfaces_present = get_finterfaces(path+'/'+fn)
-                            for finterface in finterface_list:
-                                if finterface in finterfaces_present:
-                                    s += ':1'
-                                else:
-                                    s += ':0'
-                        print >> deff, '%s:%s:%s:%s%s' % (classtype[:-2],
+                        finterfaces_present = get_finterfaces(path+'/'+fn,
+                                                              include_list)
+                        if len(finterfaces_present) > 0:
+                            s = reduce(lambda x,y: x+','+y, finterfaces_present[1:],
+                                       finterfaces_present[0])
+                        print >> deff, '%s:%s:%s:%s:%s' % (classtype[:-2],
                                                           classtype, classname,
                                                           features, s)
                         if 'dependencies' in meta:
@@ -127,9 +132,10 @@ if __name__ == '__main__':
     optlist, args = getopt.getopt(sys.argv[1:], '',
                                   ['exclude=', 'has_finterface='])
 
-    if len(args) != 5:
+    if len(args) < 5:
         raise RuntimeError('Syntax: listclasses.py <path> <interface> '
                            '<definition-file> <makefile> <config-file> '
+                           '[-I<include directory>] '
                            '[--exclude=<exclude list>] '
                            '[--has_finterface=<interface list>]')
 
@@ -139,8 +145,9 @@ if __name__ == '__main__':
     mkfn = args[3]
     cfgfn = args[4]
 
-    exclude_list = [ ]
-    finterface_list = [ ]
+    exclude_list = []
+    finterface_list = []
+    include_list = []
 
     for key, value in optlist:
         if key == '--exclude':
@@ -148,7 +155,16 @@ if __name__ == '__main__':
         elif key == '--has_finterface':
             finterface_list = value.split(',')
 
+    for key in args[5:]:
+        if key[:2] == '-I':
+            include_list += [key[2:]]
+        else:
+            raise RuntimeError('Unknown comand line argument: {}'.format(key))
+
+    print 'Scanning metadata of all source files...'
     metadata = scanallmeta(path)
    
+    print "Dumping information for classes that implement '{}' interface..." \
+        .format(interface)
     write_interface_info(metadata, interface, finterface_list, exclude_list,
-                         deffn, mkfn, cfgfn)
+                         include_list, deffn, mkfn, cfgfn)

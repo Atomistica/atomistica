@@ -88,12 +88,12 @@ def write_factory_f90(mods, str, fn):
             '  use libAtoms_module\n' +
             '  use particles\n' +
             '  use neighbors\n')
-    for f90name, f90class, name, features, register_data_ex, set_Coulomb_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         f.write('  use %s\n' % f90name)
     f.write("  implicit none\n\n" +
             "contains\n\n")
 
-    for f90name, f90class, name, features, register_data_ex, set_Coulomb_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         features = set(features.split(','))
         f.write("subroutine python_%s_new(this_cptr, cfg, m) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
@@ -119,7 +119,7 @@ def write_factory_f90(mods, str, fn):
                 "  deallocate(this_fptr)\n"  +
                 "endsubroutine python_%s_free\n\n\n" % f90name)
 
-        if register_data_ex == "1":
+        if 'register_data' in methods:
             f.write("subroutine python_%s_register_data(this_cptr, p_cptr, error) bind(C)\n" % f90name +
                     "  use, intrinsic :: iso_c_binding\n\n" +
                     "  implicit none\n\n" +
@@ -163,7 +163,7 @@ def write_factory_f90(mods, str, fn):
                 "  call init(this_fptr)\n" +
                 "endsubroutine python_%s_init_without_parameters\n\n\n" % f90name)
 
-        if set_Coulomb_ex:
+        if 'set_coulomb' in methods:
             f.write("subroutine python_%s_set_Coulomb(this_cptr, coul_cptr, error) bind(C)\n" % f90name +
                     "  use, intrinsic :: iso_c_binding\n\n" +
                     "  implicit none\n\n" +
@@ -251,7 +251,7 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
 """ % ( f90name, f90name, f90name )
         addargs = ''
         optargs = []
-        if set_Coulomb_ex:
+        if 'set_coulomb' in methods:
             addargs += 'q=q, '
         if 'mask' in features:
             s += '  if (c_associated(mask_cptr)) then\n'
@@ -334,7 +334,7 @@ def write_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = ""
-    for f90name, f90class, name, features, register_data_ex, set_Coulomb_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         s += """
 void python_%s_new(void **, section_t *, section_t **);
 void python_%s_free(void *);
@@ -342,7 +342,7 @@ void python_%s_register_data(void *, void *, int *);
 void python_%s_init_without_parameters(void *, int *);
 void python_%s_bind_to(void *, void *, void *, int *);
         """ % ( f90name, f90name, f90name, f90name, f90name )
-        if set_Coulomb_ex:
+        if 'set_coulomb' in methods:
             s += """
 void python_%s_set_coulomb(void *, void *, int *);
             """ % f90name
@@ -357,7 +357,7 @@ void python_%s_energy_and_forces(void *, void *, void *, double *, double *, dou
     #
 
     s = "%s_class_t %s_classes[N_POTENTIAL_CLASSES] = {\n" % ( str, str )
-    for f90name, f90class, name, features, register_data_ex, set_Coulomb_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         s += "  {\n"
         s += "    \"%s\",\n" % name
         s += "    python_%s_new,\n" % f90name
@@ -365,7 +365,7 @@ void python_%s_energy_and_forces(void *, void *, void *, double *, double *, dou
         s += "    python_%s_register_data,\n" % f90name
         s += "    python_%s_init_without_parameters,\n" % f90name
         s += "    python_%s_bind_to,\n" % f90name
-        if set_Coulomb_ex:
+        if 'set_coulomb' in methods:
             s += "    python_%s_set_coulomb,\n" % f90name
         else:
             s += "    NULL,\n"
@@ -395,12 +395,12 @@ def write_coulomb_factory_f90(mods, str, fn):
             '  use libAtoms_module\n' +
             '  use particles\n' +
             '  use neighbors\n')
-    for f90name, f90class, name, features, register_data_ex, set_Hubbard_U_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         f.write('  use %s\n' % f90name)
     f.write('  implicit none\n\n' +
             'contains\n\n')
 
-    for f90name, f90class, name, features, register_data_ex, set_Hubbard_U_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         f.write("subroutine python_%s_new(this_cptr, cfg, m) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
                 "  implicit none\n\n" +
@@ -425,7 +425,7 @@ def write_coulomb_factory_f90(mods, str, fn):
                 "  deallocate(this_fptr)\n"  +
                 "endsubroutine python_%s_free\n\n\n" % f90name)
 
-        if register_data_ex:
+        if 'register_data' in methods:
             f.write("subroutine python_%s_register_data(this_cptr, p_cptr, error) bind(C)\n" % f90name +
                     "  use, intrinsic :: iso_c_binding\n\n" +
                     "  implicit none\n\n" +
@@ -469,7 +469,7 @@ def write_coulomb_factory_f90(mods, str, fn):
                 "  call init(this_fptr, error=error)\n" +
                 "endsubroutine python_%s_init_without_parameters\n\n\n" % f90name)
 
-        if set_Hubbard_U_ex:
+        if 'set_hubbard_u' in methods:
             f.write("subroutine python_%s_set_Hubbard_U(this_cptr, p_cptr, U, error) bind(C)\n" % f90name +
                     "  use, intrinsic :: iso_c_binding\n\n" +
                     "  implicit none\n\n" +
@@ -573,12 +573,12 @@ def write_coulomb_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = ""
-    for f90name, f90class, name, features, register_data_ex, set_Hubbard_U_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         s += "void python_%s_new(void **, section_t *, section_t **);\n" % f90name
         s += "void python_%s_free(void *);\n" % f90name
         s += "void python_%s_register_data(void *, void *, int *);\n" % f90name
         s += "void python_%s_init_without_parameters(void *, int *);\n" % f90name
-        if set_Hubbard_U_ex:
+        if 'set_hubbard_u' in methods:
             s += "void python_%s_set_hubbard_u(void *, void *, double *, int *);\n" % f90name
         s += "void python_%s_bind_to(void *, void *, void *, int *);\n" % f90name
         s += "void python_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, double *, int *);\n" % f90name
@@ -591,14 +591,14 @@ def write_coulomb_factory_c(mods, str, c_dispatch_template, c_dispatch_file,
     #
 
     s = "%s_class_t %s_classes[N_COULOMB_CLASSES] = {\n" % ( str, str )
-    for f90name, f90class, name, features, register_data_ex, set_Hubbard_U_ex in mods:
+    for f90name, f90class, name, features, methods in mods:
         s += "  {\n"
         s += "    \"%s\",\n" % name
         s += "    python_%s_new,\n" % f90name
         s += "    python_%s_free,\n" % f90name
         s += "    python_%s_register_data,\n" % f90name
         s += "    python_%s_init_without_parameters,\n" % f90name
-        if set_Hubbard_U_ex:
+        if 'set_hubbard_u' in methods:
             s += "    python_%s_set_hubbard_u,\n" % f90name
         else:
             s += "    NULL,\n"

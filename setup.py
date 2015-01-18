@@ -83,6 +83,7 @@ lib_srcs += [ ('%s/support/' % srcdir)+i for i in
                 'simple_spline.f90',
                 'nonuniform_spline.f90',
                 'cutoff.f90',
+                'histogram1d.f90',
                 'supplib.f90',
                 'atomistica.f90',
                 ]
@@ -98,11 +99,15 @@ lib_srcs += [ ('%s/special/' % srcdir)+i for i in
 
 lib_srcs += [ ('%s/python/f90/' % srcdir)+i for i in
               [ 'python_particles.f90',
-                'python_filter.f90',
                 'python_neighbors.f90',
                 'particles_wrap.f90',
                 'neighbors_wrap.f90',
                 'python_helper.f90',
+                ]
+              ]
+
+lib_srcs += [ ('%s/core/' % srcdir)+i for i in
+              [ 'filter.f90',
                 ]
               ]
 
@@ -123,18 +128,37 @@ mod_srcs += [ '%s/python/c/py_f.c' % (srcdir),
 ###
 
 #
+# C and Fortran compile flags
+#
+
+inc_dirs += [ np.get_include(),
+              'build',
+              'src',
+              'src/support',
+              'src/potentials',
+              'src/notb',
+              'src/notb/dense',
+              ]
+
+lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
+               ( 'MDCORE_PYTHON', None ),
+               ]
+
+###
+
+#
 # Scan all metadata and get list of potentials
 #
 
 #print 'Scanning f90 metadata in directory {0}...'.format(srcdir)
-metadata = scanallmeta(srcdir)
+metadata = scanallmeta(['{}/{}'.format(srcdir, x) for x in 
+                        ['notb', 'potentials']])
 
 #print 'Writing factories...'
 
 # Coulomb modules
 mods1, fns1 = get_module_list(metadata, 'coulomb',
-                              finterface_list = [ 'register_data',
-                                                  'set_Hubbard_U' ])
+                              include_list = inc_dirs)
 lib_srcs += fns1
 
 
@@ -154,9 +178,7 @@ lib_srcs += [ '%s/python/f90/coulomb_dispatch.f90' % (srcdir),
 
 # Potential modules
 mods2, fns2 = get_module_list(metadata, 'potentials',
-                              finterface_list = [ 'register_data',
-                                                  'set_Coulomb' ],
-                              )
+                              include_list = inc_dirs)
 lib_srcs += fns2
 
 write_factory_f90(mods2, 'potential', 'build/potentials_factory_f90.f90')
@@ -172,31 +194,12 @@ lib_srcs += [ 'build/potentials_factory_f90.f90',
 f = open('build/have.inc', 'w')
 print >> f, '#ifndef __HAVE_INC'
 print >> f, '#define __HAVE_INC'
-for classabbrev, classname, classtype, classfeatures, s, s2 in mods1:
+for classabbrev, classname, classtype, classfeatures, methods in mods1:
     print >> f, '#define HAVE_%s' % (classabbrev.upper())
-for classabbrev, classname, classtype, classfeatures, s1, s2 in mods2:
+for classabbrev, classname, classtype, classfeatures, methods in mods2:
     print >> f, '#define HAVE_%s' % (classabbrev.upper())
 print >> f, '#endif'
 f.close()
-
-###
-
-#
-# C and Fortran compile flags
-#
-
-inc_dirs += [ np.get_include(),
-              'build',
-              'src',
-              'src/support',
-              'src/potentials',
-              'src/notb',
-              'src/notb/dense',
-              ]
-
-lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
-               ( 'MDCORE_PYTHON', None ),
-               ]
 
 ###
 

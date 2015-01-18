@@ -8,7 +8,8 @@ SYSTEM = $(shell uname -s)
 BINDIR = .
 
 ### Complete Fortran compiler flags
-F90FLAGS += -I. -I$(SRCDIR) -I$(SRCDIR)/support -I$(SRCDIR)/potentials
+INCLUDEFLAGS = -I. -I$(SRCDIR) -I$(SRCDIR)/support -I$(SRCDIR)/potentials
+F90FLAGS += $(INCLUDEFLAGS)
 
 ### Complete C compiler flags
 CFLAGS += -I$(SRCDIR) -I$(SRCDIR)/support -I$(SRCDIR)/notb
@@ -22,7 +23,12 @@ include _Makefile.modules
 VPATH = \
 	. \
 	$(SRCDIR) \
+	$(SRCDIR)/core \
 	$(SRCDIR)/lammps \
+	$(SRCDIR)/notb \
+	$(SRCDIR)/notb/dense \
+	$(SRCDIR)/notb/dense/solver \
+	$(SRCDIR)/notb/dense/analysis \
 	$(SRCDIR)/potentials \
 	$(SRCDIR)/potentials/bop \
 	$(SRCDIR)/potentials/bop/brenner \
@@ -37,12 +43,9 @@ VPATH = \
 	$(SRCDIR)/potentials/eam \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2sich \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2x \
-	$(SRCDIR)/notb \
-	$(SRCDIR)/notb/dense \
-	$(SRCDIR)/notb/dense/solver \
-	$(SRCDIR)/notb/dense/analysis \
 	$(SRCDIR)/qeq \
 	$(SRCDIR)/special \
+	$(SRCDIR)/standalone \
 	$(SRCDIR)/support \
 	$(SRCDIR)/unittests
 
@@ -63,20 +66,22 @@ CORE_SUPPLIB = \
 	f_logging.f90 \
 	c_logging.c \
 	misc.f90 \
+	data.f90 \
 	timer.f90 \
 	tls.f90 \
 	simple_spline.f90 \
 	nonuniform_spline.f90 \
 	cutoff.f90 \
+	histogram1d.f90 \
 	supplib.f90 \
 	table2d.f90 \
 	table3d.f90 \
 	table4d.f90 \
-    anderson_mixer.f90
+	anderson_mixer.f90
 
 ## LAMMPS support library
 LAMMPS_SUPPLIB = \
-    $(CORE_SUPPLIB) \
+	$(CORE_SUPPLIB) \
 	lammps_particles.f90 \
 	lammps_neighbors.f90 \
 	lammps_filter.f90 \
@@ -105,6 +110,79 @@ LAMMPS_ALL_O1 = $(LAMMPS_ALL_O2:.f90=.o)
 LAMMPS_ALL_O = $(LAMMPS_ALL_O1:.f90=.o)
 
 
+## I/O library
+IOLIB = \
+	native_io.f90 \
+	cfg.f90 \
+	pdb.f90 \
+	vtk.f90 \
+	nc.f90 \
+	xyz_f90.f90 \
+	lammps_data.f90 \
+	input_trajectory.f90
+
+
+## Support library for standalone code
+STANDALONE_MODS = \
+	$(COULOMB_MODS) \
+	coulomb_dispatch.f90 \
+	$(POTENTIALS_MODS) \
+	potentials_dispatch.f90 \
+	$(INTEGRATORS_MODS) \
+	integrators_dispatch.f90 \
+	$(FP_MODS) \
+	$(CALLABLES_MODS) \
+	callables_dispatch.f90
+STANDALONE_MODS_O5 = $(STANDALONE_MODS:.cu=.o)
+STANDALONE_MODS_O4 = $(STANDALONE_MODS_O5:.cpp=.o)
+STANDALONE_MODS_O3 = $(STANDALONE_MODS_O4:.c=.o)
+STANDALONE_MODS_O2 = $(STANDALONE_MODS_O3:.f=.o)
+STANDALONE_MODS_O1 = $(STANDALONE_MODS_O2:.f90=.o)
+STANDALONE_MODS_O = $(STANDALONE_MODS_O1:.f90=.o)
+
+
+### Dispatch for standalone code
+STANDALONE_DISPATCH = \
+	integrators_factory_c.c \
+	potentials_factory_c.c \
+	coulomb_factory_c.c \
+	callables_factory_c.c \
+	integrators_factory_f90.f90 \
+	potentials_factory_f90.f90 \
+	coulomb_factory_f90.f90 \
+	callables_factory_f90.f90
+STANDALONE_DISPATCH_O = $(STANDALONE_DISPATCH:.f90=.o)
+
+
+## Everything we need for the standalone code
+STANDALONE_ALL = \
+	$(CORE_SUPPLIB) \
+	signal_handler.f90 \
+	r250.f \
+	rng.f90 \
+	particles.f90 \
+	parallel_3d.f90 \
+	neighbors.f90 \
+	filter.f90 \
+	molecules.f90 \
+	dynamics.f90 \
+	cyclic.f90 \
+	symmetry.f90 \
+	versioninfo.f90 \
+	atomistica.f90 \
+	$(IOLIB) \
+	lucy.f90 \
+	square.f90 \
+	interpolation_kernels_dispatch.f90 \
+	$(STANDALONE_MODS) \
+	$(STANDALONE_DISPATCH)
+STANDALONE_ALL_O4 = $(STANDALONE_ALL:.cpp=.o)
+STANDALONE_ALL_O3 = $(STANDALONE_ALL_O4:.c=.o)
+STANDALONE_ALL_O2 = $(STANDALONE_ALL_O3:.f=.o)
+STANDALONE_ALL_O1 = $(STANDALONE_ALL_O2:.f90=.o)
+STANDALONE_ALL_O = $(STANDALONE_ALL_O1:.f90=.o)
+
+
 ## Everything we need for unit tests
 UNITTESTS = \
 	fruit_util.f90 \
@@ -120,24 +198,13 @@ UNITTESTS_O1 = $(UNITTESTS_O2:.f90=.o)
 UNITTESTS_O = $(UNITTESTS_O1:.f90=.o)
 
 
+## Main exectuable of standalone code
 MAIN = \
 	main.f90
 MAIN_O = $(MAIN:.f90=.o)
 
 
-CDEPS = \
-	config.c
-CDEPS_O = $(CDEPS:.c=.o)
-
-
-C_STANDALONE_DISPATCH = \
-	integrators_factory_c.c \
-	potentials_factory_c.c \
-	coulomb_factory_c.c \
-	callables_factory_c.c
-C_STANDALONE_DISPATCH_O = $(C_STANDALONE_DISPATCH:.c=.o)
-
-
+## Rules
 .f.o:
 	$(FC) $(FFLAGS) -c $^ -o $@
 
@@ -164,19 +231,38 @@ versioninfo.f90:
 #
 # Exclude compilation of certain modules here by adding a --exlude flag, see below.
 #
-factories:
+lammps_factories:
 	rm -f _Makefile.modules potentials.classes
 	echo "#ifndef __HAVE_INC" > have.inc
 	echo "#define __HAVE_INC" >> have.inc
-	python $(SRCDIR)/../tools/listclasses.py --has_finterface=register_data $(SRCDIR) potentials potentials.classes _Makefile.modules have.inc
+	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR)/potentials potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
 	echo "#endif" >> have.inc
 	python $(SRCDIR)/lammps/gen_factory.py $(SRCDIR)/lammps $(FC) $(MACHINE) $(SYSTEM)
+
+factories:
+	rm -f _Makefile.modules callables.classes coulomb.classes integrators.classes potentials.classes
+	echo "#ifndef __HAVE_INC" > have.inc
+	echo "#define __HAVE_INC" >> have.inc
+	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR) callables callables.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR) coulomb coulomb.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR) integrators integrators.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR) potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	echo "#endif" >> have.inc
+	awk -F ':' '{ print "use "$$1 }' integrators.classes > integrators.inc
+	awk -F ':' '{ print "use "$$1 }' callables.classes > callables.inc
+	awk -F ':' '{ print "use "$$1 }' coulomb.classes > coulomb.inc
+	awk -F ':' '{ print "use "$$1 }' potentials.classes > potentials.inc
+	python $(SRCDIR)/standalone/gen_factory.py $(SRCDIR)/standalone $(FC) $(MACHINE) $(SYSTEM)
+	python $(SRCDIR)/standalone/gen_dispatch.py
 
 versioninfo:
 	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(OPTFLAGS)
 
-atomistica: versioninfo factories $(LAMMPS_ALL_O)
+atomistica: versioninfo lammps_factories $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
+
+mdcore: versioninfo $(STANDALONE_ALL_O) $(MAIN_O)
+	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-r`cat $(SRCDIR)/REV | sed s/' '/''/ `_`cat $(SRCDIR)/REV_DATE`_$(MACHINE) $(LIBS)
 
 unittests: versioninfo $(UNITTESTS_O)
 	$(F90C) -o unittests $(UNITTESTS_O) $(LIBS)
