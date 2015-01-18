@@ -2308,7 +2308,7 @@ contains
     call log_memory_start("data_print_to_log")
 
     do i = 1, this%n_real
-       call prlog("real     :: "//trim(this%name_real(i)))
+       call prlog("     real     :: "//trim(this%name_real(i)))
 
        call log_memory_estimate(this%data_real)
        call log_memory_estimate(this%tag_real)
@@ -2316,21 +2316,21 @@ contains
     enddo
 
     do i = 1, this%n_integer
-       call prlog("integer  :: "//trim(this%name_integer(i)))
+       call prlog("     integer  :: "//trim(this%name_integer(i)))
 
        call log_memory_estimate(this%data_integer)
        call log_memory_estimate(this%tag_integer)
     enddo
 
     do i = 1, this%n_logical
-       call prlog("logical  :: "//trim(this%name_logical(i)))
-
+       call prlog("     logical  :: "//trim(this%name_logical(i)))
+     
        call log_memory_estimate(this%data_logical)
        call log_memory_estimate(this%tag_logical)
     enddo
 
     do i = 1, this%n_real3
-       call prlog("real3    :: "//trim(this%name_real3(i)))
+       call prlog("     real3    :: "//trim(this%name_real3(i)))
 
        call log_memory_estimate(this%data_real3)
        call log_memory_estimate(this%tag_real3)
@@ -2338,8 +2338,8 @@ contains
     enddo
 
     do i = 1, this%n_real3x3
-       call prlog("real3x3  :: "//trim(this%name_real3x3(i)))
-
+       call prlog("     real3x3  :: "//trim(this%name_real3x3(i)))
+     
        call log_memory_estimate(this%data_real3x3)
        call log_memory_estimate(this%tag_real3x3)
        call log_memory_estimate(this%conv_real3x3)
