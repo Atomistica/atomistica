@@ -1,3 +1,5 @@
+#define IMPLICIT_R
+
 !>
 !! Return a single vector from a vector array, i.e. an array
 !! with shape (3, :). Here, *i* is the index of the entry. 
@@ -77,7 +79,7 @@
 
 !>
 !! Helper macros for distance computation. They all depend of GET_DRJ which should be
-!! adjusted to the specific implementation.
+!! adjusted to the specific ementation.
 !<
 
 #define GET_ABS_DRJ(p, nl, i, j, ni)  sqrt(dot_product(GET_DRJ(p, nl, i, j, ni), GET_DRJ(p, nl, i, j, ni)))
@@ -216,3 +218,6 @@
 !<
 #define GEMM dgemm
 #define MM(n, alpha, A, B, beta, C)  dgemm('N', 'N', n, n, n, alpha, A, n, B, n, beta, C, n, n)
+
+
+#define DEBUG_WRITE(x)
