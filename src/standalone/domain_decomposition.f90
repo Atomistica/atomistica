@@ -415,12 +415,12 @@ contains
     deallocate(this%ghosts_l)
     deallocate(this%ghosts_r)
 
-    write (ilog, '(5X,A)')        "Average number of particles sent/received per iteration:"
-    write (ilog, '(5X,A,F20.2)')  "Particles send  = ", (1.0_DP*this%n_send_p_tot)/this%nit_p
-    write (ilog, '(5X,A,F20.2)')  "Particles recv  = ", (1.0_DP*this%n_recv_p_tot)/this%nit_p
-    write (ilog, '(5X,A,F20.2)')  "Ghosts send     = ", (1.0_DP*this%n_send_g_tot)/this%nit_g
-    write (ilog, '(5X,A,F20.2)')  "Ghosts recv     = ", (1.0_DP*this%n_recv_g_tot)/this%nit_g
-    write (ilog, *)
+    call prlog("Average number of particles sent/received per iteration:")
+    call prlog("     Particles send  = "//(1.0_DP*this%n_send_p_tot)/this%nit_p)
+    call prlog("     Particles recv  = "//(1.0_DP*this%n_recv_p_tot)/this%nit_p)
+    call prlog("     Ghosts send     = "//(1.0_DP*this%n_send_g_tot)/this%nit_g)
+    call prlog("     Ghosts recv     = "//(1.0_DP*this%n_recv_g_tot)/this%nit_g)
+    call prlog
 
   endsubroutine communicator_del
 
