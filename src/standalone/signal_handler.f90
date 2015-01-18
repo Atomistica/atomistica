@@ -49,6 +49,7 @@ module signal_handler
   contains
 
   function handle_signal(signum) bind(C)
+    !dir$ attributes default :: hangle_signal
     use, intrinsic :: iso_c_binding
 
     implicit none
