@@ -167,6 +167,10 @@ contains
 
     ! ---
 
+#ifdef _MP
+    type(MPI_Context) :: mpi
+#endif
+
     type(integrators_t), target :: ints
     type(potentials_t),  target :: pots
     type(coulomb_t),     target :: coul
@@ -179,6 +183,10 @@ contains
     !
 
     call read_ptrdict_file(p, c_loc(ints), c_loc(pots), c_loc(coul), c_loc(cals))
+
+#ifdef _MP
+    call initialise(mpi)
+#endif
 
     call atomistica_startup
 
@@ -242,8 +250,8 @@ contains
     if (abs_cutoff > 0.0_DP) then
        stop "abs_cutoff > 0.0 and parallel computation. Does not work yet. Please implement."
     endif
-    call init(mod_communicator, p, &
-         verlet_shell  = cutoff_add)
+    call init(mod_communicator, p, verlet_shell = cutoff_add, error = ierror)
+    HANDLE_ERROR(ierror)
 #endif
 
     !
@@ -287,9 +295,9 @@ contains
     endif
 
     if (any(translate_by /= 0.0_DP)) then
-       write (ilog, *)
-       write (ilog, '(5X,A,3F20.10,A)')  "translate_by  = ( ", translate_by, " )"
-       write (ilog, *)
+       call prlog
+       call prlog("     translate_by  = ( "//translate_by//" )")
+       call prlog
 
 !       call group_rigid_objects(p)
        call translate(p, translate_by)
@@ -306,8 +314,8 @@ contains
     ! Initialize integrators
     !
 
-    write (ilog, '(5X,A,I10)')  "degrees-of-freedom  = ", p%dof
-    write (ilog, *)
+    call prlog("     degrees-of-freedom  = "//p%dof)
+    call prlog
 
     !
     ! Initialize binning/neighbor lists
@@ -356,10 +364,10 @@ contains
     endif
 #endif
 
-    write (ilog, *)
-    write (ilog, *)
-    write (ilog, '(A)')  "====> ENTERING MAIN LOOP <===="
-    write (ilog, *)
+    call prlog
+    call prlog
+    call prlog("====> ENTERING MAIN LOOP <====")
+    call prlog
 
     it = 0
     done = .false.
@@ -533,7 +541,7 @@ contains
 
     call print_status(dyn)
 
-    write (ilog, *)
+    call prlog
 
     call write_atoms(p, "atoms.out", error=ierror)
     HANDLE_ERROR(ierror)

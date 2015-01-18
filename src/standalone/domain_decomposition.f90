@@ -169,14 +169,15 @@ contains
   !!
   !! Initialize the parallelization module
   !<
-  subroutine communicator_init(this, p, decomposition, verlet_shell, error)
+  subroutine communicator_init(this, p, decomposition, verlet_shell, context, error)
     implicit none
 
-    type(communicator_t), intent(inout)        :: this
-    type(particles_t), target, intent(inout)  :: p
-    integer, intent(in), optional             :: decomposition(3)
-    real(DP), intent(in), optional            :: verlet_shell
-    integer, intent(inout), optional          :: error
+    type(communicator_t),        intent(inout) :: this
+    type(particles_t), target,   intent(inout) :: p
+    integer,           optional, intent(in)    :: decomposition(3)
+    real(DP),          optional, intent(in)    :: verlet_shell
+    type(MPI_Context), optional, intent(in)    :: context
+    integer,           optional, intent(inout) :: error
 
     ! ---
 
@@ -186,7 +187,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- communicator_init -"
+    call prlog("- communicator_init -")
 
     if (present(decomposition)) then
        this%decomposition  = decomposition
@@ -196,7 +197,7 @@ contains
        this%verlet_shell   = verlet_shell
     endif
 
-    write (ilog, '(5X,A,3I5,A)')  "decomposition = ( ", this%decomposition, " )"
+    call prlog("decomposition = ( "//this%decomposition//" )")
 
     if (this%decomposition(1)*this%decomposition(2)*this%decomposition(3) /= mpi_n_procs()) then
        RAISE_ERROR("Decomposition geometry requires " // this%decomposition(1)*this%decomposition(2)*this%decomposition(3) // " processes, however, MPI returns " // mpi_n_procs() // " processes.", error)
@@ -209,10 +210,11 @@ contains
     call initialise(this%mpi, &
          dims     = this%decomposition, &
          periods  = periods_for_mpi, &
+         context  = context, &
          error    = error)
     PASS_ERROR(error)
 
-    write (ilog, '(5X,A,3I5,A)')  "coords        = ( ", this%mpi%my_coords, " )"
+    call prlog("coords        = ( "//this%mpi%my_coords//" )")
 
     do d = 1, 3
        call cart_shift( &
@@ -225,8 +227,8 @@ contains
     p%lower  = this%mpi%my_coords     * l/this%decomposition
     p%upper  = (this%mpi%my_coords+1) * l/this%decomposition
 
-    write (ilog, '(5X,A,3F15.3,A)')  "lower         = ( ", p%lower, " )"
-    write (ilog, '(5X,A,3F15.3,A)')  "upper         = ( ", p%upper, " )"
+    call prlog("lower         = ( "//p%lower//" )")
+    call prlog("upper         = ( "//p%upper//" )")
 
     this%off_r  = 0.0_DP
     this%off_l  = 0.0_DP
@@ -247,12 +249,12 @@ contains
        endif
     enddo
 
-    write (ilog, '(5X,A,3L1,A)')     "pbc (global)  = ( ", p%pbc, " )"
-    write (ilog, '(5X,A,3L1,A)')     "pbc (par.)    = ( ", this%pbc, " )"
-    write (ilog, '(5X,A,3L1,A)')     "pbc (local)   = ( ", p%locally_pbc, " )"
+    call prlog("pbc (global)  = ( "//p%pbc//" )")
+    call prlog("pbc (par.)    = ( "//this%pbc//" )")
+    call prlog("pbc (local)   = ( "//p%locally_pbc//" )")
 
-    write (ilog, '(5X,A,3F15.3,A)')  "off_l         = ( ", this%off_l, " )"
-    write (ilog, '(5X,A,3F15.3,A)')  "off_r         = ( ", this%off_r, " )"
+    call prlog("off_l         = ( "//this%off_l//" )")
+    call prlog("off_r         = ( "//this%off_r//" )")
 
     this%n_send_p_tot  = 0
     this%n_recv_p_tot  = 0
@@ -261,7 +263,7 @@ contains
     this%nit_p         = 0
     this%nit_g         = 0
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine communicator_init
 
@@ -283,7 +285,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- communicator_allocate -"
+    call prlog("- communicator_allocate -")
 
     call log_memory_start("communicator_allocate")
 
@@ -326,7 +328,7 @@ contains
        call communicate_forces(mod_communicator, p)
     endif
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine communicator_allocate
 
@@ -351,7 +353,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- communicator_request_border -"
+    call prlog("- communicator_request_border -")
 
     if (present(verlet_shell)) then
        this%verlet_shell  = verlet_shell
@@ -360,14 +362,14 @@ contains
     this%requested_border  = max(this%requested_border, border)
     this%border            = this%requested_border + this%verlet_shell
 
-    write (ilog, '(5X,A,F20.10)')  "requested_border  = ", this%requested_border
-    write (ilog, '(5X,A,F20.10)')  "verlet_shell      = ", this%verlet_shell
-    write (ilog, '(5X,A,F20.10)')  "border            = ", this%border
+    call prlog("requested_border  = "//this%requested_border)
+    call prlog("verlet_shell      = "//this%verlet_shell)
+    call prlog("border            = "//this%border)
 
     if (any(this%pbc .and. (this%decomposition .gt. 1) .and. (p%upper - p%lower < 2*this%border))) then
        RAISE_ERROR("Domain smaller than twice the border. This does not work (yet).", error)
     else if (any(p%upper - p%lower < 2*this%border)) then
-       write (ilog, *)  "    (Attention: Domain smaller than twice the border in at least one direction)"
+       call prlog("    (Attention: Domain smaller than twice the border in at least one direction)")
     endif
 
     do d = 1, 3
@@ -383,11 +385,11 @@ contains
        endif
     enddo
 
-    write (ilog, '(5X,A,3F10.3,A)')  "lower_with_border  = ( ", p%lower_with_border, " )"
-    write (ilog, '(5X,A,3F10.3,A)')  "upper_with_border  = ( ", p%upper_with_border, " )"
+    call prlog("lower_with_border  = ( "//p%lower_with_border//" )")
+    call prlog("upper_with_border  = ( "//p%upper_with_border//" )")
 
-    write (ilog, *)
-    
+    call prlog   
+ 
   endsubroutine communicator_request_border
 
   
@@ -403,7 +405,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)') "- communicator_del -"
+    call prlog("- communicator_del -")
 
     deallocate(this%send_l)
     deallocate(this%send_r)

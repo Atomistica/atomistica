@@ -395,15 +395,15 @@
     if (.not. this%neighbor_list_allocated) then
 
 #ifndef LAMMPS
-       write (ilog, '(A)')      "- " // BOP_NAME_STR // " -"
+       call prlog("- " // BOP_NAME_STR // " -")
 #ifdef DIHEDRAL
-       write (ilog, '(5X,A)')   "The " // BOP_NAME_STR // " potential has been compiled including dihedral terms."
+       call prlog("     The " // BOP_NAME_STR // " potential has been compiled including dihedral terms.")
 #endif
 #ifdef ALT_DIHEDRAL
-       write (ilog, '(5X,A)')   "The " // BOP_NAME_STR // " potential has been compiled including (alternative style) dihedral terms."
+       call prlog("     The " // BOP_NAME_STR // " potential has been compiled including (alternative style) dihedral terms.")
 #endif
 #ifdef SCREENING
-       write (ilog, '(5X,A)')   "The " // BOP_NAME_STR // " potential has been compiled with screening functions."
+       call prlog("     The " // BOP_NAME_STR // " potential has been compiled with screening functions.")
 #endif
        call log_memory_start(BOP_NAME_STR)
 #endif
@@ -486,7 +486,7 @@
 #ifndef LAMMPS
        call log_memory_stop(BOP_NAME_STR)
 
-       write (ilog, *)
+       call prlog
 #endif
 
        this%neighbor_list_allocated = .true.

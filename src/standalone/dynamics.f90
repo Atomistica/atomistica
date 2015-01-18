@@ -269,7 +269,7 @@ contains
     endif
 #endif
 
-    if (mod(this%nout, 10) == 0) then
+    if (ilog /= -1 .and. mod(this%nout, 10) == 0) then
        write (ilog, '(A10,A12,A12,A22,A22,A22,A14,A12,A14)')  &
             "it", &
             "t[" // trim(time_str) // "]", &
@@ -282,8 +282,10 @@ contains
             "P[" // trim(pressure_str) // "]"
     endif
 
-    write (ilog, '(I10,F12.1,F12.6,ES22.13,ES22.13,ES22.13,ES14.5,F12.3,ES14.3)')  &
-         this%it, this%ti, this%dt, this%ekin, this%epot, this%ekin+this%epot, this%fmax, T, tr(3, this%pressure)/3
+    if (ilog /= -1) then
+       write (ilog, '(I10,F12.1,F12.6,ES22.13,ES22.13,ES22.13,ES14.5,F12.3,ES14.3)')  &
+            this%it, this%ti, this%dt, this%ekin, this%epot, this%ekin+this%epot, this%fmax, T, tr(3, this%pressure)/3
+    endif
 
     this%nout = this%nout+1
 
@@ -335,7 +337,7 @@ contains
 
     ! - Report
 
-    write (ilog, '(A)')  "- dynamics_give_velocities -"
+    call prlog("- dynamics_give_velocities -")
 
     ! - Set velocities
 
@@ -352,7 +354,7 @@ contains
        RAISE_ERROR("dynamics_give_velocities: Unknown mode.", ierror)
     end if
 
-    write (ilog, '(5X,A)')  ""
+    call prlog
 
   end subroutine dynamics_give_velocities
 

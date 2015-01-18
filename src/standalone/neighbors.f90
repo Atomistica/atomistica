@@ -445,11 +445,11 @@ contains
     INIT_ERROR(error)
 
     if (.not. this%initialized) then
-       write (ilog, '(A)')     "- neighbors_update -"
-       write (ilog, '(5X,A)')  "Initializing neighbor list."
+       call prlog("- neighbors_update -")
+       call prlog("     Initializing neighbor list.")
 
        if (this%sort_before_update) then
-          write (ilog, '(5X,A)')  "Sorting particles before neighbor list update."
+          call prlog("     Sorting particles before neighbor list update.")
        endif
 
        if (this%mode == FIXED_VERLET_SHELL) then
@@ -463,15 +463,15 @@ contains
           RAISE_ERROR("Internal error: mode = " // this%mode, error)
        endif
 
-       write (ilog, '(5X,A,F20.10)')  "interaction_range  = ", this%interaction_range
-       write (ilog, '(5X,A,F20.10)')  "verlet_shell       = ", this%verlet_shell
-       write (ilog, '(5X,A,F20.10)')  "cutoff             = ", this%cutoff
+       call prlog("     interaction_range  = "//this%interaction_range)
+       call prlog("     iverlet_shell       = "//this%verlet_shell)
+       call prlog("     icutoff             = "//this%cutoff)
 
        if (this%cutoff <= 0.0_DP) then
           RAISE_ERROR("Cutoff needs to be larger than zero.", error)
        endif
 
-       write (ilog, '(5X,A,I10)')     "avgn               = ", this%avgn
+       call prlog("     avgn               = "//this%avgn)
 
        this%neighbors_size  = p%maxnatloc * this%avgn
 
@@ -500,7 +500,7 @@ contains
        this%it              = 0
        this%initialized     = .true.
 
-       write (ilog, *)
+       call prlog
 
 #ifdef _MP
        call request_border(mod_communicator, p, this%interaction_range, &
@@ -646,7 +646,7 @@ contains
 #ifdef _OPENMP
     !$omp  parallel default(none) &
     !$omp& private(abs_delta_r_sq, cell, chunk_start, c, cell2, cur, cur_cell, delta_r, i, j, off, x, any_c_not_zero) &
-    !$omp& firstprivate(chunk_len, cutoff_sq, ilog, lebc, Abox, shear_dx, locally_pbc) &
+    !$omp& firstprivate(chunk_len, cutoff_sq, lebc, Abox, shear_dx, locally_pbc) &
     !$omp& shared(this, p) &
     !$omp& reduction(+:error_loc) reduction(+:nn)
 
@@ -837,13 +837,13 @@ contains
           allocate(this%binning_last(this%n_cells(1), this%n_cells(2), this%n_cells(3)))
        endif
     else
-       write (ilog, '(A)')  "- neighbors_binning_init -"
-       write (ilog, '(5X,A)')           "Binning enabled."
-       write (ilog, '(5X,A,F10.3)')     "cutoff     = ", this%bin_size
-       write (ilog, '(5X,A,3F10.3,A)')  "box_size   = ( ", this%box_size, " )"
-       write (ilog, '(5X,A,3I10,A)')    "n_cells    = ( ", this%n_cells, " )"
-       write (ilog, '(5X,A,9F10.3,A)')  "cell_size  = ( ", this%cell_size, " )"
-       write (ilog, *)
+       call prlog("- neighbors_binning_init -")
+       call prlog("     Binning enabled.")
+       call prlog("     cutoff     = "//this%bin_size)
+       call prlog("     box_size   = ( "//this%box_size//" )")
+       call prlog("     n_cells    = ( "//this%n_cells//" )")
+       !call prlog("     cell_size  = ( "//this%cell_size//" )")
+       call prlog
        
        allocate(this%binning_seed(this%n_cells(1), this%n_cells(2), this%n_cells(3)))
        allocate(this%binning_last(this%n_cells(1), this%n_cells(2), this%n_cells(3)))
