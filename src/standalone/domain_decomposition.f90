@@ -977,7 +977,7 @@ contains
 
     ! ---
 
-    m = ptrdict_register_section(cfg, CSTR("Parallel3D"), &
+    m = ptrdict_register_section(cfg, CSTR("DomainDecomposition"), &
          CSTR("Domain decomposition module."))
 
     call ptrdict_register_intpoint_property(m, c_loc(this%decomposition(1)), &
