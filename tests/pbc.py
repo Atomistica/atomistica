@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # ======================================================================
 # Atomistica - Interatomic potential library
 # https://github.com/pastewka/atomistica
@@ -21,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
+#! /usr/bin/env python
+
 
 import unittest
 

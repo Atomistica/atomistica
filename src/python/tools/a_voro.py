@@ -1,5 +1,3 @@
-#!/j1b/lb12/local/intel-XE.1/Python-2.7.6/bin/python
-
 # ======================================================================
 # Atomistica - Interatomic potential library
 # https://github.com/pastewka/atomistica
@@ -21,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
+#!/j1b/lb12/local/intel-XE.1/Python-2.7.6/bin/python
+
 
 """
 Run Voronoi analysis of a trajectory, and store the results into that

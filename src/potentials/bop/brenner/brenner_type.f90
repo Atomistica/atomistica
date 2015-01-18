@@ -1,10 +1,9 @@
 !! ======================================================================
-!! Atomistica - Interatomic potential library
-!! https://github.com/pastewka/atomistica
-!! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others.
-!! See the AUTHORS file in the top-level Atomistica directory.
+!! Atomistica - Interatomic potential library and molecular dynamics code
+!! https://github.com/Atomistica/atomistica
 !!
-!! Copyright (2005-2013) Fraunhofer IWM
+!! Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
+!! See the AUTHORS file in the top-level Atomistica directory.
 !!
 !! This program is free software: you can redistribute it and/or modify
 !! it under the terms of the GNU General Public License as published by
