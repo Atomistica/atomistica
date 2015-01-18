@@ -150,15 +150,14 @@ contains
 
     call rng_init
 
-    write (ilog, '(A)')  "- verlet_global_langevin_init -"
-    write (ilog, '(A)')  "$Id$"
+    call prlog("- verlet_global_langevin_init -")
 
-    write (ilog, '(5X,A,F20.10)')  "T           = ", this%T
-    write (ilog, '(5X,A,F20.10)')  "dT          = ", this%dT
-    write (ilog, '(5X,A,F20.10)')  "dissipation = ", this%dissipation
-    write (ilog, '(5X,A,F20.10)')  " -> tau     = ", 1.0_DP/this%dissipation
+    call prlog("     T           = "//this%T)
+    call prlog("     dT          = "//this%dT)
+    call prlog("     dissipation = "//this%dissipation)
+    call prlog("      -> tau     = "//1.0_DP/this%dissipation)
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine verlet_global_langevin_init
 

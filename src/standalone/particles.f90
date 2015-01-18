@@ -1338,12 +1338,12 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- units_init -"
+    call prlog("- units_init -")
 
     system_of_units = sou
 
     if (system_of_units == eV_A) then
-       write (ilog, '(5X,A)')  "Units are eV/A"
+       call prlog("     Units are eV/A")
 
        length_to_A      = 1.0_DP
        length_to_Bohr   = 1.0/Bohr
@@ -1362,7 +1362,7 @@ contains
        mass_str      = "g/mol"
 
     else if (system_of_units == eV_A_fs) then
-       write (ilog, '(5X,A)')  "Units are eV/A/fs"
+       call prlog("     Units are eV/A/fs")
 
        length_to_A      = 1.0_DP
        length_to_Bohr   = 1.0_DP/Bohr
@@ -1381,7 +1381,7 @@ contains
        mass_str      = "a.u."
 
     else if (system_of_units == H_Bohr) then
-       write (ilog, '(5X,A)')  "Units are H/Bohr"
+       call prlog("     Units are H/Bohr")
 
        length_to_A      = Bohr
        length_to_Bohr   = 1.0_DP
@@ -1408,7 +1408,7 @@ contains
     ! Scale masses
     ElementMass = ElementMass_in_g_mol/mass_to_g_mol
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine units_init
 

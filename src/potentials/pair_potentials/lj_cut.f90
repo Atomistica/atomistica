@@ -158,13 +158,13 @@ contains
     this%el1 = filter_from_string(this%element1, p)
     this%el2 = filter_from_string(this%element2, p)
 
-    write (ilog, '(A)')            "- lj_cut_init -"
+    call prlog("- lj_cut_init -")
     call filter_prlog(this%el1, p, indent=5)
     call filter_prlog(this%el2, p, indent=5)
-    write (ilog, '(5X,A,F20.10)')  "epsilon = ", this%epsilon
-    write (ilog, '(5X,A,F20.10)')  "sigma   = ", this%sigma
-    write (ilog, '(5X,A,F20.10)')  "cutoff  = ", this%cutoff
-    write (ilog, '(5X,A,L)')       "shift   = ", this%shift
+    call prlog("     epsilon = "//this%epsilon)
+    call prlog("     sigma   = "//this%sigma)
+    call prlog("     cutoff  = "//this%cutoff)
+    !call prlog("     shift   = "//this%shift)
 
     do i = 1, p%nel
        do j = 1, p%nel
@@ -180,7 +180,7 @@ contains
             (this%sigma/this%cutoff)**6)
     endif
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine lj_cut_bind_to
 

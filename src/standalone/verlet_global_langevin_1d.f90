@@ -125,7 +125,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- verlet_global_langevin_1d -"
+    call prlog("- verlet_global_langevin_1d -")
 
     if (present(d)) then
        this%d  = d
@@ -160,9 +160,9 @@ contains
     this%d2 = modulo(this%d+1, 3)+1
     this%d3 = modulo(this%d+2, 3)+1
 
-    write (ilog, '(5X,A,X,3(I1,X),A)')  "d  = ( ", this%d, this%d2, this%d3, " )"
+    call prlog("     d  = ( "//this%d//", "//this%d2//", "//this%d3//" )")
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine verlet_global_langevin_1d_init
 
