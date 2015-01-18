@@ -478,7 +478,7 @@ contains
     !$omp& private(p0, p1, p2, q0, q1, q2) &
     !$omp& private(sinphi, cosphi, sinpsi, cospsi, sintheta, costheta) &
     !$omp& private(tmp, tmp1, tmp2) &
-    !$omp& shared(dt, d2t, f, p, this, v) &
+    !$omp& shared(dyn, d2t, p, this) &
     !$omp& reduction(max:l_max_dr_sq) reduction(+:w)
 
     !$omp do
