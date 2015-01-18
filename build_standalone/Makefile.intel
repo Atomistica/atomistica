@@ -63,29 +63,22 @@ endif
 #
 # FIXME!!! Implement FFTW check
 #
-HAVE_FFTW3 = 0
-#EXTRA_FLAGS += -DHAVE_FFTW3
-#EXTRA_INCLUDE += -I/j1a/pas/applications/fftw-3.3/include
-#EXTRA_LIB += -L/j1a/pas/applications/fftw-3.3/lib -lfftw3
+#HAVE_FFTW3 = 0
+EXTRA_FLAGS += -DHAVE_FFTW3
+EXTRA_INCLUDE += 
+EXTRA_LIB += -lfftw3
 
 #
 # *** LAPACK and BLAS link options here.
 #
 # Intel MKL
 #
-DEBUG ?= 0
-ifneq ($(OPENMP),0)
-EXTRA_FLAGS += $(shell ${FC} --version | python ${SRCDIR}/../tools/lapack.py --fflags --parallel)
-EXTRA_LIB += $(shell ${FC} --version | python ${SRCDIR}/../tools/lapack.py --flibs --parallel)
-else
-EXTRA_FLAGS += $(shell ${FC} --version | python ${SRCDIR}/../tools/lapack.py --fflags)
-EXTRA_LIB += $(shell ${FC} --version | python ${SRCDIR}/../tools/lapack.py --flibs)
-endif
+EXTRA_LIB += -mkl=parallel
 
 #
 # *** Other settings that rarely need to be touched
 #
-LIBTOOL  = ar r
+LIBTOOL = ar r
 
 #
 # * Optimization
@@ -100,10 +93,6 @@ endif
 #
 # * Defines
 #
-#   -DMDCORE_MONOLITHIC        Compile modules that work only in the standalone
-#                              version of MDCORE (i.e. HarmonicHook, etc.)
-#   -DMDCORE_PYTHON            Compile Python specific stuff
-#
 #   -DHAVE_NETCDF              Compile with NetCDF output module
 #   -DHAVE_FFTW3               Compile PME module using FFTW3
 #   -DHAVE_MKL                 LAPACK implementation is the MKL
@@ -115,8 +104,7 @@ endif
 #                              use CUDA GPU hardware.
 #
 DEFINES  = \
-	-DHAVE_IFPORT \
-	-DMDCORE_MONOLITHIC
+	-DHAVE_IFPORT
 
 #
 # *** Compilation and linking flags
