@@ -77,5 +77,9 @@ def walkfunc(d, dirname, fns):
 
 def scanallmeta(path):
     d = { }
-    os.path.walk(path, walkfunc, d)
+    if isinstance(path, str):
+        os.path.walk(path, walkfunc, d)
+    else:
+        for p in path:
+            os.path.walk(p, walkfunc, d)
     return d
