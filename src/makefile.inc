@@ -161,7 +161,7 @@ STANDALONE_ALL = \
 	r250.f \
 	rng.f90 \
 	particles.f90 \
-	parallel_3d.f90 \
+	domain_decomposition.f90 \
 	neighbors.f90 \
 	filter.f90 \
 	molecules.f90 \
