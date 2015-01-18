@@ -29,7 +29,7 @@
 !! Filter a type of atom
 !<
 module filter
-  use libAtoms_module
+  use supplib
 
   use logging
 
