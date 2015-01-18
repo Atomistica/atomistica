@@ -396,7 +396,7 @@ contains
 
 #undef ENERGY_AND_FORCES_WITH_CHARGES_AND_COUL
 
-#define ENERGY_AND_FORCES_WITH_DYN(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call energy_and_forces(this%x(i), dyn, nl, ierror=ierror) ; PASS_ERROR(ierror) ; enddo ; endif
+#define ENERGY_AND_FORCES_WITH_DYN(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call energy_and_forces_with_dyn(this%x(i), dyn, nl, ierror=ierror) ; PASS_ERROR(ierror) ; enddo ; endif
 
     ENERGY_AND_FORCES_WITH_DYN({classname})
 
