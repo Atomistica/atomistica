@@ -18,7 +18,7 @@ def get_finterfaces(fn, include_list=None, tmpfilename='_cpp.tmp'):
     include_str = ''
     if include_list is not None:
         include_str = reduce(lambda x,y: x+' -I'+y, include_list, '')
-    os.system('gfortran -cpp -E {} {} > {}'.format(fn, include_str,
+    os.system('gfortran -x f95-cpp-input -E {} {} > {}'.format(fn, include_str,
                                                    tmpfilename))
 
     iface = re.compile('^\ *interface\ ',re.IGNORECASE)
@@ -37,7 +37,8 @@ def get_finterfaces(fn, include_list=None, tmpfilename='_cpp.tmp'):
     os.remove(tmpfilename)
     # gfortran generates and empty .s file when just preprocessing
     fnroot, fnext = os.path.splitext(fn)
-    os.remove(fnroot+'.s')
+    if os.path.exists(fnroot+'.s'):
+        os.remove(fnroot+'.s')
 
     return [finterface.lower() for finterface in finterfaces]
 
