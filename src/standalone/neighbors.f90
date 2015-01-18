@@ -595,7 +595,7 @@ contains
     ! ---
 
     real(DP)  :: Abox(3, 3), shear_dx(3)
-    logical   :: locally_periodic(3)
+    logical   :: locally_pbc(3)
 
     integer   :: i, j, k, x, nn
     integer   :: cell(3), cell2(3), cur_cell(3)
@@ -624,7 +624,7 @@ contains
     call timer_start("fill_neighbor_list")
 
     Abox              = p%Abox
-    locally_periodic  = p%locally_periodic
+    locally_pbc  = p%locally_pbc
     shear_dx          = p%shear_dx
 
 #ifdef _OPENMP
@@ -646,7 +646,7 @@ contains
 #ifdef _OPENMP
     !$omp  parallel default(none) &
     !$omp& private(abs_delta_r_sq, cell, chunk_start, c, cell2, cur, cur_cell, delta_r, i, j, off, x, any_c_not_zero) &
-    !$omp& firstprivate(chunk_len, cutoff_sq, ilog, lebc, Abox, shear_dx, locally_periodic) &
+    !$omp& firstprivate(chunk_len, cutoff_sq, ilog, lebc, Abox, shear_dx, locally_pbc) &
     !$omp& shared(this, p) &
     !$omp& reduction(+:error_loc) reduction(+:nn)
 
@@ -677,7 +677,7 @@ contains
           ! distance to that cell in number of simulation cells. This allows
           ! the use of very small boxes, e.g. one atom simulations.
           do k = 1, 3
-             if (locally_periodic(k)) then
+             if (locally_pbc(k)) then
                 do while (cur_cell(k) < 1)
                    cur_cell(k) = cur_cell(k)+this%n_cells(k)
                    c(k)        = c(k)-1
@@ -700,7 +700,7 @@ contains
              c         = 0
 
              do k = 1, 3
-                if (locally_periodic(k)) then
+                if (locally_pbc(k)) then
                    do while (cur_cell(k) < 1)
                       cur_cell(k) = cur_cell(k)+this%n_cells(k)
                       c(k)        = c(k)-1
@@ -995,7 +995,7 @@ contains
 
        ! Fix for the "Particle outside simulation domain" problem
        do j = 1, 3
-          if (p%locally_periodic(j)) then
+          if (p%locally_pbc(j)) then
              if (cell(j) < 1) then
                 cell(j) = cell(j) + this%n_cells(j)
                 PNC3(p, i) = PNC3(p, i) + p%Abox(1:3, j)

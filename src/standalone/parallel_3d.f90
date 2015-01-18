@@ -60,7 +60,7 @@ module parallel_3d
      ! Periodicity
      !
 
-     logical    :: periodic(3)
+     logical    :: pbc(3)
 
      !
      ! Neighboring processeses in x-, y- and z- direction
@@ -195,13 +195,13 @@ contains
        this%verlet_shell   = verlet_shell
     endif
 
-    write (ilog, '(5X,A,3I5,A)')  "decomposition      = ( ", this%decomposition, " )"
+    write (ilog, '(5X,A,3I5,A)')  "decomposition = ( ", this%decomposition, " )"
 
     if (this%decomposition(1)*this%decomposition(2)*this%decomposition(3) /= mpi_n_procs()) then
        RAISE_ERROR("Decomposition geometry requires " // this%decomposition(1)*this%decomposition(2)*this%decomposition(3) // " processes, however, MPI returns " // mpi_n_procs() // " processes.", error)
     endif
 
-    this%periodic          = p%periodic
+    this%pbc          = p%pbc
     this%requested_border  = 0.0_DP
 
     periods_for_mpi = (/ .true., .true., .true. /)
@@ -211,7 +211,7 @@ contains
          error    = error)
     PASS_ERROR(error)
 
-    write (ilog, '(5X,A,3I5,A)')  "coords             = ( ", this%mpi%my_coords, " )"
+    write (ilog, '(5X,A,3I5,A)')  "coords        = ( ", this%mpi%my_coords, " )"
 
     do d = 1, 3
        call cart_shift( &
@@ -224,19 +224,19 @@ contains
     p%lower  = this%mpi%my_coords     * l/this%decomposition
     p%upper  = (this%mpi%my_coords+1) * l/this%decomposition
 
-    write (ilog, '(5X,A,3F15.3,A)')  "lower              = ( ", p%lower, " )"
-    write (ilog, '(5X,A,3F15.3,A)')  "upper              = ( ", p%upper, " )"
+    write (ilog, '(5X,A,3F15.3,A)')  "lower         = ( ", p%lower, " )"
+    write (ilog, '(5X,A,3F15.3,A)')  "upper         = ( ", p%upper, " )"
 
     this%off_r  = 0.0_DP
     this%off_l  = 0.0_DP
 
     do d = 1, 3
-       if (p%periodic(d) .and. this%decomposition(d) > 1) then
-          ! No periodicity in binning because we explicitly copy the atoms
+       if (p%pbc(d) .and. this%decomposition(d) > 1) then
+          ! No pbcity in binning because we explicitly copy the atoms
           ! from the other processors
-          p%locally_periodic(d) = .false.
+          p%locally_pbc(d) = .false.
        else
-          this%periodic(d) = .false.
+          this%pbc(d) = .false.
        endif
 
        if (this%mpi%my_coords(d) == 0) then
@@ -246,12 +246,12 @@ contains
        endif
     enddo
 
-    write (ilog, '(5X,A,3L1,A)')     "periodic (global)  = ( ", p%periodic, " )"
-    write (ilog, '(5X,A,3L1,A)')     "periodic (par.)    = ( ", this%periodic, " )"
-    write (ilog, '(5X,A,3L1,A)')     "periodic (local)   = ( ", p%locally_periodic, " )"
+    write (ilog, '(5X,A,3L1,A)')     "pbc (global)  = ( ", p%pbc, " )"
+    write (ilog, '(5X,A,3L1,A)')     "pbc (par.)    = ( ", this%pbc, " )"
+    write (ilog, '(5X,A,3L1,A)')     "pbc (local)   = ( ", p%locally_pbc, " )"
 
-    write (ilog, '(5X,A,3F15.3,A)')  "off_l              = ( ", this%off_l, " )"
-    write (ilog, '(5X,A,3F15.3,A)')  "off_r              = ( ", this%off_r, " )"
+    write (ilog, '(5X,A,3F15.3,A)')  "off_l         = ( ", this%off_l, " )"
+    write (ilog, '(5X,A,3F15.3,A)')  "off_r         = ( ", this%off_r, " )"
 
     this%n_send_p_tot  = 0
     this%n_recv_p_tot  = 0
@@ -363,19 +363,19 @@ contains
     write (ilog, '(5X,A,F20.10)')  "verlet_shell      = ", this%verlet_shell
     write (ilog, '(5X,A,F20.10)')  "border            = ", this%border
 
-    if (any(this%periodic .and. (this%decomposition .gt. 1) .and. (p%upper - p%lower < 2*this%border))) then
+    if (any(this%pbc .and. (this%decomposition .gt. 1) .and. (p%upper - p%lower < 2*this%border))) then
        RAISE_ERROR("Domain smaller than twice the border. This does not work (yet).", error)
     else if (any(p%upper - p%lower < 2*this%border)) then
        write (ilog, *)  "    (Attention: Domain smaller than twice the border in at least one direction)"
     endif
 
     do d = 1, 3
-       if (this%periodic(d) .or. this%mpi%my_coords(d) /= 0) then
+       if (this%pbc(d) .or. this%mpi%my_coords(d) /= 0) then
           p%lower_with_border(d)  = p%lower(d) - this%border
        else
           p%lower_with_border(d)  = p%lower(d)
        endif
-       if (this%periodic(d) .or. this%mpi%my_coords(d) /= this%decomposition(d)-1) then
+       if (this%pbc(d) .or. this%mpi%my_coords(d) /= this%decomposition(d)-1) then
           p%upper_with_border(d)  = p%upper(d) + this%border
        else
           p%upper_with_border(d)  = p%upper(d)
@@ -716,13 +716,13 @@ contains
 
     do d = 1, 3
 
-       if (this%periodic(d) .or. this%mpi%my_coords(d) /= 0) then
+       if (this%pbc(d) .or. this%mpi%my_coords(d) /= 0) then
           lower(d)  = p%lower(d) + this%border
        else
           lower(d)  = p%lower(d)
        endif
 
-       if (this%periodic(d) .or. this%mpi%my_coords(d) /= this%decomposition(d)-1) then
+       if (this%pbc(d) .or. this%mpi%my_coords(d) /= this%decomposition(d)-1) then
           upper(d)  = p%upper(d) - this%border
        else
           upper(d)  = p%upper(d)
@@ -897,13 +897,13 @@ contains
 
     do d = 1, 3
 
-       if (this%periodic(d) .or. this%mpi%my_coords(d) /= 0) then
+       if (this%pbc(d) .or. this%mpi%my_coords(d) /= 0) then
           lower(d)  = p%lower(d) + this%border
        else
           lower(d)  = p%lower(d)
        endif
 
-       if (this%periodic(d) .or. this%mpi%my_coords(d) /= this%decomposition(d)-1) then
+       if (this%pbc(d) .or. this%mpi%my_coords(d) /= this%decomposition(d)-1) then
           upper(d)  = p%upper(d) - this%border
        else
           upper(d)  = p%upper(d)

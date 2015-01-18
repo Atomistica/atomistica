@@ -48,6 +48,8 @@ program main
 
   implicit none
 
+  character(*), parameter :: MODULE_STR = "main"
+
   ! Registries from *_factory_c.c
   interface
 
@@ -95,13 +97,13 @@ program main
   real(DP), target           :: bin_size = -1
 
   real(DP), target           :: cutoff_add = -1.0_DP
-  real(DP), target           :: cutoff = -1.0_DP
+  real(DP), target           :: abs_cutoff = -1.0_DP
   logical(BOOL), target      :: force_binning = .false.
 
   logical(BOOL), target      :: in_clear_velocities  = .false.
   logical(BOOL), target      :: in_clear_charges     = .false.
 
-  integer, target            :: periodic(3) = (/ 1, 1, 1 /)
+  integer, target            :: pbc(3) = (/ 1, 1, 1 /)
 
   logical(BOOL), target      :: in_sort = .false.
 
@@ -192,8 +194,8 @@ contains
 
     call init(p)
     call init(dyn, p, dt = max_dt, mymaxtime = max_time)
-    p%periodic          = periodic /= 0
-    p%locally_periodic  = p%periodic
+    p%pbc          = pbc /= 0
+    p%locally_pbc  = p%pbc
 
     if (coulomb_is_enabled(c_loc(coul))) then
        call add_real(p%data, Q_STR, Q_TAG, ierror=ierror)
@@ -237,8 +239,8 @@ contains
     endif
 
 #ifdef _MP
-    if (cutoff > 0.0_DP) then
-       stop "cutoff > 0.0 and parallel computation. Does not work yet. Please implement."
+    if (abs_cutoff > 0.0_DP) then
+       stop "abs_cutoff > 0.0 and parallel computation. Does not work yet. Please implement."
     endif
     call init(mod_parallel_3d, p, &
          verlet_shell  = cutoff_add)
@@ -314,7 +316,7 @@ contains
     DEBUG_WRITE("- init(nl) -")
     call init(nl, &
          avgn          = avgn, &
-         cutoff        = cutoff, &
+         cutoff        = abs_cutoff, &
          verlet_shell  = cutoff_add, &
          sort          = logical(in_sort))
     if (bin_size > 0.0_DP) then
@@ -363,8 +365,12 @@ contains
     done = .false.
 
 #ifdef HAVE_IFPORT
-    call sigreg(SIGTERM, c_loc(handle_signal))
-    call sigreg(12, c_loc(handle_signal))  ! SIGUSR2
+    if (signal(SIGTERM, handle_signal, -1) == SIG$ERR) then
+       WARN("Failed to trap SIGTERM.")
+    endif
+    if (signal(12, handle_signal, -1) == SIG$ERR) then  ! SIGUSR2
+       WARN("Failed to trap SIGUSR2.")
+    endif
 #endif
 
     if (n_iterations == 0) then
@@ -590,8 +596,8 @@ contains
          CSTR("per_atom_virial"), &
          CSTR("Compute per atom virial information to be used with e.g. the Slicing module."))
 
-    call ptrdict_register_intpoint_property(ptrdict_file, c_loc(periodic(1)), &
-         CSTR("periodic"), &
+    call ptrdict_register_intpoint_property(ptrdict_file, c_loc(pbc(1)), &
+         CSTR("pbc"), &
          CSTR("Periodicity in x-, y- and z-direction."))
 
     call ptrdict_register_integer_property(ptrdict_file, c_loc(scr_freq), &
@@ -622,7 +628,7 @@ contains
     call ptrdict_register_integer_property(ptrdict_file, c_loc(avgn), CSTR("avgn"), &
          CSTR("Average number of neighbors (for neighbor list initialization)."))
 
-    call ptrdict_register_real_property(ptrdict_file, c_loc(cutoff), &
+    call ptrdict_register_real_property(ptrdict_file, c_loc(abs_cutoff), &
          CSTR("cutoff"), &
          CSTR("Specify cutoff. Shell larger than the interaction range will be treated as a skin depth/Verlet shell."))
     call ptrdict_register_real_property(ptrdict_file, c_loc(cutoff_add), &

@@ -52,13 +52,7 @@ module particles
   character(MAX_NAME_STR), parameter  :: EL_STR           = "internal_element_number"
   character(MAX_NAME_STR), parameter  :: INDEX_STR        = "atom_index"
   character(MAX_NAME_STR), parameter  :: M_STR            = "masses"
-#ifdef IMPLICIT_R
   character(MAX_NAME_STR), parameter  :: R_NON_CYC_STR    = "coordinates"                  ! ... are allowed to leave the cell between neighbor list updates
-#else
-  public :: R_STR
-  character(MAX_NAME_STR), parameter  :: R_STR            = "coordinates"                ! ... will always be within the simulation cell
-  character(MAX_NAME_STR), parameter  :: R_NON_CYC_STR    = "positions"                  ! ... are allowed to leave the cell between neighbor list updates
-#endif
   character(MAX_NAME_STR), parameter  :: R_CONT_STR       = "continuous_coordinates"     ! ... will never be wrapped back to the cell
   character(MAX_NAME_STR), parameter  :: G_STR            = "groups"
 
@@ -84,15 +78,15 @@ module particles
   integer, parameter  :: F_TO_ENER       = 128       ! Output to ener.out file
 
   integer, parameter  :: F_ALL  = F_CONSTANT + F_VERBOSE_ONLY + F_RESTART + F_TO_TRAJ + F_COMMUNICATE + F_COMM_GHOSTS
-
+  
   integer, parameter  :: Q_TAG  = F_TO_TRAJ + F_RESTART + F_COMMUNICATE + F_COMM_GHOSTS
 
-
+  
   !
   ! This stores the static information,
   ! i.e. the *positions*
   !
-
+  
   public :: particles_t
   type particles_t
 
@@ -121,7 +115,7 @@ module particles
 
      real(DP)               :: lower(3)
      real(DP)               :: upper(3)
-
+     
      real(DP)               :: lower_with_border(3)
      real(DP)               :: upper_with_border(3)
 
@@ -129,13 +123,13 @@ module particles
      !! Communication border
      !<
      real(DP)               :: border = 0.0_DP
-
+     
      !
      ! Periodicity
      !
 
-     logical                :: periodic(3)
-     logical                :: locally_periodic(3)
+     logical :: pbc(3)
+     logical :: locally_pbc(3)
 
      !
      ! Lees-Edwards boundary conditions
@@ -192,7 +186,7 @@ module particles
      real(DP), pointer      :: r_non_cyc(:, :)      ! displacement from last binning
 
      ! These positions are continouos from the start of the simulation.
-     ! No periodic boundary condition are applied.
+     ! No pbc boundary condition are applied.
      real(DP), pointer      :: r_cont(:, :)         ! displacement from beginning of simulation
 
      integer, pointer       :: g(:)                 !< group (for the user's bookkeeping, should not be touched in the code)
@@ -486,10 +480,10 @@ contains
 !    call info("- particles_set_cell")
 
     if (present(pbc)) then
-       this%periodic  = pbc
+       this%pbc  = pbc
     endif
 
-    if (.not. all(this%periodic)) then
+    if (.not. all(this%pbc)) then
        call require_orthorhombic_cell(this, error)
        PASS_ERROR(error)
     endif
@@ -535,7 +529,7 @@ contains
        RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
     endif
 
-    if (.not. all(this%periodic)) then
+    if (.not. all(this%pbc)) then
        call require_orthorhombic_cell(this, error)
        PASS_ERROR(error)
     endif
@@ -669,8 +663,8 @@ contains
 
     this%accum_max_dr      = 0.0_DP
 
-    this%periodic          = (/ .true., .true., .true. /)
-    this%locally_periodic  = (/ .true., .true., .true. /)
+    this%pbc          = (/ .true., .true., .true. /)
+    this%locally_pbc  = (/ .true., .true., .true. /)
 
     this%border = 0.0_DP
 
@@ -751,14 +745,14 @@ contains
     this%initialized                    = .true.
     this%orthorhombic_cell_is_required  = from%orthorhombic_cell_is_required
     
-    this%periodic          = (/ .true., .true., .true. /)
-    this%locally_periodic  = (/ .true., .true., .true. /)
+    this%pbc          = (/ .true., .true., .true. /)
+    this%locally_pbc  = (/ .true., .true., .true. /)
 
     this%border = 0.0_DP
 
     call init(this%data, from%data)
 
-    call set_cell(this, from%Abox, from%periodic, error=error)
+    call set_cell(this, from%Abox, from%pbc, error=error)
 
   endsubroutine particles_init_from_particles
 
@@ -1119,7 +1113,7 @@ contains
 
        do j = 1, 3
           
-          if (this%locally_periodic(j)) then
+          if (this%locally_pbc(j)) then
              do k = 1, this%natloc
 
                 do while (PNC(this, k, j) < 0.0_DP)
@@ -1143,7 +1137,7 @@ contains
 
     endif
 
-    ! Note: POS3 has different periodicity than PNC3
+    ! Note: POS3 has different pbcity than PNC3
     call pnc2pos(this)
 
   endsubroutine particles_inbox
@@ -1192,7 +1186,7 @@ contains
 
        do j = 1, 3
           
-          if (this%periodic(j)) then
+          if (this%pbc(j)) then
              do k = 1, this%natloc
 
                 do while (POS(this, k, j) < 0.0_DP)
@@ -1589,7 +1583,7 @@ contains
     call init(out, this)
     call allocate(out, this%natloc+that%natloc)
 
-    call set_cell(out, this%Abox, this%periodic)
+    call set_cell(out, this%Abox, this%pbc)
 
     out%sym(1:this%natloc)                          = this%sym(1:this%natloc)
     out%sym(this%natloc+1:this%natloc+that%natloc)  = that%sym(1:that%natloc)
@@ -1636,7 +1630,7 @@ contains
     cell(:, 1)  = this%Abox(:, 1)*arg(1)
     cell(:, 2)  = this%Abox(:, 2)*arg(2)
     cell(:, 3)  = this%Abox(:, 3)*arg(3)
-    call set_cell(out, cell, this%periodic)
+    call set_cell(out, cell, this%pbc)
 
     l = 1
     do i = 0, arg(1)-1
