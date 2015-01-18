@@ -105,7 +105,7 @@ module linearalgebra
      endsubroutine iterative_matrix_inverse
   endinterface
 
-  public :: cross_product
+  public :: cross_product, diagonal_matrix
 
 contains
 
@@ -324,5 +324,24 @@ contains
     cross_product(3) = + ( x(1)*y(2) - x(2)*y(1) )
 
   end function cross_product
+
+
+  !>
+  !! Construct a diagonal matrix with diagonal \param a
+  !<
+  pure function diagonal_matrix(a) result(r)
+    implicit none
+
+    real(DP), intent(in)  :: a(3)
+    real(DP)              :: r(3, 3)
+
+    ! ---
+
+    r        = 0.0_DP
+    r(1, 1)  = a(1)
+    r(2, 2)  = a(2)
+    r(3, 3)  = a(3)
+
+  endfunction diagonal_matrix
 
 endmodule linearalgebra
