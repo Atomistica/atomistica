@@ -558,6 +558,15 @@ contains
 #endif
     call del(p)
 
+#ifdef HAVE_IFPORT
+    if (signal(SIGTERM, handle_signal, 0) == SIG$ERR) then
+       WARN("Failed to untrap SIGTERM.")
+    endif
+    if (signal(12, handle_signal, 0) == SIG$ERR) then  ! SIGUSR2
+       WARN("Failed to untrap SIGUSR2.")
+    endif
+#endif
+
     call atomistica_shutdown
 
   endsubroutine main_loop
