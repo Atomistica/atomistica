@@ -48,7 +48,32 @@ module nc
 
   use particles
 
+#ifdef _MP
+
+  use mpi
+  use pnetcdf
+  use communicator
+
+#define nf90_close nf90mpi_close
+#define nf90_def_dim nf90mpi_def_dim
+#define nf90_def_var nf90mpi_def_var
+#define nf90_enddef nf90mpi_enddef
+#define nf90_get_var nf90mpi_get_var
+#define nf90_inq_dimid nf90mpi_inq_dimid
+#define nf90_inq_varid nf90mpi_inq_varid
+#define nf90_inquire_dimension nf90mpi_inquire_dimension
+#define nf90_inquire_variable nf90mpi_inquire_variable
+#define nf90_put_att nf90mpi_put_att
+#define nf90_put_var nf90mpi_put_var
+#define nf90_redef nf90mpi_redef
+#define nf90_strerror nf90mpi_strerror
+#define nf90_sync nf90mpi_sync
+
+#else
+
   use netcdf
+
+#endif
 
   use versioninfo
 
@@ -143,10 +168,12 @@ module nc
      ! Temporary buffers
      !
 
+#ifndef _MP
      real(DP), pointer      :: tmp_real(:)
      integer, pointer       :: tmp_integer(:)
      real(DP), pointer      :: tmp_real3(:, :)
      real(DP), pointer      :: tmp_real3x3(:, :, :)
+#endif
 
   endtype nc_t
 
@@ -258,9 +285,14 @@ contains
 
     ! ---
 
-    character(1000)  :: versionstr
+    character(1000) :: versionstr
 
-    integer          :: i
+    integer                       :: i
+#ifdef _MP
+    integer(kind=MPI_OFFSET_KIND) :: totnat
+#else
+    integer                       :: totnat
+#endif
 
     ! ---
 
@@ -268,7 +300,11 @@ contains
     this%nframes         = 0
     this%cell_origin_var = -1
 
+#ifdef _MP
+    CHECK_NETCDF_ERROR( nf90mpi_create(mod_communicator%mpi%communicator, fn, NF90_64BIT_OFFSET, MPI_INFO_NULL, this%ncid), ierror )
+#else
     CHECK_NETCDF_ERROR( nf90_create(fn, NF90_64BIT_OFFSET, this%ncid), ierror )
+#endif
 
     !
     ! Dimensions
@@ -276,7 +312,8 @@ contains
 
     CHECK_NETCDF_ERROR( nf90_def_dim(this%ncid, NC_FRAME_STR, nf90_unlimited, this%frame_dim), ierror )
     CHECK_NETCDF_ERROR( nf90_def_dim(this%ncid, NC_SPATIAL_STR, 3, this%spatial_dim), ierror )
-    CHECK_NETCDF_ERROR( nf90_def_dim(this%ncid, NC_ATOM_STR, p%nat, this%atom_dim), ierror )
+    totnat = p%totnat
+    CHECK_NETCDF_ERROR( nf90_def_dim(this%ncid, NC_ATOM_STR, totnat, this%atom_dim), ierror )
     CHECK_NETCDF_ERROR( nf90_def_dim(this%ncid, NC_CELL_SPATIAL_STR, 3, this%cell_spatial_dim), ierror )
     CHECK_NETCDF_ERROR( nf90_def_dim(this%ncid, NC_CELL_ANGULAR_STR, 3, this%cell_angular_dim), ierror )
     CHECK_NETCDF_ERROR( nf90_def_dim(this%ncid, NC_LABEL_STR, 10, this%label_dim), ierror )
@@ -518,6 +555,11 @@ contains
 
     CHECK_NETCDF_ERROR( nf90_enddef(this%ncid), ierror )
 
+#ifdef _MP
+    CHECK_NETCDF_ERROR( nf90mpi_begin_indep_data(this%ncid), ierror )
+    if (mpi_id() == ROOT) then
+#endif
+
     !
     ! Write label variables
     !
@@ -525,6 +567,11 @@ contains
     CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%spatial_var, "xyz"), ierror )
     CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%cell_spatial_var, "abc"), ierror )
     CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%cell_angular_var, (/ "alpha", "beta ", "gamma" /) ), ierror )
+
+#ifdef _MP
+    endif
+    CHECK_NETCDF_ERROR( nf90mpi_end_indep_data(this%ncid), ierror )
+#endif
 
     !
     ! Write initial configuration
@@ -536,10 +583,12 @@ contains
     ! Allocate buffers
     !
 
+#ifndef _MP
     allocate(this%tmp_real(p%nat))
     allocate(this%tmp_integer(p%nat))
     allocate(this%tmp_real3(3, p%nat))
     allocate(this%tmp_real3x3(3, 3, p%nat))
+#endif
 
     !
     ! Write constant information
@@ -569,10 +618,15 @@ contains
 
     ! ---
 
-    integer          :: xtype, ndims, nat, i
-    integer          :: dimids(NF90_MAX_VAR_DIMS)
+    integer                       :: xtype, i
+#ifdef _MP
+    integer(kind=MPI_OFFSET_KIND) :: nat, ndims, nframes
+#else
+    integer                       :: nat, ndims, nframes
+#endif
+    integer                       :: dimids(NF90_MAX_VAR_DIMS)
 
-    logical          :: in_define_mode
+    logical                       :: in_define_mode
 
     ! ---
 
@@ -587,13 +641,21 @@ contains
     endif
 
     if (this%mode == F_READ) then
+#ifdef _MP
+       CHECK_NETCDF_ERROR( nf90mpi_open(mod_communicator%mpi%communicator, fn, NF90_NOWRITE, MPI_INFO_NULL, this%ncid), ierror )
+#else
        CHECK_NETCDF_ERROR( nf90_open(fn, NF90_NOWRITE, this%ncid), ierror )
+#endif
 
        if (present(add_missing) .and. add_missing) then
           RAISE_ERROR("Missing fields can only be added if in write mode.", ierror)
        endif
     else
+#ifdef _MP
+       CHECK_NETCDF_ERROR( nf90mpi_open(mod_communicator%mpi%communicator, fn, NF90_WRITE, MPI_INFO_NULL, this%ncid), ierror )
+#else
        CHECK_NETCDF_ERROR( nf90_open(fn, NF90_WRITE, this%ncid), ierror )
+#endif
     endif
 
     CHECK_NETCDF_ERROR( nf90_inq_dimid(this%ncid, NC_FRAME_STR, this%frame_dim), ierror )
@@ -605,7 +667,8 @@ contains
        this%label_dim = -1
     endif
 
-    CHECK_NETCDF_ERROR( nf90_inquire_dimension(this%ncid, this%frame_dim, len=this%nframes), ierror )
+    CHECK_NETCDF_ERROR( nf90_inquire_dimension(this%ncid, this%frame_dim, len=nframes), ierror )
+    this%nframes = nframes
     CHECK_NETCDF_ERROR( nf90_inquire_dimension(this%ncid, this%atom_dim, len=nat), ierror )
 
     CHECK_NETCDF_ERROR( nf90_inquire_dimension(this%ncid, this%spatial_dim, len=ndims), ierror )
@@ -890,7 +953,8 @@ contains
     endif
 
     if (.not. allocated(p)) then
-       call allocate(p, nat)
+       i = nat
+       call allocate(p, i)
     else
        if (nat /= p%nat) then
           RAISE_ERROR("Particles object was allocated, however the number of particles does not match input file.", ierror)
@@ -899,25 +963,25 @@ contains
 
     do i = 1, p%data%n_real
        if (this%real_ndims(i) == 1) then
-          CHECK_NETCDF_ERROR( nf90_get_var(this%ncid, this%real_var(i), p%data%data_real(:, i), start = (/ 1 /), count = (/ p%nat /)), ierror )
+          !CHECK_NETCDF_ERROR( nf90_get_var(this%ncid, this%real_var(i), p%data%data_real(:, i), start = (/ 1 /), count = (/ nat /)), ierror )
        endif
     enddo
 
     do i = 1, p%data%n_integer
        if (this%integer_ndims(i) == 1) then
-          CHECK_NETCDF_ERROR( nf90_get_var(this%ncid, this%integer_var(i), p%data%data_integer(:, i), start = (/ 1 /), count = (/ p%nat /)), ierror )
+          !CHECK_NETCDF_ERROR( nf90_get_var(this%ncid, this%integer_var(i), p%data%data_integer(:, i), start = (/ 1 /), count = (/ nat /)), ierror )
        endif
     enddo
 
     do i = 1, p%data%n_real3
        if (this%real3_ndims(i) == 2) then
-          CHECK_NETCDF_ERROR( nf90_get_var(this%ncid, this%real3_var(i), p%data%data_real3(:, :, i), start = (/ 1, 1 /), count = (/ 3, p%nat /)), ierror )
+          !CHECK_NETCDF_ERROR( nf90_get_var(this%ncid, this%real3_var(i), p%data%data_real3(:, :, i), start = (/ 1, 1 /), count = (/ 3, nat /)), ierror )
        endif
     enddo
 
     do i = 1, p%data%n_real3x3
        if (this%real3x3_ndims(i) == 3) then
-          CHECK_NETCDF_ERROR( nf90_get_var(this%ncid, this%real3x3_var(i), p%data%data_real3x3(:, :, :, i), start = (/ 1, 1, 1 /), count = (/ 3, 3, p%nat /)), ierror )
+          !CHECK_NETCDF_ERROR( nf90_get_var(this%ncid, this%real3x3_var(i), p%data%data_real3x3(:, :, :, i), start = (/ 1, 1, 1 /), count = (/ 3, 3, nat /)), ierror )
        endif
     enddo
 
@@ -941,10 +1005,12 @@ contains
     ! Allocate buffers
     !
 
+#ifndef _MP
     allocate(this%tmp_real(p%nat))
     allocate(this%tmp_integer(p%nat))
     allocate(this%tmp_real3(3, p%nat))
     allocate(this%tmp_real3x3(3, 3, p%nat))
+#endif
 
   endsubroutine nc_open
 
@@ -984,10 +1050,12 @@ contains
        deallocate(this%real3x3_ndims)
     endif
 
+#ifndef _MP
     deallocate(this%tmp_real)
     deallocate(this%tmp_integer)
     deallocate(this%tmp_real3)
     deallocate(this%tmp_real3x3)
+#endif
 
   endsubroutine nc_close
 
@@ -1006,8 +1074,8 @@ contains
 
     ! ---
 
-    integer   :: it
-    real(DP)  :: ti
+    integer(kind=MPI_OFFSET_KIND) :: it
+    real(DP)                      :: ti
 
     ! ---
 
@@ -1018,7 +1086,7 @@ contains
     endif
 
     if (this%time_var /= -1) then
-       CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%time_var, ti, start = (/ it /)), "While reading frame " // it // ": ", ierror )
+       !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%time_var, ti, start = (/ it /)), "While reading frame " // it // ": ", ierror )
     else
        ti = it
     endif
@@ -1090,8 +1158,9 @@ contains
 
     ! ---
 
-    integer       :: i, it
-    real(DP)      :: o(3), l(3), a(3), cell(3, 3), cx, cy, cz
+    integer :: i, it
+
+    real(DP) :: o(3), l(3), a(3), cell(3, 3), cx, cy, cz
 
     ! ---
 
@@ -1102,38 +1171,38 @@ contains
     endif
 
     if (this%time_var /= -1) then
-       CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%time_var, ti, start = (/ it /)), "While reading frame " // it // ": ", ierror )
+       !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%time_var, ti, start = (/ it /)), "While reading frame " // it // ": ", ierror )
     else
        ti = it
     endif
 
     do i = 1, p%data%n_real
        if (this%real_ndims(i) == 2) then
-          CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%real_var(i), p%data%data_real(:, i), start = (/ 1, it /), count = (/ p%nat, 1 /)), "While reading frame " // it // ": ", ierror )
+          !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%real_var(i), p%data%data_real(:, i), start = (/ 1, it /), count = (/ p%nat, 1 /)), "While reading frame " // it // ": ", ierror )
        endif
     enddo
 
     do i = 1, p%data%n_integer
        if (this%integer_ndims(i) == 2) then
-          CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%integer_var(i), p%data%data_integer(:, i), start = (/ 1, it /), count = (/ p%nat, 1 /)), "While reading frame " // it // ": ", ierror )
+          !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%integer_var(i), p%data%data_integer(:, i), start = (/ 1, it /), count = (/ p%nat, 1 /)), "While reading frame " // it // ": ", ierror )
        endif
     enddo
 
     do i = 1, p%data%n_real3
        if (this%real3_ndims(i) == 3) then
-          CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%real3_var(i), p%data%data_real3(:, :, i), start = (/ 1, 1, it /), count = (/ 3, p%nat, 1 /)), "While reading frame " // it // ": ", ierror )
+          !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%real3_var(i), p%data%data_real3(:, :, i), start = (/ 1, 1, it /), count = (/ 3, p%nat, 1 /)), "While reading frame " // it // ": ", ierror )
        endif
     enddo
 
     do i = 1, p%data%n_real3x3
        if (this%real3x3_ndims(i) == 4) then
-          CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%real3x3_var(i), p%data%data_real3x3(:, :, :, i), start = (/ 1, 1, 1, it /), count = (/ 3, 3, p%nat, 1 /)), "While reading frame " // it // ": ", ierror )
+          !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%real3x3_var(i), p%data%data_real3x3(:, :, :, i), start = (/ 1, 1, 1, it /), count = (/ 3, 3, p%nat, 1 /)), "While reading frame " // it // ": ", ierror )
        endif
     enddo
 
     o = [ 0.0_DP, 0.0_DP, 0.0_DP ]
     if (this%cell_origin_var > 0) then
-       CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%cell_origin_var, o, start = (/ 1, it /), count = (/ 3, 1 /)), "While reading frame " // it // ": ", ierror )
+       !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%cell_origin_var, o, start = (/ 1, it /), count = (/ 3, 1 /)), "While reading frame " // it // ": ", ierror )
        do i = 1, p%nat
 #ifdef IMPLICIT_R
           PNC3(p, i) = PNC3(p, i) - o
@@ -1143,11 +1212,11 @@ contains
        enddo
     endif
 
-    CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%cell_lengths_var, l, start = (/ 1, it /), count = (/ 3, 1 /) ), "While reading frame " // it // ": ", ierror )
-    CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%cell_angles_var, a, start = (/ 1, it /), count = (/ 3, 1 /) ), "While reading frame " // it // ": ", ierror )
+    !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%cell_lengths_var, l, start = (/ 1, it /), count = (/ 3, 1 /) ), "While reading frame " // it // ": ", ierror )
+    !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%cell_angles_var, a, start = (/ 1, it /), count = (/ 3, 1 /) ), "While reading frame " // it // ": ", ierror )
 
     if (this%shear_dx_var > 0) then
-       CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%shear_dx_var, p%shear_dx, start = (/ 1, it /), count = (/ 3, 1 /)), "While reading frame " // it // ": ", ierror )
+       !CHECK_NETCDF_ERROR_WITH_INFO( nf90_get_var(this%ncid, this%shear_dx_var, p%shear_dx, start = (/ 1, it /), count = (/ 3, 1 /)), "While reading frame " // it // ": ", ierror )
     endif
 
     a = a*PI/180.0;
@@ -1187,13 +1256,27 @@ contains
 
     ! ---
 
-    integer                :: i, j
+    integer(kind=MPI_OFFSET_KIND), parameter :: one = 1, three = 3
+
+    integer(kind=MPI_OFFSET_KIND) :: natloc
+    integer                       :: i
+#ifdef _MP
+    integer(kind=MPI_OFFSET_KIND) :: start
+#else
+    integer                       :: j
+#endif
 
     ! ---
 
     if (this%mode /= F_WRITE) then
        RAISE_ERROR("File has not been opened for write access.", ierror)
     endif
+
+    natloc = p%natloc
+#ifdef _MP
+    start = cumsum(mod_communicator%mpi, p%natloc, error=ierror)-p%natloc+1
+    PASS_ERROR(ierror)
+#endif
 
     !
     ! Write global stuff
@@ -1203,11 +1286,14 @@ contains
        if (iand(p%data%tag_real(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_real(i), F_CONSTANT) /= 0) then
 
-             do j = 1, p%nat
-                this%tmp_real(j)  = p%data%data_real(p%global2local(j), i)
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real_var(i), p%data%data_real(:, i), start = (/ start /), count = (/ natloc /) ), ierror )
+#else
+             do j = 1, natloc
+                this%tmp_real(j) = p%data%data_real(p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_var(i), this%tmp_real, start = (/ 1 /), count = (/ p%nat /) ), ierror )
-
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_var(i), this%tmp_real, start = (/ one /), count = (/ natloc /) ), ierror )
+#endif
           endif
        endif
     enddo
@@ -1216,11 +1302,14 @@ contains
        if (iand(p%data%tag_integer(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_integer(i), F_CONSTANT) /= 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%integer_var(i), p%data%data_integer(:, i), start = (/ start /), count = (/ natloc /) ), ierror )
+#else
+             do j = 1, natloc
                 this%tmp_integer(j)  = p%data%data_integer(p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_var(i), this%tmp_integer, start = (/ 1 /), count = (/ p%nat /) ), ierror )
-
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_var(i), this%tmp_integer, start = (/ one /), count = (/ natloc /) ), ierror )
+#endif
           endif
        endif
     enddo
@@ -1229,10 +1318,14 @@ contains
        if (iand(p%data%tag_real3(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_real3(i), F_CONSTANT) /= 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real3_var(i), p%data%data_real3(:, :, i), start = (/ one, start /), count = (/ three, natloc /) ), ierror )
+#else
+             do j = 1, natloc
                 this%tmp_real3(:, j)  = p%data%data_real3(:, p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_var(i), this%tmp_real3, start = (/ 1, 1 /), count = (/ 3, p%nat /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_var(i), this%tmp_real3, start = (/ one, one /), count = (/ three, natloc /) ), ierror )
+#endif
 
           endif
        endif
@@ -1242,10 +1335,14 @@ contains
        if (iand(p%data%tag_real3x3(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_real3x3(i), F_CONSTANT) /= 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real3x3_var(i), p%data%data_real3x3(:, :, :, i), start = (/ one, one, one /), count = (/ three, three, natloc /) ), ierror )
+#else
+             do j = 1, natloc
                 this%tmp_real3x3(:, :, j)  = p%data%data_real3x3(:, :, p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3x3_var(i), this%tmp_real3x3, start = (/ 1, 1, 1 /), count = (/ 3, 3, p%nat /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3x3_var(i), this%tmp_real3x3, start = (/ one, one, one /), count = (/ three, three, natloc /) ), ierror )
+#endif
 
           endif
        endif
@@ -1269,7 +1366,15 @@ contains
 
     ! ---
 
-    integer                :: i, j, n
+    integer(kind=MPI_OFFSET_KIND) :: one = 1, three = 3
+
+    integer(kind=MPI_OFFSET_KIND) :: natloc
+    integer                       :: i, n
+#ifdef _MP
+    integer(kind=MPI_OFFSET_KIND) :: start
+#else
+    integer                       :: j
+#endif 
 
     ! ---
 
@@ -1278,15 +1383,24 @@ contains
     endif
 
     n = 0
+    natloc = p%natloc
+#ifdef _MP
+    start = cumsum(mod_communicator%mpi, p%natloc, error=ierror)-p%natloc+1
+    PASS_ERROR(ierror)
+#endif
 
     do i = 1, p%data%n_real
        if (iand(p%data%tag_real(i), F_TO_TRAJ) /= 0 .and. trim(p%data%name_real(i)) == trim(field_name)) then
           if (iand(p%data%tag_real(i), F_CONSTANT) /= 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real_var(i), p%data%data_real(:, i), start = (/ start /), count = (/ natloc /) ), ierror )
+#else
+             do j = 1, natloc
                 this%tmp_real(j)  = p%data%data_real(p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_var(i), this%tmp_real, start = (/ 1 /), count = (/ p%nat /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_var(i), this%tmp_real, start = (/ one /), count = (/ natloc /) ), ierror )
+#endif
 
              n  = n + 1
 
@@ -1298,10 +1412,14 @@ contains
        if (iand(p%data%tag_integer(i), F_TO_TRAJ) /= 0 .and. trim(p%data%name_integer(i)) == trim(field_name)) then
           if (iand(p%data%tag_integer(i), F_CONSTANT) /= 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%integer_var(i), p%data%data_integer(:, i), start = (/ start /), count = (/ natloc /) ), ierror )
+#else
+             do j = 1, natloc
                 this%tmp_integer(j)  = p%data%data_integer(p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_var(i), this%tmp_integer, start = (/ 1 /), count = (/ p%nat /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_var(i), this%tmp_integer, start = (/ one /), count = (/ natloc /) ), ierror )
+#endif
 
              n  = n + 1
 
@@ -1313,10 +1431,14 @@ contains
        if (iand(p%data%tag_real3(i), F_TO_TRAJ) /= 0 .and. trim(p%data%name_real3(i)) == trim(field_name)) then
           if (iand(p%data%tag_real3(i), F_CONSTANT) /= 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real3_var(i), p%data%data_real3(:, :, i), start = (/ one, start /), count = (/ three, natloc /) ), ierror )
+#else
+             do j = 1, natloc
                 this%tmp_real3(:, j)  = p%data%data_real3(:, p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_var(i), this%tmp_real3, start = (/ 1, 1 /), count = (/ 3, p%nat /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_var(i), this%tmp_real3, start = (/ one, one /), count = (/ three, natloc /) ), ierror )
+#endif
 
              n  = n + 1
 
@@ -1328,10 +1450,14 @@ contains
        if (iand(p%data%tag_real3x3(i), F_TO_TRAJ) /= 0 .and. trim(p%data%name_real3x3(i)) == trim(field_name)) then
           if (iand(p%data%tag_real3x3(i), F_CONSTANT) /= 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real3x3_var(i), p%data%data_real3x3(:, :, :, i), start = (/ one, one, start /), count = (/ three, three, natloc /) ), ierror )
+#else
+             do j = 1, natloc
                 this%tmp_real3x3(:, :, j)  = p%data%data_real3x3(:, :, p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3x3_var(i), this%tmp_real3x3, start = (/ 1, 1, 1 /), count = (/ 3, 3, p%nat /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3x3_var(i), this%tmp_real3x3, start = (/ one, one, one /), count = (/ three, three, natloc /) ), ierror )
+#endif
 
              n  = n + 1
 
@@ -1364,14 +1490,23 @@ contains
 
     type(nc_t), intent(inout)         :: this
     real(DP), intent(in)              :: ti
-    type(particles_t), intent(in)     :: p
+    type(particles_t), intent(inout)  :: p
     integer, intent(in), optional     :: frame_no
     integer, intent(inout), optional  :: ierror
 
     ! ---
 
-    integer  :: i, j, fno
+    integer(kind=MPI_OFFSET_KIND) :: one = 1, three = 3
 
+    integer(kind=MPI_OFFSET_KIND) :: natloc, fno
+    integer                       :: i
+#ifdef _MP
+    integer(kind=MPI_OFFSET_KIND) :: start
+#else
+    integer                       :: j
+#endif
+
+    real(DP) :: time
     real(DP) :: cell(3,3)
     real(DP) :: cell_lengths(3)
     real(DP) :: cell_angles(3)
@@ -1382,9 +1517,15 @@ contains
        RAISE_ERROR("File has not been opened for write access.", ierror)
     endif
 
-    fno  = this%frame_no
+    natloc = p%natloc
+#ifdef _MP
+    start = cumsum(mod_communicator%mpi, p%natloc, error=ierror)-p%natloc+1
+    PASS_ERROR(ierror)
+#endif
+
+    fno = this%frame_no
     if (present(frame_no)) then
-       fno  = frame_no
+       fno = frame_no
     endif
 
     call get_true_cell(p, cell, error=ierror)
@@ -1400,14 +1541,20 @@ contains
             ) * 180 / PI
     enddo
 
+#ifdef _MP
+    CHECK_NETCDF_ERROR( nf90mpi_begin_indep_data(this%ncid), ierror )
+    if (mpi_id() == ROOT) then
+#endif
+
     if (this%time_var /= -1) then
-       CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%time_var, ti, start = (/ fno /)), ierror )
+       time = ti
+       CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%time_var, time, start = (/ fno /)), ierror )
     endif
 
-    CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%cell_lengths_var, cell_lengths, start = (/ 1, fno /), count = (/ 3, 1 /)), ierror )
-    CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%cell_angles_var, cell_angles, start = (/ 1, fno /), count = (/ 3, 1 /)), ierror )
+    CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%cell_lengths_var, cell_lengths, start = (/ one, fno /), count = (/ three, one /)), ierror )
+    CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%cell_angles_var, cell_angles, start = (/ one, fno /), count = (/ three, one /)), ierror )
 
-!    CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%shear_dx_var, p%shear_dx, start = (/ 1, fno /), count = (/ 3, 1 /)), ierror )
+!    CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%shear_dx_var, p%shear_dx, start = (/ 1, fno /), count = (/ three, one /)), ierror )
 
     !
     ! Write particle data
@@ -1421,7 +1568,7 @@ contains
        if (iand(p%data%tag_real_attr(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_real_attr(i), F_CONSTANT) == 0) then
 
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_attr_var(i), (/ p%data%data_real_attr(i) /), start = (/ fno /), count = (/ 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_attr_var(i), p%data%data_real_attr(i:i+1), start = (/ fno /), count = (/ one /) ), ierror )
 
           endif
        endif
@@ -1431,7 +1578,7 @@ contains
        if (iand(p%data%tag_integer_attr(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_integer_attr(i), F_CONSTANT) == 0) then
 
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_attr_var(i), (/ p%data%data_integer_attr(i) /), start = (/ fno /), count = (/ 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_attr_var(i), p%data%data_integer_attr(i:i+1), start = (/ fno /), count = (/ one /) ), ierror )
 
           endif
        endif
@@ -1441,11 +1588,16 @@ contains
        if (iand(p%data%tag_real3_attr(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_real3_attr(i), F_CONSTANT) == 0) then
 
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_attr_var(i), p%data%data_real3_attr(:, i), start = (/ 1, fno /), count = (/ 3, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_attr_var(i), p%data%data_real3_attr(:, i), start = (/ one, fno /), count = (/ three, one /) ), ierror )
 
           endif
        endif
     enddo
+
+#ifdef _MP
+    endif
+    CHECK_NETCDF_ERROR( nf90mpi_end_indep_data(this%ncid), ierror )
+#endif
 
     !
     ! Fields
@@ -1455,10 +1607,14 @@ contains
        if (iand(p%data%tag_real(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_real(i), F_CONSTANT) == 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real_var(i), p%data%data_real(:, i), start = (/ start, fno /), count = (/ natloc, one /) ), ierror)
+#else
+             do j = 1, natloc
                 this%tmp_real(j)  = p%data%data_real(p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_var(i), this%tmp_real, start = (/ 1, fno /), count = (/ p%nat, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_var(i), this%tmp_real, start = (/ one, fno /), count = (/ natloc, one /) ), ierror )
+#endif
 
           endif
        endif
@@ -1468,10 +1624,14 @@ contains
        if (iand(p%data%tag_integer(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_integer(i), F_CONSTANT) == 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%integer_var(i), p%data%data_integer(:, i), start = (/ start, fno /), count = (/ natloc, one /) ), ierror)
+#else
+             do j = 1, natloc
                 this%tmp_integer(j)  = p%data%data_integer(p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_var(i), this%tmp_integer, start = (/ 1, fno /), count = (/ p%nat, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_var(i), this%tmp_integer, start = (/ one, fno /), count = (/ natloc, one /) ), ierror )
+#endif
 
           endif
        endif
@@ -1481,11 +1641,14 @@ contains
        if (iand(p%data%tag_real3(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_real3(i), F_CONSTANT) == 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real3_var(i), p%data%data_real3(:, :, i), start = (/ one, start, fno /), count = (/ three, natloc, one /) ), ierror)
+#else
+             do j = 1, natloc
                 this%tmp_real3(:, j)  = p%data%data_real3(:, p%global2local(j), i)
              enddo
-
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_var(i), this%tmp_real3, start = (/ 1, 1, fno /), count = (/ 3, p%nat, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_var(i), this%tmp_real3, start = (/ one, one, fno /), count = (/ three, natloc, one /) ), ierror )
+#endif
 
           endif
        endif
@@ -1495,11 +1658,14 @@ contains
        if (iand(p%data%tag_real3x3(i), F_TO_TRAJ) /= 0) then
           if (iand(p%data%tag_real3x3(i), F_CONSTANT) == 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real3x3_var(i), p%data%data_real3x3(:, :, :, i), start = (/ one, one, start, fno /), count = (/ three, three, natloc, one /) ), ierror)
+#else
+             do j = 1, natloc
                 this%tmp_real3x3(:, :, j)  = p%data%data_real3x3(:, :, p%global2local(j), i)
              enddo
-
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3x3_var(i), this%tmp_real3x3, start = (/ 1, 1, 1, fno /), count = (/ 3, 3, p%nat, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3x3_var(i), this%tmp_real3x3, start = (/ one, one, one, fno /), count = (/ three, three, natloc, one /) ), ierror )
+#endif
 
           endif
        endif
@@ -1530,32 +1696,51 @@ contains
   subroutine nc_write_field(this, p, fno, field_name, ierror)
     implicit none
 
-    type(nc_t), intent(inout)         :: this
-    type(particles_t), intent(in)     :: p
-    integer, intent(in)               :: fno
-    character(*), intent(in)          :: field_name
-    integer, intent(inout), optional  :: ierror
+    type(nc_t),                    intent(inout) :: this
+    type(particles_t),             intent(inout) :: p
+    integer(kind=MPI_OFFSET_KIND), intent(in)    :: fno
+    character(*),                  intent(in)    :: field_name
+    integer,             optional, intent(out)   :: ierror
 
     ! ---
 
-    integer  :: i, j, n
+    integer(kind=MPI_OFFSET_KIND), parameter :: one = 1, three = 3
+
+    integer(kind=MPI_OFFSET_KIND) :: natloc
+    integer                       :: i, n
+#ifdef _MP
+    integer(kind=MPI_OFFSET_KIND) :: start
+#else
+    integer                       :: j
+#endif 
 
     ! ---
+
+    INIT_ERROR(ierror)
 
     if (this%mode /= F_WRITE) then
        RAISE_ERROR("File has not been opened for write access.", ierror)
     endif
 
-    n  = 0
+    n = 0
+    natloc = p%natloc
+#ifdef _MP
+    start = cumsum(mod_communicator%mpi, p%natloc, error=ierror)-p%natloc+1
+    PASS_ERROR(ierror)
+#endif
 
     do i = 1, p%data%n_real
        if (iand(p%data%tag_real(i), F_TO_TRAJ) /= 0 .and. trim(p%data%name_real(i)) == trim(field_name)) then
           if (iand(p%data%tag_real(i), F_CONSTANT) == 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real_var(i), p%data%data_real(:, i), start = (/ start, fno /), count = (/ natloc, one /) ), ierror)
+#else
+             do j = 1, natloc
                 this%tmp_real(j)  = p%data%data_real(p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_var(i), this%tmp_real, start = (/ 1, fno /), count = (/ p%nat, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real_var(i), this%tmp_real, start = (/ one, fno /), count = (/ natloc, one /) ), ierror )
+#endif
 
              n  = n + 1
 
@@ -1567,10 +1752,14 @@ contains
        if (iand(p%data%tag_integer(i), F_TO_TRAJ) /= 0 .and. trim(p%data%name_integer(i)) == trim(field_name)) then
           if (iand(p%data%tag_integer(i), F_CONSTANT) == 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%integer_var(i), p%data%data_integer(:, i), start = (/ start, fno /), count = (/ natloc, one /) ), ierror)
+#else
+             do j = 1, natloc
                 this%tmp_integer(j)  = p%data%data_integer(p%global2local(j), i)
              enddo
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_var(i), this%tmp_integer, start = (/ 1, fno /), count = (/ p%nat, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%integer_var(i), this%tmp_integer, start = (/ one, fno /), count = (/ natloc, one /) ), ierror )
+#endif
 
              n  = n + 1
 
@@ -1582,11 +1771,14 @@ contains
        if (iand(p%data%tag_real3(i), F_TO_TRAJ) /= 0 .and. trim(p%data%name_real3(i)) == trim(field_name)) then
           if (iand(p%data%tag_real3(i), F_CONSTANT) == 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real3_var(i), p%data%data_real3(:, :, i), start = (/ one, start, fno /), count = (/ three, natloc, one /) ), ierror)
+#else
+             do j = 1, natloc
                 this%tmp_real3(:, j)  = p%data%data_real3(:, p%global2local(j), i)
              enddo
-
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_var(i), this%tmp_real3, start = (/ 1, 1, fno /), count = (/ 3, p%nat, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3_var(i), this%tmp_real3, start = (/ one, one, fno /), count = (/ three, natloc, one /) ), ierror )
+#endif
 
              n  = n + 1
 
@@ -1598,11 +1790,14 @@ contains
        if (iand(p%data%tag_real3x3(i), F_TO_TRAJ) /= 0 .and. trim(p%data%name_real3x3(i)) == trim(field_name)) then
           if (iand(p%data%tag_real3x3(i), F_CONSTANT) == 0) then
 
-             do j = 1, p%nat
+#ifdef _MP
+             CHECK_NETCDF_ERROR( nf90mpi_put_var_all(this%ncid, this%real_var(i), p%data%data_real3x3(:, :, :, i), start = (/ one, one, start, fno /), count = (/ three, three, natloc, one /) ), ierror)
+#else
+             do j = 1, natloc
                 this%tmp_real3x3(:, :, j)  = p%data%data_real3x3(:, :, p%global2local(j), i)
              enddo
-
-             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3x3_var(i), this%tmp_real3x3, start = (/ 1, 1, 1, fno /), count = (/ 3, 3, p%nat, 1 /) ), ierror )
+             CHECK_NETCDF_ERROR( nf90_put_var(this%ncid, this%real3x3_var(i), this%tmp_real3x3, start = (/ one, one, one, fno /), count = (/ three, natloc, one /) ), ierror )
+#endif
 
              n  = n + 1
 

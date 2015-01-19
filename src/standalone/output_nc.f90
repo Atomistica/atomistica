@@ -144,18 +144,10 @@ contains
 
     ! ---
 
-#ifdef _MP
-    if (mpi_id() == 0) then
-#endif
-
     if (associated(this%dyn)) then
        call write_frame(this%nc, this%dyn%ti, this%dyn%p)
        call close(this%nc)
     endif
-
-#ifdef _MP
-    endif
-#endif
 
   endsubroutine output_nc_del
 
@@ -237,7 +229,9 @@ contains
 
     call create(this%nc, dyn%p, "traj.nc")
 
+#ifndef _MP
     call write_prmtop(dyn%p, "traj.prmtop")
+#endif
     call write_frame(this%nc, 0.0_DP, dyn%p)
 
   endsubroutine output_nc_set_dynamics
@@ -266,18 +260,10 @@ contains
 
     this%ti = this%ti + dyn%dt
 
-#ifdef _MP
-    if (mpi_id() == 0) then
-#endif
-
     if (this%ti >= this%freq) then
        call write_frame(this%nc, dyn%ti, dyn%p)
        this%ti = 0.0_DP
     endif
-
-#ifdef _MP
-    endif
-#endif
 
   endsubroutine output_nc_invoke
 
