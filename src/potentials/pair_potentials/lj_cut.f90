@@ -211,7 +211,7 @@ contains
 
     ! ---
 
-    integer   :: i, jn, j, maskfaci, maskfac
+    integer   :: i, jn, j, weighti, weight
     real(DP)  :: dr(3), df(3), dw(3, 3)
     real(DP)  :: cut_sq, abs_dr, for, en, fac12, fac6
 
@@ -225,22 +225,22 @@ contains
     cut_sq = this%cutoff**2
 
     do i = 1, p%natloc
-       maskfaci = 1
+       weighti = 1
        if (present(mask) .and. mask(i) == 0) then
-          maskfaci = 0
+          weighti = 0
        endif
 
        do jn = nl%seed(i), nl%last(i)
           j = nl%neighbors(jn)
 
-          if (i > j) then
-             if (present(mask) .and. mask(j) == 0) then
-                maskfac = maskfaci
+          if (i <= j) then
+             if (i == j .or. j > p%natloc .or. (present(mask) .and. mask(j) == 0)) then
+                weight = weighti
              else
-                maskfac = maskfaci + 1
+                weight = weighti + 1
              endif
 
-             if ( maskfac > 0 .and. &
+             if ( weight > 0 .and. &
                   ( (IS_EL(this%el1, p, i) .and. IS_EL(this%el2, p, j)) .or. &
                     (IS_EL(this%el2, p, i) .and. IS_EL(this%el1, p, j)) ) ) then
 
@@ -252,8 +252,8 @@ contains
                    fac12 = (this%sigma/abs_dr)**12
                    fac6  = (this%sigma/abs_dr)**6
 
-                   en  = 0.5_DP*maskfac*4*this%epsilon*(fac12-fac6)-this%offset
-                   for = 0.5_DP*maskfac*this%epsilon*(48*fac12-24*fac6)/abs_dr
+                   en  = 0.5_DP*weight*4*this%epsilon*(fac12-fac6)-this%offset
+                   for = 0.5_DP*weight*this%epsilon*(48*fac12-24*fac6)/abs_dr
 
                    epot = epot + en
                    df   = for * dr/abs_dr
