@@ -135,6 +135,12 @@ interface sum_in_place
   module procedure MPI_context_sum_in_place_complex1
   module procedure MPI_context_sum_in_place_complex2
 end interface
+public :: cumsum
+interface cumsum
+  module procedure MPI_context_cumsum_int
+  module procedure MPI_context_cumsum_real
+  module procedure MPI_context_cumsum_complex
+end interface cumsum
 
 public :: collect
 interface collect
@@ -853,6 +859,93 @@ include 'mpif.h'
   PASS_MPI_ERROR(err, error)
 #endif
 end subroutine  MPI_context_sum_in_place_complex1
+
+function MPI_context_cumsum_int(this, v, error)
+  type(MPI_context), intent(in) :: this
+  integer, intent(in) :: v
+  integer, intent(out), optional :: error
+  integer :: MPI_context_cumsum_int
+
+#ifdef _MPI
+  integer err
+#endif
+
+#ifdef _MPI
+include 'mpif.h'
+#endif
+
+  INIT_ERROR(error)
+
+  if (.not. this%active) then
+    MPI_context_cumsum_int = v
+    return
+  endif
+
+#ifdef _MPI
+  call MPI_scan(v, MPI_context_cumsum_int, 1, MPI_INTEGER, MPI_SUM, this%communicator, err)
+  PASS_MPI_ERROR(err, error)
+#else
+  MPI_context_cumsum_int = v
+#endif
+end function  MPI_context_cumsum_int
+
+function MPI_context_cumsum_real(this, v, error)
+  type(MPI_context), intent(in) :: this
+  real(dp), intent(in) :: v
+  integer, intent(out), optional :: error
+  real(dp) :: MPI_context_cumsum_real
+
+#ifdef _MPI
+  integer err
+#endif
+
+#ifdef _MPI
+include 'mpif.h'
+#endif
+
+  INIT_ERROR(error)
+
+  if (.not. this%active) then
+    MPI_context_cumsum_real = v
+    return
+  endif
+
+#ifdef _MPI
+  call MPI_scan(v, MPI_context_cumsum_real, 1, MPI_DOUBLE_PRECISION, MPI_SUM, this%communicator, err)
+  PASS_MPI_ERROR(err, error)
+#else
+  MPI_context_cumsum_real = v
+#endif
+end function  MPI_context_cumsum_real
+
+function MPI_context_cumsum_complex(this, v, error)
+  type(MPI_context), intent(in) :: this
+  complex(dp), intent(in) :: v
+  integer, intent(out), optional :: error
+  complex(dp) :: MPI_context_cumsum_complex
+
+#ifdef _MPI
+  integer err
+#endif
+
+#ifdef _MPI
+include 'mpif.h'
+#endif
+
+  INIT_ERROR(error)
+
+  if (.not. this%active) then
+    MPI_context_cumsum_complex = v
+    return
+  endif
+
+#ifdef _MPI
+  call MPI_scan(v, MPI_context_cumsum_complex, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, this%communicator, err)
+  PASS_MPI_ERROR(err, error)
+#else
+  MPI_context_cumsum_complex = v
+#endif
+end function MPI_context_cumsum_complex
 
 subroutine MPI_context_bcast_int(this, v, root, error)
   type(MPI_context), intent(in) :: this
