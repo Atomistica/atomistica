@@ -687,10 +687,17 @@ contains
          this%data, &
          EL_STR, &
          F_CONSTANT + F_VERBOSE_ONLY + F_COMMUNICATE + F_COMM_GHOSTS )
+#ifdef _MP
+    call add_integer &
+         (this%data, &
+         INDEX_STR, &
+         F_TO_TRAJ + F_COMMUNICATE + F_COMM_GHOSTS )
+#else
     call add_integer &
          (this%data, &
          INDEX_STR, &
          F_VERBOSE_ONLY + F_COMMUNICATE + F_COMM_GHOSTS )
+#endif
     call add_real( &
          this%data, &
          M_STR, &
