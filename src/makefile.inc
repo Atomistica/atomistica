@@ -223,6 +223,11 @@ MAIN_O = $(MAIN:.f90=.o)
 .cu.o:
 	$(NVCC) $(CUFLAGS) -c $^ -o $@
 
+# Dont't optimze factories and dispatch. There is nothing to optimize, but
+# compiler tends to choke on these files.
+%_factory_f90.o: F90FLAGS += -O0
+%_dispatch.o: F90FLAGS += -O0
+
 versioninfo.f90:
 	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(OPTFLAGS)
 
