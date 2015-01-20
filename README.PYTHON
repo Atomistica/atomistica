@@ -1,4 +1,4 @@
-The following instruction show how to compile, use and test the Python
+The following instruction explain how to compile, use and test the Python
 interface to Atomistica.
 
 1. Setup your compiler. Edit setup.cfg
@@ -17,6 +17,21 @@ interface to Atomistica.
  
      [config_cc]
      compiler=intel
+
+   There may be error messages complaining about undefined symbols when loading
+   Atomistica in step 3 below. It is then necessary to force linking to the
+   respective libraries. Additional libraries can be specified in tbe build_ext
+   section:
+
+     [build_ext]
+     libraries=ifcore,ifport,iomp5,pthread
+
+   This example is the link line typically required to compile with the Intel
+   compiler suite and OpenMP enabled. ifcore contains is the Intel Fortran
+   runtime and ifport additional portability functions. iomp5 is the Intel
+   OpenMP runtime which requires to additionally link to the posix pthread
+   library. The respective libraries for the GNU compiler are gfortran and
+   gomp.
 
    You can get a list of available Fortran and C compilers by executing:
 
@@ -44,7 +59,8 @@ interface to Atomistica.
      python setup.py build --force
 
    if the source has changed. Unfortunately, the current numpy distutils
-   won't relink the module even if the library has been recompiled.
+   won't relink the module even if the library has been recompiled without
+   --force present.
 
 
 3. Test if the Python interface imports with errors. Type
@@ -56,10 +72,13 @@ interface to Atomistica.
 
      python -c "import atomistica"
 
+   To resolve undefined symbol errors link to the relevant library.
+   (See step 1 above.)
+
 
 4. Test if the Python interface gives correct results. Type
 
-     cd <path-to-atomistica>/test_suite/ase
+     cd <path-to-atomistica>/tests
      python run_tests.py
 
    Each test can also be run directly. This will produce more diagnostic output:
