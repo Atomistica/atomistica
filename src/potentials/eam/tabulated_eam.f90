@@ -21,6 +21,7 @@
 ! @meta
 !   shared
 !   classtype:tabulated_eam_t classname:TabulatedEAM interface:potentials
+!   features:per_at
 ! @endmeta
 
 !#define AVOID_SQRT
@@ -120,6 +121,15 @@ module tabulated_eam
   interface register
      module procedure tabulated_eam_register
   endinterface register
+
+  !
+  ! Internal use
+  !
+
+  public :: energy_and_forces_kernel
+  interface energy_and_forces_kernel
+     module procedure tabulated_eam_energy_and_forces_kernel
+  endinterface
 
 contains
 
@@ -260,32 +270,85 @@ contains
   !>
   !! Compute energy and force
   !!
-  !! Compute energy and force
+  !! Wrapper for energy and force computation. Computes size of internal
+  !! neighbors list from maximum coordination numbers and passes it to the
+  !! kernel. Local (per-atom) neighbor list is kept on stack.
   !<
-  subroutine tabulated_eam_energy_and_forces(this, p, nl, epot, f, wpot, epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, ierror)
+  subroutine tabulated_eam_energy_and_forces(this, p, nl, epot, &
+       f, wpot, epot_per_at, wpot_per_at, ierror)
     implicit none
 
-    type(tabulated_eam_t), intent(inout)  :: this
-    type(particles_t), intent(in)         :: p
-    type(neighbors_t), intent(inout)      :: nl
-    real(DP), intent(inout)               :: epot
-    real(DP), intent(inout)               :: f(3, p%maxnatloc)
-    real(DP), intent(inout)               :: wpot(3, 3)
-    real(DP), intent(inout), optional     :: epot_per_at(p%maxnatloc)
-    real(DP), intent(inout), optional     :: epot_per_bond(nl%neighbors_size)
-    real(DP), intent(inout), optional     :: f_per_bond(3, nl%neighbors_size)
+    type(tabulated_eam_t), intent(inout) :: this
+    type(particles_t),     intent(in)    :: p
+    type(neighbors_t),     intent(inout) :: nl
+    real(DP),              intent(inout) :: epot
+    real(DP),              intent(inout) :: f(3, p%nat)
+    real(DP),              intent(inout) :: wpot(3, 3)
+    real(DP),    optional, intent(inout) :: epot_per_at(p%nat)
 #ifdef LAMMPS
-    real(DP), intent(inout), optional     :: wpot_per_at(6, p%maxnatloc)
-    real(DP), intent(inout), optional     :: wpot_per_bond(6, nl%neighbors_size)
+    real(DP),    optional, intent(inout) :: wpot_per_at(6, p%nat)
 #else
-    real(DP), intent(inout), optional     :: wpot_per_at(3, 3, p%maxnatloc)
-    real(DP), intent(inout), optional     :: wpot_per_bond(3, 3, nl%neighbors_size)
+    real(DP),    optional, intent(inout) :: wpot_per_at(3, 3, p%nat)
 #endif
-    integer, intent(inout), optional      :: ierror
+    integer,     optional, intent(inout) :: ierror
 
     ! ---
 
-    integer, parameter  :: maxneb = 100
+    integer :: i, maxneb
+
+    ! ---
+
+    call timer_start("tabulated_eam_energy_and_forces")
+
+    INIT_ERROR(ierror)
+
+    call update(nl, p, ierror)
+    PASS_ERROR(ierror)
+
+    maxneb = 0
+    !$omp  parallel do default(none) &
+    !$omp& shared(nl, p, this) &
+    !$omp& reduction(+:maxneb)
+    do i = 1, p%natloc
+       if (IS_EL2(this%els, p%el(i))) then
+          maxneb = max(maxneb, nl%last(i)-nl%seed(i)+1)
+       endif
+    enddo
+
+    call energy_and_forces_kernel(this, p, nl, epot, f, wpot, maxneb, &
+       epot_per_at=epot_per_at, wpot_per_at=wpot_per_at, ierror=ierror)
+    PASS_ERROR(ierror)
+
+    call timer_stop("tabulated_eam_energy_and_forces")
+
+  endsubroutine tabulated_eam_energy_and_forces
+
+
+  !>
+  !! Compute energy and force
+  !!
+  !! Compute energy and force
+  !<
+  subroutine tabulated_eam_energy_and_forces_kernel(this, p, nl, epot, &
+       f, wpot, maxneb, epot_per_at, wpot_per_at, ierror)
+    implicit none
+
+    type(tabulated_eam_t), intent(inout) :: this
+    type(particles_t),     intent(in)    :: p
+    type(neighbors_t),     intent(inout) :: nl
+    real(DP),              intent(inout) :: epot
+    real(DP),              intent(inout) :: f(3, p%maxnatloc)
+    real(DP),              intent(inout) :: wpot(3, 3)
+    integer,               intent(in)    :: maxneb
+    real(DP),    optional, intent(inout) :: epot_per_at(p%maxnatloc)
+#ifdef LAMMPS
+    real(DP),    optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
+#else
+    real(DP),    optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
+#endif
+    integer,     optional, intent(inout) :: ierror
+
+    ! ---
 
     integer   :: i, ni, j, eli, elj, els, seedi, lasti
     real(DP)  :: dr(3), abs_dr, ri(3), fori(3)
@@ -315,11 +378,6 @@ contains
 
     els        = this%els
     cutoff_sq  = this%cutoff**2
-
-    call timer_start("tabulated_eam_force")
-
-    call update(nl, p, ierror)
-    PASS_ERROR(ierror)
 
     !
     ! Compute densities
@@ -436,9 +494,7 @@ contains
     epot  = epot + e
     wpot  = wpot + w
 
-    call timer_stop("tabulated_eam_force")
-
-  endsubroutine tabulated_eam_energy_and_forces
+  endsubroutine tabulated_eam_energy_and_forces_kernel
 
 
   subroutine tabulated_eam_register(this, cfg, m)

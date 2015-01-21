@@ -126,6 +126,15 @@ module tabulated_alloy_eam
      module procedure tabulated_alloy_eam_register
   endinterface register
 
+  !
+  ! Internal use
+  !
+
+  public :: energy_and_forces_kernel
+  interface energy_and_forces_kernel
+     module procedure tabulated_alloy_eam_energy_and_forces_kernel
+  endinterface
+
 contains
 
   !>
@@ -333,10 +342,12 @@ contains
   !>
   !! Compute energy and force
   !!
-  !! Compute energy and force
+  !! Wrapper for energy and force computation. Computes size of internal
+  !! neighbors list from maximum coordination numbers and passes it to the
+  !! kernel. Local (per-atom) neighbor list is kept on stack.
   !<
-  subroutine tabulated_alloy_eam_energy_and_forces(this, p, nl, epot, f, wpot, &
-       mask, epot_per_at, wpot_per_at, ierror)
+  subroutine tabulated_alloy_eam_energy_and_forces(this, p, nl, epot, &
+       f, wpot, mask, epot_per_at, wpot_per_at, ierror)
     implicit none
 
     type(tabulated_alloy_eam_t), intent(inout) :: this
@@ -356,7 +367,67 @@ contains
 
     ! ---
 
-    integer, parameter  :: maxneb = 100
+    integer :: i, eli, maxneb
+
+    ! ---
+
+    call timer_start("tabulated_alloy_eam_energy_and_forces")
+
+    INIT_ERROR(ierror)
+
+    call update(nl, p, ierror)
+    PASS_ERROR(ierror)
+
+    maxneb = 0
+    !$omp  parallel do default(none) &
+    !$omp  private(eli) &
+    !$omp& shared(mask, nl, p, this) &
+    !$omp& reduction(+:maxneb)
+    do i = 1, p%natloc
+       if (.not. present(mask) .or. mask(i) /= 0) then
+          eli = p%el(i)
+          if (IS_EL2(this%els, eli) .and. this%el2db(eli)) then
+             maxneb = max(maxneb, nl%last(i)-nl%seed(i)+1)
+          endif
+       endif
+    enddo
+
+    call energy_and_forces_kernel(this, p, nl, epot, f, wpot, maxneb, &
+       mask=mask, epot_per_at=epot_per_at, wpot_per_at=wpot_per_at, &
+       ierror=ierror)
+    PASS_ERROR(ierror)
+
+    call timer_stop("tabulated_alloy_eam_energy_and_forces")
+
+  endsubroutine tabulated_alloy_eam_energy_and_forces
+
+
+  !>
+  !! Compute energy and forces
+  !!
+  !! Compute energy and forces
+  !<
+  subroutine tabulated_alloy_eam_energy_and_forces_kernel(this, p, nl, epot, &
+       f, wpot, maxneb, mask, epot_per_at, wpot_per_at, ierror)
+    implicit none
+
+    type(tabulated_alloy_eam_t), intent(inout) :: this
+    type(particles_t),           intent(in)    :: p
+    type(neighbors_t),           intent(inout) :: nl
+    real(DP),                    intent(inout) :: epot
+    real(DP),                    intent(inout) :: f(3, p%nat)
+    real(DP),                    intent(inout) :: wpot(3, 3)
+    integer,                     intent(in)    :: maxneb
+    integer,           optional, intent(in)    :: mask(p%nat)
+    real(DP),          optional, intent(inout) :: epot_per_at(p%nat)
+#ifdef LAMMPS
+    real(DP),          optional, intent(inout) :: wpot_per_at(6, p%nat)
+#else
+    real(DP),          optional, intent(inout) :: wpot_per_at(3, 3, p%nat)
+#endif
+    integer,           optional, intent(inout) :: ierror
+
+    ! ---
 
     integer   :: i, j, eli, elj, dbi, dbj, els
 #ifdef LAMMPS
@@ -379,13 +450,8 @@ contains
 
     INIT_ERROR(ierror)
 
-    call timer_start("tabulated_alloy_eam_force")
-
     els        = this%els
     cutoff_sq  = this%cutoff**2
-
-    call update(nl, p, ierror)
-    PASS_ERROR(ierror)
 
     !
     ! Compute densities
@@ -482,7 +548,7 @@ contains
                 dbj     = this%el2db(elj)
                 dr      = neb_dr(1:3, ni)
                 abs_dr  = neb_abs_dr(ni)
-        
+
                 !
                 ! Repulsive energy and forces
                 !
@@ -540,11 +606,14 @@ contains
     epot  = epot + e
     wpot  = wpot + w
 
-    call timer_stop("tabulated_alloy_eam_force")
-
-  endsubroutine tabulated_alloy_eam_energy_and_forces
+  endsubroutine tabulated_alloy_eam_energy_and_forces_kernel
 
 
+  !>
+  !! Registry
+  !!
+  !! Queries parameters of the potential before initialization.
+  !<
   subroutine tabulated_alloy_eam_register(this, cfg, m)
     use, intrinsic :: iso_c_binding
 
