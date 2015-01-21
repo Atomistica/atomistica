@@ -19,8 +19,6 @@
 !! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !! ======================================================================
 
-#if defined(MDCORE_MONOLITHIC) || defined(MDCORE_PYTHON) || defined(LAMMPS)
-
   !>
   !! Constructor
   !!
@@ -48,98 +46,6 @@
     endif
 
   endsubroutine INIT_FUNC
-
-#else
-
-  !>
-  !! Constructor
-  !!
-  !! Constructor
-  !<
-  subroutine INIT_DEFAULT_FUNC(this, Fcc, dFdi, dFdj, dFdk, Fch, Fhh, Pcc, Pch, Tcc, ierror)
-    implicit none
-
-    type(BOP_TYPE), intent(inout)    :: this
-
-    real(DP), intent(in), optional   :: Fcc(0:4, 0:4, 0:9)
-    real(DP), intent(in), optional   :: dFdi(0:4, 0:4, 0:9)
-    real(DP), intent(in), optional   :: dFdj(0:4, 0:4, 0:9)
-    real(DP), intent(in), optional   :: dFdk(0:4, 0:4, 0:9)
-
-    real(DP), intent(in), optional   :: Fch(0:4, 0:4, 0:9)
-    real(DP), intent(in), optional   :: Fhh(0:4, 0:4, 0:9)
-
-    real(DP), intent(in), optional   :: Pcc(0:5, 0:5)
-    real(DP), intent(in), optional   :: Pch(0:5, 0:5)
-    real(DP), intent(in), optional   :: Tcc(0:4, 0:4, 0:9)
-
-    integer, intent(inout), optional  :: ierror
-
-
-    ! ---
-
-    if (present(Fcc)) then
-       if (present(dFdi)) then
-          if (present(dFdj)) then
-             if (present(dFdk)) then
-                this%in_Fcc   = Fcc
-                this%in_dFdi  = dFdi
-                this%in_dFdj  = dFdj
-                this%in_dFdk  = dFdk
-             else
-                RAISE_ERROR("Please provide dFdi, dFdj and dFdk along Fcc.", ierror)
-             endif
-          else
-             RAISE_ERROR("Please provide dFdi, dFdj and dFdk along Fcc.", ierror)
-          endif
-       else
-          RAISE_ERROR("Please provide dFdi, dFdj and dFdk along Fcc.", ierror)
-       endif
-    else
-       if (.not. this%zero_tables) then
-          call rebo2_default_Fcc_table(this%in_Fcc, this%in_dFdi, &
-             this%in_dFdj, this%in_dFdk)
-       endif
-    endif
-    if (present(Fch)) then
-       this%in_Fch  = Fch
-    else
-       if (.not. this%zero_tables) then
-          call rebo2_default_Fch_table(this%in_Fch)
-       endif
-    endif
-    if (present(Fhh)) then
-       this%in_Fhh  = Fhh
-    else
-       if (.not. this%zero_tables) then
-          call rebo2_default_Fhh_table(this%in_Fhh)
-       endif
-    endif
-    if (present(Pcc)) then
-       this%in_Pcc  = Pcc
-    else
-       if (.not. this%zero_tables) then
-          call rebo2_default_Pcc_table(this%in_Pcc)
-       endif
-    endif
-    if (present(Pch)) then
-       this%in_Pch  = Pch
-    else
-       if (.not. this%zero_tables) then
-          call rebo2_default_Pch_table(this%in_Pch)
-       endif
-    endif
-    if (present(Tcc)) then
-       this%in_Tcc  = Tcc
-    else
-       if (.not. this%zero_tables) then
-          call rebo2_default_Tcc_table(this%in_Tcc)
-       endif
-    endif
-
-  endsubroutine INIT_DEFAULT_FUNC
-
-#endif
 
 
   !>

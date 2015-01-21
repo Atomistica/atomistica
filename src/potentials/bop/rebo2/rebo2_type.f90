@@ -371,21 +371,10 @@
 
 !  type(BOP_TYPE), save  :: BOP_NAME##_default_parameters
 
-#if defined(MDCORE_MONOLITHIC) || defined(MDCORE_PYTHON) || defined(LAMMPS)
-
   public :: init
   interface init
      module procedure INIT_FUNC
   endinterface
-
-#else
-
-  public :: init_default
-  interface init_default
-     module procedure INIT_DEFAULT_FUNC
-  endinterface
-
-#endif
 
   public :: del
   interface del
