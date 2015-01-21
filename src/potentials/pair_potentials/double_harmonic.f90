@@ -79,16 +79,6 @@ module double_harmonic
   endtype double_harmonic_t
 
 
-  public :: init
-  interface init
-     module procedure double_harmonic_init
-  endinterface
-
-  public :: del
-  interface del
-     module procedure double_harmonic_del
-  endinterface
-
   public :: bind_to
   interface bind_to
      module procedure double_harmonic_bind_to
@@ -105,36 +95,6 @@ module double_harmonic
   endinterface
 
 contains
-
-  !>
-  !! Constructor
-  !!
-  !! Constructor
-  !<
-  subroutine double_harmonic_init(this)
-    implicit none
-
-    type(double_harmonic_t), intent(inout) :: this
-
-    ! ---
-
-  endsubroutine double_harmonic_init
-
-
-  !>
-  !! Destructor
-  !!
-  !! Destructor
-  !<
-  subroutine double_harmonic_del(this)
-    implicit none
-
-    type(double_harmonic_t), intent(inout) :: this
-
-    ! ---
-
-  endsubroutine double_harmonic_del
-
 
   !>
   !! Initialization
