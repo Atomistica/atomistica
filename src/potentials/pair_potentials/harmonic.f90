@@ -78,16 +78,6 @@ module harmonic
   endtype harmonic_t
 
 
-  public :: init
-  interface init
-     module procedure harmonic_init
-  endinterface
-
-  public :: del
-  interface del
-     module procedure harmonic_del
-  endinterface
-
   public :: bind_to
   interface bind_to
      module procedure harmonic_bind_to
@@ -104,36 +94,6 @@ module harmonic
   endinterface
 
 contains
-
-  !>
-  !! Constructor
-  !!
-  !! Constructor
-  !<
-  subroutine harmonic_init(this)
-    implicit none
-
-    type(harmonic_t), intent(inout) :: this
-
-    ! ---
-
-  endsubroutine harmonic_init
-
-
-  !>
-  !! Destructor
-  !!
-  !! Destructor
-  !<
-  subroutine harmonic_del(this)
-    implicit none
-
-    type(harmonic_t), intent(inout) :: this
-
-    ! ---
-
-  endsubroutine harmonic_del
-
 
   !>
   !! Initialization
