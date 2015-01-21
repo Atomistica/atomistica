@@ -100,36 +100,6 @@ module r6
 contains
 
   !>
-  !! Constructor
-  !!
-  !! Constructor
-  !<
-  subroutine r6_init(this)
-    implicit none
-
-    type(r6_t), intent(inout)     :: this
-
-    ! ---
-
-  endsubroutine r6_init
-
-
-  !>
-  !! Destructor
-  !!
-  !! Destructor
-  !<
-  subroutine r6_del(this)
-    implicit none
-
-    type(r6_t), intent(inout)  :: this
-
-    ! ---
-
-  endsubroutine r6_del
-
-
-  !>
   !! Initialization
   !!
   !! Initialization
