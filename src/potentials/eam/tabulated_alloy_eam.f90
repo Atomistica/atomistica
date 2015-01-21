@@ -386,7 +386,7 @@ contains
     do i = 1, p%natloc
        if (.not. present(mask) .or. mask(i) /= 0) then
           eli = p%el(i)
-          if (IS_EL2(this%els, eli) .and. this%el2db(eli)) then
+          if (IS_EL2(this%els, eli) .and. this%el2db(eli) > 0) then
              maxneb = max(maxneb, nl%last(i)-nl%seed(i)+1)
           endif
        endif
