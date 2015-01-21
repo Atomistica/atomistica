@@ -72,16 +72,6 @@ module r6
   endtype r6_t
 
 
-  public :: init
-  interface init
-     module procedure r6_init
-  endinterface
-
-  public :: del
-  interface del
-     module procedure r6_del
-  endinterface
-
   public :: bind_to
   interface bind_to
      module procedure r6_bind_to
@@ -166,7 +156,9 @@ contains
 
     ! ---
 
-    integer   :: i, jn, j
+    integer             :: i, j
+    integer(NEIGHPTR_T) :: jn
+
     real(DP)  :: dr(3), df(3), dw(3, 3)
     real(DP)  :: cut_sq, abs_dr, for, en
 
