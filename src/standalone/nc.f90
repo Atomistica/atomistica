@@ -77,7 +77,15 @@ module nc
 
   use versioninfo
 
+#ifndef _MP
+  use iso_fortran_env
+#endif
+
   implicit none
+
+#ifndef _MP
+  integer, parameter :: MPI_OFFSET_KIND = ATOMIC_INT_KIND
+#endif
 
   character(*), parameter, private  :: MODULE_STR = "NC"
 
@@ -288,11 +296,7 @@ contains
     character(1000) :: versionstr
 
     integer                       :: i
-#ifdef _MP
     integer(kind=MPI_OFFSET_KIND) :: totnat
-#else
-    integer                       :: totnat
-#endif
 
     ! ---
 
@@ -619,11 +623,7 @@ contains
     ! ---
 
     integer                       :: xtype, i
-#ifdef _MP
     integer(kind=MPI_OFFSET_KIND) :: nat, ndims, nframes
-#else
-    integer                       :: nat, ndims, nframes
-#endif
     integer                       :: dimids(NF90_MAX_VAR_DIMS)
 
     logical                       :: in_define_mode
