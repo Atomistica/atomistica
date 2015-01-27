@@ -95,7 +95,7 @@
      integer, allocatable   :: sneb_last(:)
      integer, allocatable   :: sneb(:)
 #ifdef LAMMPS
-     integer(C_INTPTR_T), allocatable :: sbnd(:)
+     integer(NEIGHPTR_T), allocatable :: sbnd(:)
 #else
      integer, allocatable   :: sbnd(:)
 #endif
