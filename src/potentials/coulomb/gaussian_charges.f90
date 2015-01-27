@@ -332,7 +332,8 @@ contains
     real(DP) :: U_i_sq, abs_rij, hlp, expi, expj, src, fac, fac2, efac
     real(DP) :: avg, fi1, fj1, fi2, fj2, U_i, U_j, q_i, q_j, Z_i, Z_j
 
-    integer :: i, ni, j
+    integer             :: i, j
+    integer(NEIGHPTR_T) :: ni
 
     integer, parameter :: sqrt_pi_2 = sqrt(PI/2)
 
@@ -452,7 +453,8 @@ contains
     real(DP) :: c, df(3), hlp, sqrt_pi_2, src, fac, fac2, efac, expi, expj
     real(DP) :: avg, e, ffac, fi1, fj1, fi2, fj2, U_i, U_j, Z_i, Z_j
 
-    integer :: i, ni, j
+    integer             :: i, j
+    integer(NEIGHPTR_T) :: ni
 
     !---
 
