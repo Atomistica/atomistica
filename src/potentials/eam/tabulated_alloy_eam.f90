@@ -429,12 +429,9 @@ contains
 
     ! ---
 
-    integer   :: i, j, eli, elj, dbi, dbj, els
-#ifdef LAMMPS
-    integer(C_INTPTR_T) :: ni, seedi, lasti
-#else
-    integer   :: ni, seedi, lasti
-#endif
+    integer             :: i, j, eli, elj, dbi, dbj, els
+    integer(NEIGHPTR_T) :: ni, seedi, lasti
+
     real(DP)  :: dr(3), abs_dr, r_abs_dr, ri(3), fori(3)
     real(DP)  :: rho, drho, Fi, dFi
     real(DP)  :: e, w(3, 3), wij(3, 3), cutoff_sq
