@@ -177,8 +177,10 @@ contains
 
     ! ---
 
-    integer   :: i, ni, j
-    real(DP)  :: abs_dr, dr(3), cutoff_sq
+    integer             :: i, j
+    integer(NEIGHPTR_T) :: ni
+
+    real(DP) :: abs_dr, dr(3), cutoff_sq
 
     ! ---
 
@@ -239,8 +241,10 @@ contains
 
     ! --
 
-    integer   :: i, ni, j
-    real(DP)  :: abs_dr, dr(3), df(3), fac, q_i, cutoff_sq
+    integer             :: i, j
+    integer(NEIGHPTR_T) :: ni
+
+    real(DP) :: abs_dr, dr(3), df(3), fac, q_i, cutoff_sq
 
     ! ---
 
