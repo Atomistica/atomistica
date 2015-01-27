@@ -350,7 +350,9 @@ contains
 
     ! ---
 
-    integer   :: i, ni, j, eli, elj, els, seedi, lasti
+    integer             :: i, j, eli, elj, els
+    integer(NEIGHPTR_T) :: ni, seedi, lasti
+
     real(DP)  :: dr(3), abs_dr, ri(3), fori(3)
     real(DP)  :: rho, drho, Fi, dFi
     real(DP)  :: e, w(3, 3), cutoff_sq
