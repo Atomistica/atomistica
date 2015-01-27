@@ -168,7 +168,9 @@ contains
 
     ! ---
 
-    integer   :: i, jn, j
+    integer             :: i, j
+    integer(NEIGHPTR_T) :: jn
+
     real(DP)  :: dr(3), df(3), dw(3, 3)
     real(DP)  :: cut_sq, abs_dr, for, en, fac12, fac6
 
