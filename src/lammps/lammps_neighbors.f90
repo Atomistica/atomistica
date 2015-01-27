@@ -35,18 +35,21 @@ module neighbors
 
   private
 
+  public :: neighptr_t
+  integer, parameter :: NEIGHPTR_T = C_INTPTR_T
+
   public :: neighbors_t
   type neighbors_t
 
      !>
      !! Seed for the neighbor list for the first set of neighbors
      !<
-     integer(C_INTPTR_T), pointer :: seed(:)
+     integer(NEIGHPTR_T), pointer :: seed(:)
 
      !>
      !! End type neighbors_tthe neighbor list for the first set of neighbors
      !<
-     integer(C_INTPTR_T), pointer :: last(:)
+     integer(NEIGHPTR_T), pointer :: last(:)
 
      !>
      !! Size of the neighbor list
@@ -171,14 +174,14 @@ contains
   !>
   !! Assign pointers to data
   !>
-  subroutine neighbors_set_pointers(this_cptr, natloc, seed, last, &
+  subroutine neighbors_set_pointers(this_cptr, nat, seed, last, &
        neighbors_size, neighbors) bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
 
     type(C_PTR),    value :: this_cptr
-    integer(C_INT), value :: natloc
+    integer(C_INT), value :: nat
     type(C_PTR),    value :: seed, last
     integer(C_INT), value :: neighbors_size
     type(C_PTR),    value :: neighbors
@@ -191,8 +194,8 @@ contains
 
     call c_f_pointer(this_cptr, this)
 
-    call c_f_pointer(seed, this%seed, [natloc])
-    call c_f_pointer(last, this%last, [natloc])
+    call c_f_pointer(seed, this%seed, [nat])
+    call c_f_pointer(last, this%last, [nat])
     this%neighbors_size = neighbors_size
     call c_f_pointer(neighbors, this%neighbors, [neighbors_size])
 

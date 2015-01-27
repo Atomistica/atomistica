@@ -45,6 +45,9 @@ module neighbors
   integer, parameter  :: FIXED_VERLET_SHELL = 0
   integer, parameter  :: FIXED_CUTOFF = 1
 
+  public :: NEIGHPTR_T
+  integer, parameter :: NEIGHPTR_T = C_INTPTR_T
+
   public :: neighbors_t
   type neighbors_t
 
