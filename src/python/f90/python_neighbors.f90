@@ -54,39 +54,39 @@ module neighbors
      ! Particles object
      !
 
-     type(particles_t), pointer  :: p      => NULL()       !< Associated particles object
-     integer                     :: p_rev  = -1            !< Number of changes reference counter
-     integer                     :: cell_rev  = -1         !< Number of changes reference counter
+     type(particles_t), pointer       :: p      => NULL()       !< Associated particles object
+     integer                          :: p_rev  = -1            !< Number of changes reference counter
+     integer                          :: cell_rev  = -1         !< Number of changes reference counter
 
      !
      ! Current status
      !
 
-     logical                     :: initialized = .false.  !< Has this neighbor list been initialized? FIXME! Is this necessary?
+     logical                          :: initialized = .false.  !< Has this neighbor list been initialized? FIXME! Is this necessary?
 
      !
      ! Configuration
      !
 
-     integer                     :: avgn                   !< Average number of neighbors
-     integer                     :: mode                   !< Fixed cutoff or fixed Verlet shell
+     integer                          :: avgn                   !< Average number of neighbors
+     integer                          :: mode                   !< Fixed cutoff or fixed Verlet shell
 
-     real(DP)                    :: interaction_range      !< Maximum interaction range of potentials using this neighbor list
-     real(DP)                    :: verlet_shell           !< Size of the Verlet shell
+     real(DP)                         :: interaction_range      !< Maximum interaction range of potentials using this neighbor list
+     real(DP)                         :: verlet_shell           !< Size of the Verlet shell
 
-     real(DP)                    :: cutoff                 !< Cut-off for this neighbor list (i.e., interaction_range + verlet_shell)
+     real(DP)                         :: cutoff                 !< Cut-off for this neighbor list (i.e., interaction_range + verlet_shell)
 
-     real(DP)                    :: requested_bin_size     !< Bin size that has been requested
-     real(DP)                    :: bin_size               !< Actual bin size (i.e. such that is matches the box size)
+     real(DP)                         :: requested_bin_size     !< Bin size that has been requested
+     real(DP)                         :: bin_size               !< Actual bin size (i.e. such that is matches the box size)
 
      !
      ! Binning stuff
      !
 
-     integer, allocatable        :: binning_seed(:, :, :)
-     integer, allocatable        :: binning_last(:, :, :)
+     integer, allocatable             :: binning_seed(:, :, :)
+     integer, allocatable             :: binning_last(:, :, :)
 
-     integer, allocatable        :: next_particle(:)
+     integer, allocatable             :: next_particle(:)
 
      !
      ! Binning information
@@ -94,47 +94,47 @@ module neighbors
      ! repetitions of the unit cell to consider.
      !
 
-     real(DP)                    :: box_size(3)
-     real(DP)                    :: Abox(3, 3)
+     real(DP)                         :: box_size(3)
+     real(DP)                         :: Abox(3, 3)
 
-     integer                     :: n_cells_tot
-     integer                     :: n_cells(3)
-     real(DP)                    :: cell_size(3, 3)
-     real(DP)                    :: rec_cell_size(3, 3)
+     integer                          :: n_cells_tot
+     integer                          :: n_cells(3)
+     real(DP)                         :: cell_size(3, 3)
+     real(DP)                         :: rec_cell_size(3, 3)
 
      !
      ! Neighbor stuff
      !
 
-     integer                     :: n_d
-     integer, allocatable        :: d(:, :)
+     integer                          :: n_d
+     integer, allocatable             :: d(:, :)
 
-     integer, allocatable        :: seed(:)         !< Seed for the neighbor list for the first set of particles
-     integer, allocatable        :: last(:)         !< End of the neighbor list for the first set of particles
+     integer(NEIGHPTR_T), allocatable :: seed(:)         !< Seed for the neighbor list for the first set of particles
+     integer(NEIGHPTR_T), allocatable :: last(:)         !< End of the neighbor list for the first set of particles
 
-     integer                     :: neighbors_size  !< Size of the neighbor list
-     integer, allocatable        :: neighbors(:)    !< Neighbor list for the second set of particles
+     integer                          :: neighbors_size  !< Size of the neighbor list
+     integer, allocatable             :: neighbors(:)    !< Neighbor list for the second set of particles
 
-     integer, allocatable        :: dc(:, :)        !< Which cell did the neighbor come from?
+     integer, allocatable             :: dc(:, :)        !< Which cell did the neighbor come from?
 
      !
      ! Other
      !
 
-     integer                     :: it              !< Number of iteration since last construction of the neighbor list
-     integer                     :: nupdate = 0     !< Number of total updates
+     integer                         :: it              !< Number of iteration since last construction of the neighbor list
+     integer                         :: nupdate = 0     !< Number of total updates
 
      !
      ! Statistics
      !
 
-     real(DP)                    :: avgnn           !< Average number of neighbors
+     real(DP)                        :: avgnn           !< Average number of neighbors
 
      !
      ! Tag - this is used to attach the umbrella Python instance
      !
 
-     type(C_PTR)                 :: tag
+     type(C_PTR)                     :: tag
 
   endtype neighbors_t
 
