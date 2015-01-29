@@ -344,7 +344,7 @@ contains
           ekin(i)  = dot_product(VEC3(this%v, i), VEC3(this%v, i))
 
           do ni = nl%seed(i), nl%last(i)
-             j = nl%neighbors(ni)
+             j = GET_NEIGHBOR(nl, ni)
              if (i < j .and. p%g(j) == this%g) then
 
 !                abs_dr  = nl%abs_dr(ni)
