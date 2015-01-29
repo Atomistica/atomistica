@@ -158,7 +158,7 @@ contains
     this%el1 = filter_from_string(this%element1, p)
     this%el2 = filter_from_string(this%element2, p)
 
-    call prlog("- lj_cut_init -")
+    call prlog("- lj_cut_bind_to -")
     call filter_prlog(this%el1, p, indent=5)
     call filter_prlog(this%el2, p, indent=5)
     call prlog("     epsilon = "//this%epsilon)
@@ -211,13 +211,14 @@ contains
 
     ! ---
 
-    integer   :: i, jn, j, weighti, weight
-    real(DP)  :: dr(3), df(3), dw(3, 3)
-    real(DP)  :: cut_sq, abs_dr, for, en, fac12, fac6
+    integer             :: i, j, weighti, weight
+    integer(NEIGHPTR_T) :: jn
+    real(DP)            :: dr(3), df(3), dw(3, 3)
+    real(DP)            :: cut_sq, abs_dr, for, en, fac12, fac6
 
     ! ---
 
-    call timer_start("lj_cut_force")
+    call timer_start("lj_cut_energy_and_forces")
 
     call update(nl, p, ierror)
     PASS_ERROR(ierror)
@@ -231,7 +232,7 @@ contains
        endif
 
        do jn = nl%seed(i), nl%last(i)
-          j = nl%neighbors(jn)
+          j = GET_NEIGHBOR(nl, jn)
 
           if (i <= j) then
              if (i == j .or. j > p%natloc .or. (present(mask) .and. mask(j) == 0)) then
@@ -252,8 +253,8 @@ contains
                    fac12 = (this%sigma/abs_dr)**12
                    fac6  = (this%sigma/abs_dr)**6
 
-                   en  = 0.5_DP*weight*4*this%epsilon*(fac12-fac6)-this%offset
-                   for = 0.5_DP*weight*this%epsilon*(48*fac12-24*fac6)/abs_dr
+                   en  = 0.5_DP*weight*(4*this%epsilon*(fac12-fac6)-this%offset)
+                   for = 0.5_DP*weight*24*this%epsilon*(2*fac12-fac6)/abs_dr
 
                    epot = epot + en
                    df   = for * dr/abs_dr
@@ -282,7 +283,7 @@ contains
        enddo
     enddo
 
-    call timer_stop("lj_cut_force")
+    call timer_stop("lj_cut_energy_and_forces")
 
   endsubroutine lj_cut_energy_and_forces
 
