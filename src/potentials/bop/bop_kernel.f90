@@ -143,13 +143,8 @@
     real(DP),  optional, intent(inout) :: epot_per_at(nat)
     real(DP),  optional, intent(inout) :: epot_per_bond(ptrmax)
 
-#ifdef LAMMPS
-    integer(C_INTPTR_T), intent(in)    :: aptr(maxnat+1)
-    integer(C_INTPTR_T), intent(in)    :: a2ptr(maxnat+1)
-#else
-    integer,             intent(in)    :: aptr(maxnat+1)
-    integer,             intent(in)    :: a2ptr(maxnat+1)
-#endif
+    integer(NEIGHPTR_T), intent(in)    :: aptr(maxnat+1)
+    integer(NEIGHPTR_T), intent(in)    :: a2ptr(maxnat+1)
     integer,             intent(in)    :: bptr(ptrmax)
 
 #ifdef LAMMPS
@@ -171,11 +166,7 @@
 
     ! "short" neighbor list (all neighbors which are not screened)
 
-#ifdef LAMMPS
-    integer(C_INTPTR_T)  :: jbeg,jend,jn
-#else
-    integer   :: jbeg,jend,jn
-#endif
+    integer(NEIGHPTR_T) :: jbeg,jend,jn
 
     real(DP)  :: rij(3)
     real(DP)  :: rlij, rlijr, rlik
@@ -255,11 +246,7 @@
     integer  :: sneb_max
 
     integer  :: i1,i2
-#ifdef LAMMPS
-    integer(C_INTPTR_T) :: kn
-#else
-    integer  :: kn
-#endif
+    integer(NEIGHPTR_T) :: kn
 
     integer  :: nijc
     integer  :: snebtot, ineb
