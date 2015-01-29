@@ -200,7 +200,7 @@ contains
     !$omp do
     do i = 1, p%natloc
        do ni = nl%seed(i), nl%last(i)
-          j = nl%neighbors(ni)
+          j = GET_NEIGHBOR(nl, ni)
           if(i < j) then
              DISTJ_SQ(p, nl, i, ni, j, dr, abs_dr)
              if (abs_dr < cutoff_sq) then

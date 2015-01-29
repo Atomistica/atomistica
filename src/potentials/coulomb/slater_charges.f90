@@ -399,7 +399,7 @@ contains
           !
 
           Slater_ni_loop: do ni = nl%seed(i), nl%last(i)
-             j = nl%neighbors(ni)
+             j = GET_NEIGHBOR(nl, ni)
 
              if (i <= j .and. IS_EL(this%els, p, j)) then
                 abs_rij = GET_ABS_DRJ(p, nl, i, j, ni)
@@ -528,7 +528,7 @@ contains
           !
 
           Slater_ni_loop: do ni = nl%seed(i), nl%last(i)
-             j   = nl%neighbors(ni)
+             j   = GET_NEIGHBOR(nl, ni)
                 
              if (i <= j .and. IS_EL(this%els, p, j)) then
                 DIST_SQ(p, nl, i, ni, rij, abs_rij_sq)

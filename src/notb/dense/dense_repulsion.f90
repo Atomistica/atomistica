@@ -76,11 +76,7 @@ contains
        if (IS_EL(tb%f, p, i)) then
 
           ni_loop: do ni = nl%seed(i), nl%last(i)
-#ifdef LAMMPS
-             j   = nl%neighbors(ni)+1
-#else
-             j   = nl%neighbors(ni)
-#endif
+             j = GET_NEIGHBOR(nl, ni)
 
              if (IS_EL(tb%f, p, j)) then
 

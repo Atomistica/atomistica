@@ -183,7 +183,7 @@ contains
 
     do i = 1, p%nat
        do jn = nl%seed(i), nl%last(i)
-          j = nl%neighbors(jn)
+          j = GET_NEIGHBOR(nl, jn)
 
           !if (IS_PAIR(nl, i, jn, j)) then
              if ( ( IS_EL(this%el1, p, i) .and. IS_EL(this%el2, p, j) ) .or. &

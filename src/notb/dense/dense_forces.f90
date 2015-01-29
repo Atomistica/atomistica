@@ -131,11 +131,7 @@ contains
        I_is_el: if (IS_EL(tb%f, p, I)) then
 
           ni_loop: do ni = nl%seed(I), nl%last(I)
-#ifdef LAMMPS
-             J = nl%neighbors(ni)+1
-#else
-             J = nl%neighbors(ni)
-#endif
+             J = GET_NEIGHBOR(nl, ni)
 
              J_is_el: if (IS_EL(tb%f, p, J)) then
 

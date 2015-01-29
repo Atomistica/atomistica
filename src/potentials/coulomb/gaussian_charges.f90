@@ -364,7 +364,7 @@ contains
              U_i_sq = this%U(p%el(i))**2
 
              Gaussian_ni_loop: do ni = nl%seed(i), nl%last(i)
-                j   = nl%neighbors(ni)
+                j = GET_NEIGHBOR(nl, ni)
 
                 if (i <= j .and. IS_EL(this%els, p, j)) then
                    abs_rij = GET_ABS_DRJ(p, nl, i, j, ni)
@@ -394,7 +394,7 @@ contains
              !
              
              Gaussian_ni_loop2: do ni = nl%seed(i), nl%last(i)
-                j   = nl%neighbors(ni)
+                j = GET_NEIGHBOR(nl, ni)
 
                 if (i < j .and. IS_EL(this%els, p, j)) then
                    if (this%U(p%el(j)) > 0.0_DP) then
@@ -480,7 +480,7 @@ contains
              U_i_sq = this%U(p%el(i))**2
 
              ni_loop: do ni = nl%seed(i), nl%last(i)
-                j = nl%neighbors(ni)
+                j = GET_NEIGHBOR(nl, ni)
                    
                 if (i <= j .and. IS_EL(this%els, p, j)) then
                    DIST_SQ(p, nl, i, ni, rij, abs_rij_sq)
@@ -535,7 +535,7 @@ contains
              !
 
              ni_loop2: do ni = nl%seed(i), nl%last(i)
-                j = nl%neighbors(ni)
+                j = GET_NEIGHBOR(nl, ni)
 
                 if (i < j .and. IS_EL(this%els, p, j)) then
 
