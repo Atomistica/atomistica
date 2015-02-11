@@ -354,7 +354,8 @@ contains
          abs(dot_product(this%Abox(3, :), this%Abox(1, :))) < TOL
 
     if (.not. all(this%pbc /= 0)) then
-       call require_orthorhombic_cell(this)
+       call require_orthorhombic_cell(this, error)
+       PASS_ERROR(error)
     endif
 
     if (.not. this%cell_is_orthorhombic .and. this%orthorhombic_cell_is_required) then
