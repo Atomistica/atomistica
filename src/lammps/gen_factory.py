@@ -117,9 +117,10 @@ def write_factory_f90(mods, str, fn):
                 "  type(c_ptr), value :: this_cptr\n" +
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  call c_f_pointer(this_cptr, this_fptr)\n" +
-                "  if (.not. associated(this_fptr))   stop '[lammps_%s_free] *this_fptr* is NULL.'\n" % f90name +
-                "  call del(this_fptr)\n" +
-                "  deallocate(this_fptr)\n"  +
+                "  if (.not. associated(this_fptr))   stop '[lammps_%s_free] *this_fptr* is NULL.'\n" % f90name)
+        if 'del' in methods:
+            f.write("  call del(this_fptr)\n")
+        f.write("  deallocate(this_fptr)\n"  +
                 "endsubroutine lammps_%s_free\n\n\n" % f90name)
 
         if 'register_data' in methods:
@@ -133,9 +134,10 @@ def write_factory_f90(mods, str, fn):
                 "  type(c_ptr), value :: this_cptr\n" +
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  call c_f_pointer(this_cptr, this_fptr)\n" +
-                "  if (.not. associated(this_fptr))   stop '[%s_init_without_parameters] *this_fptr* is NULL.'\n" % f90name +
-                "  call init(this_fptr)\n" +
-                "endsubroutine lammps_%s_init_without_parameters\n\n\n" % f90name)
+                "  if (.not. associated(this_fptr))   stop '[%s_init_without_parameters] *this_fptr* is NULL.'\n" % f90name)
+        if 'init' in methods:
+            f.write("  call init(this_fptr)\n")
+        f.write("endsubroutine lammps_%s_init_without_parameters\n\n\n" % f90name)
 
         f.write("subroutine lammps_%s_del(this_cptr) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
@@ -143,9 +145,10 @@ def write_factory_f90(mods, str, fn):
                 "  type(c_ptr), value :: this_cptr\n" +
                 "  type(%s_t), pointer :: this_fptr\n" % f90name +
                 "  call c_f_pointer(this_cptr, this_fptr)\n" +
-                "  if (.not. associated(this_fptr))   stop '[%s_del] *this_fptr* is NULL.'\n" % f90name +
-                "  call del(this_fptr)\n" +
-                "endsubroutine lammps_%s_del\n\n\n" % f90name)
+                "  if (.not. associated(this_fptr))   stop '[%s_del] *this_fptr* is NULL.'\n" % f90name)
+        if 'del' in methods:
+            f.write("  call del(this_fptr)\n")
+        f.write("endsubroutine lammps_%s_del\n\n\n" % f90name)
 
         f.write("subroutine lammps_%s_bind_to(this_cptr, p_cptr, nl_cptr, error) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
