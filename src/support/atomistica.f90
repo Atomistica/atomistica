@@ -127,7 +127,7 @@ contains
   !>
   !! Finalize MDCORE 
   !!
-  !! Print timing information, close log file and write an empty "DONE" file.
+  !! Print timing information, close log file.
   !<
   subroutine atomistica_shutdown() bind(C)
     implicit none
