@@ -159,8 +159,7 @@ contains
 
     type(neighbors_t)           :: nl                ! Pair information
 
-    integer                     :: it
-    integer                     :: i
+    integer                     :: it, i, done_file
     integer                     :: ierror  = ERROR_NONE
 
     logical                     :: user_exit
@@ -568,6 +567,13 @@ contains
 #endif
 
     call atomistica_shutdown
+
+    !
+    ! Create the (empty) file DONE to let everyone know we finished properly
+    !
+
+    done_file = fopen("DONE", mode=F_WRITE)
+    call fclose(done_file)
 
   endsubroutine main_loop
 
