@@ -114,9 +114,4 @@
          CSTR("Cmax"), CSTR("See functional form."))
 #endif
 
-    call ptrdict_register_integer_property(m, c_loc(this%nebmax), &
-         CSTR("nebmax"), CSTR("Maximum number of neighbors (internal neighbor list)."))
-    call ptrdict_register_integer_property(m, c_loc(this%nebavg), &
-         CSTR("nebavg"), CSTR("Average number of neighbors (internal neighbor list)."))
-
   endsubroutine REGISTER_FUNC

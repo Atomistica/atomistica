@@ -165,7 +165,4 @@
     call ptrdict_register_array3d_property(m, c_loc111(this%in_Tcc), 5, 5, 10, &
          CSTR("Tcc"), CSTR("Tcc-table"))
 
-    call ptrdict_register_integer_property(m, c_loc(this%nebmax), CSTR("nebmax"), CSTR("Internal per-loop neighbor list size."))
-    call ptrdict_register_integer_property(m, c_loc(this%nebavg), CSTR("nebavg"), CSTR("Internal global neighbor list size."))
-
   endsubroutine REGISTER_FUNC

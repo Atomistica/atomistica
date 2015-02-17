@@ -106,9 +106,6 @@
      ! Internal neighbor lists
      !
 
-     integer                :: nebmax = 40
-     integer                :: nebavg = 40
-
      integer, allocatable   :: neb(:)
      integer, allocatable   :: nbb(:)
 #ifndef LAMMPS

@@ -44,14 +44,14 @@
 #define DCELL_INDEX(ni)  VEC(dc, ni, 3) + (2*maxdc(3)+1) * ( VEC(dc, ni, 2) + (2*maxdc(2)+1) * VEC(dc, ni, 1) )
 #endif
 
-#define TOO_SMALL(what, i, ierror)  nebtot = 1 ; neb_last(i) = neb_seed(i) ; RAISE_DELAYED_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // neb_max // ", nebmax = " // this%nebmax // ", nebavg = " // this%nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (neb_last(i)-neb_seed(i)+1), ierror)
+#define TOO_SMALL(what, i, ierror)  nebtot = 1 ; neb_last(i) = neb_seed(i) ; RAISE_DELAYED_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // neb_max // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (neb_last(i)-neb_seed(i)+1), ierror)
 
 #ifdef LAMMPS
   recursive subroutine BOP_KERNEL( &
        this, &
        maxnat, natloc, nat, r, &
        el, &
-       aptr, a2ptr, bptr, ptrmax, &
+       nebmax, nebavg, aptr, a2ptr, bptr, ptrmax, &
        epot, f_inout, wpot_inout, mask, &
        epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
        ierror)
@@ -60,7 +60,7 @@
        this, cell, &
        maxnat, natloc, nat, r, &
        el, &
-       aptr, a2ptr, bptr, ptrmax, dc, shear_dx, &
+       nebmax, nebavg, aptr, a2ptr, bptr, ptrmax, dc, shear_dx, &
        epot, f_inout, wpot_inout, mask, &
        epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
        ierror)
@@ -143,6 +143,7 @@
     real(DP),  optional, intent(inout) :: epot_per_at(nat)
     real(DP),  optional, intent(inout) :: epot_per_bond(ptrmax)
 
+    integer,             intent(in)    :: nebmax, nebavg
     integer(NEIGHPTR_T), intent(in)    :: aptr(maxnat+1)
     integer(NEIGHPTR_T), intent(in)    :: a2ptr(maxnat+1)
     integer,             intent(in)    :: bptr(ptrmax)
@@ -176,7 +177,7 @@
     real(DP)  :: VAij,dVAij_drij,VRij,dVRij_drij
     real(DP)  :: zij
     real(DP)  :: wij(3, 3), wijb(3, 3)
-    real(DP)  :: dbidi(3), dbidj(3), dbidk(3, this%nebmax)
+    real(DP)  :: dbidi(3), dbidj(3), dbidk(3, nebmax)
     real(DP)  :: disjk,dkc(3)
     real(DP)  :: costh
     real(DP)  :: g_costh,dg_dcosth
@@ -213,7 +214,7 @@
 #endif
     real(DP)  :: sij, dsijdrij, dsijdrik, dsijdrjk
     real(DP)  :: fcboij, dfcboijr
-    real(DP)  :: zfaci(this%nebmax)
+    real(DP)  :: zfaci(nebmax)
 #endif
     real(DP)  :: fcinij, dfcinijr
 
@@ -230,9 +231,9 @@
     ! seed for the "short" neighbor list
     integer  :: nebtot, neb_seed(nat), neb_last(nat), istart, ifinsh
     ! seed for the "screened" neighbor list
-    integer  :: nebofi(this%nebmax)
+    integer  :: nebofi(nebmax)
 #ifndef LAMMPS
-    integer  :: dcofi(this%nebmax)
+    integer  :: dcofi(nebmax)
 #endif
 
     integer  :: numnbi
@@ -240,8 +241,8 @@
     integer  :: neb_max
 
 #ifdef SCREENING
-    integer  :: seedi(this%nebmax)
-    integer  :: lasti(this%nebmax)
+    integer  :: seedi(nebmax)
+    integer  :: lasti(nebmax)
 
     integer  :: sneb_max
 
@@ -279,9 +280,9 @@
 
     this%it = this%it + 1
 
-    neb_max   = min(maxnat*this%nebavg, ptrmax)
+    neb_max   = min(maxnat*nebavg, ptrmax)
 #ifdef SCREENING
-    sneb_max  = neb_max*this%nebavg
+    sneb_max  = neb_max*nebavg
 #endif
 
     if (this%neighbor_list_allocated .and. size(this%neb) < neb_max) then
@@ -417,11 +418,12 @@
 #ifndef LAMMPS
     !$omp& shared(cell, dc, shear_dx) &
 #endif
-    !$omp& shared(nat, natloc, neb_last, neb_seed) &
-    !$omp& shared(neb_max, mask, epot_per_at, epot_per_bond) &
+    !$omp& firstprivate(nat, natloc, nebmax, nebavg, neb_max) &
+    !$omp& shared(neb_last, neb_seed) &
+    !$omp& shared(mask, epot_per_at, epot_per_bond) &
     !$omp& shared(r, this, f_per_bond, wpot_per_at, wpot_per_bond) &
 #ifdef SCREENING
-    !$omp& shared(sneb_max) &
+    !$omp& firstprivate(sneb_max) &
 #endif
 #ifndef LAMMPS
     !$omp& firstprivate(maxdc) &
@@ -500,7 +502,7 @@
 #define f  tls_vec1
 
 #define nebmax_sq zij
-    nebmax_sq = this%nebmax*this%nebmax
+    nebmax_sq = nebmax*nebmax
 
     ! Convert to real to avoid overflow
 #ifdef _OPENMP
@@ -626,7 +628,7 @@
                    neb_last(i)            = nebtot
                    nebtot                 = nebtot + 1
 
-                   if (neb_last(i)-neb_seed(i)+1 > this%nebmax) then
+                   if (neb_last(i)-neb_seed(i)+1 > nebmax) then
                       TOO_SMALL("nebmax", i, ierror_loc)
                    endif
 
@@ -930,7 +932,7 @@
                       neb_last(i)  = nebtot
                       nebtot       = nebtot + 1
 
-                      if (neb_last(i)-neb_seed(i)+1 > this%nebmax) then
+                      if (neb_last(i)-neb_seed(i)+1 > nebmax) then
                          TOO_SMALL("nebmax", i, ierror_loc)
                       endif
 
@@ -998,7 +1000,7 @@
                    neb_last(i)            = nebtot
                    nebtot                 = nebtot + 1
 
-                   if (neb_last(i)-neb_seed(i)+1 > this%nebmax) then
+                   if (neb_last(i)-neb_seed(i)+1 > nebmax) then
                       TOO_SMALL("nebmax", i, ierror_loc)
                    endif
 

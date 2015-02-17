@@ -47,7 +47,7 @@
 
     ! ---
 
-    integer  :: i, el(p%maxnatloc)
+    integer  :: i, el(p%maxnatloc), nebmax, nebavg
 
     ! ---
 
@@ -60,27 +60,31 @@
 
     ! Internal element numbers
     el = -1
+    nebmax = 0
+    nebavg = 0
     do i = 1, p%nat
        if (p%el2Z(p%el(i)) > 0) then
          el(i) = this%Z2db(p%el2Z(p%el(i)))
        endif
+       nebmax = max(nebmax, nl%last(i)-nl%seed(i)+1)
+       nebavg = nebavg + nl%last(i)-nl%seed(i)+1
     enddo
+    nebavg = nebavg/p%nat + 1
 
 #ifdef LAMMPS
     call BOP_KERNEL( &
          this, &
-         p%maxnatloc, p%natloc, p%nat, p%r_non_cyc, &
-         el, &
-         nl%seed, nl%last, nl%neighbors, nl%neighbors_size, &
+         p%maxnatloc, p%natloc, p%nat, p%r_non_cyc, el, &
+         nebmax, nebavg, nl%seed, nl%last, nl%neighbors, nl%neighbors_size, &
          epot, f, wpot, mask, &
          epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
          ierror)
 #else
     call BOP_KERNEL( &
          this, p%Abox, &
-         p%maxnatloc, p%natloc, p%nat, p%r_non_cyc, &
-         el, &
-         nl%seed, nl%last, nl%neighbors, nl%neighbors_size, nl%dc, p%shear_dx, &
+         p%maxnatloc, p%natloc, p%nat, p%r_non_cyc, el, &
+         nebmax, nebavg, nl%seed, nl%last, nl%neighbors, nl%neighbors_size, &
+         nl%dc, p%shear_dx, &
          epot, f, wpot, mask, &
          epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
          ierror)

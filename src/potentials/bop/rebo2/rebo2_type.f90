@@ -309,9 +309,6 @@
      ! Internal neighbor lists
      !
 
-     integer                :: nebmax = 20
-     integer                :: nebavg = 20
-
      integer, allocatable   :: neb_seed(:)
      integer, allocatable   :: neb_last(:)
 
