@@ -7,8 +7,8 @@ TODO
 Change log
 ==========
 
-Current HEAD
-------------
+v0.3.0
+------
 
 - Added standalone molecular dynamics code. Source is in src/standalone and 
   Makefiles are in build_standalone.
