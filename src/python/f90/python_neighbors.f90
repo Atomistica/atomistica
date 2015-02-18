@@ -908,8 +908,6 @@ contains
           
     endif
 
-    call prlog
-
   endsubroutine neighbors_binning_init
 
 
