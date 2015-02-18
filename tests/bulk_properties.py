@@ -127,6 +127,10 @@ tests  = [
       [ dict( name='dia-C', struct=Diamond('C', size=[sx,sx,sx]),
               Ec=7.370, a0=3.566, C11=1080, C12=130, C44=720 )
         ] ),
+    ( TabulatedEAM, dict(fn='Au_u3.eam'),
+       [ dict( name='fcc-Au', struct=FaceCenteredCubic('Au', size=[sx,sx,sx]),
+               Ec=3.93, a0=4.08, B=167, C11=183, C12=159, C44=45)
+         ] ),
     ( TabulatedAlloyEAM, dict(fn='Au-Grochola-JCP05.eam.alloy'),
        [ dict( name='fcc-Au', struct=FaceCenteredCubic('Au', size=[sx,sx,sx]),
                Ec=3.924, a0=4.070, C11=202, C12=170, C44=47, C440=46)
