@@ -7,6 +7,11 @@ TODO
 Change log
 ==========
 
+HEAD
+----
+
+- Fixed a couple of OpenMP related regression that broke compilation.
+
 v0.3.0
 ------
 
