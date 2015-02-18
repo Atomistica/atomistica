@@ -399,7 +399,7 @@ contains
     !$omp& SPLINE_INLINE_OMP &
     !$omp& SPLINE_INLINE_ARRAY_OMP &
     !$omp& SPLINE_INLINE_OMP_DEFINE(F) &
-    !$omp& SPLINE_INLINE_OMP_DEFINE(phi) &
+    !$omp& SPLINE_INLINE_OMP_DEFINE(Z) &
     !$omp& SPLINE_INLINE_OMP_DEFINE(rho) &
     !$omp& reduction(+:e) reduction(+:w)
 
