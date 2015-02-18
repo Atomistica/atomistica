@@ -88,7 +88,7 @@ module tabulated_eam
      !
 
      type(simple_spline_t)  :: fF        !< Embedding function
-     type(simple_spline_t)  :: fphi      !< phi(r) - repulsive part
+     type(simple_spline_t)  :: fZ        !< Z(r) - effective charge for repulsive part
      type(simple_spline_t)  :: frho      !< rho(r) - embedding density
      
 
@@ -189,23 +189,23 @@ contains
     this%cutoff     = cutoff
 
     call read(this%fF, f, nF, dF, dF)
-    call read(this%fphi, f, nr, dr, dr)
+    call read(this%fZ, f, nr, dr, dr)
     call read(this%frho, f, nr, dr, dr)
 
-    call prlog("     cutoff(fphi)  = " // this%fphi%cut)
+    call prlog("     cutoff(fZ)    = " // this%fZ%cut)
     call prlog("     cutoff(frho)  = " // this%frho%cut)
 
     call write(this%fF, "fF.out", 0.0001_DP)
-    call write(this%fphi, "fphi.out", 0.01_DP)
+    call write(this%fZ, "fZ.out", 0.01_DP)
     call write(this%frho, "frho.out", 0.01_DP)
 
-    call scale_y_axis(this%fphi, 0.5_DP)
+    call scale_y_axis(this%fZ, sqrt(0.5_DP*Hartree*Bohr))
 
 #ifdef AVOID_SQRT
-    call square_x_axis(this%fphi, 10*this%fphi%n)
+    call square_x_axis(this%fZ, 10*this%fZ%n)
     call square_x_axis(this%frho, 10*this%frho%n)
 
-    call write(this%fphi, "fphi_sq.out", 0.01_DP)
+    call write(this%fZ, "fZ_sq.out", 0.01_DP)
     call write(this%frho, "frho_sq.out", 0.01_DP)
 #endif
          
@@ -227,7 +227,7 @@ contains
     ! ---
 
     call del(this%fF)
-    call del(this%fphi)
+    call del(this%fZ)
     call del(this%frho)
 
   endsubroutine tabulated_eam_del
@@ -369,13 +369,13 @@ contains
     SPLINE_INLINE
     SPLINE_INLINE_ARRAY(maxneb)
     SPLINE_INLINE_DEFINE(F, this%fF)
-    SPLINE_INLINE_DEFINE(phi, this%fphi)
+    SPLINE_INLINE_DEFINE(Z, this%fZ)
     SPLINE_INLINE_DEFINE(rho, this%frho)
 
     INIT_ERROR(ierror)
 
     SPLINE_INLINE_PREPARE(F, this%fF)
-    SPLINE_INLINE_PREPARE(phi, this%fphi)
+    SPLINE_INLINE_PREPARE(Z, this%fZ)
     SPLINE_INLINE_PREPARE(rho, this%frho)
 
     els        = this%els
@@ -457,10 +457,14 @@ contains
         
           !
           ! Repulsive energy and forces
+          !   phi = Z**2/r
           !
 
-          SPLINE_F_AND_DF_ARRAY(phi, 1:neb_n, neb_abs_dr, phi, dphi)
-          tls_sca1(i)  = tls_sca1(i) + sum(phi(1:neb_n))
+          SPLINE_F_AND_DF_ARRAY(Z, 1:neb_n, neb_abs_dr, phi, dphi)
+          dphi(1:neb_n) = 2*phi(1:neb_n)*dphi(1:neb_n)/neb_abs_dr(1:neb_n)
+          phi(1:neb_n)  = phi(1:neb_n)*phi(1:neb_n)/neb_abs_dr(1:neb_n)
+          dphi(1:neb_n) = dphi(1:neb_n) - phi(1:neb_n)/neb_abs_dr(1:neb_n)
+          tls_sca1(i)   = tls_sca1(i) + sum(phi(1:neb_n))
 
           !
           ! Forces due to embedding
