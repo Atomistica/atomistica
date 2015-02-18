@@ -142,7 +142,11 @@ contains
 
     if (ilog /= -1) then
       if (present(msg)) then
-         write (ilog, '(A)')  msg
+         if (msg(1:1) == "-") then
+            write (ilog, '(A)')  trim(msg)
+         else
+            write (ilog, '(5X,A)')  trim(adjustl(msg))
+         endif
       else
          write (ilog, *)
       endif
