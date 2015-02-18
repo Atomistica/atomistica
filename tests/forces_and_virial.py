@@ -250,7 +250,7 @@ def run_forces_and_virial_test(test=None):
                 for mask in masks:
                     if test is None and mask is not None:
                         print '--- using random mask ---'
-                        c.set_mask(mask)
+                    c.set_mask(mask)
 
                     ffd, f0, maxdf = test_forces(a, dx=dx)
         
