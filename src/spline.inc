@@ -9,7 +9,7 @@
 #define SPLINE_INLINE  integer :: spl_i ; real(DP) :: spl_xf, spl_B
 
 
-#define SPLINE_INLINE_DEFINE(prefix, this)  real(DP) :: prefix/**/_spl_x0, prefix/**/_spl_rdx, prefix/**/_spl_y(this%n-1), prefix/**/_spl_coeff1(this%n-1), prefix/**/_spl_coeff2(this%n-1), prefix/**/_spl_coeff3(this%n-1), prefix/**/_spl_dcoeff1(this%n-1), prefix/**/_spl_dcoeff2(this%n-1), prefix/**/_spl_dcoeff3(this%n-1)
+#define SPLINE_INLINE_DEFINE(prefix, this)  real(DP) :: prefix/**/_spl_x0, prefix/**/_spl_rdx, prefix/**/_spl_y(this%n), prefix/**/_spl_coeff1(this%n-1), prefix/**/_spl_coeff2(this%n-1), prefix/**/_spl_coeff3(this%n-1), prefix/**/_spl_dcoeff1(this%n-1), prefix/**/_spl_dcoeff2(this%n-1), prefix/**/_spl_dcoeff3(this%n-1)
 
 
 #define SPLINE_INLINE_OMP  private(spl_i, spl_xf, spl_B)
@@ -57,7 +57,7 @@
 #define SPLINE_INLINE  integer :: spl_i ; real(DP) :: spl_xf, spl_B
 
 
-#define SPLINE_INLINE_DEFINE(prefix, this)  real(DP) :: prefix ## _spl_x0, prefix ## _spl_rdx, prefix ## _spl_y(this%n-1), prefix ## _spl_coeff1(this%n-1), prefix ## _spl_coeff2(this%n-1), prefix ## _spl_coeff3(this%n-1), prefix ## _spl_dcoeff1(this%n-1), prefix ## _spl_dcoeff2(this%n-1), prefix ## _spl_dcoeff3(this%n-1)
+#define SPLINE_INLINE_DEFINE(prefix, this)  real(DP) :: prefix ## _spl_x0, prefix ## _spl_rdx, prefix ## _spl_y(this%n), prefix ## _spl_coeff1(this%n-1), prefix ## _spl_coeff2(this%n-1), prefix ## _spl_coeff3(this%n-1), prefix ## _spl_dcoeff1(this%n-1), prefix ## _spl_dcoeff2(this%n-1), prefix ## _spl_dcoeff3(this%n-1)
 
 
 #define SPLINE_INLINE_OMP  private(spl_i, spl_xf, spl_B)
