@@ -491,8 +491,6 @@ contains
 
     !$omp end parallel
 
-    w = w/2
-
     epot  = epot + e
     wpot  = wpot + w
 
