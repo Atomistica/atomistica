@@ -60,7 +60,6 @@ class PairAtomistica : public Pair {
   double init_one(int, int);
   double memory_usage();
 
- private:
   char *name_;                     // name of the potential
   char *fn_;                       // file name with potential parameters
   int maxlocal_;                   // size of numneigh, firstneigh arrays
@@ -70,6 +69,7 @@ class PairAtomistica : public Pair {
   int *Atomistica_neighb_;
   int Atomistica_nneighb_;
 
+  double rcmax_;
   double **rcmaxsq_;
 
   // pointer to the -member descriptor
@@ -87,6 +87,8 @@ class PairAtomistica : public Pair {
   void allocate();
 };
 
+int error2lmp(Error *, const char *, int, int);
+
 }
 
 extern "C" {
@@ -98,9 +100,9 @@ extern "C" {
   void particles_del(void *self);             // finalize particles object
 
   void particles_set_element(void *self, char *el_str, int nel, int el_no, 
-			     int *Z, int *error);
+                             int *Z, int *error);
   void particles_set_pointers(void *self, int nat, int natloc, int maxnatloc,
-			      void *tag, void *el, void *r);
+                              void *tag, void *el, void *r);
 
   void particles_get_border(void *self, double *border);
 
@@ -112,7 +114,7 @@ extern "C" {
   void neighbors_del(void *self);             // finalize neighbors object
 
   void neighbors_set_pointers(void *self, int natloc, void *seed, void *last,
-			      int neighbors_size, void *neighbors);
+                              int neighbors_size, void *neighbors);
 
   void neighbors_get_cutoff(void *self, int Z1, int Z2, double *cutoff);
   void neighbors_dump_cutoffs(void *self, void *p);

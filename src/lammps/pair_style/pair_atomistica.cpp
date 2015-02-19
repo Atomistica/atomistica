@@ -63,7 +63,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-int error2lmp(Error *error, const char *fn, int line, int ierror)
+int LAMMPS_NS::error2lmp(Error *error, const char *fn, int line, int ierror)
 {
   char errstr[ERRSTRLEN];
 
@@ -87,6 +87,8 @@ PairAtomistica::PairAtomistica(LAMMPS *lmp) : Pair(lmp)
 
   name_ = NULL;
   fn_ = NULL;
+
+  rcmax_ = 0.0;
 
   maxlocal_ = 0;
   Atomistica_seed_ = NULL;
@@ -326,6 +328,8 @@ void PairAtomistica::init_style()
   double rc;
   particles_get_border(particles_,&rc);
   comm->cutghostuser = MAX(comm->cutghostuser,rc);
+
+  rcmax_ = 0.0;
 }
 
 /* ----------------------------------------------------------------------
@@ -339,6 +343,8 @@ double PairAtomistica::init_one(int i, int j)
   double rc;
 
   neighbors_get_cutoff(neighbors_,i,j,&rc);
+
+  rcmax_ = MAX(rc, rcmax_);
 
   rcmaxsq_[i][j] = rcmaxsq_[j][i] = rc*rc;
   cutghost[i][j] = cutghost[j][i] = rc;
@@ -474,7 +480,7 @@ void PairAtomistica::FAtomistica(int eflag, int vflag)
 
   // set pointers in particles object
   particles_set_pointers(particles_,nall,atom->nlocal,atom->nmax,tag,
-             type,&x[0][0]);
+                         type,&x[0][0]);
 
   // set pointers in neighbor list object
   neighbors_set_pointers(neighbors_,nall,Atomistica_seed_,Atomistica_last_,
