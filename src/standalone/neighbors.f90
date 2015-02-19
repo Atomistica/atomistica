@@ -108,16 +108,16 @@ module neighbors
      ! Neighbor stuff
      !
 
-     integer                     :: n_d
-     integer, allocatable        :: d(:, :)
+     integer                          :: n_d
+     integer, allocatable             :: d(:, :)
 
-     integer, allocatable        :: seed(:)         !< Seed for the neighbor list for the first set of particles
-     integer, allocatable        :: last(:)         !< End of the neighbor list for the first set of particles
+     integer(NEIGHPTR_T), allocatable :: seed(:)         !< Seed for the neighbor list for the first set of particles
+     integer(NEIGHPTR_T), allocatable :: last(:)         !< End of the neighbor list for the first set of particles
 
-     integer                     :: neighbors_size  !< Size of the neighbor list
-     integer, allocatable        :: neighbors(:)    !< Neighbor list for the second set of particles
+     integer                          :: neighbors_size  !< Size of the neighbor list
+     integer, allocatable             :: neighbors(:)    !< Neighbor list for the second set of particles
 
-     integer, allocatable        :: dc(:, :)        !< Which cell did the neighbor come from?
+     integer, allocatable             :: dc(:, :)        !< Which cell did the neighbor come from?
 
      !
      ! Other
