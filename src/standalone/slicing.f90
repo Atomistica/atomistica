@@ -1499,7 +1499,7 @@ contains
          CSTR("Compute histograms for temperature and velocity."))
 
     call ptrdict_register_enum_property(m, c_loc(this%d), &
-         n_dims-1, len_dim_str, dim_strs(:), &
+         n_dims, len_dim_str, dim_strs(:), &
          CSTR("d"), &
          CSTR("Direction in which to slice: 'x', 'y', 'z'"))
 
