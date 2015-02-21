@@ -286,7 +286,7 @@
 
 #ifdef SCREENING
     if (this%neighbor_list_allocated .and. &
-        (size(this%neb < nebsize) .or. size(this%sneb) < snebsize)) then
+        (size(this%neb) < nebsize .or. size(this%sneb) < snebsize)) then
 #else
     if (this%neighbor_list_allocated .and. size(this%neb) < nebsize) then
 #endif
@@ -640,7 +640,7 @@
                    endif
 
                    if (nebtot > nebsize) then
-                      TOO_SMALL("nebavg", i, ierror_loc)
+                      TOO_SMALL("nebsize", i, ierror_loc)
                    endif
 
 #endif
@@ -943,10 +943,14 @@
                          TOO_SMALL("nebmax", i, ierror_loc)
                       endif
 
-                      if (nebtot > nebsize .or. snebtot > snebsize) then
-                         TOO_SMALL("nebtot", i, ierror_loc)
+                      if (nebtot > nebsize) then
+                         TOO_SMALL("nebsize", i, ierror_loc)
                       endif
                       
+                      if (snebtot > snebsize) then
+                         TOO_SMALL("snebsize", i, ierror_loc)
+                      endif
+
 #ifndef PARTIAL_SCREENING
                    endif is_fully_screened
 #endif
@@ -999,20 +1003,21 @@
                         nebmax_sq) then
                       TOO_SMALL("nebmax", i, ierror_loc)
                    endif
+
                    if (snebtot > snebsize) then
-                      TOO_SMALL("nebavg", i, ierror_loc)
+                      TOO_SMALL("snebsize", i, ierror_loc)
                    endif
 #endif
 
-                   neb_last(i)            = nebtot
-                   nebtot                 = nebtot + 1
+                   neb_last(i) = nebtot
+                   nebtot      = nebtot + 1
 
                    if (neb_last(i)-neb_seed(i)+1 > nebmax) then
                       TOO_SMALL("nebmax", i, ierror_loc)
                    endif
 
                    if (nebtot > nebsize) then
-                      TOO_SMALL("nebavg", i, ierror_loc)
+                      TOO_SMALL("nebsize", i, ierror_loc)
                    endif
 
                 endif cutoff_region
