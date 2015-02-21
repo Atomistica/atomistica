@@ -276,9 +276,12 @@
 
     this%it = this%it + 1
 
-    nebsize   = min(nat*nebavg, ptrmax)
+    ! This size should be sufficient, buffers should not overflow.
+    nebsize = min(nat*nebavg, ptrmax)
 #ifdef SCREENING
-    snebsize  = nebsize*nebavg
+    ! This size can overflow. However, most bond are either screened or not
+    ! screened such that number is expected to be low.
+    snebsize = nebsize
 #endif
 
 #ifdef SCREENING
