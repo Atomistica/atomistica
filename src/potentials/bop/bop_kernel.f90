@@ -113,10 +113,6 @@
 
     integer, parameter       :: typemax = 3
 
-    !
-    ! Size estimation for internal neighbor lists
-    !
-
     ! ---
 
     type(BOP_TYPE),      intent(inout) :: this
