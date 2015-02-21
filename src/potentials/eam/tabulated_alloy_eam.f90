@@ -163,7 +163,6 @@ contains
     INIT_ERROR(ierror)
 
     call prlog("- tabulated_alloy_eam_init -")
-    call prlog("     $Id$")
 
     call del(this)
 
@@ -176,7 +175,7 @@ contains
 
     f = fopen(this%fn, mode=F_READ)
 
-    call prlog("     Parameters from setfl file")
+    call prlog("     Parameters from setfl file.")
     call prlog("     Comment:")
     call prlog("     " // trim(read_line(f)))
     call prlog("     " // trim(read_line(f)))
@@ -189,11 +188,11 @@ contains
     line = read_line(f)
     read (line, *)  nF, dF, nr, dr, cutoff
 
-    call prlog("     nF      = " // nF)
-    call prlog("     dF      = " // dF)
-    call prlog("     nr      = " // nr)
-    call prlog("     dr      = " // dr)
-    call prlog("     cutoff  = " // cutoff)
+    call prlog("     nF     = " // nF)
+    call prlog("     dF     = " // dF)
+    call prlog("     nr     = " // nr)
+    call prlog("     dr     = " // dr)
+    call prlog("     cutoff = " // cutoff)
 
     if (allocated(this%fF)) then
        deallocate(this%fF)
@@ -214,13 +213,18 @@ contains
     do i = 1, this%db_nel
        line = read_line(f)
        read (line, *)  Z, mass, a0, lattice
+       if (trim(ElementName(Z)) /= trim(this%db_elements(i))) then
+          RAISE_ERROR("Atomic number "//Z//" is element "//trim(ElementName(Z))//" and does not match element name "//trim(this%db_elements(i))//" found in data file.", ierror)
+       endif
        call read(this%fF(i), f, nF, 0.0_DP, dF)
        call read(this%frho(i), f, nr, 0.0_DP, dr, pad=(/0.0_DP,0.0_DP/))
 
+#if 0
        call write(this%fF(i), "fF_"//trim(this%db_elements(i))//".out", &
             0.0001_DP)
        call write(this%frho(i), "frho_"//trim(this%db_elements(i))//".out", &
             0.01_DP)
+#endif
 
 #ifdef AVOID_SQRT
        call square_x_axis(this%frho(i), 10*this%frho(i)%n)
@@ -228,11 +232,13 @@ contains
     enddo
 
     do i = 1, this%db_nel
-       do j = i, this%db_nel
+       do j = 1, i
           call read(this%fphi(i, j), f, nr, 0.0_DP, dr, pad=(/0.0_DP,0.0_DP/))
 
+#if 0
           call write(this%fphi(i, j), "fphi_"//trim(this%db_elements(i))// &
                "-"//trim(this%db_elements(j))//".out", 0.01_DP)
+#endif
 
           call scale_y_axis(this%fphi(i, j), 0.5_DP)
 #ifdef AVOID_SQRT
