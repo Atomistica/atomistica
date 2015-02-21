@@ -18,6 +18,7 @@
 !! You should have received a copy of the GNU General Public License
 !! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !! ======================================================================
+
 ! @meta
 !    shared
 ! @endmeta
@@ -26,7 +27,6 @@
 ! This is the kernel for the bond-order potentials of the
 ! Tersoff-Brenner type. Currently works with the Erhart-Albe,
 ! Tersoff and Brenner potential.
-! TODO: Include screening from the new screened Brenner
 !**********************************************************************
 
 
