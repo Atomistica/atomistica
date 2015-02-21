@@ -35,7 +35,7 @@
 
 #endif
 
-#define TOO_SMALL(what, i, ierror)  nebtot = 1 ; this%neb_last(i) = this%neb_seed(i) ; RAISE_DELAYED_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // neb_max // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (this%neb_last(i)-this%neb_seed(i)+1), ierror)
+#define TOO_SMALL(what, i, ierror)  nebtot = 1 ; this%neb_last(i) = this%neb_seed(i) ; RAISE_DELAYED_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // nebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (this%neb_last(i)-this%neb_seed(i)+1), ierror)
 
 #ifdef LAMMPS
 
@@ -279,7 +279,7 @@
 
     integer  :: numnbi,numnbj,numnbk(nebmax+1),numnbl(nebmax+1)
 
-    integer  :: neb_max
+    integer  :: nebsize
 
     real(DP) :: dri(3, nebmax), drj(3, nebmax)
     real(DP) :: drk(3, nebmax*nebmax), drl(3, nebmax*nebmax)
@@ -291,7 +291,7 @@
     integer  :: lasti(nebmax), lastj(nebmax)
     integer  :: lastk(nebmax*nebmax), lastl(nebmax*nebmax)
 
-    integer  :: sneb_max
+    integer  :: snebsize
 
     integer  :: i1,i2
 
@@ -324,15 +324,17 @@
 
 #endif
 
-
     this%it = this%it + 1
 
-    neb_max   = min(maxnat*nebavg, ptrmax)
+    ! This size should be sufficient, buffers should not overflow.
+    nebsize = min(nat*nebavg, ptrmax)
 #ifdef SCREENING
-    sneb_max  = neb_max*nebavg
+    ! This size can overflow. However, most bond are either screened or not
+    ! screened such that number is expected to be low.
+    snebsize = nebsize
 #endif
 
-    if (this%neighbor_list_allocated .and. ( size(this%neb) < neb_max .or. size(this%neb_seed) < maxnat )) then
+    if (this%neighbor_list_allocated .and. ( size(this%neb) < nebsize .or. size(this%neb_seed) < maxnat )) then
 
        this%neighbor_list_allocated = .false.
 
@@ -381,8 +383,6 @@
 
     !-------prepare brenner material
     if (.not. this%neighbor_list_allocated) then
-
-#ifndef LAMMPS
        call prlog("- " // BOP_NAME_STR // " -")
 #ifdef DIHEDRAL
        call prlog("     The " // BOP_NAME_STR // " potential has been compiled including dihedral terms.")
@@ -393,8 +393,15 @@
 #ifdef SCREENING
        call prlog("     The " // BOP_NAME_STR // " potential has been compiled with screening functions.")
 #endif
-       call log_memory_start(BOP_NAME_STR)
+       call prlog("(Re)allocating internal neighbor list buffers.")
+       call prlog("nebavg   = " // nebavg)
+       call prlog("nebmax   = " // nebmax)
+       call prlog("nebsize  = " // nebsize)
+#ifdef SCREENING
+       call prlog("snebsize = " // snebsize)
 #endif
+
+       call log_memory_start(BOP_NAME_STR)
 
 #ifdef NUM_NEIGHBORS
        allocate(this%nn(typemax, maxnat))
@@ -403,52 +410,51 @@
        allocate(this%neb_seed(maxnat))
        allocate(this%neb_last(maxnat))
 
-       allocate(this%neb(neb_max))
-       allocate(this%nbb(neb_max))
+       allocate(this%neb(nebsize))
+       allocate(this%nbb(nebsize))
 #ifndef LAMMPS
-       allocate(this%dcell(neb_max))
+       allocate(this%dcell(nebsize))
 #endif
-       allocate(this%bndtyp(neb_max))
-       allocate(this%bndlen(neb_max))
-       allocate(this%bndnm(3, neb_max))
-       allocate(this%cutfcnar(neb_max))
-       allocate(this%cutdrvar(neb_max))
+       allocate(this%bndtyp(nebsize))
+       allocate(this%bndlen(nebsize))
+       allocate(this%bndnm(3, nebsize))
+       allocate(this%cutfcnar(nebsize))
+       allocate(this%cutdrvar(nebsize))
 
-#ifndef LAMMPS
        call log_memory_estimate(this%neb_seed)
        call log_memory_estimate(this%neb_last)
        call log_memory_estimate(this%neb)
        call log_memory_estimate(this%nbb)
+#ifndef LAMMPS
        call log_memory_estimate(this%dcell)
+#endif
        call log_memory_estimate(this%bndtyp)
        call log_memory_estimate(this%bndlen)
        call log_memory_estimate(this%bndnm)
        call log_memory_estimate(this%cutfcnar)
        call log_memory_estimate(this%cutdrvar)
-#endif
 
 #ifdef SCREENING
-       allocate(this%cutfcnbo(neb_max))
-       allocate(this%cutdrvbo(neb_max))
-       allocate(this%sneb_seed(neb_max))
-       allocate(this%sneb_last(neb_max))
-       allocate(this%sneb(sneb_max))
-       allocate(this%sbnd(sneb_max))
-       allocate(this%sfacbo(sneb_max))
-       allocate(this%cutdrarik(sneb_max))
-       allocate(this%cutdrarjk(sneb_max))
-       allocate(this%cutdrboik(sneb_max))
-       allocate(this%cutdrbojk(sneb_max))
+       allocate(this%cutfcnbo(nebsize))
+       allocate(this%cutdrvbo(nebsize))
+       allocate(this%sneb_seed(nebsize))
+       allocate(this%sneb_last(nebsize))
+       allocate(this%sneb(snebsize))
+       allocate(this%sbnd(snebsize))
+       allocate(this%sfacbo(snebsize))
+       allocate(this%cutdrarik(snebsize))
+       allocate(this%cutdrarjk(snebsize))
+       allocate(this%cutdrboik(snebsize))
+       allocate(this%cutdrbojk(snebsize))
 
 #ifdef NUM_NEIGHBORS
-       allocate(this%cutfcnnc(neb_max))
-       allocate(this%cutdrvnc(neb_max))
-       allocate(this%sfacnc(sneb_max))
-       allocate(this%cutdrncik(sneb_max))
-       allocate(this%cutdrncjk(sneb_max))
+       allocate(this%cutfcnnc(nebsize))
+       allocate(this%cutdrvnc(nebsize))
+       allocate(this%sfacnc(snebsize))
+       allocate(this%cutdrncik(snebsize))
+       allocate(this%cutdrncjk(snebsize))
 #endif
 
-#ifndef LAMMPS
        call log_memory_estimate(this%cutfcnbo)
        call log_memory_estimate(this%cutdrvbo)
        call log_memory_estimate(this%sneb_seed)
@@ -469,13 +475,10 @@
        call log_memory_estimate(this%cutdrncjk)
 #endif
 #endif
-#endif
 
-#ifndef LAMMPS
        call log_memory_stop(BOP_NAME_STR)
 
        call prlog
-#endif
 
        this%neighbor_list_allocated = .true.
        
@@ -520,11 +523,11 @@
     !$omp& firstprivate(maxdc) &
     !$omp& shared(cell, dc, shear_dx) &
 #endif
-    !$omp& firstprivate(nat, natloc, nebmax, nebavg, neb_max) &
+    !$omp& firstprivate(nat, natloc, nebmax, nebavg, nebsize) &
     !$omp& shared(epot_per_at, epot_per_bond) &
     !$omp& shared(r, this, f_per_bond, wpot_per_at, wpot_per_bond) &
 #ifdef SCREENING
-    !$omp& firstprivate(sneb_max) &
+    !$omp& firstprivate(snebsize) &
 #endif
     !$omp& private(jbeg,jend,jn) &
     !$omp& private(rij) &
@@ -648,9 +651,9 @@
     nebmax_sq = nebmax*nebmax
 
 #ifdef _OPENMP
-    nebtot   = 1 + neb_max*omp_get_thread_num()/omp_get_num_threads()
+    nebtot   = 1 + nebsize*omp_get_thread_num()/omp_get_num_threads()
 #ifdef SCREENING
-    snebtot  = 1 + sneb_max*omp_get_thread_num()/omp_get_num_threads()
+    snebtot  = 1 + snebsize*omp_get_thread_num()/omp_get_num_threads()
 #endif
 
 #else
@@ -770,8 +773,8 @@
                       TOO_SMALL("nebmax", i, ierror_loc)
                    endif
 
-                   if (nebtot > neb_max) then
-                      TOO_SMALL("nebavg", i, ierror_loc)
+                   if (nebtot > nebsize) then
+                      TOO_SMALL("nebsize", i, ierror_loc)
                    endif
       
 #ifdef SCREENING
@@ -1098,8 +1101,8 @@
                             TOO_SMALL("nebmax", i, ierror_loc)
                          endif
 
-                         if (nebtot > neb_max) then
-                            TOO_SMALL("nebavg", i, ierror_loc)
+                         if (nebtot > nebsize) then
+                            TOO_SMALL("nebsize", i, ierror_loc)
                          endif
 
 #endif
@@ -1113,8 +1116,8 @@
                            nebmax_sq) then
                          TOO_SMALL("nebmax", i, ierror_loc)
                       endif
-                      if (snebtot > sneb_max) then
-                         TOO_SMALL("nebavg", i, ierror_loc)
+                      if (snebtot > snebsize) then
+                         TOO_SMALL("snebsize", i, ierror_loc)
                       endif
 
                       this%neb_last(i)  = nebtot
@@ -1124,8 +1127,8 @@
                            nebmax) then
                          TOO_SMALL("nebmax", i, ierror_loc)
                       endif
-                      if (nebtot > neb_max) then
-                         TOO_SMALL("nebavg", i, ierror_loc)
+                      if (nebtot > nebsize) then
+                         TOO_SMALL("nebsize", i, ierror_loc)
                       endif
 
                    endif
@@ -1226,7 +1229,7 @@
              ktypk_eq_C: if (ktypk == rebo2_C_) then
 
 !                if (kmc+this%neb_last(k)-this%neb_seed(k)+1 > nebmax_sq) then
-!                   TOO_SMALL("neb_max", i, ierror_loc)
+!                   TOO_SMALL("nebsize", i, ierror_loc)
 !                endif
 
                 forall(km = this%neb_seed(k):this%neb_last(k))
@@ -1648,7 +1651,7 @@
                             !                      nebofk(lnc+1:lnc + this%neb_seed(l)-this%neb_last(l)+1)  = 0
 
 !                            if (lnc+this%neb_last(l)-this%neb_seed(l)+1 > nebmax_sq) then
-!                               TOO_SMALL("neb_max", i, ierror_loc)
+!                               TOO_SMALL("nebsize", i, ierror_loc)
 !                            endif
 
                             forall (ln = this%neb_seed(l):this%neb_last(l))
