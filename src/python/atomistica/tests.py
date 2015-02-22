@@ -262,6 +262,8 @@ def orthorhombic_elastic_constants(a, Minimizer=None, fmax=0.025, eps=0.001):
 
 def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                                  test=None):
+    nok = 0
+    nfail = 0
     try:
         potname = pot.__name__
     except:
@@ -344,6 +346,9 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 if abs(dev) > dev_thres:
                     print '            --- Warning: Property off by more than '\
                         '%i %%.' % dev_thres
+                    nfail += 1
+                else:
+                    nok += 1
             else:
                 test.assertTrue(abs(dev) < dev_thres, msg=errmsg)
 
@@ -365,6 +370,9 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 if abs(dev) > dev_thres:
                     print '            --- Warning: Property off by more than '\
                         '%i %%.' % dev_thres
+                    nfail += 1
+                else:
+                    nok += 1
             else:
                 test.assertTrue(abs(dev) < dev_thres, msg=errmsg)
 
@@ -388,6 +396,9 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 if abs(dev) > dev_thres:
                     print '            --- Warning: Property off by more than '\
                         '%f %%.' % dev_thres
+                    nfail += 1
+                else:
+                    nok += 1
             else:
                 test.assertTrue(abs(dev) < dev_thres, msg=errmsg)
 
@@ -407,6 +418,9 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 if abs(dev) > dev_thres:
                     print '            --- Warning: Property off by more than '\
                         '%f %%.' % (dev_thres)
+                    nfail += 1
+                else:
+                    nok += 1
             else:
                 test.assertTrue(abs(dev) < dev_thres, msg=errmsg)
 
@@ -427,6 +441,9 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 if abs(dev) > dev_thres:
                     print '            --- Warning: Property off by more than '\
                         '%f %%.' % (dev_thres)
+                    nfail += 1
+                else:
+                    nok += 1
             else:
                 test.assertTrue(abs(dev) < dev_thres, msg=errmsg)
 
@@ -447,6 +464,9 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 if abs(dev) > dev_thres:
                     print '            --- Warning: Property off by more than '\
                         '%f %%.' % (dev_thres)
+                    nfail += 1
+                else:
+                    nok += 1
             else:
                 test.assertTrue(abs(dev) < dev_thres, msg=errmsg)
 
@@ -467,6 +487,9 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 if abs(dev) > dev_thres:
                     print '            --- Warning: Property off by more than '\
                         '%f %%.' % (dev_thres)
+                    nfail += 1
+                else:
+                    nok += 1
             else:
                 test.assertTrue(abs(dev) < dev_thres, msg=errmsg)
 
@@ -487,8 +510,13 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 if abs(dev) > dev_thres:
                     print '            --- Warning: Property off by more than '\
                         '%f %%.' % (dev_thres)
+                    nfail += 1
+                else:
+                    nok += 1
             else:
                 test.assertTrue(abs(dev) < dev_thres, msg=errmsg)
+
+    return nok, nfail
 
 
 def test_hexagonal_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
