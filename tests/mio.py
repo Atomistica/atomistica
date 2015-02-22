@@ -136,6 +136,7 @@ def check_db(c, db, test=None):
             a = molecule(mol)
             a.center(vacuum=10.0)
             a.set_pbc(False)
+            a.set_array('charges', np.zeros(len(a)))
 
             a.set_calculator(c)
             FIRE(a, logfile=None).run(fmax=0.001)
@@ -177,7 +178,11 @@ def run_mio_test(test=None):
 class TestMIO(unittest.TestCase):
 
     def test_mio(self):
-        run_mio_test(self)
+        if os.getenv('MIO') is None:
+            print 'Skipping MIO test. Specify path to mio Slater-Koster ' \
+                  'tables in MIO environment variable if you want to run it.'
+        else:
+            run_mio_test(self)
 
 ###
 
