@@ -185,6 +185,8 @@ class TestElasticConstants(unittest.TestCase):
 ###
 
 if __name__ == '__main__':
+    nok = 0
+    nfail = 0
     for pot, par, mats in tests:
         if len(sys.argv) > 1:
             found = False
@@ -203,4 +205,7 @@ if __name__ == '__main__':
             if not found:
                 continue
 
-        test_cubic_elastic_constants(mats, pot, par, sx, dev_thres)
+        _nok, _nfail = test_cubic_elastic_constants(mats, pot, par, sx, dev_thres)
+        nok += _nok
+        nfail += _nfail
+    print '{} tests passed, {} tests failed.'.format(nok, nfail)

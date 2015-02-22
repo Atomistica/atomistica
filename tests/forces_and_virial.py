@@ -185,6 +185,8 @@ tests += [
 ###
 
 def run_forces_and_virial_test(test=None):
+    nok = 0
+    nfail = 0
     for pot, par, mats in tests:
         if len(sys.argv) > 1:
             found = False
@@ -259,8 +261,10 @@ def run_forces_and_virial_test(test=None):
         
                     if test is None:
                         if abs(maxdf) < tol:
+                            nok += 1
                             print "forces .ok."
                         else:
+                            nfail += 1
                             print "forces .failed."
                             print "max(df)  = %f" % maxdf
 
@@ -277,8 +281,10 @@ def run_forces_and_virial_test(test=None):
 
                     if test is None:
                         if abs(maxds) < tol:
+                            nok += 1
                             print "virial .ok."
                         else:
+                            nfail += 1
                             print "virial .failed."
                             print "max(ds)  = %f" % maxds
                     
@@ -295,8 +301,10 @@ def run_forces_and_virial_test(test=None):
 
                     if test is None:
                         if abs(maxdp) < tol:
+                            nok += 1
                             print "potential .ok."
                         else:
+                            nfail += 1
                             print "potential .failed."
                             print "max(dp)  = %f" % maxdp
                     
@@ -310,6 +318,8 @@ def run_forces_and_virial_test(test=None):
                                         msg=errmsg+'; virial')
             
                 a.rattle(rattle)
+    if test is None:
+        print '{} tests passed, {} tests failed.'.format(nok, nfail)
 
 ###
 
