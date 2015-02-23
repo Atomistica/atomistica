@@ -332,7 +332,7 @@
 
     ! This size should be sufficient, buffers should not overflow.
 #ifdef _OPENMP
-    nebsize = max(omp_get_max_threads()**3, &
+    nebsize = max(omp_get_max_threads()**2*nebmax**2, &
                   min((nat+1)*nebmax, ptrmax))+omp_get_max_threads()
 #else
     nebsize = min(nat*nebavg, ptrmax)+1
