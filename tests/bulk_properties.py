@@ -96,6 +96,8 @@ tests  = [
         dict( name="fcc-W", struct=FaceCenteredCubic("W", latticeconstant=4.0,
                                                      size=[sx,sx,sx]),
               Ec=8.89-0.346, a0=4.005 ),
+        # Note: The sc test uses 2 2x2x2 unit cell. The lattice constant is
+        # therefore twice what is listed in Juslin's paper.
         dict( name="sc-W", struct=SimpleCubic("W", latticeconstant=2.7,
                                               size=[2*sx,2*sx,2*sx]),
                Ec=8.89-1.614, a0=2*2.671 ),
