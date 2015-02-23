@@ -35,7 +35,11 @@
 
 #endif
 
-#define TOO_SMALL(what, i, ierror)  nebtot = 1 ; this%neb_last(i) = this%neb_seed(i) ; RAISE_DELAYED_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // nebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (this%neb_last(i)-this%neb_seed(i)+1), ierror)
+#ifdef _OPENMP
+#define TOO_SMALL(what, i, ierror)  RAISE_DELAYED_ERROR("Internal neighbor list exhausted on OpenMP thread " // omp_get_thread_num() // ", *" // what // "* too small: " // "nebtot = " // nebtot // "/" // nebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", this%neb_last(i)-this%neb_seed(i)+1 = " // (this%neb_last(i)-this%neb_seed(i)+1) // ", i = " // i // "/" // natloc // "(" // nat // ")", ierror) ; nebtot = 1 ; this%neb_last(i) = this%neb_seed(i)
+#else
+#define TOO_SMALL(what, i, ierror)  RAISE_DELAYED_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // nebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", this%neb_last(i)-this%neb_seed(i)+1 = " // (this%neb_last(i)-this%neb_seed(i)+1) // ", i = " // i // "/" // natloc // " (" // nat // ")", ierror) ; nebtot = 1 ; this%neb_last(i) = this%neb_seed(i)
+#endif
 
 #ifdef LAMMPS
 
@@ -327,7 +331,11 @@
     this%it = this%it + 1
 
     ! This size should be sufficient, buffers should not overflow.
-    nebsize = min(nat*nebavg, ptrmax)
+#ifdef _OPENMP
+    nebsize = min((nat+1)*nebmax, omp_get_num_threads()*ptrmax)+omp_get_num_threads()
+#else
+    nebsize = min(nat*nebavg, ptrmax)+1
+#endif
 #ifdef SCREENING
     ! This size can overflow. However, most bond are either screened or not
     ! screened such that number is expected to be low.
@@ -650,20 +658,26 @@
 #define nebmax_sq nti
     nebmax_sq = nebmax*nebmax
 
+    ! Convert to real to avoid overflow
 #ifdef _OPENMP
-    nebtot   = 1 + nebsize*omp_get_thread_num()/omp_get_num_threads()
+
+    ! When using OpenMP parallelization, every thread gets an equal share of the
+    ! internal neighbor list buffers.
+    nebtot   = int(1 + real(nebsize, DP)*omp_get_thread_num()/omp_get_num_threads())
+    nebsize  = int(real(nebsize, DP)*(omp_get_thread_num()+1)/omp_get_num_threads())
 #ifdef SCREENING
-    snebtot  = 1 + snebsize*omp_get_thread_num()/omp_get_num_threads()
-#endif
+    snebtot  = int(1 + real(snebsize, DP)*omp_get_thread_num()/omp_get_num_threads())
+    snebsize = int(real(snebsize, DP)*(omp_get_thread_num()+1)/omp_get_num_threads())
+#endif ! SCREENING
 
 #else
 
     nebtot   = 1
 #ifdef SCREENING
     snebtot  = 1
-#endif
+#endif ! SCREENING
 
-#endif
+#endif ! _OPENMP
 
     !$omp do
     i_loop1: do i = 1, nat

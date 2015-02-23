@@ -192,7 +192,7 @@
        nebmax = max(nebmax, nl%last(i)-nl%seed(i)+1)
        nebavg = nebavg + nl%last(i)-nl%seed(i)+1
     enddo
-    nebavg = nebavg/p%nat + 1
+    nebavg = (nebavg+1)/p%nat
 
 #ifdef LAMMPS
     call BOP_KERNEL( &
