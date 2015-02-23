@@ -403,7 +403,7 @@ contains
     !$omp& SPLINE_INLINE_OMP_DEFINE(rho) &
     !$omp& reduction(+:e) reduction(+:w)
 
-    call tls_init(p%nat, sca=1)
+    call tls_init(p%nat, sca=1, vec=1)
 
     !$omp do
     do i = 1, p%natloc
@@ -477,12 +477,12 @@ contains
 
           fori  = 0.0_DP
           do ni = 1, neb_n
-             j           = neb(ni)
-             fori        = fori       + df(1:3, ni)
-             VEC3(f, j)  = VEC3(f, j) - df(1:3, ni)
-             w           = w + (- outer_product(neb_dr(1:3, ni), df(1:3, ni)))
+             j                 = neb(ni)
+             fori              = fori              + df(1:3, ni)
+             VEC3(tls_vec1, j) = VEC3(tls_vec1, j) - df(1:3, ni)
+             w                 = w + (- outer_product(neb_dr(1:3, ni), df(1:3, ni)))
           enddo
-          VEC3(f, i)  = VEC3(f, i) + fori
+          VEC3(tls_vec1, i) = VEC3(tls_vec1, i) + fori
 
        endif
     enddo
@@ -490,7 +490,9 @@ contains
     e  = e + sum(tls_sca1(1:p%natloc))
 
     if (present(epot_per_at)) then
-       call tls_reduce(p%nat, sca1=epot_per_at)
+       call tls_reduce(p%nat, sca1=epot_per_at, vec1=f)
+    else
+       call tls_reduce(p%nat, vec1=f)
     endif
 
     !$omp end parallel
