@@ -388,7 +388,7 @@ contains
     !$omp  parallel do default(none) &
     !$omp  private(eli) &
     !$omp& shared(mask, nl, p, this) &
-    !$omp& reduction(+:maxneb)
+    !$omp& reduction(max:maxneb)
     do i = 1, p%natloc
        if (.not. present(mask) .or. mask(i) /= 0) then
           eli = p%el(i)

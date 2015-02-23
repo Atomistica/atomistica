@@ -308,7 +308,7 @@ contains
     maxneb = 0
     !$omp  parallel do default(none) &
     !$omp& shared(nl, p, this) &
-    !$omp& reduction(+:maxneb)
+    !$omp& reduction(max:maxneb)
     do i = 1, p%natloc
        if (IS_EL2(this%els, p%el(i))) then
           maxneb = max(maxneb, nl%last(i)-nl%seed(i)+1)
@@ -337,14 +337,14 @@ contains
     type(particles_t),     intent(in)    :: p
     type(neighbors_t),     intent(inout) :: nl
     real(DP),              intent(inout) :: epot
-    real(DP),              intent(inout) :: f(3, p%maxnatloc)
+    real(DP),              intent(inout) :: f(3, p%nat)
     real(DP),              intent(inout) :: wpot(3, 3)
     integer,               intent(in)    :: maxneb
-    real(DP),    optional, intent(inout) :: epot_per_at(p%maxnatloc)
+    real(DP),    optional, intent(inout) :: epot_per_at(p%nat)
 #ifdef LAMMPS
-    real(DP),    optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
+    real(DP),    optional, intent(inout) :: wpot_per_at(6, p%nat)
 #else
-    real(DP),    optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
+    real(DP),    optional, intent(inout) :: wpot_per_at(3, 3, p%nat)
 #endif
     integer,     optional, intent(inout) :: ierror
 
