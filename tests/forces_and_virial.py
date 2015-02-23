@@ -269,10 +269,16 @@ def run_forces_and_virial_test(test=None):
                             print "max(df)  = %f" % maxdf
 
                             print "f - from potential"
-                            print f0
+                            for i, f in enumerate(f0):
+                                print i, f
 
                             print "f - numerically"
-                            print ffd
+                            for i, f in enumerate(ffd):
+                                print i, f
+
+                            print "difference between the above"
+                            for i, f in enumerate(f0-ffd):
+                                print i, f
                     else:
                       test.assertTrue(abs(maxdf) < tol,
                                         msg=errmsg+'; forces')
@@ -293,6 +299,9 @@ def run_forces_and_virial_test(test=None):
                 
                             print "s - numerically"
                             print sfd
+
+                            print "difference between the above"
+                            print s0-sfd
                     else:
                         test.assertTrue(abs(maxds) < tol,
                                         msg=errmsg+'; virial')
@@ -313,6 +322,9 @@ def run_forces_and_virial_test(test=None):
                 
                             print "p - numerically"
                             print pfd
+
+                            print "difference between the above"
+                            print p0-pfd
                     else:
                         test.assertTrue(abs(maxds) < tol,
                                         msg=errmsg+'; virial')
