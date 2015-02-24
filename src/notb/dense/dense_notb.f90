@@ -166,8 +166,8 @@ module dense_notb
      module procedure dense_notb_bind_to
   endinterface
 
-  public :: energy_and_forces
-  interface energy_and_forces
+  public :: energy_and_forces_with_charges
+  interface energy_and_forces_with_charges
      module procedure dense_notb_energy_and_forces
   endinterface
 
