@@ -293,10 +293,14 @@ contains
 
     ! ---
 
+    write (*, *)  "coulomb_bind_to"
+
     call c_f_pointer(this_cptr, this)
 
-    call ptr_by_name(p%data, PHI_STR, this%phi)
-    call ptr_by_name(p%data, E_STR, this%E)
+    call ptr_by_name(p%data, PHI_STR, this%phi, ierror)
+    PASS_ERROR(ierror)
+    call ptr_by_name(p%data, E_STR, this%E, ierror)
+    PASS_ERROR(ierror)
 
 #define BIND_TO(x)  if (allocated(this%x)) then ; call bind_to(this%x, p, nl, ierror) ; PASS_ERROR(ierror) ; endif
 
