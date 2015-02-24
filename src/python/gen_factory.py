@@ -312,7 +312,10 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
             s += '  if (c_associated(wpot_per_bond_cptr)) then\n'
             s += '     RETURN_ERROR("*wpot_per_bond* argument present but not supported by potential %s.", error)\n' % name
             s += '  endif\n'
-        s += switch_optargs('energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)' % (addargs+'%s'), optargs)
+        if 'set_coulomb' in methods:
+            s += switch_optargs('energy_and_forces_with_charges(this_fptr, p, nl, epot, f, wpot, %sierror=error)' % (addargs+'%s'), optargs)
+        else:
+            s += switch_optargs('energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)' % (addargs+'%s'), optargs)
         s += 'endsubroutine python_%s_energy_and_forces\n\n\n' % f90name
 
         f.write(s)
