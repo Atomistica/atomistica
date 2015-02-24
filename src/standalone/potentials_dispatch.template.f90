@@ -327,6 +327,11 @@ contains
 
 #undef BIND_TO
 
+    if (coulomb_is_enabled(coul)) then
+       call coulomb_bind_to(coul, p, nl, ierror=ierror)
+       PASS_ERROR(ierror)
+    endif
+
 #define BIND_TO_WITH_COUL(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call bind_to_with_coul(this%x(i), p, nl, coul, ierror=ierror) ; PASS_ERROR(ierror) ; enddo ; endif
 
     BIND_TO_WITH_COUL({classname})
