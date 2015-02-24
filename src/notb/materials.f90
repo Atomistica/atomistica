@@ -799,11 +799,11 @@ contains
        case("element")   ! starts the set for new element
           j=j+1
           hlp(j)%name = ' '
-          hlp(j)%name(1:len_trim(dat)) = s2a(trim(dat))
+          hlp(j)%name(1:min(2,len_trim(dat))) = s2a(trim(dat))
        case("Z");     read(dat,*) hlp(j)%elem
        case("common");
           hlp(j)%cname = ' '
-          hlp(j)%cname(1:len_trim(dat)) = s2a(trim(dat))
+          hlp(j)%cname(1:min(10,len_trim(dat))) = s2a(trim(dat))
        case("m");     read(dat,*) hlp(j)%m
        case("q0");    read(dat,*) hlp(j)%q0
        case("no")
