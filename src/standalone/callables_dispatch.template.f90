@@ -297,17 +297,17 @@ contains
 
 #undef INVOKE
 
-#define INVOKE_POTS(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call invoke_pots(this%x(i), dyn, nl, pots, ierror) ; PASS_ERROR(ierror) ; enddo ; endif
+#define INVOKE_WITH_POTS(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call invoke_with_pots(this%x(i), dyn, nl, pots, ierror) ; PASS_ERROR(ierror) ; enddo ; endif
 
-    INVOKE_POTS({classname})
+    INVOKE_WITH_POTS({classname})
 
-#undef INVOKE_POTS
+#undef INVOKE_WITH_POTS
 
-#define INVOKE_POTS_COUL(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call invoke_pots_coul(this%x(i), dyn, nl, pots, coul, ierror) ; PASS_ERROR(ierror) ; enddo ; endif
+#define INVOKE_WITH_POTS_AND_COUL(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call invoke_with_pots_and_coul(this%x(i), dyn, nl, pots, coul, ierror) ; PASS_ERROR(ierror) ; enddo ; endif
 
-    INVOKE_POTS_COUL({classname})
+    INVOKE_WITH_POTS_AND_COUL({classname})
 
-#undef INVOKE_POTS_COUL
+#undef INVOKE_WITH_POTS_AND_COUL
 
   endsubroutine callables_invoke
 

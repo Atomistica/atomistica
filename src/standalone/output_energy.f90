@@ -108,8 +108,8 @@ module output_energy
 !     module procedure output_energy_register_data
 !  endinterface
 
-  public :: invoke_with_pots
-  interface invoke_with_pots
+  public :: invoke_with_pots_and_coul
+  interface invoke_with_pots_and_coul
      module procedure output_energy_invoke
   endinterface
 
