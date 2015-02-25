@@ -358,7 +358,7 @@ contains
     real(DP)  :: e, w(3, 3), cutoff_sq
 
     real(DP)  :: phi(maxneb), dphi(maxneb), fac(maxneb)
-    real(DP)  :: df(1:3, maxneb)
+    real(DP)  :: df(3, maxneb)
 
     ! Internal local neighbor list cache
     integer   :: neb_n, neb(maxneb)
