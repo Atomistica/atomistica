@@ -175,7 +175,7 @@ contains
 
     do i = 1, 3
        do j = 1, 3
-          write (un, '(A,I1.1,A,I1.1,A,ES16.10,A)')  "H0(", i, ",", j, ") = ", p%Abox(j, i)*conv, " A"
+          write (un, '(A,I1.1,A,I1.1,A,ES16.9,A)')  "H0(", i, ",", j, ") = ", p%Abox(j, i)*conv, " A"
        enddo
     enddo
 
@@ -203,11 +203,11 @@ contains
        write (un, '(A,I2.2,A,A)')     "auxiliary[", k+3*(i-1)+2, "] = ", trim(p%data%name_real3(i)) // "_z"
     enddo
 
-    write (fmt, '(A,I2.2,A)')  "(", 3+naux, "(ES17.10,1X))"
+    write (fmt, '(A,I2.2,A)')  "(", 3+naux, "(ES16.9,1X))"
 
     do i = 1, p%nat
-       write (un, '(ES17.10)')   p%m(i)
-       write (un, '(A)')         p%sym(i)
+       write (un, '(ES16.9)')   p%m(i)
+       write (un, '(A)')        p%sym(i)
        if (naux > 0) then
           do j = 1, p%data%n_real
              aux(j)  = p%data%data_real(i, j)
