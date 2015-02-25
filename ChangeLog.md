@@ -12,6 +12,11 @@ HEAD
 
 - Fixed a couple of OpenMP related regression that broke compilation.
 
+- Fixed a regression that lead to wrong unit conversion for Hubbard-Us.
+
+- Coulomb solvers now have an energy_and_forces rather than a
+  potential_and_field function.
+
 v0.3.0
 ------
 
