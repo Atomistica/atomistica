@@ -23,6 +23,7 @@
 
 import unittest
 
+from coulomb import *
 from neighbor_list import *
 from pbc import *
 from bulk_properties import *
