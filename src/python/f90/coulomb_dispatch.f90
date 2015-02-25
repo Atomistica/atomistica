@@ -74,7 +74,7 @@ module coulomb
   private
 
   public :: C_PTR
-  public :: coulomb_set_Hubbard_U, coulomb_potential, coulomb_potential_and_field
+  public :: coulomb_set_Hubbard_U, coulomb_potential
 
   interface
     subroutine py_coulomb_set_Hubbard_U(this_cptr, p_cptr, U, ierror) bind(C)
@@ -87,24 +87,6 @@ module coulomb
       real(C_DOUBLE), intent(in)  :: U(*)
       integer(C_INT), intent(out) :: ierror
     endsubroutine py_coulomb_set_Hubbard_U
-
-    subroutine py_coulomb_potential_and_field(this_cptr, p_cptr, nl_cptr, q, &
-         phi, epot, E, wpot, ierror) bind(C)
-      use, intrinsic :: iso_c_binding
-
-      implicit none
-
-      type(C_PTR),    value         :: this_cptr
-      type(C_PTR),    value         :: p_cptr
-      type(C_PTR),    value         :: nl_cptr
-      real(C_DOUBLE), intent(in)    :: q(*)
-      real(C_DOUBLE), intent(inout) :: phi(*)
-      real(C_DOUBLE), intent(inout) :: epot
-      real(C_DOUBLE), intent(inout) :: E(3, *)
-      real(C_DOUBLE), intent(inout) :: wpot(3, 3)
-      integer(C_INT), intent(out)   :: ierror
-
-    endsubroutine py_coulomb_potential_and_field
 
     subroutine py_coulomb_potential(this_cptr, p_cptr, nl_cptr, q, phi, &
          ierror) bind(C)
@@ -151,42 +133,6 @@ contains
     endif
 
   endsubroutine coulomb_set_Hubbard_U
-
-  subroutine coulomb_potential_and_field(this_cptr, p, nl, q, epot, wpot, phi, &
-       E, ierror)
-    use, intrinsic :: iso_c_binding
-
-    implicit none
-
-    type(C_PTR),       intent(in)    :: this_cptr
-    type(particles_t), target        :: p
-    type(neighbors_t), target        :: nl
-    real(DP),          intent(in)    :: q(p%maxnatloc)
-    real(DP),          intent(inout) :: phi(p%maxnatloc)
-    real(DP),          intent(inout) :: epot
-    real(DP),          intent(inout) :: E(3, p%maxnatloc)
-    real(DP),          intent(inout) :: wpot(3, 3)
-    integer, optional, intent(out)   :: ierror
-
-    ! ---
-    
-    integer :: ierror_loc
-    
-    ! ---
-
-    if (present(ierror)) then
-       INIT_ERROR(ierror)
-       call py_coulomb_potential_and_field(this_cptr, c_loc(p), c_loc(nl), q, &
-          phi, epot, E, wpot, ierror)
-       PASS_ERROR(ierror)
-    else
-       ierror_loc = ERROR_NONE
-       call py_coulomb_potential_and_field(this_cptr, c_loc(p), c_loc(nl), q, &
-          phi, epot, E, wpot, ierror_loc)
-       HANDLE_ERROR(ierror_loc)
-    endif
-
-  endsubroutine coulomb_potential_and_field
 
   subroutine coulomb_potential(this_cptr, p, nl, q, phi, ierror)
     use, intrinsic :: iso_c_binding

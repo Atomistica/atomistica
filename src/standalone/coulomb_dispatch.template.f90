@@ -112,8 +112,7 @@ module coulomb
   public :: coulomb_alloc, coulomb_free, coulomb_register_data
   public :: coulomb_init, coulomb_is_enabled
   public :: coulomb_del, coulomb_bind_to, coulomb_set_Hubbard_U
-  public :: coulomb_potential, coulomb_potential_and_field
-  public :: coulomb_energy_and_forces, coulomb_get_potential_energy
+  public :: coulomb_potential, coulomb_energy_and_forces
 
 contains
 
@@ -344,77 +343,6 @@ contains
   !>
   !! Calculate the electrostatic potential of every atom (for variable charge models)
   !!
-  !! Calculate the electrostatic potential of every atom (for variable charge models)
-  !<
-  subroutine coulomb_potential_and_field(this_cptr, p, nl, q, epot, wpot, phi, &
-       E, ierror)
-    implicit none
-
-    type(C_PTR),        intent(in)    :: this_cptr
-    type(particles_t),  intent(in)    :: p
-    type(neighbors_t),  intent(inout) :: nl
-    real(DP),           intent(in)    :: q(p%maxnatloc)
-    real(DP), optional, intent(inout) :: phi(p%maxnatloc)
-    real(DP), optional, intent(inout) :: epot
-    real(DP), optional, intent(inout) :: E(3, p%maxnatloc)
-    real(DP), optional, intent(inout) :: wpot(3, 3)
-    integer,  optional, intent(inout) :: ierror
-
-    ! ---
-
-    type(coulomb_t), pointer :: this
-
-    ! ---
-
-    call c_f_pointer(this_cptr, this)
-
-    if (have_positions_changed(p, this%p_pos_rev) .or. has_other_changed(p, this%p_other_rev)) then
-
-       this%epot              = 0.0_DP
-       this%wpot              = 0.0_DP
-
-       ! Note: This needs to be 1:p%nat, NOT 1:p%natloc for the fast-multipole solver
-       this%phi(1:p%nat)      = 0.0_DP
-       VEC3(this%E, 1:p%nat)  = 0.0_DP
-
-#define POTENTIAL_AND_FIELD(x)  if (allocated(this%x)) then ; call potential_and_field(this%x, p, nl, q, this%phi, this%epot, this%E, this%wpot, ierror) ; PASS_ERROR(ierror) ; endif
-
-       POTENTIAL_AND_FIELD({classname})
-
-#undef POTENTIAL_AND_FIELD
-
-       if (system_of_units == eV_A .or. system_of_units == eV_A_fs) then
-          this%phi    = this%phi * Hartree * Bohr
-          this%epot   = this%epot * Hartree * Bohr
-
-          this%E      = this%E * Hartree * Bohr
-          this%wpot   = this%wpot * Hartree * Bohr
-       endif
-
-       !this%epot = 0.5_DP*dot_product(q(1:p%natloc), this%phi(1:p%natloc))
-       !write (*, *)  this%epot, 0.5_DP*dot_product(q(1:p%natloc), this%phi(1:p%natloc))
-
-    endif
-
-    if (present(epot)) then
-       epot                 = this%epot
-    endif
-    if (present(wpot)) then
-       wpot                 = this%wpot
-    endif
-    if (present(phi)) then
-       phi(1:p%natloc)      = this%phi(1:p%natloc)
-    endif
-    if (present(E)) then
-       VEC3(E, 1:p%natloc)  = VEC3(this%E, 1:p%natloc)
-    endif
-
-  endsubroutine coulomb_potential_and_field
-
-
-  !>
-  !! Calculate the electrostatic potential of every atom (for variable charge models)
-  !!
   !! Calculate the electrostatic potential of every atom (for variable charge models). Note that \param phi
   !! will be overriden.
   !<
@@ -435,10 +363,8 @@ contains
     ! ---
 
     call c_f_pointer(this_cptr, this)
-    !call potential_and_field(this, p, nl, q, phi=phi, ierror=ierror)
-    !PASS_ERROR(ierror)
 
-    phi  = 0.0_DP
+    phi = 0.0_DP
 
 #define POTENTIAL(x)  if (allocated(this%x)) then ; call potential(this%x, p, nl, q, phi, ierror) ; PASS_ERROR(ierror) ; endif
 
@@ -462,17 +388,17 @@ contains
   !! This assumes that both, positions and charges, of the atoms have changed.
   !<
   subroutine coulomb_energy_and_forces(this_cptr, p, nl, q, epot, f, wpot, &
-       ierror)
+       error)
     implicit none
 
     type(C_PTR),        intent(in)    :: this_cptr
     type(particles_t),  intent(in)    :: p
     type(neighbors_t),  intent(inout) :: nl
-    real(DP),           intent(in)    :: q(p%maxnatloc)
+    real(DP),           intent(in)    :: q(p%nat)
     real(DP),           intent(inout) :: epot
-    real(DP), optional, intent(inout) :: f(3, p%maxnatloc)
-    real(DP), optional, intent(inout) :: wpot(3, 3)
-    integer,  optional, intent(inout) :: ierror
+    real(DP),           intent(inout) :: f(3, p%nat)
+    real(DP),           intent(inout) :: wpot(3, 3)
+    integer,  optional, intent(out)   :: error
 
     ! ---
 
@@ -480,51 +406,17 @@ contains
 
     ! ---
 
-    integer   :: i
-
-    ! ---
+    INIT_ERROR(error)
 
     call c_f_pointer(this_cptr, this)
-    ! FIXME! Pressure tensor does not work yet, only
-    ! hydrostatic pressure works.
 
-    call coulomb_potential_and_field(this_cptr, p, nl, q, ierror=ierror)
-    PASS_ERROR(ierror)
+#define ENERGY_AND_FORCES(x)  if (allocated(this%x)) then ; call energy_and_forces(this%x, p, nl, q, epot, f, wpot, error=error) ; PASS_ERROR(error) ; endif
 
-    if (present(f)) then
-       do i = 1, p%natloc
-          VEC3(f, i)  = VEC3(f, i) + q(i)*VEC3(this%E, i)
-       enddo
-    endif
+    ENERGY_AND_FORCES({classname})
 
-    epot     = epot + this%epot
-    if (present(wpot)) then
-       wpot  = wpot + this%wpot
-    endif
+#undef ENERGY_AND_FORCES
 
   endsubroutine coulomb_energy_and_forces
-
-
-  !>
-  !! Return potential energy
-  !!
-  !! Returns previously calculated potential energy
-  !<
-  real(DP) function coulomb_get_potential_energy(this_cptr)
-    implicit none
-
-    type(C_PTR),        intent(in)    :: this_cptr
-
-    ! ---
-
-    type(coulomb_t), pointer :: this
-
-    ! ---
-
-    call c_f_pointer(this_cptr, this)
-    coulomb_get_potential_energy = this%epot
-
-  endfunction coulomb_get_potential_energy
 
 endmodule coulomb
 

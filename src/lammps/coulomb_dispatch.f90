@@ -80,8 +80,7 @@ module coulomb
   public :: coulomb_alloc, coulomb_free
 
   public :: coulomb_del, coulomb_bind_to, coulomb_set_Hubbard_U
-  public :: coulomb_potential, coulomb_potential_and_field
-  public :: coulomb_energy_and_forces, coulomb_get_potential_energy
+  public :: coulomb_potential, coulomb_energy_and_forces
 
 contains
 
@@ -167,30 +166,6 @@ contains
   !>
   !! Calculate the electrostatic potential of every atom (for variable charge models)
   !!
-  !! Calculate the electrostatic potential of every atom (for variable charge models)
-  !<
-  subroutine coulomb_potential_and_field(this_cptr, p, nl, q, epot, wpot, phi, &
-       E, ierror)
-    implicit none
-
-    type(C_PTR),        intent(in)    :: this_cptr
-    type(particles_t),  intent(in)    :: p
-    type(neighbors_t),  intent(inout) :: nl
-    real(DP),           intent(in)    :: q(p%maxnatloc)
-    real(DP), optional, intent(inout) :: phi(p%maxnatloc)
-    real(DP), optional, intent(inout) :: epot
-    real(DP), optional, intent(inout) :: E(3, p%maxnatloc)
-    real(DP), optional, intent(inout) :: wpot(3, 3)
-    integer,  optional, intent(inout) :: ierror
-
-    ! ---
-
-  endsubroutine coulomb_potential_and_field
-
-
-  !>
-  !! Calculate the electrostatic potential of every atom (for variable charge models)
-  !!
   !! Calculate the electrostatic potential of every atom (for variable charge models). Note that \param phi
   !! will be overriden.
   !<
@@ -233,21 +208,6 @@ contains
     ! ---
 
   endsubroutine coulomb_energy_and_forces
-
-
-  !>
-  !! Return potential energy
-  !!
-  !! Returns previously calculated potential energy
-  !<
-  real(DP) function coulomb_get_potential_energy(this_cptr)
-    implicit none
-
-    type(C_PTR),        intent(in)    :: this_cptr
-
-    ! ---
-
-  endfunction coulomb_get_potential_energy
 
 endmodule coulomb
 
