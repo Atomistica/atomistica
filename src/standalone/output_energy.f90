@@ -294,7 +294,7 @@ contains
     this%p(:, :)  = this%p(:, :)  + dyn%pressure(:, :) * dyn%dt
     this%V        = this%V        + volume(dyn%p) * dyn%dt
 
-    this%ecoul = this%ecoul   + coulomb_get_potential_energy(coul) * dyn%dt
+    !this%ecoul = this%ecoul   + coulomb_get_potential_energy(coul) * dyn%dt
 
 !    if (associated(mod_tb)) then
 !       this%ebs   = this%ebs    + mod_tb%tb%ebs * dyn%dt
