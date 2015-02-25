@@ -233,11 +233,11 @@ contains
     type(cutoff_coulomb_t), intent(inout) :: this
     type(particles_t),      intent(in)    :: p
     type(neighbors_t),      intent(inout) :: nl
-    real(DP),               intent(in)    :: q(p%maxnatloc)
+    real(DP),               intent(in)    :: q(p%nat)
     real(DP),               intent(inout) :: epot
-    real(DP),               intent(inout) :: f(3, p%maxnatloc)
+    real(DP),               intent(inout) :: f(3, p%nat)
     real(DP),               intent(inout) :: wpot(3, 3)
-    integer,      optional, intent(inout) :: error
+    integer,      optional, intent(out)   :: error
 
     ! --
 
@@ -247,6 +247,8 @@ contains
     real(DP) :: abs_dr, dr(3), df(3), fac, q_i, cutoff_sq
 
     ! ---
+
+    INIT_ERROR(error)
 
     call timer_start('cutoff_coulomb_energy_and_forces')
 
@@ -263,16 +265,16 @@ contains
 
           if (i <= j .and. abs_dr < cutoff_sq) then
              abs_dr        = sqrt(abs_dr)
-             df            = fac*dr/(abs_dr**3)
+             df            = q_i*q(j)*fac*dr/(abs_dr**3)
              if (i == j) then
                 epot        = epot + 0.5_DP*fac*q_i*q(j)/abs_dr
-                wpot        = wpot - outer_product(dr, 0.5_DP*q_i*q(j)*df)
+                wpot        = wpot - outer_product(dr, 0.5_DP*df)
              else
-                VEC3(f, i)  = VEC3(f, i) + q_i*q(j)*df
-                VEC3(f, j)  = VEC3(f, j) - q_i*q(j)*df
+                VEC3(f, i)  = VEC3(f, i) + df
+                VEC3(f, j)  = VEC3(f, j) - df
 
                 epot        = epot + fac*q_i*q(j)/abs_dr
-                wpot        = wpot - outer_product(dr, q_i*q(j)*df)
+                wpot        = wpot - outer_product(dr, df)
              endif
           endif
        enddo
