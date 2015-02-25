@@ -230,6 +230,10 @@ contains
 
     INIT_ERROR(error)
 
+    call prlog("- slater_charges_set_Hubbard_U -")
+    call prlog("U = "//U)
+    call prlog("Z = "//Z)
+
     !this%db%nel = p%nel
     this%db%nU = p%nel
     this%db%nZ = p%nel
@@ -243,6 +247,8 @@ contains
     else
        this%db%Z = 0.0_DP
     endif
+
+    call prlog
 
   endsubroutine slater_charges_set_Hubbard_U
 
@@ -270,8 +276,8 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')     "- slater_charges_bind_to -"
-    write (ilog, '(5X,A,A)')       "elements       = ", trim(this%elements)
+    call prlog("- slater_charges_bind_to -")
+    call prlog("elements = " // trim(this%elements))
 
     this%els  = filter_from_string(this%elements, p, ierror=ierror)
     PASS_ERROR(ierror)
@@ -310,16 +316,19 @@ contains
 
              if (Z == p%el2Z(j)) then
                 call prlog("     " // ElementName(Z) // " - " // j)
-                call prlog("     - U = " // this%db%U(i) // ", Z = " // this%db%Z(i))
-
                 this%U(j)  = this%db%U(i) / (Hartree*Bohr)
                 this%Z(j)  = this%db%Z(i)
+                call prlog("     - U = " // this%db%U(i) // ", (U = " // this%U(j) // "), Z = " // this%db%Z(i))
              endif
           enddo
        enddo
     else
-       if (this%db%nU > 0)  this%U(1:this%db%nU) = this%db%U(1:this%db%nU)
-       if (this%db%nZ > 0)  this%Z(1:this%db%nU) = this%db%Z(1:this%db%nU)
+       if (this%db%nU > 0) then
+          this%U(1:this%db%nU) = this%db%U(1:this%db%nU) / (Hartree*Bohr)
+       endif          
+       if (this%db%nZ > 0) then
+          this%Z(1:this%db%nU) = this%db%Z(1:this%db%nU)
+       endif
     endif
 
     ! U_i is converted such that the charge is f_i(r) ~ exp(-U_i r), i.e.
@@ -331,9 +340,9 @@ contains
     this%cutoff_sq = this%cutoff**2
 
     call request_interaction_range(nl, this%cutoff)
-    write (ilog, '(5X,A,F20.10)')  "cutoff    = ", this%cutoff
+    call prlog("cutoff   = " // this%cutoff)
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine slater_charges_bind_to
 

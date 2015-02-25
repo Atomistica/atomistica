@@ -217,11 +217,16 @@ contains
 
     INIT_ERROR(error)
 
+    call prlog("- gaussian_charges_set_Hubbard_U -")
+    call prlog("U = "//U)
+
     !this%db%nel = p%nel
     this%db%nU = p%nel
 
     !call resize(this%U, p%nel)
     this%db%U(1:p%nel) = U
+
+    call prlog
     
   endsubroutine gaussian_charges_set_Hubbard_U
 
@@ -249,8 +254,8 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')     "- gaussian_charges_bind_to -"
-    write (ilog, '(5X,A,A)')       "elements       = ", trim(this%elements)
+    call prlog("- gaussian_charges_bind_to -")
+    call prlog("elements = " // trim(this%elements))
 
     this%els  = filter_from_string(this%elements, p, ierror=ierror)
     PASS_ERROR(ierror)
@@ -284,27 +289,23 @@ contains
 
              if (Z == p%el2Z(j)) then
                 call prlog("     " // ElementName(Z) // " - " // j)
-                call prlog("     - U = " // this%db%U(i))
-
                 this%U(j)  = this%db%U(i) / (Hartree*Bohr)
+                call prlog("     - U = " // this%db%U(i) // " (" // this%U(j) // ")")
              endif
           enddo
        enddo
     else
-       if (this%db%nU > 0)  this%U(1:this%db%nU) = this%db%U(1:this%db%nU)
+       if (this%db%nU > 0) then
+          this%U(1:this%db%nU) = this%db%U(1:this%db%nU) / (Hartree*Bohr)
+       endif
     endif
 
     this%cutoff_sq = this%cutoff**2
 
     call request_interaction_range(nl, this%cutoff)
+    call prlog("cutoff   = " // this%cutoff)
 
-    !
-    ! Fixme!!! Does only work for square geometries
-    !
-    
-    write (ilog, '(5X,A,F20.10)')  "cutoff    = ", this%cutoff
-
-    write (ilog, *)
+    call prlog
 
   endsubroutine gaussian_charges_bind_to
 
