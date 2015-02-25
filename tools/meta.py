@@ -2,7 +2,6 @@
    is intended to scan directories for this information.
 """
 
-import io
 import os
 
 
@@ -14,7 +13,7 @@ def scanmeta(f):
        a dictionary.
     """
     if isinstance(f, str):
-        f = io.open(f, mode='r', encoding='latin-1')
+        f = open(f, mode='r')
 
     done = False
 
