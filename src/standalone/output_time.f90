@@ -201,7 +201,7 @@ contains
       nowcpu = date_into_seconds(now)
 
       !write (this%un, '(I9,X,ES20.10,4X,A8,X,A10,X)')  dyn%it, dyn%ti, mydate, mytime
-      write (this%un, '(I9,X,ES16.10,2X,I2,A,I2,A,I4,X,I2,A,I2,A,I2,A16,A12,A12,A12,A16,A16)')  dyn%it, dyn%ti, &
+      write (this%un, '(I9,X,ES16.9,2X,I2,A,I2,A,I4,X,I2,A,I2,A,I2,A16,A12,A12,A12,A16,A16)')  dyn%it, dyn%ti, &
        ! the actual time and date, when the line is written into the file
        now(3), '.', now(2), '.', now(1), now(5), ':', now(6), ':', now(7), &
        ! whole and line duration
