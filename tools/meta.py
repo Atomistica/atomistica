@@ -78,6 +78,6 @@ def scanallmeta(path):
     if isinstance(path, str):
         path = [path]
     for p in path:
-        for dirpath, dirnames, filenames in os.walk(p):
+        for dirpath, dirnames, filenames in os.walk(p, followlinks=True):
             d[dirpath] = _scanallmeta(dirpath, filenames)
     return d
