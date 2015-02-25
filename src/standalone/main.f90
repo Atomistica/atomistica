@@ -201,8 +201,8 @@ contains
 
     call init(p)
     call init(dyn, p, dt = max_dt, mymaxtime = max_time)
-    p%pbc          = pbc /= 0
-    p%locally_pbc  = p%pbc
+    p%pbc          = pbc
+    p%locally_pbc  = p%pbc /= 0
 
     if (coulomb_is_enabled(c_loc(coul))) then
        call add_real(p%data, Q_STR, Q_TAG, ierror=ierror)

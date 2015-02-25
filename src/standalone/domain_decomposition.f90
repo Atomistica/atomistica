@@ -203,8 +203,8 @@ contains
        RAISE_ERROR("Decomposition geometry requires " // this%decomposition(1)*this%decomposition(2)*this%decomposition(3) // " processes, however, MPI returns " // mpi_n_procs() // " processes.", error)
     endif
 
-    this%pbc          = p%pbc
-    this%requested_border  = 0.0_DP
+    this%pbc              = p%pbc /= 0
+    this%requested_border = 0.0_DP
 
     periods_for_mpi = (/ .true., .true., .true. /)
     call initialise(this%mpi, &
@@ -234,7 +234,7 @@ contains
     this%off_l  = 0.0_DP
 
     do d = 1, 3
-       if (p%pbc(d) .and. this%decomposition(d) > 1) then
+       if (p%pbc(d) /= 0 .and. this%decomposition(d) > 1) then
           ! No pbcity in binning because we explicitly copy the atoms
           ! from the other processors
           p%locally_pbc(d) = .false.
@@ -249,7 +249,7 @@ contains
        endif
     enddo
 
-    call prlog("     pbc (global)  = ( "//p%pbc//" )")
+    call prlog("     pbc (global)  = ( "//(p%pbc /= 0)//" )")
     call prlog("     pbc (par.)    = ( "//this%pbc//" )")
     call prlog("     pbc (local)   = ( "//p%locally_pbc//" )")
 

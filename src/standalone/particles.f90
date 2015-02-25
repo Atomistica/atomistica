@@ -128,7 +128,7 @@ module particles
      ! Periodicity
      !
 
-     logical :: pbc(3)
+     integer :: pbc(3)
      logical :: locally_pbc(3)
 
      !
@@ -480,10 +480,14 @@ contains
 !    call info("- particles_set_cell")
 
     if (present(pbc)) then
-       this%pbc  = pbc
+       where (pbc)
+          this%pbc = 1
+       elsewhere
+          this%pbc = 0
+       endwhere
     endif
 
-    if (.not. all(this%pbc)) then
+    if (.not. all(this%pbc /= 0)) then
        call require_orthorhombic_cell(this, error)
        PASS_ERROR(error)
     endif
@@ -529,7 +533,7 @@ contains
        RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
     endif
 
-    if (.not. all(this%pbc)) then
+    if (.not. all(this%pbc /= 0)) then
        call require_orthorhombic_cell(this, error)
        PASS_ERROR(error)
     endif
@@ -663,7 +667,7 @@ contains
 
     this%accum_max_dr      = 0.0_DP
 
-    this%pbc          = (/ .true., .true., .true. /)
+    this%pbc          = (/ 1, 1, 1 /)
     this%locally_pbc  = (/ .true., .true., .true. /)
 
     this%border = 0.0_DP
@@ -752,14 +756,14 @@ contains
     this%initialized                    = .true.
     this%orthorhombic_cell_is_required  = from%orthorhombic_cell_is_required
     
-    this%pbc          = (/ .true., .true., .true. /)
+    this%pbc          = (/ 1, 1, 1 /)
     this%locally_pbc  = (/ .true., .true., .true. /)
 
     this%border = 0.0_DP
 
     call init(this%data, from%data)
 
-    call set_cell(this, from%Abox, from%pbc, error=error)
+    call set_cell(this, from%Abox, from%pbc /= 0, error=error)
 
   endsubroutine particles_init_from_particles
 
@@ -1590,7 +1594,7 @@ contains
     call init(out, this)
     call allocate(out, this%natloc+that%natloc)
 
-    call set_cell(out, this%Abox, this%pbc)
+    call set_cell(out, this%Abox, this%pbc /= 0)
 
     out%sym(1:this%natloc)                          = this%sym(1:this%natloc)
     out%sym(this%natloc+1:this%natloc+that%natloc)  = that%sym(1:that%natloc)
@@ -1637,7 +1641,7 @@ contains
     cell(:, 1)  = this%Abox(:, 1)*arg(1)
     cell(:, 2)  = this%Abox(:, 2)*arg(2)
     cell(:, 3)  = this%Abox(:, 3)*arg(3)
-    call set_cell(out, cell, this%pbc)
+    call set_cell(out, cell, this%pbc /= 0)
 
     l = 1
     do i = 0, arg(1)-1
