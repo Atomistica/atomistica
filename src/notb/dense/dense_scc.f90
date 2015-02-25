@@ -88,7 +88,6 @@ module dense_scc
      integer   :: warn         = 20          !< warn after 20 iterations
 
      logical(BOOL)   :: log          = .false.     !< write a status report for each SCC step
-     logical(BOOL)   :: log_energy   = .false.     !< calculate and output the bandstructure energy for each SCC step
 
      logical   :: charges_only = .false.     !< Only calculate Mulliken charges
 
@@ -170,7 +169,7 @@ contains
   !!
   !! Initialize self-consistent charge calculation and allocate memory.
   !<
-  subroutine dense_scc_init(this, solv, coul, dq_crit, beta, est, max_nit, andersen_memory, warn, charges_only, log, log_energy, error)
+  subroutine dense_scc_init(this, solv, coul, dq_crit, beta, est, max_nit, andersen_memory, warn, charges_only, log, error)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -186,7 +185,6 @@ contains
     integer,              optional, intent(in)    :: warn
     logical,              optional, intent(in)    :: charges_only
     logical,              optional, intent(in)    :: log
-    logical,              optional, intent(in)    :: log_energy
     integer,              optional, intent(inout) :: error
 
     ! ---
@@ -196,7 +194,7 @@ contains
     this%enabled = .true.
 
     ! - set defaults and requested parameters
-    call set(this, dq_crit, beta, est, max_nit, andersen_memory, warn, log, log_energy, charges_only)
+    call set(this, dq_crit, beta, est, max_nit, andersen_memory, warn, log, charges_only)
 
     ! - set pointers
     if (present(solv)) then
@@ -216,7 +214,7 @@ contains
   !!
   !! Set SCC parameters
   !<
-  subroutine dense_scc_set(this, dq_crit, beta, est, max_nit, andersen_memory, warn, log, log_energy, charges_only)
+  subroutine dense_scc_set(this, dq_crit, beta, est, max_nit, andersen_memory, warn, log, charges_only)
     implicit none
     
     type(dense_scc_t), intent(inout)  :: this
@@ -227,7 +225,6 @@ contains
     integer, intent(in), optional          :: andersen_memory
     integer, intent(in), optional          :: warn
     logical, intent(in), optional          :: log
-    logical, intent(in), optional          :: log_energy
     logical, intent(in), optional          :: charges_only
 
     ! ---
@@ -256,10 +253,6 @@ contains
 
     if (present(log)) then
        this%log  = log
-    endif
-
-    if (present(log_energy)) then
-       this%log_energy  = log_energy
     endif
 
     if (present(charges_only)) then
@@ -557,11 +550,7 @@ contains
     !
 
     if (this%log) then
-       if (this%log_energy) then
-          write (ilog, '(1X,A10,1X,A4,6A12)')  "scc|", "it", "sum(q)", "max(dq)", "mu[eV]", "e_BS[eV]", "e_coul[eV]", "e_tot[eV]"
-       else
-          write (ilog, '(1X,A10,1X,A4,3A12)')  "scc|", "it", "sum(q)", "max(dq)", "mu[eV]"
-       endif
+       write (ilog, '(1X,A10,1X,A4,3A12)')  "scc|", "it", "sum(q)", "max(dq)", "mu[eV]"
     endif
 
     !
@@ -595,19 +584,7 @@ contains
        if( mod(it, this%warn)==0 .or. (done .and. it>this%warn) ) write(*,*) "SC it...", it
 
        if (this%log) then
-#ifndef MDCORE_PYTHON
-          if (this%log_energy) then
-             e1 = e_bs(this%solv, tb, error=error)
-             PASS_ERROR(error)
-             e2 = 0.0_DP
-             call coulomb_energy_and_forces(this%coul, p, nl, q, e2)
-             write (ilog, '(12X,I4,F12.3,5ES12.3)')  it, sum(q), maxval( abs(f_q_prev(1:nf) - f_q_new(1:nf)) ), this%tb%mu, e1, e2, e1+e2
-          else
-#endif
-             write (ilog, '(12X,I4,F12.3,2ES12.3)')  it, sum(q), maxval( abs(f_q_prev(1:nf) - f_q_new(1:nf)) ), this%tb%mu
-#ifndef MDCORE_PYTHON
-          endif
-#endif
+          write (ilog, '(12X,I4,F12.3,2ES12.3)')  it, sum(q), maxval( abs(f_q_prev(1:nf) - f_q_new(1:nf)) ), this%tb%mu
        endif
 
     enddo  ! end of charge self-consistency loop
@@ -730,9 +707,6 @@ contains
 
     call ptrdict_register_boolean_property(m, c_loc(this%log), CSTR("log"), &
          CSTR("Print a status for each iteration step to the log file."))
-    call ptrdict_register_boolean_property(m, c_loc(this%log_energy), &
-         CSTR("log_energy"), &
-         CSTR("Calculate and output the bandstructure energy for each SCC step."))
 
   endsubroutine dense_scc_register
 
