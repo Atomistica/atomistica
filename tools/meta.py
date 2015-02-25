@@ -2,6 +2,7 @@
    is intended to scan directories for this information.
 """
 
+import io
 import os
 
 
@@ -13,7 +14,7 @@ def scanmeta(f):
        a dictionary.
     """
     if isinstance(f, str):
-        f = open(f, 'r')
+        f = io.open(f, mode='r', encoding='latin-1')
 
     done = False
 
@@ -63,23 +64,21 @@ def scanmeta(f):
     return d
 
 
-def walkfunc(d, dirname, fns):
-    dd = { }
+def _scanallmeta(dirname, fns):
+    d = {}
     for fn in fns:
         fullfn = dirname+'/'+fn
         if os.path.isfile(fullfn):
             if fn.split('.')[-1] in srcexts:
-                dd[fn] = scanmeta(fullfn)
-        elif os.path.islink(fullfn):
-            os.path.walk(fullfn, walkfunc, d)
-    d[dirname] = dd
+                d[fn] = scanmeta(fullfn)
+    return d
 
 
 def scanallmeta(path):
-    d = { }
+    d = {}
     if isinstance(path, str):
-        os.path.walk(path, walkfunc, d)
-    else:
-        for p in path:
-            os.path.walk(p, walkfunc, d)
+        path = [path]
+    for p in path:
+        for dirpath, dirnames, filenames in os.walk(p):
+            d[dirpath] = _scanallmeta(dirpath, filenames)
     return d

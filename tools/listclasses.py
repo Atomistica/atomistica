@@ -5,12 +5,16 @@
 # and scan metadata.
 #
 
+from __future__ import print_function
+
 import getopt
+import io
 import os
 import re
 import sys
 
 from meta import scanallmeta
+from functools import reduce
 
 ###
 
@@ -25,7 +29,7 @@ def get_finterfaces(fn, include_list=None, tmpfilename='_cpp.tmp'):
 
     finterfaces = []
 
-    f = open(tmpfilename, 'r')
+    f = io.open(tmpfilename, mode='r', encoding='latin-1')
     l = f.readline()
     while l:
         l = f.readline()
@@ -51,8 +55,8 @@ def get_module_list(metadata, interface, finterface_list=[], exclude_list=[],
     depalready = []
 
     # Loop over all files and find modules
-    for path, metapath in metadata.iteritems():
-        for fn, meta in metapath.iteritems():
+    for path, metapath in metadata.items():
+        for fn, meta in metapath.items():
             if 'interface' in meta:
                 if meta['interface'] == interface:
                     classtype = meta['classtype']
@@ -83,15 +87,15 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
                          include_list, deffn, mkfn, cfgfn):
     fns = []
 
-    deff = open(deffn, 'a')
-    mkf = open(mkfn, 'a')
-    cfgf = open(cfgfn, 'a')
+    deff = io.open(deffn, 'a')
+    mkf = io.open(mkfn, 'a')
+    cfgf = io.open(cfgfn, 'a')
 
-    print >> mkf, '%s_MODS = \\' % interface.upper()
+    print(u'%s_MODS = \\' % interface.upper(), file=mkf)
 
     depalready = []
-    for path, metapath in metadata.iteritems():
-        for fn, meta in metapath.iteritems():
+    for path, metapath in metadata.items():
+        for fn, meta in metapath.items():
             if 'interface' in meta:
                 if meta['interface'] == interface:
                     classtype = meta['classtype']
@@ -107,23 +111,23 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
                         if len(finterfaces_present) > 0:
                             s = reduce(lambda x,y: x+','+y, finterfaces_present[1:],
                                        finterfaces_present[0])
-                        print >> deff, '%s:%s:%s:%s:%s' % (classtype[:-2],
+                        print('%s:%s:%s:%s:%s' % (classtype[:-2],
                                                           classtype, classname,
-                                                          features, s)
+                                                          features, s), file=deff)
                         if 'dependencies' in meta:
                             dependencies = meta['dependencies'].split(',')
                             for depfn in dependencies:
                                 depfn = os.path.basename(depfn)
                                 if not depfn in depalready:
-                                    print >> mkf, '\t%s \\' % depfn
+                                    print('\t%s \\' % depfn, file=mkf)
                                     depalready += [ depfn ]
-                        print >> mkf, '\t%s \\' % fn
+                        print(u'\t%s \\' % fn, file=mkf)
 
-                        print >> cfgf, '#define HAVE_%s' % \
-                            (classtype[:-2].upper())
+                        print('#define HAVE_%s' % \
+                            (classtype[:-2].upper()), file=cfgf)
 
     deff.close()
-    print >> mkf
+    print(u'', file=mkf)
     mkf.close()
     cfgf.close()
 
@@ -162,10 +166,10 @@ if __name__ == '__main__':
         else:
             raise RuntimeError('Unknown comand line argument: {}'.format(key))
 
-    print 'Scanning metadata of all source files...'
+    print('Scanning metadata of all source files...')
     metadata = scanallmeta(path)
    
-    print "Dumping information for classes that implement '{}' interface..." \
-        .format(interface)
+    print("Dumping information for classes that implement '{}' interface..." \
+        .format(interface))
     write_interface_info(metadata, interface, finterface_list, exclude_list,
                          include_list, deffn, mkfn, cfgfn)
