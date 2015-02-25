@@ -148,9 +148,10 @@ contains
 
     !$omp critical
 
-    error_stack_position  = error_stack_position + 1
+    error_stack_position = error_stack_position + 1
 
     if (error_stack_position > ERROR_STACK_SIZE) then
+       error_stack_position = error_stack_position - 1
        write(*,*)  get_error_string_and_clear()
        call system_abort("Fatal error: Error stack size too small.")
     endif
@@ -185,9 +186,10 @@ contains
 
     !$omp critical
 
-    error_stack_position  = error_stack_position + 1
+    error_stack_position = error_stack_position + 1
 
     if (error_stack_position > ERROR_STACK_SIZE) then
+       error_stack_position = error_stack_position - 1
        write(*,*)  get_error_string_and_clear()
        call system_abort("Fatal error: Error stack size too small.")
     endif
