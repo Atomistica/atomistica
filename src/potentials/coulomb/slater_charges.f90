@@ -232,7 +232,9 @@ contains
 
     call prlog("- slater_charges_set_Hubbard_U -")
     call prlog("U = "//U)
-    call prlog("Z = "//Z)
+    if (present(Z)) then
+       call prlog("Z = "//Z)
+    endif
 
     !this%db%nel = p%nel
     this%db%nU = p%nel
@@ -367,13 +369,11 @@ contains
 
     !---
 
-    real(DP) :: U_i_sq, abs_rij, hlp, expi, expj, src, fac, fac2, efac
+    real(DP) :: abs_rij, hlp, expi, expj, src, fac, fac2, efac
     real(DP) :: avg, fi1, fj1, fi2, fj2, U_i, U_j, q_i, q_j, Z_i, Z_j
 
     integer             :: i, j
     integer(NEIGHPTR_T) :: ni
-
-    integer, parameter :: sqrt_pi_2 = sqrt(PI/2)
 
     !---
 
@@ -506,8 +506,8 @@ contains
 
     !---
 
-    real(DP) :: U_i_sq, q_i, q_j, rij(3), abs_rij, abs_rij_sq
-    real(DP) :: c, df(3), hlp, sqrt_pi_2, src, fac, fac2, efac, expi, expj
+    real(DP) :: q_i, q_j, rij(3), abs_rij, abs_rij_sq
+    real(DP) :: df(3), hlp, src, fac, fac2, efac, expi, expj
     real(DP) :: avg, e, ffac, fi1, fj1, fi2, fj2, U_i, U_j, Z_i, Z_j
 
     integer             :: i, j
