@@ -267,7 +267,7 @@ atomistica: versioninfo lammps_factories $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
 
 mdcore: versioninfo $(STANDALONE_ALL_O) $(MAIN_O)
-	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-r`cat $(SRCDIR)/REV | sed s/' '/''/ `_`cat $(SRCDIR)/REV_DATE`_$(MACHINE) $(LIBS)
+	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-`cat $(SRCDIR)/REV | sed s/' '/''/ `_`cat $(SRCDIR)/REV_DATE` $(LIBS)
 
 unittests: versioninfo $(UNITTESTS_O)
 	$(F90C) -o unittests $(UNITTESTS_O) $(LIBS)
