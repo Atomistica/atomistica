@@ -362,6 +362,8 @@ contains
 
     ! ---
 
+    INIT_ERROR(ierror)
+
     call c_f_pointer(this_cptr, this)
 
     phi = 0.0_DP
@@ -387,22 +389,24 @@ contains
   !!
   !! This assumes that both, positions and charges, of the atoms have changed.
   !<
-  subroutine coulomb_energy_and_forces(this_cptr, p, nl, q, epot, f, wpot, &
-       error)
+  subroutine coulomb_energy_and_forces(this_cptr, p, nl, q, epot_out, f_out, &
+       wpot_out, error)
     implicit none
 
     type(C_PTR),        intent(in)    :: this_cptr
     type(particles_t),  intent(in)    :: p
     type(neighbors_t),  intent(inout) :: nl
     real(DP),           intent(in)    :: q(p%nat)
-    real(DP),           intent(inout) :: epot
-    real(DP),           intent(inout) :: f(3, p%nat)
-    real(DP),           intent(inout) :: wpot(3, 3)
+    real(DP),           intent(inout) :: epot_out
+    real(DP),           intent(inout) :: f_out(3, p%nat)
+    real(DP),           intent(inout) :: wpot_out(3, 3)
     integer,  optional, intent(out)   :: error
 
     ! ---
 
     type(coulomb_t), pointer :: this
+
+    real(DP) :: epot, f(3, p%nat), wpot(3, 3)
 
     ! ---
 
@@ -415,6 +419,12 @@ contains
     ENERGY_AND_FORCES({classname})
 
 #undef ENERGY_AND_FORCES
+ 
+    if (system_of_units == eV_A .or. system_of_units == eV_A_fs) then
+       epot_out = epot_out + Hartree*Bohr*epot
+       f_out    = f_out    + Hartree*Bohr*f
+       wpot_out = wpot_out + Hartree*Bohr*wpot
+    endif
 
   endsubroutine coulomb_energy_and_forces
 
