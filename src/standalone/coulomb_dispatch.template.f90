@@ -293,8 +293,6 @@ contains
 
     ! ---
 
-    write (*, *)  "coulomb_bind_to"
-
     call c_f_pointer(this_cptr, this)
 
     call ptr_by_name(p%data, PHI_STR, this%phi, ierror)
