@@ -360,12 +360,10 @@ double PairAtomistica::init_one(int i, int j)
 void PairAtomistica::Atomistica_neigh()
 {
   //printf("...entering Atomistica_neigh():\n");
-  int i,j,ii,jj,n,inum,jnum,itype,jtype;
-  double xtmp,ytmp,ztmp,delx,dely,delz,rsq;
-  int *ilist,*jlist,*numneigh,**firstneigh;
+  int i,ii,inum;
+  int *ilist,*numneigh,**firstneigh;
 
-  double **x = atom->x;
-  int *type = atom->type;
+
   int nlocal = atom->nlocal;
   int nall = nlocal + atom->nghost;
 
@@ -412,6 +410,7 @@ void PairAtomistica::Atomistica_neigh()
   }
 
 #if 0
+  double xtmp,ytmp,ztmp,delx,dely,delz;
   // DEBUG: Check if neighbor list is symmetric
   for (i = 0; i < nall; i++) {
     xtmp = x[i][0];
