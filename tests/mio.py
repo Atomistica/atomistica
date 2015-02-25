@@ -131,12 +131,10 @@ def check_db(c, db, test=None):
     for mol, values in db.iteritems():
         #if mol == 'H2O':
         if 1:
-            print mol
-
             a = molecule(mol)
             a.center(vacuum=10.0)
             a.set_pbc(False)
-            a.set_array('charges', np.zeros(len(a)))
+            a.set_initial_charges(np.zeros(len(a)))
 
             a.set_calculator(c)
             FIRE(a, logfile=None).run(fmax=0.001)
