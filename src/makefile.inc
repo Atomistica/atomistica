@@ -44,6 +44,7 @@ VPATH = \
 	$(SRCDIR)/potentials/eam \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2sich \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2x \
+	$(SRCDIR)/potentials_nonfree/coulomb \
 	$(SRCDIR)/qeq \
 	$(SRCDIR)/special \
 	$(SRCDIR)/standalone \
