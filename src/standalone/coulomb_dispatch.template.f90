@@ -414,6 +414,10 @@ contains
 
     call c_f_pointer(this_cptr, this)
 
+    epot = 0.0_DP
+    f    = 0.0_DP
+    wpot = 0.0_DP
+
 #define ENERGY_AND_FORCES(x)  if (allocated(this%x)) then ; call energy_and_forces(this%x, p, nl, q, epot, f, wpot, error=error) ; PASS_ERROR(error) ; endif
 
     ENERGY_AND_FORCES({classname})
