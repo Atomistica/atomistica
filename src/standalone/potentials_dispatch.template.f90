@@ -407,9 +407,11 @@ contains
 
 #undef ENERGY_AND_FORCES_WITH_DYN
 
-    if (coulomb_is_enabled(coul)) then
-       call coulomb_energy_and_forces(coul, dyn%p, nl, q, dyn%epot, dyn%f, dyn%wpot, error=ierror)
-       PASS_ERROR(ierror)
+    if (present(coul) .and. (present(q))) then
+       if (coulomb_is_enabled(coul)) then
+          call coulomb_energy_and_forces(coul, dyn%p, nl, q, dyn%epot, dyn%f, dyn%wpot, error=ierror)
+          PASS_ERROR(ierror)
+       endif
     endif
 
   endsubroutine potentials_energy_and_forces
