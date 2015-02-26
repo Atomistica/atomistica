@@ -86,17 +86,17 @@ contains
     call prscrlog("   Atomistica revision:  " // trim(atomistica_revision))
     call prscrlog("   Atomistica rev date:  " // trim(atomistica_date))
     call prscrlog("   Atomistica URL:       " // trim(atomistica_url))
-#ifdef HAVE_MKL
-    call mkl_get_version_string(mklversion)
-    call prscrlog("   MKL version:          " // trim(mklversion))
-#endif
     call prscrlog
     call prscrlog("   architecture:         " // trim(arch))
     call prscrlog
     call prscrlog("   build host:           " // trim(buildhost))
     call prscrlog("   build date:           " // trim(builddate))
-    call prscrlog("   compile options:      " // trim(compileroptions))
     call prscrlog("   compiler version:     " // trim(compilerversion))
+    call prscrlog("   compile options:      " // trim(compileroptions))
+#ifdef HAVE_MKL
+    call mkl_get_version_string(mklversion)
+    call prscrlog("   MKL version:          " // trim(mklversion))
+#endif
     call prscrlog
 #ifdef HAVE_IFPORT
     call prscrlog("   run host:             " // trim(runhost))
