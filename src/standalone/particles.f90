@@ -2103,7 +2103,7 @@ contains
     ! ---
 
     real(DP) :: A(3,3)
-    integer  :: ipiv(3), info
+    integer  :: i, ipiv(3), info
 
     ! ---
 
@@ -2115,6 +2115,10 @@ contains
        cell(2,3) = this%shear_dx(2)
 
        if (present(rec_cell)) then
+          rec_cell = 0.0_DP
+          do i = 1, 3
+             rec_cell(i, i) = 1.0_DP
+          enddo
           A  = cell
           call dgesv(3, 3, A, 3, ipiv, rec_cell, 3, info)
 
