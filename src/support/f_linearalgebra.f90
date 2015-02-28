@@ -27,6 +27,7 @@
 !<
 module linearalgebra
   use system_module
+  use error_module
 
   implicit none
 
@@ -59,6 +60,11 @@ module linearalgebra
   interface norm
      module procedure dnorm
   endinterface norm
+
+  public :: det
+  interface det
+     module procedure ddet
+  endinterface
 
   public :: ev_bounds
   interface ev_bounds
@@ -342,5 +348,52 @@ contains
     r(3, 3)  = a(3)
 
   endfunction diagonal_matrix
+
+
+  !>
+  !! Determinant of a matrix
+  real(DP) function ddet(mat, error)
+    implicit none
+
+    real(DP),          intent(in)  :: mat(:, :)
+    integer, optional, intent(out) :: error
+
+    !---
+
+    integer :: N, i, info
+    integer :: ipiv(size(mat, 1))
+
+    real(DP) :: sgn
+
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    N = size(mat, 1)
+    if (size(mat, 2) /= N) then
+       RAISE_ERROR("Matrix has dimension "//N//"x"//size(mat, 2)//" which is not square.", error)
+    endif
+
+    ipiv = 0
+    call dgetrf(N, N, mat, N, ipiv, info)
+    if (info /= 0) then
+       RAISE_ERROR("dgetrf failed. (info = "//info//")", error)
+    endif
+
+    ddet = 1.0_DP
+    do i = 1, N
+       ddet = ddet*mat(i, i)
+    enddo
+
+    sgn = 1.0_DP
+    do i = 1, N
+       if (ipiv(i) /= i) then
+          sgn = -sgn
+       endif
+    enddo
+
+    ddet = sgn*ddet   
+  endfunction ddet
 
 endmodule linearalgebra
