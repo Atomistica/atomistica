@@ -406,7 +406,7 @@ contains
 
     type(coulomb_t), pointer :: this
 
-    real(DP) :: epot, f(3, p%nat), wpot(3, 3)
+    real(DP) :: f(3, p%nat)
 
     ! ---
 
@@ -414,21 +414,27 @@ contains
 
     call c_f_pointer(this_cptr, this)
 
-    epot = 0.0_DP
-    f    = 0.0_DP
-    wpot = 0.0_DP
+    this%epot = 0.0_DP
+    f         = 0.0_DP
+    this%wpot = 0.0_DP
 
-#define ENERGY_AND_FORCES(x)  if (allocated(this%x)) then ; call energy_and_forces(this%x, p, nl, q, epot, f, wpot, error=error) ; PASS_ERROR(error) ; endif
+#define ENERGY_AND_FORCES(x)  if (allocated(this%x)) then ; call energy_and_forces(this%x, p, nl, q, this%epot, f, this%wpot, error=error) ; PASS_ERROR(error) ; endif
 
     ENERGY_AND_FORCES({classname})
 
 #undef ENERGY_AND_FORCES
  
     if (system_of_units == eV_A .or. system_of_units == eV_A_fs) then
-       epot_out = epot_out + Hartree*Bohr*epot
-       f_out    = f_out    + Hartree*Bohr*f
-       wpot_out = wpot_out + Hartree*Bohr*wpot
+       this%epot = this%epot * Hartree*Bohr
+       this%wpot = this%wpot * Hartree*Bohr
+
+       f_out = f_out + Hartree*Bohr*f
+    else
+       f_out = f_out + f
     endif
+
+    epot_out = epot_out + this%epot
+    wpot_out = wpot_out + this%wpot
 
   endsubroutine coulomb_energy_and_forces
 
