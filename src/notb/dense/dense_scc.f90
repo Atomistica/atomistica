@@ -80,16 +80,15 @@ module dense_scc
      ! SCC stuff
      !
 
-     integer   :: max_nit          = 200         !< max nr of iterations in self-consistency
-     real(DP)  :: dq_crit          = 0.01_DP     !< limit for convergence = max(dq_in-qd_out) 
-     real(DP)  :: beta             = 0.1_DP      !< density mixing parameter in iteration
-     integer   :: andersen_memory  = 1           !< M in Anderson mixing in iteration
+     integer       :: max_nit         = 200         !< max nr of iterations in self-consistency
+     real(DP)      :: dq_crit         = 0.0001_DP   !< limit for convergence = max(dq_in-qd_out) 
+     real(DP)      :: beta            = 0.2_DP      !< density mixing parameter in iteration
+     integer       :: andersen_memory = 3           !< M in Anderson mixing in iteration
 
-     integer   :: warn         = 20          !< warn after 20 iterations
+     integer       :: warn            = 1000        !< warn after 1000 iterations
+     logical(BOOL) :: log             = .false.     !< write a status report for each SCC step
 
-     logical(BOOL)   :: log          = .false.     !< write a status report for each SCC step
-
-     logical   :: charges_only = .false.     !< Only calculate Mulliken charges
+     logical       :: charges_only    = .false.     !< Only calculate Mulliken charges
 
      real(DP), allocatable  :: phi(:)
 
@@ -97,7 +96,8 @@ module dense_scc
      ! Position and charge history
      !
 
-     integer               :: nhistory = 0
+     integer               :: extrapolation_memory = 3  !< Number of past steps to keep
+     integer               :: history_counter = 0
      real(DP), allocatable :: r(:, :, :)
      real(DP), allocatable :: q(:, :)
 
@@ -391,15 +391,15 @@ contains
     allocate(this%phi(p%maxnatloc))
 
     ! allocate history
-    this%nhistory = 0
+    this%history_counter = 0
     if (allocated(this%r)) then
        deallocate(this%r)
     endif
     if (allocated(this%q)) then
        deallocate(this%q)
     endif
-    allocate(this%r(3, p%maxnatloc, 3))
-    allocate(this%q(p%maxnatloc, 3))
+    allocate(this%r(3, p%maxnatloc, this%extrapolation_memory))
+    allocate(this%q(p%maxnatloc, this%extrapolation_memory))
 
     this%tb    => tb
 
@@ -521,6 +521,7 @@ contains
     type(anderson_mixer_t) :: mixer                 ! Anderson mixer
 
     real(DP)  :: f_q_prev(p%natloc), f_q_new(p%natloc)    ! filtered charge arrays, previous and new
+    real(DP)  :: prev_mu
 
 #ifdef DEBUG_ENERGY_MINIMUM
     integer :: M
@@ -601,7 +602,7 @@ contains
     !
 
     if (this%log) then
-       write (ilog, '(1X,A10,1X,A4,3A12)')  "scc|", "it", "sum(q)", "max(dq)", "mu[eV]"
+       write (ilog, '(1X,A10,1X,A4,4A12)')  "scc|", "it", "sum(q)", "max(dq)", "mu[eV]", "dmu[eV]"
     endif
 
     !
@@ -610,6 +611,7 @@ contains
 
     done = .false.
     it = 0
+    prev_mu = this%tb%mu
     do while(.not. done .and. it < this%max_nit)
        it          = it + 1
        this%nsteps = this%nsteps + 1
@@ -636,8 +638,14 @@ contains
        if( mod(it, this%warn)==0 .or. (done .and. it>this%warn) ) write(*,*) "SC it...", it
 
        if (this%log) then
-          write (ilog, '(12X,I4,F12.3,2ES12.3)')  it, sum(q), maxval( abs(f_q_prev(1:nf) - f_q_new(1:nf)) ), this%tb%mu
+          if (it > 1) then
+             write (ilog, '(12X,I4,F12.3,3ES12.3)')  it, sum(q), maxval( abs(f_q_prev(1:nf) - f_q_new(1:nf)) ), this%tb%mu, this%tb%mu-prev_mu
+          else
+             write (ilog, '(12X,I4,F12.3,2ES12.3)')  it, sum(q), maxval( abs(f_q_prev(1:nf) - f_q_new(1:nf)) ), this%tb%mu
+          endif
        endif
+
+       prev_mu = this%tb%mu
 
     enddo  ! end of charge self-consistency loop
 
@@ -736,10 +744,14 @@ contains
 
     ! ---
 
-    integer :: i, iprev1, iprev2, iprev3
+    integer :: i, k, l
 
-    real(DP) :: a11, a12, a22, det_a, b1, b2, alpha, beta
+    real(DP) :: a(this%extrapolation_memory-1, this%extrapolation_memory-1)
+    real(DP) :: b(this%extrapolation_memory-1)
+    real(DP) :: alpha(this%extrapolation_memory-1)
     real(DP) :: q0(p%nat)
+
+    real(DP) :: drk(3, p%natloc), drl(3, p%natloc)
 
     ! ---
 
@@ -747,44 +759,43 @@ contains
 
     q0 = q
 
-    if (this%nhistory >= 3) then
-       iprev1 = modulo(this%nhistory-1, 3)+1
-       iprev2 = modulo(this%nhistory-2, 3)+1
-       iprev3 = modulo(this%nhistory-3, 3)+1
-
-       a11 = 0.0_DP
-       a12 = 0.0_DP
-       a22 = 0.0_DP
-       b1 = 0.0_DP
-       b2 = 0.0_DP
-       do i = 1, p%natloc
-           a11 = a11 + dot_product(this%r(1:3, i, iprev1) - this%r(1:3, i, iprev2), &
-                                   this%r(1:3, i, iprev1) - this%r(1:3, i, iprev2))
-           a12 = a12 + dot_product(this%r(1:3, i, iprev1) - this%r(1:3, i, iprev2), &
-                                   this%r(1:3, i, iprev2) - this%r(1:3, i, iprev3))
-           a22 = a22 + dot_product(this%r(1:3, i, iprev2) - this%r(1:3, i, iprev3), &
-                                   this%r(1:3, i, iprev2) - this%r(1:3, i, iprev3))
-           b1  = b1  + dot_product(PCN3(p, i)             - this%r(1:3, i, iprev1), &
-                                   this%r(1:3, i, iprev1) - this%r(1:3, i, iprev2))
-           b2  = b2  + dot_product(PCN3(p, i)             - this%r(1:3, i, iprev1), &
-                                   this%r(1:3, i, iprev2) - this%r(1:3, i, iprev3))
+    if (this%history_counter >= this%extrapolation_memory) then
+       do k = 1, this%extrapolation_memory-1
+          drk = this%r(1:3, 1:p%natloc, modulo(this%history_counter-k, this%extrapolation_memory)+1) - &
+                this%r(1:3, 1:p%natloc, modulo(this%history_counter-k-1, this%extrapolation_memory)+1)
+          do l = 1, this%extrapolation_memory-1
+             drl = this%r(1:3, 1:p%natloc, modulo(this%history_counter-l, this%extrapolation_memory)+1) - &
+                   this%r(1:3, 1:p%natloc, modulo(this%history_counter-l-1, this%extrapolation_memory)+1)
+             a(k, l) = dot_product(reshape(drk, [3*p%natloc]), reshape(drl, [3*p%natloc]))
+          enddo
+          b(k) = dot_product( &
+              reshape(PCN3(p, 1:p%natloc) - &
+                      this%r(1:3, 1:p%natloc, modulo(this%history_counter-1, this%extrapolation_memory)+1), &
+                      [3*p%natloc]), &
+              reshape(this%r(1:3, 1:p%natloc, modulo(this%history_counter-k, this%extrapolation_memory)+1) - &
+                      this%r(1:3, 1:p%natloc, modulo(this%history_counter-k-1, this%extrapolation_memory)+1), &
+                      [3*p%natloc]) &
+              )
        enddo
 
-       det_a = det(reshape([a11, a12, a12, a22], [2, 2]), error)
+       alpha = matmul(inverse(a, error=error), b)
        PASS_ERROR(error)
-       if (det_a == 0.0_DP) then
-          RAISE_ERROR("det(A) = 0", error)
-       endif
-       alpha = (b1*a22 - b2*a12)/det_a
-       beta  = (b2*a11 - b1*a12)/det_a
 
-       q = q0 + alpha*(q0 - this%q(1:p%nat, iprev1)) + &
-           beta*(this%q(1:p%nat, iprev2) - this%q(1:p%nat, iprev3))
+       write (*, *)  alpha
+
+       !                q(t) - q(t-dt)
+       q = q0 + alpha(1)*(q0 - this%q(1:p%nat, modulo(this%history_counter-1, this%extrapolation_memory)+1))
+       do i = 2, this%extrapolation_memory-1
+          q = q + alpha(i)*(this%q(1:p%nat, modulo(this%history_counter-i+1, this%extrapolation_memory)+1) - &
+                            this%q(1:p%nat, modulo(this%history_counter-i, this%extrapolation_memory)+1))
+       enddo
     endif
 
-    this%nhistory = this%nhistory+1
-    i = modulo(this%nhistory-1, 3)+1
+    this%history_counter = this%history_counter+1
+    i = modulo(this%history_counter-1, this%extrapolation_memory)+1
+    ! This is current r(t+dt)
     this%r(1:3, 1:p%nat, i) = PCN3(p, 1:p%nat)
+    ! This is last q(t)
     this%q(1:p%nat, i)      = q0(1:p%nat)
     
   endsubroutine dense_scc_extrapolate_charges
@@ -796,14 +807,26 @@ contains
   subroutine dense_scc_register(this, cfg)
     implicit none
 
-    type(dense_scc_t), target, intent(inout)  :: this
-    type(c_ptr), intent(in)          :: cfg
+    type(dense_scc_t), target, intent(inout) :: this
+    type(c_ptr),               intent(in) :: cfg
 
     ! ---
 
-    type(c_ptr)                :: m
+    type(c_ptr) :: m
 
     ! ---
+
+    this%max_nit              = 200         !< max nr of iterations in self-consistency
+    this%dq_crit              = 0.0001_DP   !< limit for convergence = max(dq_in-qd_out)
+    this%beta                 = 0.2_DP      !< density mixing parameter in iteration
+    this%andersen_memory      = 3           !< M in Anderson mixing in iteration
+
+    this%warn                 = 1000        !< warn after 1000 iterations
+    this%log                  = .false.     !< write a status report for each SCC step
+
+    this%charges_only         = .false.     !< Only calculate Mulliken charges
+
+    this%extrapolation_memory = 3
 
     m = ptrdict_register_module(cfg, c_loc(this%enabled), CSTR("SCC"), &
          CSTR("Use charge self-consistency in the tight-binding calculation."))
@@ -820,6 +843,10 @@ contains
     call ptrdict_register_integer_property(m, c_loc(this%andersen_memory), &
          CSTR("andersen_memory"), &
          CSTR("Anderson mixing memory."))
+
+    call ptrdict_register_integer_property(m, c_loc(this%extrapolation_memory), &
+         CSTR("extrapolation_memory"), &
+         CSTR("Number of past time steps to consider for charge extrapolation (min 2)."))
 
     call ptrdict_register_integer_property(m, c_loc(this%warn), CSTR("warn"), &
          CSTR("Warn after a number of iterations without self-consistency."))
