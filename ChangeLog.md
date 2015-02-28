@@ -10,6 +10,8 @@ Change log
 HEAD
 ----
 
+- Implemented charge extrapolation for SCC NOTB
+
 - Fixed a couple of OpenMP related regression that broke compilation.
 
 - Fixed a regression that lead to wrong unit conversion for Hubbard-Us.
