@@ -94,6 +94,14 @@ module dense_scc
      real(DP), allocatable  :: phi(:)
 
      !
+     ! Position and charge history
+     !
+
+     integer               :: nhistory = 0
+     real(DP), allocatable :: r(:, :, :)
+     real(DP), allocatable :: q(:, :)
+
+     !
      ! Statistics/diagnostic
      !
 
@@ -155,6 +163,10 @@ module dense_scc
   public :: establish_self_consistency
   interface establish_self_consistency
      module procedure dense_scc_establish_self_consistency
+  endinterface
+
+  interface extrapolate_charges
+     module procedure dense_scc_extrapolate_charges
   endinterface
 
   public :: register
@@ -293,6 +305,8 @@ contains
     endif
 
     if (allocated(this%phi))  deallocate(this%phi)
+    if (allocated(this%r))    deallocate(this%r)
+    if (allocated(this%q))    deallocate(this%q)
 
     this%p   => NULL()
     this%tb  => NULL()
@@ -365,7 +379,7 @@ contains
 
     this%p  => p
 
-    ! - allocate phi array
+    ! allocate phi array
     if (allocated(this%phi)) then
        deallocate(this%phi)
     endif
@@ -373,6 +387,17 @@ contains
        RAISE_ERROR("scc_init: Particles doesn't seem to contain any atoms.", error)
     endif
     allocate(this%phi(p%maxnatloc))
+
+    ! allocate history
+    this%nhistory = 0
+    if (allocated(this%r)) then
+       deallocate(this%r)
+    endif
+    if (allocated(this%q)) then
+       deallocate(this%q)
+    endif
+    allocate(this%r(3, p%maxnatloc, 3))
+    allocate(this%q(p%maxnatloc, 3))
 
     this%tb    => tb
 
@@ -475,14 +500,14 @@ contains
   subroutine dense_scc_establish_self_consistency(this, p, nl, tb, q, noc, f, error)
     implicit none
 
-    type(dense_scc_t), intent(inout)   :: this            !< SCC object
-    type(particles_t), target          :: p               !< Particles
-    type(neighbors_t), target          :: nl              !< Neighbor list
+    type(dense_scc_t), intent(inout)   :: this      !< SCC object
+    type(particles_t), target          :: p         !< Particles
+    type(neighbors_t), target          :: nl        !< Neighbor list
     type(dense_hamiltonian_t), target  :: tb
-    real(DP), intent(inout)            :: q(p%maxnatloc)  !< Charges
-    real(DP), intent(in)               :: noc             !< Number of occupied orbitals
-    integer, intent(in), optional      :: f               !< Filter for atom types
-    integer, intent(inout), optional   :: error          !< Error signals
+    real(DP), intent(inout)            :: q(p%nat)  !< Charges
+    real(DP), intent(in)               :: noc       !< Number of occupied orbitals
+    integer, intent(in), optional      :: f         !< Filter for atom types
+    integer, intent(inout), optional   :: error     !< Error signals
 
     ! ---
 
@@ -536,6 +561,12 @@ contains
     call timer_start('scc_establish_self_consistency')
 
     this%niterations = this%niterations + 1
+
+    !
+    ! Extrapolate charges
+    !
+
+    call extrapolate_charges(this, p, q)
 
     !
     ! Init
@@ -688,6 +719,73 @@ contains
     endsubroutine solve
 
   endsubroutine dense_scc_establish_self_consistency
+
+
+  !>
+  !! Extrapolate charges from past time steps
+  !<
+  subroutine dense_scc_extrapolate_charges(this, p, q, error)
+    implicit none
+
+    type(dense_scc_t), intent(inout) :: this      !< SCC object
+    type(particles_t), intent(in)    :: p         !< Particles
+    real(DP),          intent(inout) :: q(p%nat)  !< Charges
+    integer, optional, intent(out)   :: error     !< Error status
+
+    ! ---
+
+    integer :: i, iprev1, iprev2, iprev3
+
+    real(DP) :: a11, a12, a22, det_a, b1, b2, alpha, beta
+    real(DP) :: q0(p%nat)
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    q0 = q
+
+    if (this%nhistory >= 3) then
+       iprev1 = modulo(this%nhistory-1, 3)+1
+       iprev2 = modulo(this%nhistory-2, 3)+1
+       iprev3 = modulo(this%nhistory-3, 3)+1
+
+       a11 = 0.0_DP
+       a12 = 0.0_DP
+       a22 = 0.0_DP
+       b1 = 0.0_DP
+       b2 = 0.0_DP
+       do i = 1, p%natloc
+           a11 = a11 + dot_product(this%r(1:3, i, iprev1) - this%r(1:3, i, iprev2), &
+                                   this%r(1:3, i, iprev1) - this%r(1:3, i, iprev2))
+           a12 = a12 + dot_product(this%r(1:3, i, iprev1) - this%r(1:3, i, iprev2), &
+                                   this%r(1:3, i, iprev2) - this%r(1:3, i, iprev3))
+           a22 = a22 + dot_product(this%r(1:3, i, iprev2) - this%r(1:3, i, iprev3), &
+                                   this%r(1:3, i, iprev2) - this%r(1:3, i, iprev3))
+           b1  = b1  + dot_product(PCN3(p, i)             - this%r(1:3, i, iprev1), &
+                                   this%r(1:3, i, iprev1) - this%r(1:3, i, iprev2))
+           b2  = b2  + dot_product(PCN3(p, i)             - this%r(1:3, i, iprev1), &
+                                   this%r(1:3, i, iprev2) - this%r(1:3, i, iprev3))
+       enddo
+
+       det_a = det(reshape([a11, a12, a12, a22], [2, 2]), error)
+       PASS_ERROR(error)
+       if (det_a == 0.0_DP) then
+          RAISE_ERROR("det(A) = 0", error)
+       endif
+       alpha = (b1*a22 - b2*a12)/det_a
+       beta  = (b2*a11 - b1*a12)/det_a
+
+       q = q0 + alpha*(q0 - this%q(1:p%nat, iprev1)) + &
+           beta*(this%q(1:p%nat, iprev2) - this%q(1:p%nat, iprev3))
+    endif
+
+    this%nhistory = this%nhistory+1
+    i = modulo(this%nhistory-1, 3)+1
+    this%r(1:3, 1:p%nat, i) = PCN3(p, 1:p%nat)
+    this%q(1:p%nat, i)      = q0(1:p%nat)
+    
+  endsubroutine dense_scc_extrapolate_charges
 
 
   !>

@@ -255,7 +255,7 @@ contains
           call init(this%solver, error=ierror)
           PASS_ERROR(ierror)
        else
-          RAISE_ERROR("dense_notb_init: Please specify a solver.", ierror)
+          RAISE_ERROR("Please specify a solver.", ierror)
        endif
     endif
 
@@ -352,7 +352,7 @@ contains
     else
 
        if(this%in_qtot /= 0.0_DP) then
-          RAISE_ERROR("notb_bind_to: Only number of occupied orbitals OR the total charge should be specified on input!", ierror)
+          RAISE_ERROR("Only number of occupied orbitals OR the total charge should be specified on input!", ierror)
        endif
 
        this%noc = this%in_noc
@@ -574,7 +574,7 @@ contains
 
     ! Verify pointers
     if(.not. associated(this%solver)) then
-       RAISE_ERROR("notb_energy_and_forces: No solver object associated to NOTB.", ierror)
+       RAISE_ERROR("No solver object associated to NOTB.", ierror)
     end if
 
     ! Update neighbor list
@@ -594,11 +594,8 @@ contains
     if (associated(this%scc)) then
 
        if (.not. present(q)) then
-          RAISE_ERROR("notb_energy_and_forces: Please provide a charge-array for the self-consistent solution.", ierror)
+          RAISE_ERROR("Please provide a charge-array for the self-consistent solution.", ierror)
        endif
-
-       ! check that total charge matches, if not, change
-       call dense_notb_adjust_total_charge(p, this%tb%f, q, this%qtot)
 
        this%it  = this%it + 1
        call establish_self_consistency( &
