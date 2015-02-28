@@ -300,6 +300,7 @@ contains
 
     if (this%niterations > 0) then
        call prlog("- dense_scc_del -")
+       call prlog("Solver was called "//this%nsteps//" times.")
        call prlog("Average number of iterations for self-consistency = "//((1.0_DP*this%nsteps)/this%niterations))
        call prlog("Convergence failed "//this%nfail//" times.")
        call prlog
