@@ -61,9 +61,14 @@ module linearalgebra
      module procedure dnorm
   endinterface norm
 
-  public :: det
+  public :: det, ddet
   interface det
      module procedure ddet
+  endinterface
+
+  public :: inverse
+  interface inverse
+     module procedure dinverse
   endinterface
 
   public :: ev_bounds
@@ -352,6 +357,7 @@ contains
 
   !>
   !! Determinant of a matrix
+  !<
   real(DP) function ddet(mat, error)
     implicit none
 
@@ -395,5 +401,46 @@ contains
 
     ddet = sgn*ddet   
   endfunction ddet
+
+
+  !>
+  !! Inverse of a matrix
+  !<
+  function dinverse(mat, error) result(B)
+    implicit none
+
+    real(DP),          intent(in)  :: mat(:, :)
+    integer, optional, intent(out) :: error
+
+    real(DP)                       :: B(size(mat, 1), size(mat, 2))
+
+    !---
+
+    integer :: N, i, info
+    integer :: ipiv(size(mat, 1))
+
+    real(DP) :: A(size(mat, 1), size(mat, 2))
+
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    N = size(mat, 1)
+    if (size(mat, 2) /= N) then
+       RAISE_ERROR("Matrix has dimension "//N//"x"//size(mat, 2)//" which is not square.", error)
+    endif
+
+    B = 0.0_DP
+    do i = 1, N
+       B(i, i) = 1.0_DP
+    enddo
+    A = mat
+    call dgesv(N, N, A, N, ipiv, B, N, info)
+
+    if (info /= 0) then
+       RAISE_ERROR("Failed to compute inverse.", error)
+    endif
+  endfunction dinverse
 
 endmodule linearalgebra
