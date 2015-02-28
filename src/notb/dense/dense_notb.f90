@@ -603,7 +603,7 @@ contains
        this%it  = this%it + 1
        call establish_self_consistency( &
             this%scc, p, nl, this%tb, q, &
-            this%noc, this%it, &
+            this%noc, &
             f     = this%tb%f, &
             error = ierror)
        PASS_ERROR(ierror)

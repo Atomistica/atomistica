@@ -94,6 +94,14 @@ module dense_scc
      real(DP), allocatable  :: phi(:)
 
      !
+     ! Statistics/diagnostic
+     !
+
+     integer :: niterations = 0
+     integer :: nsteps      = 0
+     integer :: nfail       = 0
+
+     !
      ! Configuration objects
      !
 
@@ -193,6 +201,10 @@ contains
 
     this%enabled = .true.
 
+    this%niterations = 0
+    this%nsteps      = 0
+    this%nfail       = 0
+
     ! - set defaults and requested parameters
     call set(this, dq_crit, beta, est, max_nit, andersen_memory, warn, log, charges_only)
 
@@ -273,6 +285,12 @@ contains
     type(dense_scc_t), intent(inout)  :: this
 
     ! ---
+
+    if (this%niterations > 0) then
+       call prlog("- dense_scc_del -")
+       call prlog("Average number of iterations for self-consistency = "//((1.0_DP*this%nsteps)/this%niterations))
+       call prlog("Convergence failed "//this%nfail//" times.")
+    endif
 
     if (allocated(this%phi))  deallocate(this%phi)
 
@@ -454,7 +472,7 @@ contains
   !!
   !! Run the self-consistency loop
   !<
-  subroutine dense_scc_establish_self_consistency(this, p, nl, tb, q, noc, mit, f, error)
+  subroutine dense_scc_establish_self_consistency(this, p, nl, tb, q, noc, f, error)
     implicit none
 
     type(dense_scc_t), intent(inout)   :: this            !< SCC object
@@ -463,13 +481,11 @@ contains
     type(dense_hamiltonian_t), target  :: tb
     real(DP), intent(inout)            :: q(p%maxnatloc)  !< Charges
     real(DP), intent(in)               :: noc             !< Number of occupied orbitals
-    integer, intent(in)                :: mit             !< Iteration
     integer, intent(in), optional      :: f               !< Filter for atom types
     integer, intent(inout), optional   :: error          !< Error signals
 
     ! ---
 
-    real(DP)  :: e1, e2                             ! logging
     integer   :: it                                 ! SCC loop iteration
     logical   :: done                               ! charges converged?
     integer   :: nf                                 ! number of atoms within filter
@@ -519,6 +535,8 @@ contains
 
     call timer_start('scc_establish_self_consistency')
 
+    this%niterations = this%niterations + 1
+
     !
     ! Init
     !
@@ -560,7 +578,8 @@ contains
     done = .false.
     it = 0
     do while(.not. done .and. it < this%max_nit)
-       it = it + 1
+       it          = it + 1
+       this%nsteps = this%nsteps + 1
 
        ! solve: calculate potential -> diagonalize -> calculate new charges
        call solve(error=error)
@@ -597,10 +616,10 @@ contains
     call del(mixer)
 
     ! warn of problems with convergence
-    if (it == this%max_nit) then
-       write(ilog,*) "it=itmax2 in Scc"
-       write(*,*)    'it=itmax2 in Scc'
-    end if
+    if (it >= this%max_nit) then
+       call prscrlog("Warning: Maximum number of SCC iterations (= "//this%max_nit//") exceeded.")
+       this%nfail = this%nfail + 1
+    endif
 
 #ifdef DEBUG_ENERGY_MINIMUM
 
