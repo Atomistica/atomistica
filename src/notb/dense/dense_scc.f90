@@ -85,7 +85,7 @@ module dense_scc
      real(DP)      :: beta            = 0.2_DP      !< density mixing parameter in iteration
      integer       :: andersen_memory = 3           !< M in Anderson mixing in iteration
 
-     integer       :: warn            = 1000        !< warn after 1000 iterations
+     integer       :: warn            = 20          !< warn after 20 iterations
      logical(BOOL) :: log             = .false.     !< write a status report for each SCC step
 
      logical       :: charges_only    = .false.     !< Only calculate Mulliken charges
@@ -635,7 +635,7 @@ contains
 #endif
 
        ! output and logging
-       if( mod(it, this%warn)==0 .or. (done .and. it>this%warn) ) write(*,*) "SC it...", it
+       if( mod(it, this%warn)==0 .or. (done .and. it>this%warn) ) call prscrlog("Warning: Charge self-consistency at iteration "//it//".")
 
        if (this%log) then
           if (it > 1) then
@@ -781,8 +781,6 @@ contains
        alpha = matmul(inverse(a, error=error), b)
        PASS_ERROR(error)
 
-       write (*, *)  alpha
-
        !                q(t) - q(t-dt)
        q = q0 + alpha(1)*(q0 - this%q(1:p%nat, modulo(this%history_counter-1, this%extrapolation_memory)+1))
        do i = 2, this%extrapolation_memory-1
@@ -821,7 +819,7 @@ contains
     this%beta                 = 0.2_DP      !< density mixing parameter in iteration
     this%andersen_memory      = 3           !< M in Anderson mixing in iteration
 
-    this%warn                 = 1000        !< warn after 1000 iterations
+    this%warn                 = 20          !< warn after 20 iterations
     this%log                  = .false.     !< write a status report for each SCC step
 
     this%charges_only         = .false.     !< Only calculate Mulliken charges
