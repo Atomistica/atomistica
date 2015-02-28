@@ -7,14 +7,16 @@ TODO
 Change log
 ==========
 
-HEAD
-----
+v0.3.1
+------
 
 - Implemented charge extrapolation for SCC NOTB
 
 - Fixed a couple of OpenMP related regression that broke compilation.
 
 - Fixed a regression that lead to wrong unit conversion for Hubbard-Us.
+
+- Fixed a regression that lead to OutputEnergy not being called.
 
 - Coulomb solvers now have an energy_and_forces rather than a
   potential_and_field function.
