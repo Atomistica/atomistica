@@ -24,8 +24,13 @@
 #define PNC3(p, i)      p%r_non_cyc(1:3, i)
 #define PNC(p, i, d)    p%r_non_cyc(d, i)
 
+#if defined(LAMMPS) || defined(MDCORE_PYTHON)
+#define PCN3(p, i)      p%r_non_cyc(1:3, i)
+#define PCN(p, i, d)    p%r_non_cyc(d, i)
+#else
 #define PCN3(p, i)      p%r_cont(1:3, i)
 #define PCN(p, i, d)    p%r_cont(d, i)
+#endif
 
 
 !>
