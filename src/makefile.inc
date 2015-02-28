@@ -191,6 +191,7 @@ UNITTESTS = \
 	fruit.f90 \
 	$(CORE_SUPPLIB) \
 	test_cutoff.f90 \
+	test_linearalgebra.f90 \
 	test_table2d.f90 \
 	run_tests.f90
 UNITTESTS_O4 = $(UNITTESTS:.cpp=.o)
