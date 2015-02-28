@@ -302,6 +302,7 @@ contains
        call prlog("- dense_scc_del -")
        call prlog("Average number of iterations for self-consistency = "//((1.0_DP*this%nsteps)/this%niterations))
        call prlog("Convergence failed "//this%nfail//" times.")
+       call prlog
     endif
 
     if (allocated(this%phi))  deallocate(this%phi)
