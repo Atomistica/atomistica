@@ -53,37 +53,38 @@ module output_energy
   public :: output_energy_t
   type output_energy_t
 
-     real(DP)  :: freq
-
-     integer   :: un
+     real(DP) :: freq = -1.0_DP
+     integer  :: un
 
      !
      ! Averaging
      !
 
-     real(DP)  :: t
-     real(DP)  :: ekin
-     real(DP)  :: epot
-     real(DP)  :: ecoul
-     real(DP)  :: ebs
-     real(DP)  :: erep
-     real(DP)  :: mu
-     real(DP)  :: P(3, 3)
-     real(DP)  :: V
+     logical(BOOL) :: average = .false.
+
+     real(DP) :: t
+     real(DP) :: ekin
+     real(DP) :: epot
+     real(DP) :: ecoul
+     real(DP) :: ebs
+     real(DP) :: erep
+     real(DP) :: mu
+     real(DP) :: P(3, 3)
+     real(DP) :: V
 
      !
      ! Additional variable attributes from the data structure
      !
 
-     integer                :: n_real_attr
-     integer, allocatable   :: l2d(:)
-     real(DP), allocatable  :: real_attr(:)
+     integer               :: n_real_attr
+     integer, allocatable  :: l2d(:)
+     real(DP), allocatable :: real_attr(:)
 
      !
      ! Output format str
      !
 
-     character(256)  :: fmt_str
+     character(256) :: fmt_str
 
   endtype output_energy_t
 
@@ -133,17 +134,10 @@ contains
 
     ! ---
 
-#ifdef _MP
-    if (mpi_id() == 0) then
-#endif
-
     call prlog("- output_energy_init -")
-    call prlog("     freq = " // this%freq)
+    call prlog("freq    = " // this%freq)
+    call prlog("average = " // logical(this%average))
     call prlog
-
-#ifdef _MP
-    endif
-#endif
 
   endsubroutine output_energy_init
 
@@ -197,6 +191,8 @@ contains
     character(1024)  :: hdr
 
     ! ---
+
+    INIT_ERROR(ierror)
 
 #ifdef _MP
     if (mpi_id() == 0) then
@@ -266,7 +262,7 @@ contains
   !!
   !! Write energies to the output file
   !<
-  subroutine output_energy_invoke(this, dyn, nl, pots_cptr, coul, ierror)
+  subroutine output_energy_invoke(this, dyn, nl, pots_cptr, coul_cptr, ierror)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -275,7 +271,7 @@ contains
     type(dynamics_t),      target        :: dyn
     type(neighbors_t),     target        :: nl
     type(C_PTR),           intent(in)    :: pots_cptr
-    type(C_PTR),           intent(in)    :: coul
+    type(C_PTR),           intent(in)    :: coul_cptr
     integer,     optional, intent(out)   :: ierror
 
     ! ---
@@ -283,24 +279,31 @@ contains
     integer   :: i
     real(DP)  :: pr, T
 
+    type(coulomb_t), pointer :: coul
+
     ! ---
 
     INIT_ERROR(ierror)
 
-    this%t = this%t + dyn%dt
+    call c_f_pointer(coul_cptr, coul)
 
-    this%ekin     = this%ekin     + dyn%ekin * dyn%dt
-    this%epot     = this%epot     + dyn%epot * dyn%dt
-    this%p(:, :)  = this%p(:, :)  + dyn%pressure(:, :) * dyn%dt
-    this%V        = this%V        + volume(dyn%p) * dyn%dt
+    if (this%average) then
+       this%t     = this%t + dyn%dt
 
-    !this%ecoul = this%ecoul   + coulomb_get_potential_energy(coul) * dyn%dt
+       this%ekin  = this%ekin  + dyn%ekin * dyn%dt
+       this%epot  = this%epot  + dyn%epot * dyn%dt
+       this%p     = this%p     + dyn%pressure * dyn%dt
+       this%V     = this%V     + volume(dyn%p) * dyn%dt
+       this%ecoul = this%ecoul + coul%epot * dyn%dt
+    else
+       this%t     = 1.0_DP
 
-!    if (associated(mod_tb)) then
-!       this%ebs   = this%ebs    + mod_tb%tb%ebs * dyn%dt
-!       this%erep  = this%erep   + mod_tb%tb%erep * dyn%dt
-!       this%mu    = this%mu     + mod_tb%tb%mu * dyn%dt
-!    endif
+       this%ekin  = dyn%ekin
+       this%epot  = dyn%epot
+       this%p     = dyn%pressure
+       this%V     = volume(dyn%p)
+       this%ecoul = coul%epot
+    endif
 
     if (this%n_real_attr > 0) then
        do i = 1, this%n_real_attr
@@ -311,20 +314,11 @@ contains
 
     if (this%freq < 0 .or. this%t >= this%freq) then
 
-       this%ekin     = this%ekin / this%t
-       this%epot     = this%epot / this%t
-       this%p(:, :)  = this%p(:, :) / this%t
-       this%V        = this%V / this%t
-
-       if (coulomb_is_enabled(coul)) then
-          this%ecoul = this%ecoul / this%t
-       endif
-
-!       if (associated(mod_tb)) then
-!          this%ebs   = this%ebs / this%t
-!          this%erep  = this%erep / this%t
-!          this%mu    = this%mu / this%t
-!       endif
+       this%ekin  = this%ekin / this%t
+       this%epot  = this%epot / this%t
+       this%p     = this%p / this%t
+       this%V     = this%V / this%t
+       this%ecoul = this%ecoul / this%t
 
        T  = this%ekin*2/(dyn%p%dof*K_to_energy)  ! eV/A                                                                                                                                   
        pr = tr(3, this%p) / 3
@@ -386,17 +380,23 @@ contains
 
     implicit none
 
-    type(output_energy_t), target, intent(inout)  :: this
-    type(c_ptr), intent(in)               :: cfg
-    type(c_ptr), intent(out)              :: m
+    type(output_energy_t), target, intent(inout) :: this
+    type(c_ptr),                   intent(in)    :: cfg
+    type(c_ptr),                   intent(out)   :: m
 
     ! ---
+
+    this%freq    = -1.0_DP
+    this%average = .false.
 
     m = ptrdict_register_section(cfg, CSTR("OutputEnergy"), &
          CSTR("Output the energy of the system to the file 'ener.out'."))
 
     call ptrdict_register_real_property(m, c_loc(this%freq), CSTR("freq"), &
          CSTR("Output frequency (-1 means output every time step)."))
+
+    call ptrdict_register_boolean_property(m, c_loc(this%average), CSTR("average"), &
+         CSTR("Average all quantities of the time interval *freq*."))
 
   endsubroutine output_energy_register
 
