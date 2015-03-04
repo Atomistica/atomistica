@@ -23,6 +23,7 @@
 !    shared:directory
 !    dependencies:rebo2_default_tables.f90
 !    classtype:rebo2_t classname:Rebo2 interface:potentials
+!    features:per_at,per_bond
 ! @endmeta
 
 !>
