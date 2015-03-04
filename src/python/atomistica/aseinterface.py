@@ -142,6 +142,7 @@ class Atomistica(object):
     CELL_TOL = 1e-16
     POSITIONS_TOL = 1e-16
 
+    name = None
     potential_class = None
     avgn = 100
     
@@ -210,6 +211,15 @@ class Atomistica(object):
         self.f_per_bond = None
         self.wpot_per_at = None
         self.wpot_per_bond = None
+
+
+    def todict(self):
+        return self.kwargs
+
+
+    def check_state(self, atoms):
+        # This is a hack to indicate ase.db that state has changed
+        return [1]
         
 
     def initialize(self, atoms):
@@ -365,6 +375,8 @@ class Atomistica(object):
             self.calculate()
             self.force_update  = False
 
+        if self.q is not None:
+            atoms.set_initial_charges(self.q)
 
     def get_potential_energy(self, atoms, force_consistent=False):
         self.update(atoms)
@@ -557,6 +569,7 @@ for name, cls in inspect.getmembers(_atomistica):
         elif cls.__name__.endswith('Scr'):
             avgn = 1000
         globals()[cls.__name__] = type(cls.__name__, (Atomistica,), {
+            'name': cls.__name__,
             'potential_class': cls,
             'avgn': avgn
             })
