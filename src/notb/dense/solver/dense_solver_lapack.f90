@@ -44,7 +44,6 @@ module dense_solver_lapack
 
   private
 
-  public :: dense_solver_lapack_t
   public :: ST_STANDARD, ST_DIVIDE_AND_CONQUER, ST_EXPERT, n_st, len_st_str
   public :: STR_standard, STR_divide_and_conquer, STR_expert, st_strs
 
@@ -59,6 +58,61 @@ module dense_solver_lapack
   character(len_st_str), parameter  :: STR_expert              = CSTR("expert")
   character(len_st_str), parameter  :: st_strs(n_st) = &
        (/ STR_standard, STR_divide_and_conquer, STR_expert /)
+
+  !
+  ! Solver type
+  !
+
+  public :: dense_solver_lapack_t
+  type dense_solver_lapack_t
+
+     !
+     ! Parameters
+     !
+
+     logical(BOOL)  :: enabled      = .false.
+
+     integer   :: solver_type  = 1        ! type of solver to use...
+                                          ! 0 = LAPACK standard
+                                          ! 1 = LAPACK divide-and-conquer
+                                          ! 2 = LAPACK expert
+
+     real(DP)  :: Tele         = 0.01_DP  ! Electronic temperature
+
+     integer   :: norb         = -1       ! Number of orbitals
+     integer   :: n_bands      = 10       ! Number of eigenvalues to solve for
+
+     !
+     ! The tight-binding object
+     !
+
+     type(dense_hamiltonian_t), pointer  :: tb  => NULL()
+
+     !
+     ! Solver stuff (eigenvectors and eigenvalues)
+     !
+
+     real(DP), allocatable  :: evals(:, :)                  ! eigenvalues
+     WF_T(DP), allocatable  :: evecs(:, :, :)               ! eigenvectors
+
+     real(DP), allocatable  :: f(:, :)                      ! occupation, i.e., the Fermi function
+
+     !
+     ! Work buffers
+     !
+
+     WF_T(DP), allocatable :: S2(:, :)
+
+#ifdef COMPLEX_WF
+     WF_T(DP), allocatable :: work(:)
+     real(DP), allocatable :: rwork(:)
+     integer,  allocatable :: iwork(:)
+#else
+     WF_T(DP), allocatable :: work(:)
+     integer,  allocatable :: iwork(:)
+#endif
+
+  endtype dense_solver_lapack_t
 
   !
   ! Interface definition
@@ -319,8 +373,15 @@ contains
        evecs(:, :)  = H(:, :)
     endif
 
-
-    call timer_start("LAPACK_gvd")
+    if (this%solver_type == ST_STANDARD) then
+       call timer_start("LAPACK dsygv")
+    else if (this%solver_type == ST_DIVIDE_AND_CONQUER) then
+       call timer_start("LAPACK dsygvd")
+    else if (this%solver_type == ST_EXPERT) then
+       call timer_start("LAPACK dsygvx")
+    else
+       RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
+    endif
 
     call resize(this%S2, tb%norb, tb%norb)
 
@@ -558,9 +619,6 @@ contains
 !
 !       endif
 
-       write (*, *)  this%S2
-       write (*, *)  evecs
-
        RAISE_ERROR("Diagonalization failed with error code "//info//".", error)
     endif
 
@@ -576,7 +634,15 @@ contains
 !
 !    endif
 
-    call timer_stop("LAPACK_gvd")
+    if (this%solver_type == ST_STANDARD) then
+       call timer_stop("LAPACK dsygv")
+    else if (this%solver_type == ST_DIVIDE_AND_CONQUER) then
+       call timer_stop("LAPACK dsygvd")
+    else if (this%solver_type == ST_EXPERT) then
+       call timer_stop("LAPACK dsygvx")
+    else
+       RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
+    endif
 
   endsubroutine dense_solver_lapack_solve_HS
 
@@ -639,7 +705,7 @@ contains
 
     endif
 
-    call occupy(this, tb, noc, error)
+    call occupy(tb, this%evals, noc, this%Tele, this%f, error=error)
     PASS_ERROR(error)
 
     if (present(phi)) then

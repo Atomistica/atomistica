@@ -33,58 +33,6 @@ module dense_occupation
 
   private
 
-  public :: dense_solver_lapack_t
-
-  type dense_solver_lapack_t
-
-     !
-     ! Parameters
-     !
-
-     logical(BOOL)  :: enabled      = .false.
-
-     integer   :: solver_type  = 1        ! type of solver to use...
-                                          ! 0 = LAPACK standard
-                                          ! 1 = LAPACK divide-and-conquer
-                                          ! 2 = LAPACK expert
-
-     real(DP)  :: Tele         = 0.01_DP  ! Electronic temperature
-
-     integer   :: norb         = -1       ! Number of orbitals
-     integer   :: n_bands      = 10       ! Number of eigenvalues to solve for
-
-     !
-     ! The tight-binding object
-     !
-
-     type(dense_hamiltonian_t), pointer  :: tb  => NULL()
-
-     !
-     ! Solver stuff (eigenvectors and eigenvalues)
-     !
-
-     real(DP), allocatable  :: evals(:, :)                  ! eigenvalues
-     WF_T(DP), allocatable  :: evecs(:, :, :)               ! eigenvectors
-
-     real(DP), allocatable  :: f(:, :)                      ! occupation, i.e., the Fermi function
-
-     !
-     ! Work buffers
-     !
-
-     WF_T(DP), allocatable :: S2(:, :)
-
-#ifdef COMPLEX_WF
-     WF_T(DP), allocatable :: work(:)
-     real(DP), allocatable :: rwork(:)
-     integer,  allocatable :: iwork(:)
-#else
-     WF_T(DP), allocatable :: work(:)
-     integer,  allocatable :: iwork(:)
-#endif
-
-  endtype dense_solver_lapack_t
-
   save
   WF_T(DP), allocatable  :: tr_evecs(:, :)
 
@@ -99,11 +47,11 @@ contains
   function fermi_dirac(e, mu, T)
     implicit none
 
-    real(DP), intent(in)  :: e   ! energy
-    real(DP), intent(in)  :: mu  ! chemical potential
-    real(DP), intent(in)  :: T   ! temperature
+    real(DP), intent(in) :: e   ! energy
+    real(DP), intent(in) :: mu  ! chemical potential
+    real(DP), intent(in) :: T   ! temperature
 
-    real(DP)              :: fermi_dirac
+    real(DP)             :: fermi_dirac
 
     ! ---
 
@@ -138,20 +86,20 @@ contains
   ! Calculate the occupation numbers for a given number of occupied
   ! orbitals
   !**********************************************************************
-  subroutine occupy(s, tb, noc, error)
+  subroutine occupy(tb, evals, noc, Tele, F, error)
     implicit none
 
-    type(dense_solver_lapack_t), intent(inout)  :: s
-    type(dense_hamiltonian_t),   intent(inout)  :: tb
-    real(DP),                    intent(in)     :: noc
-    integer,           optional, intent(out)    :: error
+    type(dense_hamiltonian_t),   intent(inout) :: tb
+    real(DP),                    intent(in)    :: evals(tb%norb, tb%nk)
+    real(DP),                    intent(in)    :: noc
+    real(DP),                    intent(in)    :: Tele
+    real(DP),                    intent(out)   :: F(tb%norb, tb%nk)
+    integer,           optional, intent(out)   :: error
 
     ! ---
 
     real(DP)  :: mu
     integer   :: i, k
-
-#define F s%f
 
     ! ---
 
@@ -163,10 +111,10 @@ contains
     ! Find the chemical potential
     !
 
-    mu  = SolveMu(s, tb, s%Tele, 2*noc, error)
+    mu  = SolveMu(tb, evals, Tele, 2*noc, error)
     PASS_ERROR(error)
 
-    s%f = 0
+    F = 0.0_DP
 
     ! Fixme!!! This is O(N^3)!
 
@@ -176,9 +124,9 @@ contains
 
     do k = 1, tb%nk
        !$omp  parallel do default(none) &
-       !$omp& shared(k, mu, s, tb)
+       !$omp& shared(evals, f, k, mu, tb, Tele)
        do i = 1, tb%norb
-          F(i, k) = 2 * fermi_dirac(s%evals(i, k), mu, s%Tele)
+          F(i, k) = 2 * fermi_dirac(evals(i, k), mu, Tele)
        enddo
        !$omp end parallel do
     enddo
@@ -194,14 +142,14 @@ contains
   ! Returns: sum_i 2*f(e_i)-N.
   ! If mu is correct, it returns zero!
   !**********************************************************************
-  function fsum(s, tb, T, mu, N)
+  function fsum(tb, evals, T, mu, N)
     implicit none
 
-    type(dense_solver_lapack_t), intent(in)  :: s
-    type(dense_hamiltonian_t),   intent(in)  :: tb
-    real(DP),                    intent(in)  :: T, mu, N
+    type(dense_hamiltonian_t),   intent(in) :: tb
+    real(DP),                    intent(in) :: evals(tb%norb, tb%nk)
+    real(DP),                    intent(in) :: T, mu, N
 
-    real(DP)                                 :: fsum
+    real(DP)                                :: fsum
 
     ! ---
 
@@ -214,15 +162,13 @@ contains
 
     do k = 1, tb%nk
        !$omp  parallel do default(none) &
-       !$omp& shared(k, mu, s, T, tb) &
+       !$omp& shared(k, mu, evals, T, tb) &
        !$omp& reduction(+:r)
        do i = 1, tb%norb
-          r = r + 2*fermi_dirac(s%evals(i, k), mu, T)
+          r = r + 2*fermi_dirac(evals(i, k), mu, T)
        enddo
        !$omp end parallel do
     enddo
-
-!    write (*, *)  r
 
     fsum = r - N
 
@@ -240,15 +186,15 @@ contains
   !! equation for mu (e.g. Newton becomes unstable if T is very
   !! small.) Works also for exactly zero temperature.
   !>
-  function SolveMu(s, tb, T, N, error) result(res)
+  function SolveMu(tb, evals, T, N, error) result(res)
     implicit none
 
-    type(dense_solver_lapack_t), intent(in)   :: s
-    type(dense_hamiltonian_t),   intent(in)   :: tb
-    real(DP),                    intent(in)   :: T, N
-    integer,           optional, intent(out)  :: error
+    type(dense_hamiltonian_t),   intent(in)  :: tb
+    real(DP),                    intent(in)  :: evals(tb%norb, tb%nk)
+    real(DP),                    intent(in)  :: T, N
+    integer,           optional, intent(out) :: error
 
-    real(DP)                                  :: res
+    real(DP)                                 :: res
 
     ! ---
 
@@ -261,20 +207,13 @@ contains
 
     !if( N/2>tb%norb ) stop 'noc must be wrong!'
 
-    mu1  = minval(s%evals(1, :))
-    mu2  = maxval(s%evals(tb%norb, :))
+    mu1  = minval(evals(1, :))
+    mu2  = maxval(evals(tb%norb, :))
 
-!    write (*, *)  s%evals(:, :)
-!    write (*, *)  tb%norb, s%evals(1, 1)
+    fmu1 = fsum(tb, evals, T, mu1, N)
+    fmu2 = fsum(tb, evals, T, mu2, N)
 
-!    write (*, *)  "mu1, mu2 = ", mu1, mu2
-
-    fmu1 = fsum(s, tb, T, mu1, N)
-    fmu2 = fsum(s, tb, T, mu2, N)
-
-!    write (*, *)  "fmu1, fmu2 = ", fmu1, fmu2
-
-    if( fmu1*fmu2 > 0d0 ) then
+    if (fmu1*fmu2 > 0.0_DP) then
        RAISE_ERROR("Bisection algorithm could not find root. Did you specify the number of occupied orbitals? State: mu1 = " // mu1 // ", mu2 = " // mu2 // ", N(mu1)-N0 = " // fmu1 // ", N(mu2)-N0 = " // fmu2, error)
     end if
 
@@ -287,9 +226,7 @@ contains
 
        mu3  = 0.5d0*(mu1+mu2)
 
-       fmu3 = fsum(s, tb, T, mu3, N)
-
-!       write (*, *)  mu3, fmu3, N
+       fmu3 = fsum(tb, evals, T, mu3, N)
 
        if (fmu3 == 0.0) then
           mu1 = mu3
@@ -313,11 +250,12 @@ contains
   !>
   !! Construct the density matrix
   !<
-  subroutine construct_density_matrix(s, tb)
+  subroutine construct_density_matrix(tb, evecs, F)
     implicit none
 
-    type(dense_hamiltonian_t),   intent(inout)  :: tb
-    type(dense_solver_lapack_t), intent(inout)  :: s
+    type(dense_hamiltonian_t),   intent(inout) :: tb
+    real(DP),                    intent(in)    :: evecs(tb%norb, tb%norb, tb%nk)
+    real(DP),                    intent(in)    :: F(tb%norb, tb%nk)
 
     ! ---
 
@@ -338,10 +276,8 @@ contains
     ! Construct the density matrix rho_ll
     !
 
-#define F s%f
-
     k_loop: do k = 1, tb%nk
-       tr_evecs = transpose(s%evecs(:, :, k))
+       tr_evecs = transpose(evecs(:, :, k))
 
        i_loop: do ia = 1, tb%norb
           j_loop: do jb = 1, tb%norb
