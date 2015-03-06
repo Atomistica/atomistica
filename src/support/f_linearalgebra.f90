@@ -439,7 +439,7 @@ contains
     call dgesv(N, N, A, N, ipiv, B, N, info)
 
     if (info /= 0) then
-       RAISE_ERROR("Failed to compute inverse.", error)
+       RAISE_ERROR("Failed to compute inverse of "//N//"x"//N//" matrix.", error)
     endif
   endfunction dinverse
 
