@@ -569,7 +569,8 @@ contains
     ! Extrapolate charges
     !
 
-    call extrapolate_charges(this, p, q)
+    call extrapolate_charges(this, p, q, error=error)
+    PASS_ERROR(error)
 
     !
     ! Init
@@ -779,14 +780,18 @@ contains
        enddo
 
        alpha = matmul(inverse(a, error=error), b)
-       PASS_ERROR(error)
-
-       !                q(t) - q(t-dt)
-       q = q0 + alpha(1)*(q0 - this%q(1:p%nat, modulo(this%history_counter-1, this%extrapolation_memory)+1))
-       do i = 2, this%extrapolation_memory-1
-          q = q + alpha(i)*(this%q(1:p%nat, modulo(this%history_counter-i+1, this%extrapolation_memory)+1) - &
-                            this%q(1:p%nat, modulo(this%history_counter-i, this%extrapolation_memory)+1))
-       enddo
+       if (error == ERROR_NONE) then
+          !                q(t) - q(t-dt)
+          q = q0 + alpha(1)*(q0 - this%q(1:p%nat, modulo(this%history_counter-1, this%extrapolation_memory)+1))
+          do i = 2, this%extrapolation_memory-1
+             q = q + alpha(i)*(this%q(1:p%nat, modulo(this%history_counter-i+1, this%extrapolation_memory)+1) - &
+                               this%q(1:p%nat, modulo(this%history_counter-i, this%extrapolation_memory)+1))
+          enddo
+       else
+          call prlog("Warning: Unable to extrapolate charges. Resetting history.")
+          call clear_error(error)
+          this%history_counter = 0
+       endif
     endif
 
     this%history_counter = this%history_counter+1
