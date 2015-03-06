@@ -60,7 +60,7 @@ module slater_charges
 
   private
 
-  integer, parameter  :: SLATER_CHARGES_MAX_EL  = 3
+  integer, parameter  :: SLATER_CHARGES_MAX_EL = 16
 
   !
   ! The module for the computation of energies/potentials
@@ -236,6 +236,10 @@ contains
        call prlog("Z = "//Z)
     endif
 
+    if (p%nel > SLATER_CHARGES_MAX_EL) then
+       RAISE_ERROR("Number of elements > SLATER_CHARGES_MAX_EL", error)
+    endif
+
     !this%db%nel = p%nel
     this%db%nU = p%nel
     this%db%nZ = p%nel
@@ -329,7 +333,7 @@ contains
           this%U(1:this%db%nU) = this%db%U(1:this%db%nU) / (Hartree*Bohr)
        endif          
        if (this%db%nZ > 0) then
-          this%Z(1:this%db%nU) = this%db%Z(1:this%db%nU)
+          this%Z(1:this%db%nZ) = this%db%Z(1:this%db%nZ)
        endif
     endif
 
