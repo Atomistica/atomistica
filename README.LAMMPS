@@ -2,6 +2,7 @@ To compile the LAMMPS-Atomistica interface do the following:
 
 1. In the build_lammps directory do
 
+    make -f <Makefile> lammps_factories
     make -f <Makefile> atomistica
 
    Here <Makefile> is some makefile configured for your environment.
