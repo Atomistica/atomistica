@@ -433,6 +433,12 @@ class Atomistica(object):
         return self.phi
 
 
+    def get_per_bond_property(self, name):
+        for pot in self.pots:
+            if hasattr(pot, 'get_per_bond_property'):
+                return pot.get_per_bond_property(self.particles, self.nl, name)
+
+
     def calculate(self):
         self.epot = 0.0
         self.forces = np.zeros([len(self.particles),3])

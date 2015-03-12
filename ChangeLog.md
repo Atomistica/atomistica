@@ -4,8 +4,17 @@ TODO
 - Make TabulatedEAM work for alloys. Probably useful to rename TabulatedEAM
   to FuncflEAM and TabulatedAlloyEAM to SetflEAM at this point.
 
+- Remove need for (undocumented) elements.dat file for Slater-Koster
+  databases.
+
 Change log
 ==========
+
+HEAD
+----
+
+- Made NOTB per-bond analysis tools available from Python (added
+  get_per_bond_property method)
 
 v0.3.1
 ------

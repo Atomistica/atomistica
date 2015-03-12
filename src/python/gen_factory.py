@@ -179,6 +179,26 @@ def write_factory_f90(mods, str, fn):
                     "  call set_Coulomb(this_fptr, coul_cptr, ierror=error)\n" +
                     "endsubroutine python_%s_set_Coulomb\n\n\n" % f90name)
 
+        if 'get_per_bond_property' in methods:
+            f.write("subroutine python_%s_get_per_bond_property(this_cptr, p_cptr, nl_cptr, propstr, propout, error) bind(C)\n" % f90name +
+                    "  use, intrinsic :: iso_c_binding\n\n" +
+                    "  implicit none\n\n" +
+                    "  type(c_ptr), value :: this_cptr\n" +
+                    "  type(c_ptr), value :: p_cptr\n" +
+                    "  type(c_ptr), value :: nl_cptr\n" +
+                    "  type(c_ptr), value :: propstr\n" +
+                    "  real(c_double), intent(out) :: propout(*)\n\n" +
+                    "  integer(c_int), intent(out) :: error\n\n" +
+                    "  type(%s_t), pointer :: this_fptr\n" % f90name +
+                    "  type(particles_t), pointer :: p\n" +
+                    "  type(neighbors_t), pointer :: nl\n" +
+                    "  error = ERROR_NONE\n" +
+                    "  call c_f_pointer(this_cptr, this_fptr)\n" +
+                    "  call c_f_pointer(p_cptr, p)\n" +
+                    "  call c_f_pointer(nl_cptr, nl)\n" +
+                    "  if (.not. associated(this_fptr))   stop '[python_%s_get_per_bond_property] *this_fptr* is NULL.'\n" % f90name +
+                    "  call get_per_bond_property(this_fptr, p, nl, a2s(c_f_string(propstr)), propout, error=error)\n" +
+                    "endsubroutine python_%s_get_per_bond_property\n\n\n" % f90name)
 
         f.write("subroutine python_%s_bind_to(this_cptr, p_cptr, nl_cptr, error) bind(C)\n" % f90name +
                 "  use, intrinsic :: iso_c_binding\n\n" +
@@ -351,6 +371,10 @@ void python_%s_bind_to(void *, void *, void *, int *);
             s += """
 void python_%s_set_coulomb(void *, void *, int *);
             """ % f90name
+        if 'get_per_bond_property' in methods:
+            s += """
+void python_%s_get_per_bond_property(void *, void *, void *, char *, double *, int *);
+            """ % f90name
         s += """
 void python_%s_energy_and_forces(void *, void *, void *, double *, double *, double *, int *, double *, double *, double *, double *, double *, double *, int *);
         """ % f90name
@@ -372,6 +396,10 @@ void python_%s_energy_and_forces(void *, void *, void *, double *, double *, dou
         s += "    python_%s_bind_to,\n" % f90name
         if 'set_coulomb' in methods:
             s += "    python_%s_set_coulomb,\n" % f90name
+        else:
+            s += "    NULL,\n"
+        if 'get_per_bond_property' in methods:
+            s += "    python_%s_get_per_bond_property,\n" % f90name
         else:
             s += "    NULL,\n"
         s += "    python_%s_energy_and_forces,\n" % f90name

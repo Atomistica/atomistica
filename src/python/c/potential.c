@@ -315,6 +315,53 @@ potential_set_Coulomb(potential_t *self, PyObject *args)
 
 
 static PyObject *
+potential_get_per_bond_property(potential_t *self, PyObject *args)
+{
+  int ierror = ERROR_NONE;
+  PyObject *coul;
+
+#ifdef DEBUG
+  printf("[potential_get_per_bond_property] self = %p\n", self);
+#endif
+
+  if (!self->f90class->get_per_bond_property) {
+    char errstr[1024];
+    sprintf(errstr, "Potential %s does not implement get_per_bond_property.",
+            self->f90class->name);
+    PyErr_SetString(PyExc_RuntimeError, errstr);
+    return NULL;
+  }
+
+  particles_t *a;
+  neighbors_t *n;
+  char *propname;
+  if (!PyArg_ParseTuple(args, "O!O!s", &particles_type, &a, &neighbors_type, &n, &propname))
+    return NULL;
+
+  /* Get property from potential object */
+  npy_intp dims[1];
+  dims[0] = get_neighbors_size(n, a);
+  PyObject *tmp = PyArray_ZEROS(1, dims, NPY_DOUBLE, 1);
+  self->f90class->get_per_bond_property(self->f90obj, a->f90obj, n->f90obj,
+                                        propname, PyArray_DATA(tmp), &ierror);
+  if (error_to_py(ierror)) {
+    Py_DECREF(tmp);
+    return NULL;
+  }
+
+  /* Pack neighbor list into Python format */
+  dims[0] = get_number_of_all_neighbors(n, a);
+  PyObject *prop = PyArray_ZEROS(1, dims, NPY_DOUBLE, 1);
+  f_pack_per_bond_scalar(n->f90obj, PyArray_DATA(tmp), PyArray_DATA(prop));
+
+  /* Release temporary buffer */
+  Py_DECREF(tmp);
+
+  return prop;
+}
+
+
+static PyObject *
 potential_energy_and_forces(potential_t *self, PyObject *args, PyObject *kwargs)
 {
   static char *kwlist[] = {
@@ -646,6 +693,8 @@ static PyMethodDef potential_methods[] = {
     "to be called if either one changes." },
   { "set_Coulomb", (PyCFunction) potential_set_Coulomb, METH_VARARGS,
     "Set the object that handles Coulomb callbacks." },
+  { "get_per_bond_property", (PyCFunction) potential_get_per_bond_property, METH_VARARGS,
+    "Return a named property that is defined per bond." },
   { "energy_and_forces", (PyCFunction) potential_energy_and_forces,
     METH_KEYWORDS, "Compute the forces and return the potential energy." },
   { NULL, NULL, 0, NULL }  /* Sentinel */

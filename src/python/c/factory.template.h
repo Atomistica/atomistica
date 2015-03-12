@@ -43,6 +43,7 @@ typedef struct __%(name)s_class_t {
   void (*init)(void *, int *);
   void (*bind_to)(void *, void *, void *, int *);
   void (*set_Coulomb)(void *, void *, int *);
+  void (*get_per_bond_property)(void *, void *, void *, char *, double *, int *);
   void (*energy_and_forces)(void *, void *, void *, double *, double *,
                             double *, int *, double *, double *, double *,
                             double *, double *, double *, int *);
