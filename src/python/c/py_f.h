@@ -55,6 +55,8 @@ void py_to_error(char *file, int line, int *ierror);
 
 /* Initialize an F90-object from a Python dictionary */
 
+int pyobject_to_property(PyObject *value, property_t *p);
 int pydict_to_ptrdict(PyObject *dict, section_t *s);
+PyObject *property_to_pyobject(property_t *p);
 
 #endif
