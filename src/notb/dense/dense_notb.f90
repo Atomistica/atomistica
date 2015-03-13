@@ -186,6 +186,11 @@ module dense_notb
      module procedure dense_notb_set_Coulomb
   endinterface
 
+  public :: get_dict
+  interface get_dict
+     module procedure dense_notb_get_dict
+  endinterface
+
   public :: get_per_bond_property
   interface get_per_bond_property
      module procedure dense_notb_get_per_bond_property
@@ -535,6 +540,30 @@ contains
     endif
 
   endsubroutine dense_notb_get_per_bond_property
+
+
+  !>
+  !! Return dictionary object containing pointers to internal data
+  !<
+  subroutine dense_notb_get_dict(this, dict, error)
+    implicit none
+
+    type(dense_notb_t), intent(inout) :: this        !< NOTB object
+    type(ptrdict_t),    intent(inout) :: dict
+    integer,  optional, intent(out)   :: error       !< Error signals
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    call get_dict(this%tb, dict, error)
+    PASS_ERROR(error)
+    if (associated(this%solver)) then
+       call get_dict(this%solver, dict, error)
+       PASS_ERROR(error)
+    endif
+
+  endsubroutine dense_notb_get_dict
 
 
   !>
