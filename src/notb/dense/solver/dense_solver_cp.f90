@@ -248,12 +248,13 @@ contains
     ! ---
 
     INIT_ERROR(error)
-    call c_f_pointer(tb%S, tb_S, [tb%norb, tb%norb, tb%nk])
-    call c_f_pointer(tb%H, tb_H, [tb%norb, tb%norb, tb%nk])
 
     if (.not. associated(this%tb, tb)) then
        call set_Hamiltonian(this, tb)
     endif
+
+    call c_f_pointer(tb%S, tb_S, [tb%norb, tb%norb, tb%nk])
+    call c_f_pointer(tb%H, tb_H, [tb%norb, tb%norb, tb%nk])
 
     call timer_start("dense_solver_cp_diag_start")
 
