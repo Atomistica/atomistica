@@ -43,7 +43,7 @@
 
 /* Create a new group */
 section_t *ptrdict_register_group(section_t *self, int kind, char *name,
-				 char *description, char *alias)
+				                          char *description, char *alias)
 {
   section_t *new_section;
   section_t *i;
@@ -127,7 +127,7 @@ section_t *ptrdict_register_group(section_t *self, int kind, char *name,
 
 /* Create a new section */
 section_t *ptrdict_register_section(section_t *self, char *name,
-				   char *description)
+				                            char *description)
 {
   return ptrdict_register_group(self, SK_SECTION, name, description, NULL);
 }
@@ -135,7 +135,7 @@ section_t *ptrdict_register_section(section_t *self, char *name,
 
 /* Create a new module */
 section_t *ptrdict_register_module(section_t *self, BOOL *notification,
-				  char *name, char *description)
+				                           char *name, char *description)
 {
   section_t *s;
   
@@ -164,11 +164,6 @@ property_t *ptrdict_register_property(section_t *self, int kind, void *ptr,
 #ifdef DEBUG
   printf("ptrdict_register_property: %p %i %p %s %s\n", self, kind, ptr, name, description);
 #endif
-
-  if (!ptr) {
-    printf("[ptrdict_register_property] Internal error: Null pointer provided for *ptr*: self: %p kind: %i ptr: %p name: %s descr.: %s\n", self, kind, ptr, name, description);
-    exit(1);
-  }
 
   new_property = (property_t*) malloc(sizeof(property_t));
   new_property->kind = kind;
@@ -421,7 +416,14 @@ void ptrdict_set_property(property_t *p, char *value)
   char *c1, *c2, *endptr1, *endptr2;
 
   if (p->provided) {
-    printf("[ptrdict_set_property] Error: Property '%s' of section '%s' has already been set.\n", p->name, p->parent->name);
+    printf("[ptrdict_set_property] Error: Property '%s' of section '%s' has "
+           "already been set.\n", p->name, p->parent->name);
+    exit(1);
+  }
+
+  if (!p->ptr) {
+    printf("[ptrdict_set_property] Error: Trying to set property '%s' of "
+           "section '%s' which has NULL pointer.\n", p->name, p->parent->name);
     exit(1);
   }
 
@@ -434,8 +436,9 @@ void ptrdict_set_property(property_t *p, char *value)
     i = strtol(value, &endptr, 10);
 
     if (endptr != value+strlen(value)) {
-      printf("[ptrdict_set_property] Error: Cannot convert '%s' to integer for property '%s' of section '%s'.\n",
-	     value, p->name, p->parent->name);
+      printf("[ptrdict_set_property] Error: Cannot convert '%s' to integer "
+             "for property '%s' of section '%s'.\n", value, p->name,
+             p->parent->name);
       exit(1);
     }
 
