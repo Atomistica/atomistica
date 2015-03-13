@@ -179,6 +179,22 @@ def write_factory_f90(mods, str, fn):
                     "  call set_Coulomb(this_fptr, coul_cptr, ierror=error)\n" +
                     "endsubroutine python_%s_set_Coulomb\n\n\n" % f90name)
 
+        if 'get_dict' in methods:
+            f.write("subroutine python_%s_get_dict(this_cptr, dict_cptr, error) bind(C)\n" % f90name +
+                    "  use, intrinsic :: iso_c_binding\n\n" +
+                    "  implicit none\n\n" +
+                    "  type(c_ptr), value :: this_cptr\n" +
+                    "  type(c_ptr), value :: dict_cptr\n" +
+                    "  integer(c_int), intent(out) :: error\n\n" +
+                    "  type(%s_t), pointer :: this_fptr\n" % f90name +
+                    "  type(ptrdict_t) :: dict\n" +
+                    "  error = ERROR_NONE\n" +
+                    "  call c_f_pointer(this_cptr, this_fptr)\n" +
+                    "  dict%ptrdict = dict_cptr\n" +
+                    "  if (.not. associated(this_fptr))   stop '[python_%s_get_dict] *this_fptr* is NULL.'\n" % f90name +
+                    "  call get_dict(this_fptr, dict, error=error)\n" +
+                    "endsubroutine python_%s_get_dict\n\n\n" % f90name)
+
         if 'get_per_bond_property' in methods:
             f.write("subroutine python_%s_get_per_bond_property(this_cptr, p_cptr, nl_cptr, propstr, propout, error) bind(C)\n" % f90name +
                     "  use, intrinsic :: iso_c_binding\n\n" +
@@ -371,6 +387,10 @@ void python_%s_bind_to(void *, void *, void *, int *);
             s += """
 void python_%s_set_coulomb(void *, void *, int *);
             """ % f90name
+        if 'get_dict' in methods:
+            s += """
+void python_%s_get_dict(void *, void *, int *);
+            """ % f90name
         if 'get_per_bond_property' in methods:
             s += """
 void python_%s_get_per_bond_property(void *, void *, void *, char *, double *, int *);
@@ -396,6 +416,10 @@ void python_%s_energy_and_forces(void *, void *, void *, double *, double *, dou
         s += "    python_%s_bind_to,\n" % f90name
         if 'set_coulomb' in methods:
             s += "    python_%s_set_coulomb,\n" % f90name
+        else:
+            s += "    NULL,\n"
+        if 'get_dict' in methods:
+            s += "    python_%s_get_dict,\n" % f90name
         else:
             s += "    NULL,\n"
         if 'get_per_bond_property' in methods:

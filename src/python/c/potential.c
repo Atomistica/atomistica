@@ -134,103 +134,56 @@ potential_getattro(potential_t *self, PyObject *pyname)
 {
   char *name;
   property_t *p;
-  PyObject *r = NULL;
-  PyArrayObject *arr;
-  npy_intp dims[3];
-  double *data;
-  PyObject **odata;
-  int i, j, k;
 
   name = PyString_AsString(pyname);
-  if (!name)
-    return NULL;
+  if (!name) return NULL;
 
+#ifdef DEBUG
+  printf("[potential_getattro] %p %p %s\n", self, pyname, name);
+#endif
+
+  /* Search potential parameter data */
   p = self->f90members->first_property;
 
   while (p != NULL && strcmp(p->name, name)) {
+#ifdef DEBUG
+    printf("[potential_getattro] p->name = %s\n", p->name);
+#endif
     p = p->next;
   }
 
-  if (p) {
-    r = NULL;
-    switch (p->kind) {
-    case PK_INT:
-      r = PyInt_FromLong(*((int*) p->ptr));
-      break;
-    case PK_DOUBLE:
-      r = PyFloat_FromDouble(*((double*) p->ptr));
-      break;
-    case PK_BOOL:
-      r = PyBool_FromLong(*((BOOL*) p->ptr));
-      break;
-    case PK_LIST:
-      if (*p->tag5 == 1) {
-        r = PyFloat_FromDouble(*((double*) p->ptr));
-      } else {
-        dims[0] = *p->tag5;
-        arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims,
-                                                 NPY_DOUBLE);
-        data = (double *) PyArray_DATA(arr);
-        for (i = 0; i < *p->tag5; i++) {
-          data[i] = ((double*) p->ptr)[i];
-        }
-        r = (PyObject*) arr;
-      }
-      break;
-    case PK_FORTRAN_STRING_LIST:
-      if (*p->tag5 == 1) {
-        r = fstring_to_pystring((char*) p->ptr, p->tag);
-      } else {
-        dims[0] = *p->tag5;
-        arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims,
-                                                 NPY_OBJECT);
-        odata = (PyObject **) PyArray_DATA(arr);
-        for (i = 0; i < *p->tag5; i++) {
-          odata[i] = fstring_to_pystring(((char*) p->ptr + i*p->tag), p->tag);
-        }
-        r = (PyObject*) arr;
-      }
-      break;
-    case PK_ARRAY2D:
-      dims[0] = p->tag;
-      dims[1] = p->tag2;
-      arr = (PyArrayObject*) PyArray_SimpleNew(2, (npy_intp*) dims, NPY_DOUBLE);
-      data = (double *) PyArray_DATA(arr);
-      for (i = 0; i < p->tag; i++) {
-        for (j = 0; j < p->tag2; j++) {
-          data[j + i*p->tag2] = ((double*) p->ptr)[i + j*p->tag];
-        }
-      }
-      //        memcpy(data, p->ptr, p->tag*p->tag2*sizeof(double));
-      r = (PyObject*) arr;
-      break;
-    case PK_ARRAY3D:
-      dims[0] = p->tag;
-      dims[1] = p->tag2;
-      dims[2] = p->tag3;
-      arr = (PyArrayObject*) PyArray_SimpleNew(3, (npy_intp*) dims, NPY_DOUBLE);
-      data = (double *) PyArray_DATA(arr);
-      for (i = 0; i < p->tag; i++) {
-        for (j = 0; j < p->tag2; j++) {
-          for (k = 0; k < p->tag3; k++) {
-            data[k + (j + i*p->tag2)*p->tag3] = 
-              ((double*) p->ptr)[i + (j + k*p->tag2)*p->tag];
-          }
-        }
-      }
-      //        memcpy(data, p->ptr, p->tag*p->tag2*p->tag3*sizeof(double));
-      r = (PyObject*) arr;
-      break;
-    default:
-      PyErr_SetString(PyExc_TypeError, "Internal error: Unknown type encountered in section.");
-      break;
+  if (p) return property_to_pyobject(p);
+
+  /* Not in parameter data? Search in state data */
+  if (self->f90class->get_dict) {
+#ifdef DEBUG
+    printf("[potential_getattro] searching state dictionary\n");
+#endif
+
+    int ierror = ERROR_NONE;
+    section_t *s = ptrdict_register_section(NULL, self->f90class->name, "");
+    PyObject *r = NULL;
+    
+    self->f90class->get_dict(self->f90obj, s, &ierror);
+
+    if (error_to_py(ierror))
+      return NULL;
+
+    p = s->first_property;
+    while (p != NULL && strcmp(p->name, name)) {
+#ifdef DEBUG
+      printf("[potential_getattro] p->name = %s\n", p->name);
+#endif
+      p = p->next;
     }
-  } else {
-    r = PyObject_GenericGetAttr((PyObject *) self, pyname);
-    // Py_FindMethod(self->ob_type->tp_methods, (PyObject *) self, name);
+
+    if (p) r = property_to_pyobject(p);
+    ptrdict_cleanup(s);
+    if (r) return r;
   }
 
-  return r;
+  /* Fall back to default getattro */
+  return PyObject_GenericGetAttr((PyObject *) self, pyname);
 }
 
 
@@ -721,16 +674,15 @@ PyTypeObject potential_type = {
     (reprfunc)potential_str,                    /*tp_str*/
     (getattrofunc)potential_getattro,           /*tp_getattro*/
     0,                                          /*tp_setattro*/
-    //    (setattrofunc)potential_setattro,    /*tp_setattro*/
     0,                                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   /*tp_flags*/
     "Potential objects",                        /* tp_doc */
-    0,                                      /* tp_traverse */
-    0,                                      /* tp_clear */
-    0,                                      /* tp_richcompare */
-    0,                                      /* tp_weaklistoffset */
-    0,                                      /* tp_iter */
-    0,                                      /* tp_iternext */
+    0,                                          /* tp_traverse */
+    0,                                          /* tp_clear */
+    0,                                          /* tp_richcompare */
+    0,                                          /* tp_weaklistoffset */
+    0,                                          /* tp_iter */
+    0,                                          /* tp_iternext */
     potential_methods,                          /* tp_methods */
     0,                                          /* tp_members */
     0,                                          /* tp_getset */
