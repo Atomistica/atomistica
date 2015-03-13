@@ -153,6 +153,11 @@ module dense_solver_lapack
      module procedure dense_solver_lapack_mulliken
   endinterface
 
+  public :: get_dict
+  interface get_dict
+     module procedure dense_solver_lapack_get_dict
+  endinterface
+
   public :: register
   interface register
      module procedure dense_solver_lapack_register
@@ -962,6 +967,26 @@ contains
     call timer_stop('construct_density_and_energy_matrix')
     
   endsubroutine construct_density_and_energy_matrix
+
+
+  !>
+  !! Return dictionary object containing pointers to internal data
+  !<
+  subroutine dense_solver_lapack_get_dict(this, dict, error)
+    implicit none
+
+    type(dense_solver_lapack_t), intent(inout) :: this        !< NOTB object
+    type(ptrdict_t),             intent(inout) :: dict
+    integer,           optional, intent(out)   :: error       !< Error signals
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    call register(dict, this%evals(:, 1), "eigenvalues")
+    call register(dict, this%f(:, 1), "occupation")
+
+  endsubroutine dense_solver_lapack_get_dict
 
 
   !>
