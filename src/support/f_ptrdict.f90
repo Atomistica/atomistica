@@ -261,4 +261,296 @@ module ptrdict
      endsubroutine ptrdict_write
   endinterface
 
+  !
+  ! Fortran-90 wrapper
+  !
+
+  type ptrdict_t
+     type(c_ptr) :: ptrdict
+  endtype ptrdict_t
+
+  interface register_section
+     module procedure fptrdict_register_section
+  endinterface
+
+  interface register
+     module procedure fptrdict_register_integer_property
+     module procedure fptrdict_register_real_property
+     module procedure fptrdict_register_boolean_property
+     module procedure fptrdict_register_string_property
+     module procedure fptrdict_register_point_property
+     module procedure fptrdict_register_intpoint_property
+     module procedure fptrdict_register_array2d_property
+     module procedure fptrdict_register_array3d_property
+  endinterface
+
+  interface cleanup
+     module procedure fptrdict_cleanup
+  endinterface
+
+  interface read
+     module procedure fptrdict_read
+  endinterface
+
+  interface write
+     module procedure fptrdict_write
+  endinterface
+
+contains
+
+  function fptrdict_register_section(this, name, description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    type(ptrdict_t)                    :: fptrdict_register_section
+
+    ! ---
+
+    if (present(description)) then
+       fptrdict_register_section%ptrdict = &
+          ptrdict_register_section(this%ptrdict, CSTR(name), CSTR(description))
+    else
+       fptrdict_register_section%ptrdict = &
+          ptrdict_register_section(this%ptrdict, CSTR(name), CSTR("N/A"))
+    endif
+
+  endfunction fptrdict_register_section
+
+
+  subroutine fptrdict_register_integer_property(this, ptr, name, description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    integer(C_INT),         target     :: ptr
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    ! ---
+
+    if (present(description)) then
+       call ptrdict_register_integer_property(this%ptrdict, c_loc(ptr), &
+                                              CSTR(name), CSTR(description))
+    else
+       call ptrdict_register_integer_property(this%ptrdict, c_loc(ptr), &
+                                              CSTR(name), CSTR("N/A"))
+    endif
+
+  endsubroutine fptrdict_register_integer_property
+
+
+  subroutine fptrdict_register_real_property(this, ptr, name, description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    real(C_DOUBLE),         target     :: ptr
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    ! ---
+
+    if (present(description)) then
+       call ptrdict_register_real_property(this%ptrdict, c_loc(ptr), &
+                                           CSTR(name), CSTR(description))
+    else
+       call ptrdict_register_real_property(this%ptrdict, c_loc(ptr), &
+                                           CSTR(name), CSTR("N/A"))
+    endif
+
+  endsubroutine fptrdict_register_real_property
+
+
+  subroutine fptrdict_register_boolean_property(this, ptr, name, description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    logical(C_BOOL),        target     :: ptr
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    ! ---
+
+    if (present(description)) then
+       call ptrdict_register_boolean_property(this%ptrdict, c_loc(ptr), &
+                                              CSTR(name), CSTR(description))
+    else
+       call ptrdict_register_boolean_property(this%ptrdict, c_loc(ptr), &
+                                              CSTR(name), CSTR("N/A"))
+    endif
+
+  endsubroutine fptrdict_register_boolean_property
+
+
+  subroutine fptrdict_register_string_property(this, ptr, maxlen, name, &
+                                               description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    character(*),           target     :: ptr
+    integer(c_int),         intent(in) :: maxlen
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    ! ---
+
+    if (present(description)) then
+       call ptrdict_register_string_property(this%ptrdict, c_loc(ptr), maxlen, &
+                                             CSTR(name), CSTR(description))
+    else
+       call ptrdict_register_string_property(this%ptrdict, c_loc(ptr), maxlen, &
+                                             CSTR(name), CSTR("N/A"))
+    endif
+
+  endsubroutine fptrdict_register_string_property
+
+
+  subroutine fptrdict_register_point_property(this, ptr, name, description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    real(C_DOUBLE),         target     :: ptr(3)
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    ! ---
+
+    if (present(description)) then
+       call ptrdict_register_point_property(this%ptrdict, c_loc(ptr), &
+                                            CSTR(name), CSTR(description))
+    else
+       call ptrdict_register_point_property(this%ptrdict, c_loc(ptr), &
+                                            CSTR(name), CSTR("N/A"))
+    endif
+
+  endsubroutine fptrdict_register_point_property
+
+
+  subroutine fptrdict_register_intpoint_property(this, ptr, name, description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    integer(C_INT),         target     :: ptr(3)
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    ! ---
+
+    if (present(description)) then
+       call ptrdict_register_intpoint_property(this%ptrdict, c_loc(ptr), &
+                                               CSTR(name), CSTR(description))
+    else
+       call ptrdict_register_intpoint_property(this%ptrdict, c_loc(ptr), &
+                                               CSTR(name), CSTR("N/A"))
+    endif
+
+  endsubroutine fptrdict_register_intpoint_property
+
+
+  subroutine fptrdict_register_array2d_property(this, ptr, name, description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    real(C_DOUBLE),         target     :: ptr(:, :)
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    ! ---
+
+    if (present(description)) then
+       call ptrdict_register_array2d_property(this%ptrdict, c_loc(ptr), &
+                                              size(ptr, 1), size(ptr, 2), &
+                                              CSTR(name), CSTR(description))
+    else
+       call ptrdict_register_array2d_property(this%ptrdict, c_loc(ptr), &
+                                              size(ptr, 1), size(ptr, 2), &
+                                              CSTR(name), CSTR("N/A"))
+    endif
+
+  endsubroutine fptrdict_register_array2d_property
+
+
+  subroutine fptrdict_register_array3d_property(this, ptr, name, description)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t),        intent(in) :: this
+    real(C_DOUBLE),         target     :: ptr(:, :, :)
+    character(*),           intent(in) :: name
+    character(*), optional, intent(in) :: description
+
+    ! ---
+
+    if (present(description)) then
+       call ptrdict_register_array3d_property(this%ptrdict, c_loc(ptr), &
+                                              size(ptr, 1), size(ptr, 2), &
+                                              size(ptr, 3), &
+                                              CSTR(name), CSTR(description))
+    else
+       call ptrdict_register_array3d_property(this%ptrdict, c_loc(ptr), &
+                                              size(ptr, 1), size(ptr, 2), &
+                                              size(ptr, 3), &
+                                              CSTR(name), CSTR("N/A"))
+    endif
+
+  endsubroutine fptrdict_register_array3d_property
+
+
+  subroutine fptrdict_cleanup(root)
+    implicit none
+
+    type(ptrdict_t), intent(in) :: root
+
+    ! ---
+
+    call ptrdict_cleanup(root%ptrdict)
+
+  endsubroutine fptrdict_cleanup
+
+     
+  subroutine fptrdict_read(root, fn)
+    implicit none
+
+    type(ptrdict_t), intent(in) :: root
+    character(*),    intent(in) :: fn
+
+    ! ---
+
+    call ptrdict_read(root%ptrdict, fn)
+
+  endsubroutine fptrdict_read
+
+     
+  subroutine fptrdict_write(root, fn)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(ptrdict_t), intent(in) :: root
+    character(*),    intent(in) :: fn
+
+    ! ---
+
+    call ptrdict_write(root%ptrdict, fn)
+
+  endsubroutine fptrdict_write
+  
 endmodule ptrdict
