@@ -35,14 +35,13 @@
 module dense_solver
   use, intrinsic :: iso_c_binding
 
-  use libAtoms_module
+  use supplib
 
   use particles
 
   use materials
 
   use dense_hamiltonian_type
-  use dense_occupation
 
   use dense_solver_cp
   use dense_solver_lapack
@@ -54,8 +53,8 @@ module dense_solver
   public :: dense_solver_t
   type dense_solver_t
 
-     type(dense_solver_cp_t),      pointer  :: cp      => NULL()
-     type(dense_solver_lapack_t),  pointer  :: lapack  => NULL()
+     type(dense_solver_cp_t),       pointer :: cp       => NULL()
+     type(dense_solver_lapack_t),   pointer :: lapack   => NULL()
 
   endtype dense_solver_t
 
@@ -99,6 +98,11 @@ module dense_solver
      module procedure dense_solver_mulliken
   endinterface
 
+  public :: get_dict
+  interface get_dict
+     module procedure dense_solver_get_dict
+  endinterface
+
   public :: register
   interface register
      module procedure dense_solver_register
@@ -136,7 +140,7 @@ contains
     if (associated(this%cp) .and. &
          associated(this%lapack)) then
        n = sum( [ l2i(this%cp%enabled), &
-            l2i(this%lapack%enabled) ] )
+                  l2i(this%lapack%enabled) ] )
        if (n > 1) then
           RAISE_ERROR("Please specify only a single solver for the dense NOTB module.", error)
        endif
@@ -146,8 +150,8 @@ contains
           this%lapack%enabled = .true.
        endif
 
-       if (.not. this%cp%enabled)       deallocate(this%cp)
-       if (.not. this%lapack%enabled)   deallocate(this%lapack)
+       if (.not. this%cp%enabled)        deallocate(this%cp)
+       if (.not. this%lapack%enabled)    deallocate(this%lapack)
     endif
 
     if (associated(this%cp)) then
@@ -321,6 +325,28 @@ contains
     endif
 
   endfunction dense_solver_e_bs
+
+
+  !>
+  !! Return dictionary object containing pointers to internal data
+  !<
+  subroutine dense_solver_get_dict(this, dict, error)
+    implicit none
+
+    type(dense_solver_t), intent(inout) :: this        !< NOTB object
+    type(ptrdict_t),      intent(inout) :: dict
+    integer,    optional, intent(out)   :: error       !< Error signals
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    if (associated(this%lapack)) then
+       call get_dict(this%lapack, dict, error)
+       PASS_ERROR(error)
+    endif
+
+  endsubroutine dense_solver_get_dict
 
 
   !>
