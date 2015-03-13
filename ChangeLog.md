@@ -13,6 +13,8 @@ Change log
 HEAD
 ----
 
+- Object introspection from Python
+
 - Made NOTB per-bond analysis tools available from Python (added
   get_per_bond_property method)
 
