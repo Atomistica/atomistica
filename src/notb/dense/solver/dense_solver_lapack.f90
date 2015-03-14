@@ -981,10 +981,22 @@ contains
 
     ! ---
 
+    integer :: nk
+
+    ! ---
+
     INIT_ERROR(error)
 
-    call register(dict, this%evals(:, 1), "eigenvalues")
-    call register(dict, this%f(:, 1), "occupation")
+    nk = size(this%evals, 2)
+    if (nk == 1) then
+       call register(dict, this%evals(:, 1), "eigenvalues")
+       call register(dict, this%evecs(:, :, 1), "eigenvectors")
+       call register(dict, this%f(:, 1), "occupation")
+    else
+       call register(dict, this%evals, "eigenvalues")
+       call register(dict, this%evecs, "eigenvectors")
+       call register(dict, this%f, "occupation")
+    endif
 
   endsubroutine dense_solver_lapack_get_dict
 
