@@ -368,6 +368,52 @@ pyobject_to_property(PyObject *value, property_t *p)
       *((int*) p->ptr) = j;
     };
     break;
+  case PK_ARRAY1D:
+    if (!PyArray_Check(value)) {
+      sprintf(errstr,
+              "Property '%s' of section '%s' should be a 1d array "
+              "of floats.\n",
+              p->name, p->parent->name);
+      PyErr_SetString(PyExc_TypeError, errstr);
+      return -1;
+    }
+    arr = (PyArrayObject *) value;
+    if (!PyArray_ISFLOAT(arr)) {
+      sprintf(errstr,
+              "Property '%s' of section '%s' should be a 1d array "
+              "of floats.\n",
+              p->name, p->parent->name);
+      PyErr_SetString(PyExc_TypeError, errstr);
+      return -1;
+    }
+    if (arr->nd != 1) {
+      PyErr_SetString(PyExc_TypeError, "Array needs to be 1-dimensional.");
+      return -1;
+    }
+    if (PyArray_DIM(arr, 0) != p->tag) {
+      sprintf(errstr, "Wrong dimensions: Array needs to be of length %i.", 
+              p->tag, p->tag2);
+      PyErr_SetString(PyExc_TypeError, errstr);
+      return -1;
+    }
+    /* Type conversion madness */
+    switch (arr->descr->type_num) {
+    case NPY_FLOAT:
+      for (i = 0; i < p->tag; i++) {
+        ((double*) p->ptr)[i] = ((npy_float *) PyArray_DATA(arr))[i];
+      }
+      break;
+    case NPY_DOUBLE:
+      for (i = 0; i < p->tag; i++) {
+        ((double*) p->ptr)[i] = ((npy_double *) PyArray_DATA(arr))[i];
+      }
+      break;
+    default:
+      PyErr_SetString(PyExc_TypeError, "Don't know how to convert from "
+                      "numpy float type.");
+      return -1;
+    }
+    break;
   case PK_ARRAY2D:
     if (!PyArray_Check(value)) {
       sprintf(errstr,
@@ -630,6 +676,16 @@ property_to_pyobject(property_t *p)
       }
       r = (PyObject*) arr;
     }
+    break;
+  case PK_ARRAY1D:
+    dims[0] = p->tag;
+    arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims, NPY_DOUBLE);
+    data = (double *) PyArray_DATA(arr);
+    for (i = 0; i < p->tag; i++) {
+      data[i] = ((double*) p->ptr)[i];
+    }
+    //        memcpy(data, p->ptr, p->tag*p->tag2*sizeof(double));
+    r = (PyObject*) arr;
     break;
   case PK_ARRAY2D:
     dims[0] = p->tag;

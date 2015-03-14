@@ -62,12 +62,13 @@
 #define PK_POINT 5
 #define PK_INTPOINT 6
 #define PK_ENUM 7
-#define PK_ARRAY2D 8
-#define PK_ARRAY3D 9
-#define PK_LIST 10
-#define PK_STRING_LIST 11
-#define PK_FORTRAN_STRING_LIST 12
-#define PK_INT_LIST 13
+#define PK_ARRAY1D 8
+#define PK_ARRAY2D 9
+#define PK_ARRAY3D 10
+#define PK_LIST 11
+#define PK_STRING_LIST 12
+#define PK_FORTRAN_STRING_LIST 13
+#define PK_INT_LIST 14
 
 
 typedef struct __property_t {

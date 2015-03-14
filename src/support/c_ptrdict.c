@@ -316,9 +316,21 @@ void ptrdict_register_integer_list_property(section_t *self, double *ptr,
 }
 
 
+/* 1D array property */
+void ptrdict_register_array1d_property(section_t *self, double *ptr, int nx,
+                                       char *name, char *description)
+{
+  property_t *p;
+
+  p = ptrdict_register_property(self, PK_ARRAY1D, ptr, name, description);
+
+  p->tag = nx;
+}
+
+
 /* 2D array property */
 void ptrdict_register_array2d_property(section_t *self, double *ptr, int nx,
-				      int ny, char *name, char *description)
+				                               int ny, char *name, char *description)
 {
   property_t *p;
 
@@ -331,8 +343,8 @@ void ptrdict_register_array2d_property(section_t *self, double *ptr, int nx,
 
 /* 3D array property */
 void ptrdict_register_array3d_property(section_t *self, double *ptr, int nx,
-				      int ny, int nz, char *name,
-				      char *description)
+				                               int ny, int nz, char *name,
+				                               char *description)
 {
   property_t *p;
 
