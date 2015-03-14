@@ -508,8 +508,6 @@
     enddo
 #endif
 
-!    write (*, *)  "maxdc  = ", maxdc
-
 #ifdef SCREENING
     this%sfacbo  = 0.0_DP
 
