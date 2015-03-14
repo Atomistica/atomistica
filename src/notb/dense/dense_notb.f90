@@ -529,8 +529,8 @@ contains
 
     INIT_ERROR(error)
 
-    if (trim(propstr) == "bond_order") then
-       call bond_analysis(this%tb, p, nl, bond_order=propout)
+    if (trim(propstr) == "overlap_population") then
+       call bond_analysis(this%tb, p, nl, overlap_population=propout)
     else
        if (trim(propstr) == "covalent_bond_energy") then
           call bond_analysis(this%tb, p, nl, e_cov=propout)
