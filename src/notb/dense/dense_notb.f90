@@ -532,11 +532,15 @@ contains
     if (trim(propstr) == "overlap_population") then
        call bond_analysis(this%tb, p, nl, overlap_population=propout)
     else
-       if (trim(propstr) == "covalent_bond_energy") then
-          call bond_analysis(this%tb, p, nl, e_cov=propout)
-       else
-          RAISE_ERROR("Unknown bond property '" // propstr // "'.", error)
-       endif
+    if (trim(propstr) == "Loewdin_bond_order") then
+       call bond_analysis(this%tb, p, nl, Loewdin_bond_order=propout)
+    else
+    if (trim(propstr) == "covalent_bond_energy") then
+       call bond_analysis(this%tb, p, nl, e_cov=propout)
+    else
+       RAISE_ERROR("Unknown bond property '" // propstr // "'.", error)
+    endif
+    endif
     endif
 
   endsubroutine dense_notb_get_per_bond_property

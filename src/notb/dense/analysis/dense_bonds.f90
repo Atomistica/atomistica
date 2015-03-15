@@ -41,20 +41,24 @@ contains
   !>
   !! Determine covalent energies
   !<
-  subroutine bond_analysis(tb, p, nl, overlap_population, e_cov)
+  subroutine bond_analysis(tb, p, nl, overlap_population, Loewdin_bond_order, &
+                           e_cov)
     implicit none
 
     type(dense_hamiltonian_t), intent(in)  :: tb
     type(particles_t),         intent(in)  :: p
     type(neighbors_t),         intent(in)  :: nl
     real(DP),        optional, intent(out) :: overlap_population(nl%neighbors_size)
+    real(DP),        optional, intent(out) :: Loewdin_bond_order(nl%neighbors_size)
     real(DP),        optional, intent(out) :: e_cov(nl%neighbors_size)
 
     ! ---
 
     integer :: i, ni, j, k, a, b, ia, jb
 
-    real(DP) :: overlap_population_accum, e_cov_accum
+    real(DP) :: overlap_population_accum, Lowdin_bond_order_accum, e_cov_accum
+    real(DP) :: alpha, beta
+    WF_T(DP) :: sqrt_S(tb%norb, tb%norb), Loewdin_rho(tb%norb, tb%norb, tb%nk)
 
     WF_T(DP),             pointer :: rho(:, :, :), H(:, :, :), S(:, :, :)
     type(notb_element_t), pointer :: at(:)
@@ -68,11 +72,19 @@ contains
     call c_f_pointer(tb%S, S, [tb%norb, tb%norb, tb%nk])
     call c_f_pointer(tb%at, at, [p%nat])
 
+    if (present(Loewdin_bond_order)) then
+       do k = 1, tb%nk
+          sqrt_S = sqrtm(S(:, :, k))
+          Loewdin_rho(:, :, k) = matmul(sqrt_S, matmul(rho(:, :, k), sqrt_S))
+       enddo
+    endif
+
     i_loop: do i = 1, p%nat
        ni_loop: do ni = nl%seed(i), nl%last(i)
           j = nl%neighbors(ni)
 
           overlap_population_accum = 0.0_DP
+          Lowdin_bond_order_accum = 0.0_DP
           e_cov_accum = 0.0_DP
 
           a_loop: do a = 1, at(i)%no
@@ -85,10 +97,14 @@ contains
                    overlap_population_accum = overlap_population_accum + &
                                               rho(ia, jb, k) * S(jb, ia, k)
 
-                  ! Note: For SCC NOTB there is a contribution from phi
-                  !   H(jb, ia) -= 0.5_DP*S(jb, ia)*(phi(i) + phi(j))
-                  ! but this shift due to the electrostatic potential cancels
-                  ! in the expression below.
+                   Lowdin_bond_order_accum = Lowdin_bond_order_accum + &
+                                             Loewdin_rho(ia, jb, k) + &
+                                             Loewdin_rho(jb, ia, k)
+
+                   ! Note: For SCC NOTB there is a contribution from phi
+                   !   H(jb, ia) -= 0.5_DP*S(jb, ia)*(phi(i) + phi(j))
+                   ! but this shift due to the electrostatic potential cancels
+                   ! in the expression below.
                    e_cov_accum = e_cov_accum + rho(ia, jb, k) &
                         * ( H(jb, ia, k) - &
                             0.5_DP*S(jb, ia, k)*(H(ia, ia, k) + H(jb, jb, k)) &
@@ -101,6 +117,9 @@ contains
 
           if (present(overlap_population)) then
              overlap_population(ni) = overlap_population_accum
+          endif
+          if (present(Loewdin_bond_order)) then
+             Loewdin_bond_order(ni) = 0.5_DP*Lowdin_bond_order_accum
           endif
           if (present(e_cov)) then
              e_cov(ni) = e_cov_accum
