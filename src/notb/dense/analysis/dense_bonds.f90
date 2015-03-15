@@ -56,7 +56,7 @@ contains
 
     integer :: i, ni, j, k, a, b, ia, jb
 
-    real(DP) :: overlap_population_accum, Lowdin_bond_order_accum, e_cov_accum
+    real(DP) :: overlap_population_accum, Loewdin_bond_order_accum, e_cov_accum
     real(DP) :: alpha, beta
 
     WF_T(DP),             pointer :: rho(:, :, :), H(:, :, :), S(:, :, :)
@@ -87,7 +87,7 @@ contains
           j = nl%neighbors(ni)
 
           overlap_population_accum = 0.0_DP
-          Lowdin_bond_order_accum = 0.0_DP
+          Loewdin_bond_order_accum = 0.0_DP
           e_cov_accum = 0.0_DP
 
           a_loop: do a = 1, at(i)%no
@@ -100,9 +100,11 @@ contains
                    overlap_population_accum = overlap_population_accum + &
                                               rho(ia, jb, k) * S(jb, ia, k)
 
-                   Lowdin_bond_order_accum = Lowdin_bond_order_accum + &
-                                             Loewdin_rho(ia, jb, k) + &
-                                             Loewdin_rho(jb, ia, k)
+                   if (present(Loewdin_bond_order)) then
+                      Loewdin_bond_order_accum = Loewdin_bond_order_accum + &
+                                                 Loewdin_rho(ia, jb, k) + &
+                                                 Loewdin_rho(jb, ia, k)
+                   endif
 
                    ! Note: For SCC NOTB there is a contribution from phi
                    !   H(jb, ia) -= 0.5_DP*S(jb, ia)*(phi(i) + phi(j))
@@ -122,7 +124,7 @@ contains
              overlap_population(ni) = overlap_population_accum
           endif
           if (present(Loewdin_bond_order)) then
-             Loewdin_bond_order(ni) = 0.5_DP*Lowdin_bond_order_accum
+             Loewdin_bond_order(ni) = 0.5_DP*Loewdin_bond_order_accum
           endif
           if (present(e_cov)) then
              e_cov(ni) = e_cov_accum
