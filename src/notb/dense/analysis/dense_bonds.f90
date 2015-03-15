@@ -58,10 +58,11 @@ contains
 
     real(DP) :: overlap_population_accum, Lowdin_bond_order_accum, e_cov_accum
     real(DP) :: alpha, beta
-    WF_T(DP) :: sqrt_S(tb%norb, tb%norb), Loewdin_rho(tb%norb, tb%norb, tb%nk)
 
     WF_T(DP),             pointer :: rho(:, :, :), H(:, :, :), S(:, :, :)
     type(notb_element_t), pointer :: at(:)
+
+    WF_T(DP), allocatable :: sqrt_S(:, :), Loewdin_rho(:, :, :)
 
     ! ---
 
@@ -73,6 +74,8 @@ contains
     call c_f_pointer(tb%at, at, [p%nat])
 
     if (present(Loewdin_bond_order)) then
+       allocate(sqrt_S(tb%norb, tb%norb))
+       allocate(Loewdin_rho(tb%norb, tb%norb, tb%nk))
        do k = 1, tb%nk
           sqrt_S = sqrtm(S(:, :, k))
           Loewdin_rho(:, :, k) = matmul(sqrt_S, matmul(rho(:, :, k), sqrt_S))
@@ -126,6 +129,9 @@ contains
           endif
        enddo ni_loop
     enddo i_loop
+
+    if (allocated(sqrt_S))       deallocate(sqrt_S)
+    if (allocated(Loewdin_rho))  deallocate(Loewdin_rho)
 
     call timer_stop("bond_analysis")
 
