@@ -71,6 +71,11 @@ module linearalgebra
      module procedure dinverse
   endinterface
 
+  public :: sqrtm
+  interface sqrtm
+     module procedure dsqrtm
+  endinterface
+
   public :: ev_bounds
   interface ev_bounds
      subroutine dev_bounds(n, H, l, u) bind(C)
@@ -442,5 +447,58 @@ contains
        RAISE_ERROR("Failed to compute inverse of "//N//"x"//N//" matrix.", error)
     endif
   endfunction dinverse
+
+
+  !>
+  !! Square root of a symmetric, positive-definite matrix
+  !<
+  function dsqrtm(mat, error) result(B)
+    implicit none
+
+    real(DP),          intent(in)  :: mat(:, :)
+    integer, optional, intent(out) :: error
+
+    real(DP)                       :: B(size(mat, 1), size(mat, 2))
+
+    !---
+
+    integer :: N, i, info, lwork, liwork
+    integer :: iwork(3+5*size(mat, 1))
+
+    real(DP) :: alpha, beta
+    real(DP) :: evecs(size(mat, 1), size(mat, 2)), evals(size(mat, 1))
+    real(DP) :: work(1+6*size(mat, 1)+2*size(mat, 1)**2)
+    real(DP) :: work2(size(mat, 1), size(mat, 2))
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    N = size(mat, 1)
+    if (size(mat, 2) /= N) then
+       RAISE_ERROR("Matrix has dimension "//N//"x"//size(mat, 2)//" which is not square.", error)
+    endif
+
+    lwork = 1+6*size(mat, 1)+2*size(mat, 1)**2
+    liwork = 3+5*size(mat, 1)
+    evecs = mat
+    call dsyevd('V', 'L', N, &
+         evecs, N, &
+         evals, &
+         work, lwork, iwork, liwork, info)
+
+    if (info /= 0) then
+       RAISE_ERROR("Diagonalization (dsyevd) failed with error code "//info//".", error)
+    endif
+    if (any(evals < 0.0_DP)) then
+       RAISE_ERROR("Matrix not positive-definite.", error)
+    endif
+
+    work2 = evecs*spread(sqrt(evals), 1, N)
+    alpha = 1.0_DP
+    beta = 0.0_DP
+    call dgemm('N', 'T', N, N, N, alpha, work2, N, evecs, N, beta, B, N)
+
+  endfunction dsqrtm
 
 endmodule linearalgebra

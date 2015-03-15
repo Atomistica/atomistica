@@ -7,10 +7,18 @@ program run_tests
   implicit none
 
   call init_fruit
-  call test_det
+
+  ! test_cutoff
   call test_exp_cutoff
   call test_trig_cutoff
+
+  ! test_linearalgebra
+  call test_det
+  call test_sqrtm
+
+  ! test_table2d
   call test_table2d_f_and_df
+
   call fruit_summary
   call fruit_finalize
 endprogram
