@@ -13,7 +13,16 @@ To compile the LAMMPS-Atomistica interface do the following:
    "src/lammps/pair_style" directory to the LAMMPS "src" directory.
 
 3. Modify your LAMMPS Makefile to link "libatomistica.a" created by step 1.
-   Compile LAMMPS. The "src/lammps/MAKE" subdirectory contains sample
+   pair_atomistica.h includes the files "ptrdict.h" and
+   "potentials_factory_c.h" from the atomistica source directory. They are
+   located here:
+
+     src/support/ptrdict.h 
+     build_lammps/potentials_factory_c.h
+
+   Modify your LAMMPS Makefile to add these paths to the header search path.
+
+4. Compile LAMMPS. The "src/lammps/MAKE" subdirectory contains sample
    makefiles.
 
 
