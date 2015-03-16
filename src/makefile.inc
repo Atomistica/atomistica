@@ -266,7 +266,7 @@ factories:
 versioninfo:
 	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(F90FLAGS)
 
-atomistica: versioninfo lammps_factories $(LAMMPS_ALL_O)
+atomistica: versioninfo $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
 
 mdcore: versioninfo $(STANDALONE_ALL_O) $(MAIN_O)
@@ -276,6 +276,9 @@ unittests: versioninfo $(UNITTESTS_O)
 	$(F90C) -o unittests $(UNITTESTS_O) $(LIBS)
 
 clean:
-	rm -f *.o
+	rm -f *.o *.a
 	rm -f *.mod
+	rm -f *.c *.h *.f90
+	rm -f *.classes
+	rm -f have.inc _Makefile.modules
 
