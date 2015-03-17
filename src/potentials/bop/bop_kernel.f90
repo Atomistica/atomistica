@@ -45,9 +45,11 @@
 #endif
 
 #ifdef _OPENMP
-#define TOO_SMALL(what, i, ierror)  RAISE_DELAYED_ERROR("Internal neighbor list exhausted on OpenMP thread " // omp_get_thread_num() // ", *" // what // "* too small: " // "nebtot = " // nebtot // "/" // nebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (neb_last(i)-neb_seed(i)+1) // ", i = " // i // "/" // natloc // "(" // nat // ")", ierror) ; nebtot = 1 ; neb_last(i) = neb_seed(i)
+#define NEB_TOO_SMALL(what, i, ierror)  RAISE_DELAYED_ERROR("Internal neighbor list exhausted on OpenMP thread " // omp_get_thread_num() // ", *" // what // "* too small: " // "nebtot = " // nebtot // "/" // nebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (neb_last(i)-neb_seed(i)+1) // ", i = " // i // "/" // natloc // "(" // nat // ")", ierror) ; nebtot = int(1 + real(nebsize, DP)*omp_get_thread_num()/omp_get_num_threads()) ; neb_last(i) = neb_seed(i)
+#define SNEB_TOO_SMALL(what, i, ierror)  RAISE_DELAYED_ERROR("Internal screening neighbor list exhausted on OpenMP thread " // omp_get_thread_num() // ", *" // what // "* too small: " // "snebtot = " // snebtot // "/" // snebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", this%sneb_last(i)-this%sneb_seed(i)+1 = " // (this%sneb_last(i)-this%sneb_seed(i)+1) // ", i = " // i // "/" // natloc // "(" // nat // ")", ierror) ; snebtot = int(1 + real(snebsize, DP)*omp_get_thread_num()/omp_get_num_threads()) ; this%sneb_last(i) = this%sneb_seed(i)
 #else
-#define TOO_SMALL(what, i, ierror)  RAISE_DELAYED_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // nebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (neb_last(i)-neb_seed(i)+1) // ", i = " // i // "/" // natloc // " (" // nat // ")", ierror) ; nebtot = 1 ; neb_last(i) = neb_seed(i)
+#define NEB_TOO_SMALL(what, i, ierror)  RAISE_ERROR("Internal neighbor list exhausted, *" // what // "* too small: " // "nebtot = " // nebtot // "/" // nebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", neb_last(i)-neb_seed(i)+1 = " // (neb_last(i)-neb_seed(i)+1) // ", i = " // i // "/" // natloc // " (" // nat // ")", ierror) ; nebtot = 1 ; neb_last(i) = neb_seed(i)
+#define SNEB_TOO_SMALL(what, i, ierror)  RAISE_ERROR("Internal screening neighbor list exhausted, *" // what // "* too small: " // "snebtot = " // snebtot // "/" // snebsize // ", nebmax = " // nebmax // ", nebavg = " // nebavg // ", this%sneb_last(i)-this%sneb_seed(i)+1 = " // (this%sneb_last(i)-this%sneb_seed(i)+1) // ", i = " // i // "/" // natloc // " (" // nat // ")", ierror) ; snebtot = 1 ; this%sneb_last(i) = this%sneb_seed(i)
 #endif
 
 #ifdef LAMMPS
@@ -260,7 +262,11 @@
     integer  :: maxdc(3)
 #endif
 
+#ifdef _OPENMP
     integer  :: ierror_loc
+#else
+#define ierror_loc ierror
+#endif
 
     ! ---
 
@@ -650,11 +656,11 @@
                    nebtot                 = nebtot + 1
 
                    if (neb_last(i)-neb_seed(i)+1 > nebmax) then
-                      TOO_SMALL("nebmax", i, ierror_loc)
+                      NEB_TOO_SMALL("nebmax", i, ierror_loc)
                    endif
 
                    if (nebtot > nebsize) then
-                      TOO_SMALL("nebsize", i, ierror_loc)
+                      NEB_TOO_SMALL("nebsize", i, ierror_loc)
                    endif
 
 #endif
@@ -954,15 +960,15 @@
                       nebtot       = nebtot + 1
 
                       if (neb_last(i)-neb_seed(i)+1 > nebmax) then
-                         TOO_SMALL("nebmax", i, ierror_loc)
+                         NEB_TOO_SMALL("nebmax", i, ierror_loc)
                       endif
 
                       if (nebtot > nebsize) then
-                         TOO_SMALL("nebsize", i, ierror_loc)
+                         NEB_TOO_SMALL("nebsize", i, ierror_loc)
                       endif
                       
                       if (snebtot > snebsize) then
-                         TOO_SMALL("snebsize", i, ierror_loc)
+                         SNEB_TOO_SMALL("snebsize", i, ierror_loc)
                       endif
 
 #ifndef PARTIAL_SCREENING
@@ -1015,11 +1021,11 @@
 
                    if (this%sneb_last(nebtot)-this%sneb_seed(nebtot)+1 > &
                         nebmax_sq) then
-                      TOO_SMALL("nebmax", i, ierror_loc)
+                      SNEB_TOO_SMALL("nebmax", i, ierror_loc)
                    endif
 
                    if (snebtot > snebsize) then
-                      TOO_SMALL("snebsize", i, ierror_loc)
+                      SNEB_TOO_SMALL("snebsize", i, ierror_loc)
                    endif
 #endif
 
@@ -1027,11 +1033,11 @@
                    nebtot      = nebtot + 1
 
                    if (neb_last(i)-neb_seed(i)+1 > nebmax) then
-                      TOO_SMALL("nebmax", i, ierror_loc)
+                      NEB_TOO_SMALL("nebmax", i, ierror_loc)
                    endif
 
                    if (nebtot > nebsize) then
-                      TOO_SMALL("nebsize", i, ierror_loc)
+                      NEB_TOO_SMALL("nebsize", i, ierror_loc)
                    endif
 
                 endif cutoff_region
@@ -1594,7 +1600,9 @@
 
     !$omp end parallel
 
+#ifdef _OPENMP
     INVOKE_DELAYED_ERROR(ierror_loc, ierror)
+#endif
 
     wpot_inout  = wpot_inout + wpot
 
