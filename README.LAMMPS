@@ -1,13 +1,13 @@
 To compile the LAMMPS-Atomistica interface do the following:
 
-1. In the build_lammps directory do
+1. In the build_lammps directory copy one of the Makefile.* to Makefile and
+   edit appropriately. Example makefiles for the Intel and GNU compilers are
+   provided. Then type
 
-    make -f <Makefile> lammps_factories
-    make -f <Makefile> atomistica
+    make lammps_factories
+    make atomistica
 
-   Here <Makefile> is some makefile configured for your environment.
-   Example makefiles for the Intel and GNU compilers are provided. This should
-   generate the file "libatomistica.a".
+   This should create the file "libatomistica.a".
 
 2. Copy "pair_atomistica.cpp" and "pair_atomistica.h" from the
    "src/lammps/pair_style" directory to the LAMMPS "src" directory.
