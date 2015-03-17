@@ -526,7 +526,11 @@
     ! calculate the main pairwise terms and store them.
     !
 
+#ifdef _OPENMP
+    ierror_loc = ERROR_NONE
+#else
     INIT_ERROR(ierror_loc)
+#endif
 
     !$omp  parallel default(none) &
     !$omp& shared(aptr, a2ptr, bptr, f_inout, ktyp) &
