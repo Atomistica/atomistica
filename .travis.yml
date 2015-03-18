@@ -22,7 +22,7 @@ install:
   - conda info -a
 
   # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy
   - source activate test-environment
   - cp setup.cfg.gnu setup.cfg ; python setup.py install
 script:
