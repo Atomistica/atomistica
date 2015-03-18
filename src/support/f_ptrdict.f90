@@ -467,8 +467,8 @@ contains
 
     ! ---
 
-    call ptrdict_register_array1d_property_s(this, ptr, size(ptr, 1), name, &
-                                             description)
+    call fptrdict_register_array1d_property_s(this, ptr, size(ptr, 1), name, &
+                                              description)
 
   endsubroutine fptrdict_register_array1d_property
 
@@ -560,10 +560,10 @@ contains
 
     ! ---
 
-    call ptrdict_register_array3d_property_s(this, ptr, &
-                                             size(ptr, 1), size(ptr, 2), &
-                                             size(ptr, 3), &
-                                             CSTR(name), CSTR(description))
+    call fptrdict_register_array3d_property_s(this, ptr, &
+                                              size(ptr, 1), size(ptr, 2), &
+                                              size(ptr, 3), &
+                                              CSTR(name), CSTR(description))
 
   endsubroutine fptrdict_register_array3d_property
 
