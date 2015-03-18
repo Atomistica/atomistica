@@ -3,8 +3,9 @@ python:
   - "2.7"
 before_install:
   - "sudo apt-get install gfortran"
-install:
   - "pip install numpy"
+  - "curl https://wiki.fysik.dtu.dk/ase-files/python-ase-3.8.1.3440.tar.gz | tar -zvx ; cd python-ase-3.8.1.3440 ; python setup.py install"
+install:
   - "cp setup.cfg.gnu setup.cfg ; python setup.py install --force"
 script:
   - "cd tests ; python run_tests.py"
