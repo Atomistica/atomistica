@@ -25,7 +25,7 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy
   - source activate test-environment
   # Fetch and install ASE
-  - curl https://wiki.fysik.dtu.dk/ase-files/python-ase-3.8.1.3440.tar.gz | tar -zvx ; cd python-ase-3.8.1.3440 ; python setup.py install
+  - curl https://wiki.fysik.dtu.dk/ase-files/python-ase-3.8.1.3440.tar.gz | tar -zvx ; cd python-ase-3.8.1.3440 ; python setup.py install ; cd ..
   - cp setup.cfg.gnu setup.cfg ; python setup.py install
 script:
   - "cd tests ; python run_tests.py"
