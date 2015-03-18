@@ -1,8 +1,10 @@
 language: python
 python:
   - "2.7"
+before_install:
+  - "sudo apt-get install gfortran g77"
 install:
   - "pip install numpy"
-  - "python setup.py install --force"
+  - "cp setup.cfg.gnu setup.cfg ; python setup.py install --force"
 script:
   - "cd tests ; python run_tests.py"
