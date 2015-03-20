@@ -3,13 +3,11 @@ less stable than either the Python or LAMMPS interface.
 
 To compile the Atomistica standalone code (MDCORE) do the following:
 
-1. In the build_standalone directory do
+1. In the build_standalone directory copy one of the Makefile.* to Makefile and
+   edit appropriately. Example makefiles for the Intel and GNU compilers are
+   provided. Then type
 
-     make -f <Makefile> factories
-
-   Here <Makefile> is some makefile configured for your environment.
-   Example makefiles for the Intel and GNU compilers are provided. Makefiles
-   with a _mpi suffix are for MPI parallel compilations.
+     make factories
 
    This will create a set of *_factory_* and *_dispatch.f90" files. These files
    are responsible for instantianting and calling instances of potentials,
@@ -19,7 +17,4 @@ To compile the Atomistica standalone code (MDCORE) do the following:
 
 2. Compile the code with
 
-     OPENMP=0/1 make -f <Makefile> mdcore
-
-   where OPENMP=1 switches on OpenMP parallelization. Note that hybrid
-   OpenMP+MPI is possible.
+     make mdcore
