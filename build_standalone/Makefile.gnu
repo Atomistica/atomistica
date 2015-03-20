@@ -38,13 +38,8 @@ EXTRA_LIB = -lstdc++
 #
 # OpenMP parallelization
 #
-OPENMP ?= 0 
-ifneq ($(OPENMP),0)
-OMP_FLAGS = -fopenmp
-EXTRA_LIB += -fopenmp
-else
 OMP_FLAGS =
-endif
+#OMP_FLAGS = -fopenmp
 
 
 #
@@ -92,17 +87,15 @@ LIBTOOL  = ar r
 #
 # Normal (GNU)
 #
-#OPTFLAGS = -g -O3 -funroll-loops -fbacktrace
+OPTFLAGS = -g -O3 -funroll-loops -fbacktrace
 #
 # Debug (GNU)
 #
-OPTFLAGS = -g -O0 -fbacktrace -fbounds-check
+#OPTFLAGS = -g -O0 -fbacktrace -fbounds-check
 
 #
 # * Defines
 #
-#   -DMDCORE_MONOLITHIC        Compile modules that work only in the standalone
-#                              version of MDCORE (i.e. HarmonicHook, etc.)
 #   -DMDCORE_PYTHON            Compile Python specific stuff
 #
 #   -DHAVE_NETCDF              Compile with NetCDF output module
@@ -116,7 +109,6 @@ OPTFLAGS = -g -O0 -fbacktrace -fbounds-check
 #                              use CUDA GPU hardware.
 # 
 DEFINES  = \
-	-DMDCORE_MONOLITHIC \
 	-DNO_BIND_C_OPTIONAL
 
 #
