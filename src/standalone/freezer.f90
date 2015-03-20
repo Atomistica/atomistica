@@ -77,8 +77,6 @@ contains
   endsubroutine freezer_invoke
 
 
-#ifdef MDCORE_MONOLITHIC
-
   !****************************************************************
   ! Initialize the property list
   !****************************************************************
@@ -99,6 +97,4 @@ contains
 
   endsubroutine freezer_register
   
-#endif
-
 endmodule freezer
