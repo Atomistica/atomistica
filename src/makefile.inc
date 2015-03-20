@@ -232,7 +232,7 @@ MAIN_O = $(MAIN:.f90=.o)
 %_dispatch.o: F90FLAGS += -O0
 
 versioninfo.f90:
-	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(F90FLAGS)
+	bash $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(F90FLAGS)
 
 
 # Targets
