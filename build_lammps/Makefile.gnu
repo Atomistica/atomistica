@@ -55,7 +55,7 @@ OPTFLAGS = -O3 -funroll-loops
 #
 # Debug (GNU)
 #
-#OPTFLAGS = -g -O0 -fbounds-check
+#OPTFLAGS = -g -O0 #-fbounds-check
 
 #
 # * Defines
