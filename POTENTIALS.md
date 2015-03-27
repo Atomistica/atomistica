@@ -1,8 +1,8 @@
 Interatomic potentials
 ======================
 
-This file contains a list of implemented interatomic potentials and parameters
-set provided. The code fragments show Python code necessary to instantiate an
+This file contains a list of implemented interatomic potentials and parameter
+sets provided. The code fragments show Python code necessary to instantiate an
 ASE calculator object for the respective potential/parameterization. Note that
 for all potentials listed below there is a default parameter set that is used
 if instantiated without and explicit database dictionary. This default is the 
