@@ -6,6 +6,9 @@ designed to be used with different computational engines. Currently supported
 are ASE and LAMMPS (see below). A list of supported interatomic potentials can
 be found [here](POTENTIALS.md).
 
+Build status
+------------
+
 [![Build Status](https://travis-ci.org/Atomistica/atomistica.svg?branch=master)](https://travis-ci.org/Atomistica/atomistica)
 
 Usage
