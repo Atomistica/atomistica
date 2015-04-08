@@ -34,7 +34,7 @@
 
     integer          :: i, j, ii, jj, nel, npairs, Z
 
-    real(DP)         :: x(this%db%nel*(this%db%nel+1)/2)
+    real(DP)         :: x(this%db%nel*(this%db%nel+1)/2), cutoff
 
     ! ---
 
@@ -128,17 +128,13 @@
                 jj = this%Z2db(p%el2Z(j))
                 nel = Z2pair(this, ii, jj)
 #ifdef SCREENING
-                call request_interaction_range( &
-                     nl, &
-                     x(nel)*sqrt(this%max_cut_sq(nel)), &
-                     i, j &
-                     )
+                cutoff = x(nel)*sqrt(this%max_cut_sq(nel))
 #else
-                call request_interaction_range( &
-                     nl, &
-                     this%cut_in_h(nel), &
-                     i, j &
-                     )
+                cutoff = this%cut_in_h(nel)
+#endif
+                call request_interaction_range(nl, cutoff, i, j)
+#ifdef LAMMPS
+                call set_interaction_range(p, 2*cutoff, i, j)
 #endif
              endif
           enddo
