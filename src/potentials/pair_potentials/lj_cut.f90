@@ -18,6 +18,7 @@
 !! You should have received a copy of the GNU General Public License
 !! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !! ======================================================================
+
 ! @meta
 !   shared
 !   classtype:lj_cut_t classname:LJCut interface:potentials
@@ -161,10 +162,10 @@ contains
     call prlog("- lj_cut_bind_to -")
     call filter_prlog(this%el1, p, indent=5)
     call filter_prlog(this%el2, p, indent=5)
-    call prlog("     epsilon = "//this%epsilon)
-    call prlog("     sigma   = "//this%sigma)
-    call prlog("     cutoff  = "//this%cutoff)
-    !call prlog("     shift   = "//this%shift)
+    call prlog("     epsilon  = "//this%epsilon)
+    call prlog("     sigma    = "//this%sigma)
+    call prlog("     cutoff   = "//this%cutoff)
+    call prlog("     shift    = "//logical(this%shift))
 
     do i = 1, p%nel
        do j = 1, p%nel
@@ -179,6 +180,8 @@ contains
        this%offset = 4*this%epsilon*((this%sigma/this%cutoff)**12 - &
             (this%sigma/this%cutoff)**6)
     endif
+
+    call prlog("     * offset = "//this%offset)
 
     call prlog
 
