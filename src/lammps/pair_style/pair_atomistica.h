@@ -1,9 +1,10 @@
 /* ======================================================================
-   Atomistica - Interatomic potential library and molecular dynamics code
-   https://github.com/Atomistica/atomistica
-
-   Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
+   Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
    See the AUTHORS file in the top-level Atomistica directory.
+
+   Copyright (2005-2013) Fraunhofer IWM
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -60,6 +61,7 @@ class PairAtomistica : public Pair {
   double init_one(int, int);
   double memory_usage();
 
+ //private:
   char *name_;                     // name of the potential
   char *fn_;                       // file name with potential parameters
   int maxlocal_;                   // size of numneigh, firstneigh arrays
@@ -69,8 +71,15 @@ class PairAtomistica : public Pair {
   int *Atomistica_neighb_;
   int Atomistica_nneighb_;
 
+  int *mask_;
+
+  // neighbor list range
   double rcmax_;
   double **rcmaxsq_;
+  // width of the communication border
+  double rcghost_;
+  // interaction range
+  double rangemax_;
 
   // pointer to the -member descriptor
   section_t *members_;
@@ -105,6 +114,8 @@ extern "C" {
                               void *tag, void *el, void *r);
 
   void particles_get_border(void *self, double *border);
+  void particles_get_interaction_range(void *self, int el1, int el2,
+                                       double *border);
 
 
   void neighbors_new(void **self);            // allocate neighbors object
@@ -116,7 +127,7 @@ extern "C" {
   void neighbors_set_pointers(void *self, int natloc, void *seed, void *last,
                               int neighbors_size, void *neighbors);
 
-  void neighbors_get_cutoff(void *self, int Z1, int Z2, double *cutoff);
+  void neighbors_get_cutoff(void *self, int el1, int el2, double *cutoff);
   void neighbors_dump_cutoffs(void *self, void *p);
 
   void atomistica_startup(int);

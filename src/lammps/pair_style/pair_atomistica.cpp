@@ -1,9 +1,10 @@
 /* ======================================================================
-   Atomistica - Interatomic potential library and molecular dynamics code
-   https://github.com/Atomistica/atomistica
-
-   Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
+   Atomistica - Interatomic potential library
+   https://github.com/pastewka/atomistica
+   Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
    See the AUTHORS file in the top-level Atomistica directory.
+
+   Copyright (2005-2013) Fraunhofer IWM
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -50,9 +51,9 @@
 #include "neigh_request.h"
 #include "memory.h"
 #include "error.h"
-#include<iostream>
-//#include<vector>
 #include "update.h"
+
+#include "gfmd_grid.h"
 
 #include "potentials_factory_c.h"
 
@@ -89,12 +90,16 @@ PairAtomistica::PairAtomistica(LAMMPS *lmp) : Pair(lmp)
   fn_ = NULL;
 
   rcmax_ = 0.0;
+  rcghost_ = 0.0;
+  rangemax_ = 0.0;
 
   maxlocal_ = 0;
   Atomistica_seed_ = NULL;
   Atomistica_last_ = NULL;
   Atomistica_nneighb_ = 0;
   Atomistica_neighb_ = NULL;
+
+  mask_ = NULL;
 
   particles_new(&particles_);
   particles_init(particles_);
@@ -125,6 +130,9 @@ PairAtomistica::~PairAtomistica()
 
   memory->sfree(Atomistica_seed_);
   memory->sfree(Atomistica_last_);
+
+  if (mask_)
+    memory->sfree(mask_);
 
   if (allocated) {
     memory->destroy(setflag);
@@ -325,9 +333,8 @@ void PairAtomistica::init_style()
 
   // determine width of ghost communication border
 
-  double rc;
-  particles_get_border(particles_,&rc);
-  comm->cutghostuser = MAX(comm->cutghostuser,rc);
+  particles_get_border(particles_,&rcghost_);
+  comm->cutghostuser = MAX(comm->cutghostuser,rcghost_);
 
   rcmax_ = 0.0;
 }
@@ -340,11 +347,14 @@ double PairAtomistica::init_one(int i, int j)
 {
   if (setflag[i][j] == 0) error->all(FLERR,"All pair coeffs are not set");
 
-  double rc;
+  double rc, range;
 
   neighbors_get_cutoff(neighbors_,i,j,&rc);
+  particles_get_interaction_range(particles_,i,j,&range);
+  range = MAX(range, rc);
 
   rcmax_ = MAX(rc, rcmax_);
+  rangemax_ = MAX(range, rangemax_);
 
   rcmaxsq_[i][j] = rcmaxsq_[j][i] = rc*rc;
   cutghost[i][j] = cutghost[j][i] = rc;
@@ -360,10 +370,12 @@ double PairAtomistica::init_one(int i, int j)
 void PairAtomistica::Atomistica_neigh()
 {
   //printf("...entering Atomistica_neigh():\n");
-  int i,ii,inum;
-  int *ilist,*numneigh,**firstneigh;
+  int i,j,ii,jj,n,inum,jnum,itype,jtype;
+  double xtmp,ytmp,ztmp,delx,dely,delz,rsq;
+  int *ilist,*jlist,*numneigh,**firstneigh;
 
-
+  double **x = atom->x;
+  int *type = atom->type;
   int nlocal = atom->nlocal;
   int nall = nlocal + atom->nghost;
 
@@ -375,16 +387,26 @@ void PairAtomistica::Atomistica_neigh()
     maxlocal_ = atom->nmax;
     memory->sfree(Atomistica_seed_);
     memory->sfree(Atomistica_last_);
+#ifdef GFMD_GRID_H
+    if (atom->gfmd_flag)
+      memory->sfree(mask_);
+#endif
     Atomistica_seed_ = (intptr_t *)
       memory->smalloc(maxlocal_*sizeof(intptr_t),"Atomistica:Atomistica_seed");
     Atomistica_last_ = (intptr_t *)
       memory->smalloc(maxlocal_*sizeof(intptr_t),"Atomistica:Atomistica_last");
+#ifdef GFMD_GRID_H
+    if (atom->gfmd_flag)
+      mask_ = (int *) memory->smalloc(maxlocal_*sizeof(int),"Atomistica::mask");
+#endif
   }
 
   // set start values for neighbor array Atomistica_neighb
   for (i = 0; i < nall; i++) {
     Atomistica_seed_[i] = -1;
     Atomistica_last_[i] = -2;
+    if (mask_)
+      mask_[i] = 1;
   }
 
   inum = list->inum+list->gnum;
@@ -410,7 +432,6 @@ void PairAtomistica::Atomistica_neigh()
   }
 
 #if 0
-  double xtmp,ytmp,ztmp,delx,dely,delz;
   // DEBUG: Check if neighbor list is symmetric
   for (i = 0; i < nall; i++) {
     xtmp = x[i][0];
@@ -461,6 +482,7 @@ void PairAtomistica::FAtomistica(int eflag, int vflag)
   double **f = atom->f;
   int *tag = atom->tag;
   int *type = atom->type;
+  int *mask = NULL;
   int nlocal = atom->nlocal;
   int nall = nlocal + atom->nghost;
   double epot,*epot_per_at,*wpot_per_at,wpot[3][3];
@@ -477,6 +499,13 @@ void PairAtomistica::FAtomistica(int eflag, int vflag)
     wpot_per_at = &vatom[0][0];
   }
 
+#ifdef GFMD_GRID_H
+  if (atom->gfmd_flag) {
+    for (int i = 0; i < nall; i++) mask_[i] = !FLAG_FROM_POW2_IDX(atom->gid[i]);
+    mask = mask_;
+  }
+#endif
+
   // set pointers in particles object
   particles_set_pointers(particles_,nall,atom->nlocal,atom->nmax,tag,
                          type,&x[0][0]);
@@ -488,7 +517,7 @@ void PairAtomistica::FAtomistica(int eflag, int vflag)
   int ierror;
   epot = 0.0;
   class_->energy_and_forces(potential_,particles_,neighbors_,&epot,&f[0][0],
-                            &wpot[0][0],NULL,epot_per_at,wpot_per_at,&ierror);
+                            &wpot[0][0],mask,epot_per_at,wpot_per_at,&ierror);
   error2lmp(error,FLERR,ierror);
 
   if (evflag) {

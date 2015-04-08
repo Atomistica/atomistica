@@ -53,17 +53,17 @@ module particles
      !>
      !! Number of particles in system (including ghost particles)
      !<
-     integer                 :: nat = 0
+     integer                     :: nat = 0
 
      !>
      !! Number of particles on this processor (excluding ghost particles)
      !<
-     integer                 :: natloc = 0
+     integer                     :: natloc = 0
 
      !>
      !! Length of the position array
      !<
-     integer                 :: maxnatloc = 0
+     integer                     :: maxnatloc = 0
 
      !
      ! All particel data is managed by LAMMPS. The fields below are pointers to
@@ -73,28 +73,33 @@ module particles
      !>
      !! Unique atom id
      !<
-     integer(C_INT), pointer :: tag(:) => NULL()
+     integer(C_INT), pointer     :: tag(:) => NULL()
 
      !>
      !! Internal element numbers
      !<
-     integer(C_INT), pointer :: el(:) => NULL()
+     integer(C_INT), pointer     :: el(:) => NULL()
 
      !>
      !! These positions are always local and may be outside the global box.
      !<
-     real(C_DOUBLE), pointer :: r_non_cyc(:, :) => NULL()
+     real(C_DOUBLE), pointer     :: r_non_cyc(:, :) => NULL()
 
      !>
      !! Mapping of internal element numbers to real elements
      !<
-     integer                 :: nel           !> number of distinct elements
-     integer                 :: el2Z(MAX_Z)   !> id - i.e. from 1 to nel
+     integer                     :: nel           !> number of distinct elements
+     integer                     :: el2Z(MAX_Z)   !> id - i.e. from 1 to nel
 
      !>
      !! Communication border
      !<
-     real(C_DOUBLE)          :: border
+     real(C_DOUBLE)              :: border
+
+     !>
+     !! Maximum range of interaction
+     !<
+     real(C_DOUBLE), allocatable :: interaction_range(:, :)
 
   endtype particles_t
 
@@ -102,6 +107,11 @@ module particles
   interface request_border
      module procedure particles_request_border
   endinterface request_border
+
+  public :: set_interaction_range
+  interface set_interaction_range
+     module procedure particles_set_interaction_range
+  endinterface
 
 contains
 
@@ -179,20 +189,31 @@ contains
     this%el => NULL()
     this%r_non_cyc => NULL()
 
+    allocate(this%interaction_range(MAX_Z, MAX_Z))
+    this%interaction_range = 0.0_DP
+
   endsubroutine particles_init
 
 
   !>
   !! Destructore
   !<
-  subroutine particles_del(this) bind(C)
+  subroutine particles_del(this_cptr) bind(C)
     use, intrinsic :: iso_c_binding
 
     implicit none
 
-    type(C_PTR), value :: this
+    type(C_PTR), value :: this_cptr
 
     ! ---
+
+    type(particles_t), pointer :: this
+
+    ! ---
+
+    call c_f_pointer(this_cptr, this)
+
+    deallocate(this%interaction_range)
 
   endsubroutine particles_del
 
@@ -278,7 +299,7 @@ contains
 
 
   !>
-  !! Assign pointers to data
+  !! Request a certain size for the communication border
   !>
   subroutine particles_request_border(this, border)
     type(particles_t), intent(inout) :: this
@@ -289,6 +310,66 @@ contains
     this%border = max(border, this%border)
 
   endsubroutine particles_request_border
+
+
+  !>
+  !! Report the true interaction range for this model (which can differ from
+  !! the neighbor list cutoff)
+  !<
+  subroutine particles_set_interaction_range(this, range, el1, el2)
+    type(particles_t), intent(inout) :: this
+    real(DP),          intent(in)    :: range
+    integer, optional, intent(in)    :: el1
+    integer, optional, intent(in)    :: el2
+
+    ! ---
+
+    integer :: rel2
+
+    ! ---
+
+    if (present(el1)) then
+       if (present(el2)) then
+          rel2 = el2
+       else
+          rel2 = el1
+       endif
+       this%interaction_range(el1, rel2) = &
+          max(this%interaction_range(el1, rel2), range)
+       if (el1 /= rel2)  then
+          this%interaction_range(rel2, el1) = &
+             max(this%interaction_range(rel2, el1), range)
+       endif
+    else
+       this%interaction_range = max(this%interaction_range, range)
+    endif
+
+  endsubroutine particles_set_interaction_range
+
+
+  !>
+  !! Return cutoffs for element combination el1, el2
+  !<
+  subroutine particles_get_interaction_range(this_cptr, el1, el2, range) bind(C)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(C_PTR),    value       :: this_cptr
+    integer(C_INT), value       :: el1, el2
+    real(DP),       intent(out) :: range
+
+    ! ---
+
+    type(particles_t), pointer :: this
+
+    ! ---
+
+    call c_f_pointer(this_cptr, this)
+
+    range = this%interaction_range(el1, el2)
+
+  endsubroutine particles_get_interaction_range
 
 
   !>
