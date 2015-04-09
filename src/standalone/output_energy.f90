@@ -60,17 +60,14 @@ module output_energy
      ! Averaging
      !
 
-     logical(BOOL) :: average = .false.
+     logical(BOOL) :: average = .true.
 
      real(DP) :: t
      real(DP) :: ekin
      real(DP) :: epot
      real(DP) :: ecoul
-     real(DP) :: ebs
-     real(DP) :: erep
-     real(DP) :: mu
-     real(DP) :: P(3, 3)
-     real(DP) :: V
+     real(DP) :: pressure(3, 3)
+     real(DP) :: volume
 
      !
      ! Additional variable attributes from the data structure
@@ -187,7 +184,24 @@ contains
 
     ! ---
 
-    integer          :: i
+    character(15), parameter :: qstr(14) = [ &
+       "ekin           ", &
+       "epot           ", &
+       "ecoul          ", &
+       "epot+ecoul     ", &
+       "ekin+epot+ecoul", &
+       "temperature    ", &
+       "pressure       ", &
+       "Pxx            ", &
+       "Pyy            ", &
+       "Pzz            ", &
+       "Pxy            ", &
+       "Pyz            ", &
+       "Pzx            ", &
+       "V              " &
+       ]
+
+    integer          :: i, j
     character(1024)  :: hdr
 
     ! ---
@@ -224,25 +238,32 @@ contains
 
     this%un = fopen("ener.out", F_WRITE)
 
-    this%fmt_str = "(I9,X,"//(18+this%n_real_attr)//"ES20.10)"
-    hdr = "#1:it 2:time 3:ekin 4:epot 5:ecoul 6:epot+ecoul 7:ekin+epot+ecoul"//&
-         " 8:ebs 9:erep 10:mu 11:T 12:P 13:Pxx 14:Pyy 15:Pzz 16:Pxy 17:Pyz "//&
-         "18:Pzx 19:V"
-    do i = 1, this%n_real_attr
-       hdr = trim(hdr) // " " // (19+i) // ":" // &
-            p%data%name_real_attr(this%l2d(i))
+    this%fmt_str = "(I9,X,"//(29+2*this%n_real_attr)//"ES20.10)"
+    hdr = "# 1:it 2:time"
+    do i = 1, 14
+       hdr = trim(hdr)//" "//(i+2)//":"//trim(qstr(i))
     enddo
+    do i = 1, this%n_real_attr
+       hdr = trim(hdr)//" "//(i+2+14)//":"//p%data%name_real_attr(this%l2d(i))
+    enddo
+    if (this%average .and. this%freq > 0.0_DP) then
+       j = 2+14+this%n_real_attr
+       do i = 1, 14
+          hdr = trim(hdr)//" "//(i+j)//":mean("//trim(qstr(i))//")"
+       enddo
+       do i = 1, this%n_real_attr
+          hdr = trim(hdr)//" "//(i+j+14)//":mean("// &
+                p%data%name_real_attr(this%l2d(i))//")"
+       enddo
+    endif
     write (this%un, '(A)')  trim(hdr)
 
     this%t        = 0.0_DP
     this%ekin     = 0.0_DP
     this%epot     = 0.0_DP
     this%ecoul    = 0.0_DP
-    this%ebs      = 0.0_DP
-    this%erep     = 0.0_DP
-    this%mu       = 0.0_DP
-    this%P(:, :)  = 0.0_DP
-    this%V        = 0.0_DP
+    this%pressure = 0.0_DP
+    this%volume   = 0.0_DP
 
     if (this%n_real_attr > 0) then
        this%real_attr = 0.0_DP
@@ -276,8 +297,8 @@ contains
 
     ! ---
 
-    integer   :: i
-    real(DP)  :: pr, T
+    integer  :: i
+    real(DP) :: real_attr(this%n_real_attr)
 
     type(coulomb_t), pointer :: coul
 
@@ -287,41 +308,28 @@ contains
 
     call c_f_pointer(coul_cptr, coul)
 
-    if (this%average) then
-       this%t     = this%t + dyn%dt
+    this%t        = this%t + dyn%dt
 
-       this%ekin  = this%ekin  + dyn%ekin * dyn%dt
-       this%epot  = this%epot  + dyn%epot * dyn%dt
-       this%p     = this%p     + dyn%pressure * dyn%dt
-       this%V     = this%V     + volume(dyn%p) * dyn%dt
-       this%ecoul = this%ecoul + coul%epot * dyn%dt
-    else
-       this%t     = 1.0_DP
-
-       this%ekin  = dyn%ekin
-       this%epot  = dyn%epot
-       this%p     = dyn%pressure
-       this%V     = volume(dyn%p)
-       this%ecoul = coul%epot
-    endif
+    this%ekin     = this%ekin + dyn%ekin * dyn%dt
+    this%epot     = this%epot + dyn%epot * dyn%dt
+    this%pressure = this%pressure + dyn%pressure * dyn%dt
+    this%volume   = this%volume + volume(dyn%p) * dyn%dt
+    this%ecoul    = this%ecoul + coul%epot * dyn%dt
 
     if (this%n_real_attr > 0) then
        do i = 1, this%n_real_attr
-          this%real_attr(i) = this%real_attr(i) + &
-               dyn%p%data%data_real_attr(this%l2d(i))*dyn%dt
+          real_attr(i) = dyn%p%data%data_real_attr(this%l2d(i))
+          this%real_attr(i) = this%real_attr(i) + real_attr(i)*dyn%dt
        enddo
     endif
 
-    if (this%freq < 0 .or. this%t >= this%freq) then
+    if (this%freq < 0.0_DP .or. this%t >= this%freq) then
 
-       this%ekin  = this%ekin / this%t
-       this%epot  = this%epot / this%t
-       this%p     = this%p / this%t
-       this%V     = this%V / this%t
-       this%ecoul = this%ecoul / this%t
-
-       T  = this%ekin*2/(dyn%p%dof*K_to_energy)  ! eV/A                                                                                                                                   
-       pr = tr(3, this%p) / 3
+       this%ekin     = this%ekin / this%t
+       this%epot     = this%epot / this%t
+       this%pressure = this%pressure / this%t
+       this%volume   = this%volume / this%t
+       this%ecoul    = this%ecoul / this%t
 
        if (this%n_real_attr > 0) then
           this%real_attr = this%real_attr / this%t
@@ -331,44 +339,85 @@ contains
        if (mpi_id() == 0) then
 #endif
 
-       if (this%n_real_attr > 0) then
-          write (this%un, this%fmt_str)  dyn%it, dyn%ti, &
-               this%ekin, this%epot-this%ecoul, this%ecoul, this%epot, &
-               this%ekin+this%epot, this%ebs, this%erep, this%mu, T, &
-               pr, this%p(1, 1), this%p(2, 2), this%p(3, 3), &
-               (this%p(1, 2)+this%p(2, 1))/2, &
-               (this%p(2, 3)+this%p(3, 2))/2, &
-               (this%p(3, 1)+this%p(1, 3))/2, &
-               this%V, &
-               this%real_attr
+	   if (this%average .and. this%freq > 0.0_DP) then
+       	  if (this%n_real_attr > 0) then
+             write (this%un, this%fmt_str)  dyn%it, dyn%ti, &
+                  dyn%ekin, dyn%epot-coul%epot, coul%epot, dyn%epot, &
+                  dyn%ekin+dyn%epot, dyn%ekin*2/(dyn%p%dof*K_to_energy), &
+                  tr(3, dyn%pressure)/3, &
+                  dyn%pressure(1, 1), dyn%pressure(2, 2), dyn%pressure(3, 3), &
+                  (dyn%pressure(1, 2)+dyn%pressure(2, 1))/2, &
+                  (dyn%pressure(2, 3)+dyn%pressure(3, 2))/2, &
+                  (dyn%pressure(3, 1)+dyn%pressure(1, 3))/2, &
+                  volume(dyn%p), &
+                  real_attr, &
+                  this%ekin, this%epot-this%ecoul, this%ecoul, this%epot, &
+                  this%ekin+this%epot, this%ekin*2/(dyn%p%dof*K_to_energy), &
+                  tr(3, this%pressure)/3, &
+                  this%pressure(1, 1),this%pressure(2, 2),this%pressure(3, 3), &
+                  (this%pressure(1, 2)+this%pressure(2, 1))/2, &
+                  (this%pressure(2, 3)+this%pressure(3, 2))/2, &
+                  (this%pressure(3, 1)+this%pressure(1, 3))/2, &
+                  this%volume, &
+                  this%real_attr
+          else
+             write (this%un, this%fmt_str)  dyn%it, dyn%ti, &
+                  dyn%ekin, dyn%epot-coul%epot, coul%epot, dyn%epot, &
+                  dyn%ekin+dyn%epot, dyn%ekin*2/(dyn%p%dof*K_to_energy), &
+                  tr(3, dyn%pressure)/3, &
+                  dyn%pressure(1, 1), dyn%pressure(2, 2), dyn%pressure(3, 3), &
+                  (dyn%pressure(1, 2)+dyn%pressure(2, 1))/2, &
+                  (dyn%pressure(2, 3)+dyn%pressure(3, 2))/2, &
+                  (dyn%pressure(3, 1)+dyn%pressure(1, 3))/2, &
+                  volume(dyn%p), &
+                  this%ekin, this%epot-this%ecoul, this%ecoul, this%epot, &
+                  this%ekin+this%epot, this%ekin*2/(dyn%p%dof*K_to_energy), &
+                  tr(3, this%pressure)/3, &
+                  this%pressure(1, 1),this%pressure(2, 2),this%pressure(3, 3), &
+                  (this%pressure(1, 2)+this%pressure(2, 1))/2, &
+                  (this%pressure(2, 3)+this%pressure(3, 2))/2, &
+                  (this%pressure(3, 1)+this%pressure(1, 3))/2, &
+                  this%volume
+          endif
        else
-          write (this%un, this%fmt_str)  dyn%it, dyn%ti, &
-               this%ekin, this%epot-this%ecoul, this%ecoul, this%epot, &
-               this%ekin+this%epot, this%ebs, this%erep, this%mu, T, &
-               pr, this%p(1, 1), this%p(2, 2), this%p(3, 3), &
-               (this%p(1, 2)+this%p(2, 1))/2, &
-               (this%p(2, 3)+this%p(3, 2))/2, &
-               (this%p(3, 1)+this%p(1, 3))/2, &
-               this%V
+       	  if (this%n_real_attr > 0) then
+             write (this%un, this%fmt_str)  dyn%it, dyn%ti, &
+                  dyn%ekin, dyn%epot-coul%epot, coul%epot, dyn%epot, &
+                  dyn%ekin+dyn%epot, dyn%ekin*2/(dyn%p%dof*K_to_energy), &
+                  tr(3, dyn%pressure)/3, &
+                  dyn%pressure(1, 1), dyn%pressure(2, 2), dyn%pressure(3, 3), &
+                  (dyn%pressure(1, 2)+dyn%pressure(2, 1))/2, &
+                  (dyn%pressure(2, 3)+dyn%pressure(3, 2))/2, &
+                  (dyn%pressure(3, 1)+dyn%pressure(1, 3))/2, &
+                  volume(dyn%p), &
+                  real_attr
+          else
+             write (this%un, this%fmt_str)  dyn%it, dyn%ti, &
+                  dyn%ekin, dyn%epot-coul%epot, coul%epot, dyn%epot, &
+                  dyn%ekin+dyn%epot, dyn%ekin*2/(dyn%p%dof*K_to_energy), &
+                  tr(3, dyn%pressure)/3, &
+                  dyn%pressure(1, 1), dyn%pressure(2, 2), dyn%pressure(3, 3), &
+                  (dyn%pressure(1, 2)+dyn%pressure(2, 1))/2, &
+                  (dyn%pressure(2, 3)+dyn%pressure(3, 2))/2, &
+                  (dyn%pressure(3, 1)+dyn%pressure(1, 3))/2, &
+                  volume(dyn%p)
+          endif
        endif
 
 #ifdef _MP
-    endif
+       endif
 #endif
 
-      this%t        = 0.0_DP
-      this%ekin     = 0.0_DP
-      this%epot     = 0.0_DP
-      this%ecoul    = 0.0_DP
-      this%ebs      = 0.0_DP
-      this%erep     = 0.0_DP
-      this%mu       = 0.0_DP
-      this%P(:, :)  = 0.0_DP
-      this%V        = 0.0_DP
+       this%t        = 0.0_DP
+       this%ekin     = 0.0_DP
+       this%epot     = 0.0_DP
+       this%ecoul    = 0.0_DP
+       this%pressure = 0.0_DP
+       this%volume   = 0.0_DP
 
-      if (this%n_real_attr > 0) then
-         this%real_attr = 0.0_DP
-      endif
+       if (this%n_real_attr > 0) then
+          this%real_attr = 0.0_DP
+       endif
 
     endif
 
@@ -387,7 +436,7 @@ contains
     ! ---
 
     this%freq    = -1.0_DP
-    this%average = .false.
+    this%average = .true.
 
     m = ptrdict_register_section(cfg, CSTR("OutputEnergy"), &
          CSTR("Output the energy of the system to the file 'ener.out'."))
@@ -396,7 +445,7 @@ contains
          CSTR("Output frequency (-1 means output every time step)."))
 
     call ptrdict_register_boolean_property(m, c_loc(this%average), CSTR("average"), &
-         CSTR("Average all quantities of the time interval *freq*."))
+         CSTR("Output quantities averaged over the time interval *freq*."))
 
   endsubroutine output_energy_register
 
