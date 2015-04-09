@@ -1,0 +1,39 @@
+Simulation {
+
+  system_of_units = "eV/A";
+
+  #
+  # Screen/File output
+  #
+
+  scr_freq   = "10";
+  file_freq  = "100";
+
+  per_atom_virial = "yes";
+
+  OutputEnergy { };
+
+  OutputNC { freq  = "10."; };
+
+  #
+  # Simulation control
+  #
+
+  dt        = "0.025";
+  max_time  = "100.0";
+
+  PetersT {
+    T       = "300.";
+    gamma   = "1.0";
+    cutoff  = "4.0";
+  };
+
+  #
+  # Force model
+  #
+
+  avgn = "50";
+
+  Rebo2 { };
+
+};
