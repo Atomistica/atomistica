@@ -132,9 +132,9 @@ contains
          DISSIPATION_STR, &
          F_CONSTANT + F_VERBOSE_ONLY + F_COMMUNICATE )
 
-    this%d  = modulo(this%d-1, 3)+1
-    this%d2 = modulo(this%d, 3)+1
-    this%d3 = modulo(this%d+1, 3)+1
+    this%d2 = modulo(this%d+1, 3)+1
+    this%d3 = modulo(this%d+2, 3)+1
+    this%d  = modulo(this%d,   3)+1
 
     write (ilog, '(5X,A,X,3(I1,X),A)')  "d  = ( ", this%d, this%d2, this%d3, " )"
 
