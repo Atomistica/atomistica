@@ -125,17 +125,27 @@ contains
 
     ! ---
 
-    call prlog("- verlet_global_langevin_1d -")
+    INIT_ERROR(ierror)
+
+    call prlog("- verlet_global_langevin_1d_init -")
 
     if (present(d)) then
-       this%d  = d
+       this%d = d
     endif
     if (present(T)) then
-       this%T  = T
+       this%T = T
     endif
     if (present(dT)) then
-       this%dT  = dT
+       this%dT = dT
     endif
+
+    this%d2 = modulo(this%d+1, 3)+1
+    this%d3 = modulo(this%d+2, 3)+1
+    this%d  = modulo(this%d,   3)+1
+
+    call prlog("d             = ( "//this%d//", "//this%d2//", "//this%d3//" )")
+    call prlog("T             = "//this%T)
+    call prlog("dT            = "//this%dT)
 
     if (present(dissipation)) then
        this%dissipation  = dissipation
@@ -150,17 +160,14 @@ contains
 
     if (this%tau > 0.0_DP) then
        this%dissipation  = 1.0_DP/this%tau
+       call prlog("tau           = "//1.0_DP/this%dissipation)
+       call prlog("* dissipation = "//this%dissipation)
+    else
+       call prlog("dissipation   = "//this%dissipation)
+       call prlog("* tau         = "//1.0_DP/this%dissipation)
     endif
 
-    if (.not. rng_initialized) then
-       call rng_init
-    endif
-
-    this%d  = modulo(this%d,   3)+1
-    this%d2 = modulo(this%d+1, 3)+1
-    this%d3 = modulo(this%d+2, 3)+1
-
-    call prlog("     d  = ( "//this%d//", "//this%d2//", "//this%d3//" )")
+    call rng_init
 
     call prlog
 
