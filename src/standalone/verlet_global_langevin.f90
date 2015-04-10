@@ -114,11 +114,9 @@ contains
         
     ! ---
 
-    integer  :: i
-
-    ! ---
-
     INIT_ERROR(error)
+
+    call prlog("- verlet_global_langevin_init -")
 
     ! Checks
     if (present(dissipation) .and. present(tau)) then
@@ -127,11 +125,15 @@ contains
 
     ! Init
     if (present(T)) then
-       this%T  = T
+       this%T = T
     endif
     if (present(dT)) then
-       this%dT  = dT
+       this%dT = dT
     endif
+
+    call prlog("     T           = "//this%T)
+    call prlog("     dT          = "//this%dT)
+
     if (present(dissipation)) then
        this%dissipation  = dissipation
        this%tau = -1.0_DP
@@ -140,22 +142,19 @@ contains
        endif
     endif
     if (present(tau)) then
-       this%tau  = tau
+       this%tau = tau
     endif
 
     if (this%tau > 0.0_DP) then
        this%dissipation  = 1.0_DP/this%tau
+       call prlog("tau           = "//1.0_DP/this%dissipation)
+       call prlog("* dissipation = "//this%dissipation)
+    else
+       call prlog("dissipation   = "//this%dissipation)
+       call prlog("* tau         = "//1.0_DP/this%dissipation)
     endif
 
-
     call rng_init
-
-    call prlog("- verlet_global_langevin_init -")
-
-    call prlog("     T           = "//this%T)
-    call prlog("     dT          = "//this%dT)
-    call prlog("     dissipation = "//this%dissipation)
-    call prlog("      -> tau     = "//1.0_DP/this%dissipation)
 
     call prlog
 
