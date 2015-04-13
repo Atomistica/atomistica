@@ -2,7 +2,8 @@ TODO
 ====
 
 - Make TabulatedEAM work for alloys. Probably useful to rename TabulatedEAM
-  to FuncflEAM and TabulatedAlloyEAM to SetflEAM at this point.
+  to FuncflEAM and TabulatedAlloyEAM to SetflEAM to distinguish by file
+  format.
 
 - Remove need for (undocumented) elements.dat file for Slater-Koster
   databases.
@@ -10,13 +11,18 @@ TODO
 Change log
 ==========
 
-HEAD
-----
+v0.3.2
+------
 
-- Object introspection from Python
+- General mechanism for object introspection from Python
+
+- Exposed NOTB internals to Python (Hamiltonian, overlap and density matrices,
+  eigenvalues and eigenvectors if LAPACK solver is used)
 
 - Made NOTB per-bond analysis tools available from Python (added
   get_per_bond_property method)
+
+- Some bug fixes to parts of the standalone code
 
 v0.3.1
 ------
