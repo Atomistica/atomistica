@@ -9,7 +9,7 @@ from atomistica import *
 
 ###
 
-pots = [ Brenner, BrennerScr, Tersoff, TersoffScr, Rebo2, Rebo2Scr ]
+pots = [ Brenner, BrennerScr, Tersoff, TersoffScr, Rebo2, Rebo2Scr, Rebo2SiCH, Rebo2SiCHScr ]
 
 for pot in pots:
     a = ase.io.read('rho_2.9.traj')
@@ -18,4 +18,4 @@ for pot in pots:
     	              setup='from __main__ import a',
     			      number=100)
 
-    print '{} {}'.format(pot, t)
+    print '{0} {1}'.format(pot, t)

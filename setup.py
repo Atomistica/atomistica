@@ -151,7 +151,7 @@ lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
 #
 
 #print 'Scanning f90 metadata in directory {0}...'.format(srcdir)
-metadata = scanallmeta(['{}/{}'.format(srcdir, x) for x in 
+metadata = scanallmeta(['{0}/{1}'.format(srcdir, x) for x in 
                         ['notb', 'potentials', 'potentials_nonfree']])
 
 #print 'Writing factories...'
@@ -163,7 +163,7 @@ lib_srcs += fns1
 
 print '* Found the following Coulomb modules:'
 for f90name, f90type, name, features, methods in mods1:
-    print '    {}'.format(name)
+    print '    {0}'.format(name)
 
 
 # Write coulomb factory
@@ -187,7 +187,7 @@ lib_srcs += fns2
 
 print '* Found the following potential modules:'
 for f90name, f90type, name, features, methods in mods2:
-    print '    {}'.format(name)
+    print '    {0}'.format(name)
 
 write_factory_f90(mods2, 'potential', 'build/potentials_factory_f90.f90')
 write_factory_c(mods2, 'potential', 

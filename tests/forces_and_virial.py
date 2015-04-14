@@ -331,7 +331,7 @@ def run_forces_and_virial_test(test=None):
             
                 a.rattle(rattle)
     if test is None:
-        print '{} tests passed, {} tests failed.'.format(nok, nfail)
+        print '{0} tests passed, {1} tests failed.'.format(nok, nfail)
 
 ###
 

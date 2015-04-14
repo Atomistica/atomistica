@@ -76,7 +76,7 @@ els = [(el, nat)]
 
 f = open('hyb.out', 'w')
 for density in densities:
-    print 'Running for density {}...'.format(density)
+    print 'Running for density {0}...'.format(density)
     if isinstance(density, str):
         a = read(density)
     else:
@@ -93,17 +93,17 @@ for density in densities:
     FIRE(a).run(fmax=fmax, steps=10000)
 
     # Langevin quench to T1
-    print 'Langevin quench to {}...'.format(T1)
+    print 'Langevin quench to {0}...'.format(T1)
     Langevin(a, dt*fs, T1*kB, 1.0/(500*fs),
              logfile='-', loginterval=int(100/dt)).run(int(time/dt))
 
     # Langevin quench to T2
-    print 'Langevin quench to {}...'.format(T2)
+    print 'Langevin quench to {0}...'.format(T2)
     Langevin(a, dt*fs, T2*kB, 1.0/(500*fs),
              logfile='-', loginterval=int(100/dt)).run(int(time/dt))
 
     # Langevin quench to T3
-    print 'Langevin quench to {}...'.format(T3)
+    print 'Langevin quench to {0}...'.format(T3)
     dyn = Langevin(a, dt*fs, T3*kB, 1.0/(500*fs), logfile='-',
                    loginterval=int(100/dt))
     dyn.run(int(time/dt))

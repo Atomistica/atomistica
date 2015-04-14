@@ -21,8 +21,9 @@ def get_finterfaces(fn, include_list=None, tmpfilename='_cpp.tmp'):
     include_str = ''
     if include_list is not None:
         include_str = reduce(lambda x,y: x+' -I'+y, include_list, '')
-    os.system('gfortran -x f95-cpp-input -E {} {} > {}'.format(fn, include_str,
-                                                   tmpfilename))
+    os.system('gfortran -x f95-cpp-input -E {0} {1} > {2}'.format(fn,
+                                                                  include_str,
+                                                                  tmpfilename))
 
     iface = re.compile('^\ *interface\ ',re.IGNORECASE)
 
@@ -163,12 +164,12 @@ if __name__ == '__main__':
         if key[:2] == '-I':
             include_list += [key[2:]]
         else:
-            raise RuntimeError('Unknown comand line argument: {}'.format(key))
+            raise RuntimeError('Unknown comand line argument: {0}'.format(key))
 
     print('Scanning metadata of all source files...')
     metadata = scanallmeta(path)
    
-    print("Dumping information for classes that implement '{}' interface..." \
+    print("Dumping information for classes that implement '{0}' interface..." \
         .format(interface))
     write_interface_info(metadata, interface, finterface_list, exclude_list,
                          include_list, deffn, mkfn, cfgfn)

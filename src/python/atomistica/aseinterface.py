@@ -225,8 +225,8 @@ class Atomistica(object):
     def initialize(self, atoms):
         if self.mask is not None:
             if len(self.mask) != len(atoms):
-                raise RuntimeError('Length of mask array (= {}) does not equal '
-                                   'number of atoms (= {}).'
+                raise RuntimeError('Length of mask array (= {0}) does not '
+                                   'equal number of atoms (= {1}).'
                                    .format(len(self.mask), len(atoms)))
 
         pbc = atoms.get_pbc()
