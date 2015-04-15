@@ -1,17 +1,17 @@
 Interatomic potentials
 ======================
 
-This file contains a list of implemented interatomic potentials and parameter
-sets provided. The code fragments show Python code necessary to instantiate an
-ASE calculator object for the respective potential/parameterization. Note that
-for all potentials listed below there is a default parameter set that is used
-if instantiated without and explicit database dictionary. This default is the 
-first potential listed below.
+This file contains a list of interatomic potentials implemented in Atomistica,
+and the parameter sets provided for them. The code fragments show Python code
+that instantiates an ASE calculator object for the respective
+potential/parameterization. Note that for all potentials listed below there is
+a default parameter set that is used if instantiated without an explicit
+database dictionary. This default is the first potential listed below.
 
 Empirical bond-order potentials
 -------------------------------
 
-Potentials that employ the Tersoff functional form:
+Potentials that employ Tersoff's functional form:
 
 *   Jerry Tersoff  
     "Modeling solid-state chemistry: Interatomic potentials for multicomponent systems"  
@@ -115,8 +115,8 @@ Special potentials:
     Note: This is the default parameter set for this potential. It gets loaded
     by the following code.  
 
-        from atomistica import Kumagai  
-        calc = Kumagai()
+        from atomistica import Juslin  
+        calc = Juslin()
 
 *   T. Kumagai, S. Izumi, S. Hara, S. Sakai  
     "Development of bond-order potentials that can reproduce the elastic constants and melting point of silicon for classical molecular dynamics simulation"  
