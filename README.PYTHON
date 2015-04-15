@@ -20,7 +20,7 @@ interface to Atomistica.
 
    There may be error messages complaining about undefined symbols when loading
    Atomistica in step 3 below. It is then necessary to force linking to the
-   respective libraries. Additional libraries can be specified in tbe build_ext
+   respective libraries. Additional libraries can be specified in the build_ext
    section:
 
      [build_ext]
