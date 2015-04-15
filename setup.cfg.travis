@@ -7,4 +7,4 @@ f90flags=-cpp -fPIC -ffree-form -ffree-line-length-none -x f95-cpp-input
 f77flags=-cpp -fPIC -x f77-cpp-input
 
 [build_ext]
-libraries=lapack,blas,gfortran
+libraries=lapack blas gfortran
