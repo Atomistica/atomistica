@@ -53,7 +53,7 @@
 #include "error.h"
 #include "update.h"
 
-#include "gfmd_grid.h"
+//#include "gfmd_grid.h"
 
 #include "potentials_factory_c.h"
 
