@@ -336,6 +336,9 @@ contains
        do j = i, p%nel
           if (IS_EL2(this%els, j)) then
              call request_interaction_range(nl, this%cutoff, i, j)
+#ifdef LAMMPS
+             call set_interaction_range(p, 2*this%cutoff, i, j)
+#endif
           endif
        enddo
     enddo
