@@ -74,6 +74,8 @@ module tabulated_alloy_eam
 
      character(100)         :: fn = "default.in"
 
+     logical(BOOL)          :: dump = .false.
+
      !
      ! Additional information
      !
@@ -219,12 +221,12 @@ contains
        call read(this%fF(i), f, nF, 0.0_DP, dF)
        call read(this%frho(i), f, nr, 0.0_DP, dr, pad=(/0.0_DP,0.0_DP/))
 
-#if 0
-       call write(this%fF(i), "fF_"//trim(this%db_elements(i))//".out", &
-            0.0001_DP)
-       call write(this%frho(i), "frho_"//trim(this%db_elements(i))//".out", &
-            0.01_DP)
-#endif
+       if (this%dump) then
+          call write(this%fF(i), "fF_"//trim(this%db_elements(i))//".out", &
+               0.0001_DP)
+          call write(this%frho(i), "frho_"//trim(this%db_elements(i))//".out", &
+               0.01_DP)
+       endif 
 
 #ifdef AVOID_SQRT
        call square_x_axis(this%frho(i), 10*this%frho(i)%n)
@@ -235,10 +237,10 @@ contains
        do j = 1, i
           call read(this%fphi(i, j), f, nr, 0.0_DP, dr, pad=(/0.0_DP,0.0_DP/))
 
-#if 0
-          call write(this%fphi(i, j), "fphi_"//trim(this%db_elements(i))// &
-               "-"//trim(this%db_elements(j))//".out", 0.01_DP)
-#endif
+          if (this%dump) then
+             call write(this%fphi(i, j), "fphi_"//trim(this%db_elements(i))// &
+                  "-"//trim(this%db_elements(j))//".out", 0.01_DP)
+          endif
 
           call scale_y_axis(this%fphi(i, j), 0.5_DP)
 #ifdef AVOID_SQRT
@@ -642,6 +644,9 @@ contains
 
     call ptrdict_register_string_property(m, c_locs(this%fn), 100, CSTR("fn"), &
          CSTR("Configuration file."))
+
+    call ptrdict_register_boolean_property(m, c_loc(this%dump), CSTR("dump"), &
+         CSTR("Dump interatomic potential to disk."))
 
   endsubroutine tabulated_alloy_eam_register
 
