@@ -30,7 +30,7 @@
 !!
 !! Implementation of the specific functional forms of Juslin's W-C-H potential,
 !! including screening functions.
-!! See: Juslin, Erhart, Träskelin, Nord, Henriksson, Nordlund, Salonen, Albe,
+!! See: Juslin, Erhart, Traskelin, Nord, Henriksson, Nordlund, Salonen, Albe,
 !! J. Appl. Phys. 98, 123520 (2005)
 !<
 
