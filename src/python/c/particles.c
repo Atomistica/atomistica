@@ -535,7 +535,7 @@ static PyMappingMethods particles_as_mapping = {
 
 
 PyTypeObject particles_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     0,                                          /*ob_size*/
     "_atomistica.Particles",                    /*tp_name*/
     sizeof(particles_t),                        /*tp_basicsize*/

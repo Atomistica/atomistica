@@ -18,6 +18,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ====================================================================== */
+
 #include <Python.h>
 #define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #include <numpy/arrayobject.h>
@@ -106,11 +107,30 @@ static PyMethodDef module_methods[] = {
 };
 
 
-/* Module initialization
+/*
+ * Module initialization
  */
 
-#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
+#ifndef PyMODINIT_FUNC  /* declarations for DLL import/export */
 #define PyMODINIT_FUNC void
+#endif
+
+/*
+ * Module declaration
+ */
+
+#if PY_MAJOR_VERSION >= 3
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, methods, doc) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+    #define MOD_RETURN_ERROR return NULL
+#else
+    #define MOD_INIT(name) PyMODINIT_FUNC init##name(void)
+    #define MOD_DEF(ob, name, methods, doc) \
+        ob = Py_InitModule3(name, methods, doc);
+    #define MOD_RETURN_ERROR return
 #endif
 
 static PyTypeObject
@@ -118,8 +138,7 @@ coulomb_types[N_COULOMB_CLASSES];
 static PyTypeObject
 potential_types[N_POTENTIAL_CLASSES];
 
-PyMODINIT_FUNC
-init_atomistica(void)
+MOD_INIT(_atomistica)
 {
     PyObject* m;
     int i;
@@ -133,17 +152,15 @@ init_atomistica(void)
     import_array();
 
     if (PyType_Ready(&particles_type) < 0)
-      return;
+      MOD_RETURN_ERROR;
 
     if (PyType_Ready(&neighbors_type) < 0)
-      return;
+      MOD_RETURN_ERROR;
 
-    m = Py_InitModule3("_atomistica", module_methods,
-                       "Interface to the Atomistica molecular dynamics Fortran "
-		       "kernel.");
-
+    MOD_DEF(m, "_atomistica", module_methods,
+            "Interface to the Atomistica interatomic potential library.")
     if (m == NULL)
-      return;
+      MOD_RETURN_ERROR;
 
     Py_INCREF(&particles_type);
     PyModule_AddObject(m, "Particles", (PyObject *) &particles_type);
@@ -160,7 +177,7 @@ init_atomistica(void)
               MAX_COULOMB_NAME);
 
       if (PyType_Ready(&coulomb_types[i]) < 0)
-        return;
+        MOD_RETURN_ERROR;
 
       Py_INCREF(&coulomb_types[i]);
       PyModule_AddObject(m, coulomb_classes[i].name,
@@ -176,10 +193,14 @@ init_atomistica(void)
 	      MAX_POTENTIAL_NAME);
 
       if (PyType_Ready(&potential_types[i]) < 0)
-        return;
+        MOD_RETURN_ERROR;
 
       Py_INCREF(&potential_types[i]);
       PyModule_AddObject(m, potential_classes[i].name,
 			 (PyObject *) &potential_types[i]);
     }
+
+#if PY_MAJOR_VERSION >= 3
+    return m;
+#endif
 }

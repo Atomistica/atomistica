@@ -18,6 +18,7 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ====================================================================== */
+
 #include <Python.h>
 #define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
@@ -322,7 +323,7 @@ static PyMethodDef neighbors_methods[] = {
 
 
 PyTypeObject neighbors_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     0,                                          /*ob_size*/
     "_atomistica.Neighbors",                    /*tp_name*/
     sizeof(neighbors_t),                        /*tp_basicsize*/

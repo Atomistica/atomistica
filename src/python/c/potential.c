@@ -655,7 +655,7 @@ static PyMethodDef potential_methods[] = {
 
 
 PyTypeObject potential_type = {
-    PyObject_HEAD_INIT(NULL)
+    PyVarObject_HEAD_INIT(NULL, 0)
     0,                                          /*ob_size*/
     "_atomistica.Potential",                    /*tp_name*/
     sizeof(potential_t),                        /*tp_basicsize*/
