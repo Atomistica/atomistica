@@ -324,7 +324,6 @@ static PyMethodDef neighbors_methods[] = {
 
 PyTypeObject neighbors_type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    0,                                          /*ob_size*/
     "_atomistica.Neighbors",                    /*tp_name*/
     sizeof(neighbors_t),                        /*tp_basicsize*/
     0,                                          /*tp_itemsize*/
