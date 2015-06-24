@@ -318,7 +318,8 @@ static PyMethodDef neighbors_methods[] = {
     "Set the cutoff radius." },
   { "update", (PyCFunction) neighbors_update, METH_VARARGS,
     "Update the neighbor list." },
-  { "get_neighbors", (PyCFunction) neighbors_get_neighbors, METH_KEYWORDS,
+  { "get_neighbors", (PyCFunction) neighbors_get_neighbors,
+    METH_VARARGS | METH_KEYWORDS,
     "Return complete neighbors list in a three tuple giving, atom i, atom j, "
     "and the distance r." },
   { "find_neighbor", (PyCFunction) neighbors_find_neighbor, METH_VARARGS,

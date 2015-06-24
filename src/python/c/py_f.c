@@ -54,8 +54,10 @@ py_to_error(char *file, int line, int *ierror)
   PyErr_Fetch(&ptype, &pvalue, &ptraceback); 
 
 #if PY_MAJOR_VERSION >= 3
-  c_push_error_with_info(PyUnicode_AS_DATA(pvalue), file, line,
+  PyObject *bpvalue = PyUnicode_AsASCIIString(pvalue);
+  c_push_error_with_info(PyBytes_AS_STRING(bpvalue), file, line,
                          ERROR_UNSPECIFIED);
+  Py_DECREF(bpvalue);
 #else
   c_push_error_with_info(PyString_AS_STRING(pvalue), file, line,
                          ERROR_UNSPECIFIED);
@@ -79,13 +81,17 @@ pystring_to_fstring(PyObject *pystr, char *forstr, int len)
   int j;
 
 #if PY_MAJOR_VERSION >= 3
-  str = PyUnicode_AS_DATA(pystr);
+  PyObject *pybstr = PyUnicode_AsASCIIString(pystr);
+  str = PyBytes_AS_STRING(pybstr);
 #else
   str = PyString_AS_STRING(pystr);
 #endif
   strncpy(forstr, str, len);
   j = strlen(str);
   if (j < len)  memset(forstr+j, ' ', len-j);
+#if PY_MAJOR_VERSION >= 3
+  Py_DECREF(pybstr);
+#endif
 }
 
 
@@ -129,7 +135,7 @@ pyobject_to_property(PyObject *value, property_t *p)
 
   char errstr[1024];
 
-  PyObject *t;
+  PyObject *t, *bvalue;
   PyArrayObject *arr;
 
 #ifdef DEBUG
@@ -178,11 +184,15 @@ pyobject_to_property(PyObject *value, property_t *p)
       return -1;
     }
 #if PY_MAJOR_VERSION >= 3
-    str = PyUnicode_AS_DATA(value);
+    bvalue = PyUnicode_AsASCIIString(value);
+    str = PyBytes_AS_STRING(bvalue);
 #else
     str = PyString_AS_STRING(value);
 #endif
     strncpy((char*) p->ptr, str, p->tag-1);
+#if PY_MAJOR_VERSION >= 3
+    Py_DECREF(bvalue);
+#endif
     break;
   case PK_FORTRAN_STRING:
 #if PY_MAJOR_VERSION >= 3
@@ -406,7 +416,8 @@ pyobject_to_property(PyObject *value, property_t *p)
       return -1;
     }
 #if PY_MAJOR_VERSION >= 3
-    str = PyUnicode_AS_DATA(value);
+    bvalue = PyUnicode_AsASCIIString(value);
+    str = PyBytes_AS_STRING(bvalue);
 #else
     str = PyString_AS_STRING(value);
 #endif
@@ -419,11 +430,17 @@ pyobject_to_property(PyObject *value, property_t *p)
       sprintf(errstr, "[ptrdict_set_property] Error: Could not find key "
               "'%s' in property '%s' of section '%s'.\n",
               str, p->name, p->parent->name);
+#if PY_MAJOR_VERSION >= 3
+      Py_DECREF(bvalue);
+#endif
       PyErr_SetString(PyExc_ValueError, errstr);
       return -1;
     } else {
       *((int*) p->ptr) = j;
     };
+#if PY_MAJOR_VERSION >= 3
+    Py_DECREF(bvalue);
+#endif
     break;
   case PK_ARRAY1D:
     if (!PyArray_Check(value)) {
@@ -618,7 +635,8 @@ pydict_to_ptrdict(PyObject *dict, section_t *s)
     }
 
 #if PY_MAJOR_VERSION >= 3
-    key = PyUnicode_AS_DATA(pkey);
+    PyObject *bpkey = PyUnicode_AsASCIIString(pkey);
+    key = PyBytes_AS_STRING(bpkey);
 #else
     key = PyString_AS_STRING(pkey);
 #endif
@@ -637,6 +655,9 @@ pydict_to_ptrdict(PyObject *dict, section_t *s)
       // Property found
 
       if (pyobject_to_property(value, p)) {
+#if PY_MAJOR_VERSION >= 3
+        Py_DECREF(bpkey);
+#endif
         return -1;
       }
     } else {
@@ -658,8 +679,12 @@ pydict_to_ptrdict(PyObject *dict, section_t *s)
 #endif
 
         // Value should be a dictionary
-        if (!PyDict_Check(value))
+        if (!PyDict_Check(value)) {
+#if PY_MAJOR_VERSION >= 3
+          Py_DECREF(bpkey);
+#endif
           return -1;
+        }
 
 #ifdef DEBUG
         printf("[pydict_to_ptrdict] Child: %s\n", child->name);
@@ -677,12 +702,18 @@ pydict_to_ptrdict(PyObject *dict, section_t *s)
         if (key[0] != '_' || key[1] != '_') {
           sprintf(errstr, "Could not find property '%s' of section '%s'.",
                   key, s->name);
+#if PY_MAJOR_VERSION >= 3
+          Py_DECREF(bpkey);
+#endif
           PyErr_SetString(PyExc_TypeError, errstr);
           return -1;
         }
       }
     }
 
+#if PY_MAJOR_VERSION >= 3
+    Py_DECREF(bpkey);
+#endif
   }
 
   return 0;

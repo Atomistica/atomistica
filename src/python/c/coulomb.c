@@ -152,7 +152,8 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
   }
 
 #if PY_MAJOR_VERSION >= 3
-  name = PyUnicode_AS_DATA(pyname);
+  PyObject *pybname = PyUnicode_AsASCIIString(pyname);
+  name = PyBytes_AS_STRING(pybname);
 #else
   name = PyString_AS_STRING(pyname);
 #endif
@@ -245,6 +246,9 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
     r = PyObject_GenericGetAttr((PyObject *) self, pyname);
   }
 
+#if PY_MAJOR_VERSION >= 3
+  Py_DECREF(pybname);
+#endif
   return r;
 }
 

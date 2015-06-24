@@ -146,7 +146,8 @@ potential_getattro(potential_t *self, PyObject *pyname)
   }
 
 #if PY_MAJOR_VERSION >= 3
-  name = PyUnicode_AS_DATA(pyname);
+  PyObject *pybname = PyUnicode_AsASCIIString(pyname);
+  name = PyBytes_AS_STRING(pybname);
 #else
   name = PyString_AS_STRING(pyname);
 #endif
@@ -165,7 +166,12 @@ potential_getattro(potential_t *self, PyObject *pyname)
     p = p->next;
   }
 
-  if (p) return property_to_pyobject(p);
+  if (p) {
+#if PY_MAJOR_VERSION >= 3
+    Py_DECREF(pybname);
+#endif
+    return property_to_pyobject(p);
+}
 
   /* Not in parameter data? Search in state data */
   if (self->f90class->get_dict) {
@@ -179,8 +185,12 @@ potential_getattro(potential_t *self, PyObject *pyname)
     
     self->f90class->get_dict(self->f90obj, s, &ierror);
 
-    if (error_to_py(ierror))
+    if (error_to_py(ierror)) {
+#if PY_MAJOR_VERSION >= 3
+      Py_DECREF(pybname);
+#endif
       return NULL;
+    }
 
     p = s->first_property;
     while (p != NULL && strcmp(p->name, name)) {
@@ -192,9 +202,17 @@ potential_getattro(potential_t *self, PyObject *pyname)
 
     if (p) r = property_to_pyobject(p);
     ptrdict_cleanup(s);
-    if (r) return r;
+    if (r) {
+#if PY_MAJOR_VERSION >= 3
+      Py_DECREF(pybname);
+#endif
+      return r;
+    }
   }
 
+#if PY_MAJOR_VERSION >= 3
+  Py_DECREF(pybname);
+#endif
   /* Fall back to default getattro */
   return PyObject_GenericGetAttr((PyObject *) self, pyname);
 }
@@ -663,10 +681,11 @@ static PyMethodDef potential_methods[] = {
     "to be called if either one changes." },
   { "set_Coulomb", (PyCFunction) potential_set_Coulomb, METH_VARARGS,
     "Set the object that handles Coulomb callbacks." },
-  { "get_per_bond_property", (PyCFunction) potential_get_per_bond_property, METH_VARARGS,
-    "Return a named property that is defined per bond." },
-  { "energy_and_forces", (PyCFunction) potential_energy_and_forces,
-    METH_KEYWORDS, "Compute the forces and return the potential energy." },
+  { "get_per_bond_property", (PyCFunction) potential_get_per_bond_property,
+    METH_VARARGS, "Return a named property that is defined per bond." },
+  { "energy_and_forces", (PyCFunctionWithKeywords) potential_energy_and_forces,
+    METH_VARARGS | METH_KEYWORDS,
+    "Compute the forces and return the potential energy." },
   { NULL, NULL, 0, NULL }  /* Sentinel */
 };
 

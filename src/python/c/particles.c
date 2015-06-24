@@ -363,14 +363,8 @@ data_array_by_name(particles_t *self, char *key)
       break;
 
     default:
-
-#if PY_MAJOR_VERSION >= 3
       sprintf(errstr, "InternalError: Unknown type returned for field or "
-              "attribute '%s'.", PyUnicode_AS_DATA(key));
-#else
-      sprintf(errstr, "InternalError: Unknown type returned for field or "
-              "attribute '%s'.", PyString_AS_STRING(key));
-#endif
+              "attribute '%s'.", key);
       PyErr_SetString(PyExc_KeyError, errstr);
       r  = NULL;
 
@@ -409,21 +403,26 @@ particles_getitem(particles_t *self, PyObject *key)
 #endif
 
 #if PY_MAJOR_VERSION >= 3
-  r = (PyObject*) data_array_by_name(self, PyUnicode_AS_DATA(key));
+  PyObject *bkey = PyUnicode_AsASCIIString(key);
+  r = (PyObject*) data_array_by_name(self, PyBytes_AS_STRING(bkey));
 #else
   r = (PyObject*) data_array_by_name(self, PyString_AS_STRING(key));
 #endif
 
   if (!r) {
-    sprintf(errstr, "No field or attribute '%s' defined for this object.",
 #if PY_MAJOR_VERSION >= 3
-            PyUnicode_AS_DATA(key));
+    sprintf(errstr, "No field or attribute '%s' defined for this object.",
+            PyBytes_AS_STRING(bkey));
 #else
+    sprintf(errstr, "No field or attribute '%s' defined for this object.",
             PyString_AS_STRING(key));
 #endif
     PyErr_SetString(PyExc_KeyError, errstr);
   };
 
+#if PY_MAJOR_VERSION >= 3
+  Py_DECREF(bkey);
+#endif
   return r;
 }
 
@@ -441,7 +440,9 @@ particles_getattro(particles_t *self, PyObject *key)
   r = NULL;
   if (self->initialized) {
 #if PY_MAJOR_VERSION >= 3
-    r = (PyObject*) data_array_by_name(self, PyUnicode_AS_DATA(key));
+    PyObject *bkey = PyUnicode_AsASCIIString(key);
+    r = (PyObject*) data_array_by_name(self, PyBytes_AS_STRING(bkey));
+    Py_DECREF(bkey);
 #else
     r = (PyObject*) data_array_by_name(self, PyString_AS_STRING(key));
 #endif
