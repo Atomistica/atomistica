@@ -8,6 +8,7 @@
 from __future__ import print_function
 
 import getopt
+import io
 import os
 import re
 import sys
@@ -29,7 +30,7 @@ def get_finterfaces(fn, include_list=None, tmpfilename='_cpp.tmp'):
 
     finterfaces = []
 
-    f = open(tmpfilename, mode='r')
+    f = io.open(tmpfilename, mode='r', encoding='latin-1')
     l = f.readline()
     while l:
         l = f.readline()
@@ -87,9 +88,9 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
                          include_list, deffn, mkfn, cfgfn):
     fns = []
 
-    deff = open(deffn, 'a')
-    mkf = open(mkfn, 'a')
-    cfgf = open(cfgfn, 'a')
+    deff = io.open(deffn, mode='a', encoding='latin-1')
+    mkf = io.open(mkfn, mode='a', encoding='latin-1')
+    cfgf = io.open(cfgfn, mode='a', encoding='latin-1')
 
     print(u'%s_MODS = \\' % interface.upper(), file=mkf)
 

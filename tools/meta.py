@@ -2,6 +2,9 @@
    is intended to scan directories for this information.
 """
 
+from __future__ import print_function
+
+import io
 import os
 
 
@@ -12,8 +15,9 @@ def scanmeta(f):
     """Scan file headers for @meta ... @endmeta information and store that into
        a dictionary.
     """
+    print(f)
     if isinstance(f, str):
-        f = open(f, mode='r')
+        f = io.open(f, mode='r', encoding='latin-1')
 
     done = False
 

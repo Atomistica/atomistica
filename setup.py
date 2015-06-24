@@ -1,3 +1,26 @@
+# ======================================================================
+# Atomistica - Interatomic potential library and molecular dynamics code
+# https://github.com/Atomistica/atomistica
+#
+# Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
+# See the AUTHORS file in the top-level Atomistica directory.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ======================================================================
+
+from __future__ import print_function
+
 import glob
 import os
 import sys
@@ -37,13 +60,13 @@ extra_link_args = [ ]
 # LAPACK configuration from numpy
 #
 
-for k, v in np.__config__.__dict__.iteritems():
+for k, v in np.__config__.__dict__.items():
     if re.match('lapack_.*_info', k):
         if 'library_dirs' in v:
-            print "* Using LAPACK information from '%s' dictionary in " \
-                "numpy.__config__" % k
-            print "    library_dirs = '%s'" % v['library_dirs']
-            print "    libraries = '%s'" % v['libraries']
+            print("* Using LAPACK information from '%s' dictionary in " \
+                "numpy.__config__" % k)
+            print("    library_dirs = '%s'" % v['library_dirs'])
+            print("    libraries = '%s'" % v['libraries'])
             lib_dirs += v['library_dirs']
             libs += v['libraries']
             # We use whichever lapack_*_info comes first
@@ -161,9 +184,9 @@ mods1, fns1 = get_module_list(metadata, 'coulomb',
                               include_list = inc_dirs)
 lib_srcs += fns1
 
-print '* Found the following Coulomb modules:'
+print('* Found the following Coulomb modules:')
 for f90name, f90type, name, features, methods in mods1:
-    print '    {0}'.format(name)
+    print('    {0}'.format(name))
 
 
 # Write coulomb factory
@@ -185,9 +208,9 @@ mods2, fns2 = get_module_list(metadata, 'potentials',
                               include_list = inc_dirs)
 lib_srcs += fns2
 
-print '* Found the following potential modules:'
+print('* Found the following potential modules:')
 for f90name, f90type, name, features, methods in mods2:
-    print '    {0}'.format(name)
+    print('    {0}'.format(name))
 
 write_factory_f90(mods2, 'potential', 'build/potentials_factory_f90.f90')
 write_factory_c(mods2, 'potential', 
@@ -200,13 +223,13 @@ lib_srcs += [ 'build/potentials_factory_f90.f90',
               ]
 
 f = open('build/have.inc', 'w')
-print >> f, '#ifndef __HAVE_INC'
-print >> f, '#define __HAVE_INC'
+print('#ifndef __HAVE_INC', file=f)
+print('#define __HAVE_INC', file=f)
 for classabbrev, classname, classtype, classfeatures, methods in mods1:
-    print >> f, '#define HAVE_%s' % (classabbrev.upper())
+    print('#define HAVE_%s' % (classabbrev.upper()), file=f)
 for classabbrev, classname, classtype, classfeatures, methods in mods2:
-    print >> f, '#define HAVE_%s' % (classabbrev.upper())
-print >> f, '#endif'
+    print('#define HAVE_%s' % (classabbrev.upper()), file=f)
+print('#endif', file=f)
 f.close()
 
 ###
