@@ -64,7 +64,7 @@ class MaskTest(unittest.TestCase):
         self.assertTrue(np.max(np.abs(w-w1-w2)) < 1e-6)
 
     def test_mask_decomposition_bop(self):
-        a = io.read('aC.traj')
+        a = io.read('aC.cfg')
         for pot in [Tersoff, TersoffScr]:
             c = Tersoff()
             a.set_calculator(c)

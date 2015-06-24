@@ -36,7 +36,7 @@ from atomistica.snippets import mic
 class NeighborListTest(unittest.TestCase):
 
     def test_neighbor_list(self):
-        a = io.read('aC.traj')
+        a = io.read('aC.cfg')
         an = native.from_atoms(a)
         nl = native.Neighbors(100)
         nl.request_interaction_range(5.0)
