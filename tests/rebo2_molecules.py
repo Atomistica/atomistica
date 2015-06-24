@@ -120,7 +120,7 @@ def run_rebo2_molecules_test(test=None):
         ]:
 
         if test is None:
-            print '=== Testing {0} ==='.format(potname)
+            print('=== Testing {0} ==='.format(potname))
 
         nok = 0
         nfailed = 0
@@ -144,12 +144,12 @@ def run_rebo2_molecules_test(test=None):
 
             if test is None:
                 if abs(e-eref) > ETOL:
-                    print '{0:>20} {1:>20.10f} {2:>20.10f} {3:>20.10f}      ' \
-                        '.failed.'.format(mol, e, eref, e-eref)
+                    print('{0:>20} {1:>20.10f} {2:>20.10f} {3:>20.10f}      ' \
+                        '.failed.'.format(mol, e, eref, e-eref))
                     nfailed += 1
                 else:
-                    print '{0:>20} {1:>20.10f} {2:>20.10f} {3:>20.10f}  .ok.' \
-                        .format(mol, e, eref, e-eref)
+                    print('{0:>20} {1:>20.10f} {2:>20.10f} {3:>20.10f}  .ok.' \
+                        .format(mol, e, eref, e-eref))
                     nok += 1
 
             else:
@@ -158,8 +158,8 @@ def run_rebo2_molecules_test(test=None):
                                 'is %f eV.' % ( mol, eref, e ))
 
         if test is None:
-            print '{0} molecule tests ok, {1} molecule tests failed.' \
-                .format(nok, nfailed)
+            print('{0} molecule tests ok, {1} molecule tests failed.' \
+                .format(nok, nfailed))
 
 ###
 

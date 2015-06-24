@@ -26,7 +26,7 @@ import atexit
 
 import _atomistica
 
-from aseinterface import *
+from atomistica.aseinterface import *
 
 #
 # Enabled logging

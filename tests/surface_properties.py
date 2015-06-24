@@ -20,10 +20,9 @@
 # ======================================================================
 #! /usr/bin/env python
 
-
-#
-# Test the surface properties for a set of potentials
-#
+"""
+Test the surface properties for a set of potentials
+"""
 
 import sys
 

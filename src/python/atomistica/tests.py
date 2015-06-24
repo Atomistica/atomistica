@@ -23,6 +23,8 @@
 Potential test suite.
 """
 
+from __future__ import print_function
+
 from math import sqrt
 
 import numpy as np
@@ -269,10 +271,10 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
     except:
         potname = pot.__class__.__name__
     if test is None:
-        print '--- %s ---' % potname
+        print('--- %s ---' % potname)
     if par is not None:
         if test is None and '__ref__' in par:
-            print '    %s' % par['__ref__']
+            print('    %s' % par['__ref__'])
         c  = pot(**par)
     else:
         c  = pot
@@ -335,17 +337,17 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
         Ec = a.get_potential_energy()/len(a)
         if t_Ec is None:
             if test is None:
-                print '%10s: Ec   = %10.3f eV' % ( name, Ec )
+                print('%10s: Ec   = %10.3f eV' % ( name, Ec ))
         else:
             t_Ec = float(t_Ec)
             dev = (Ec + t_Ec)*100/t_Ec
             if test is None:
-                print '%10s: Ec   = %10.3f eV  (%10.3f eV - %7.2f %%)' % \
-                    ( name, Ec, t_Ec, dev )
+                print('%10s: Ec   = %10.3f eV  (%10.3f eV - %7.2f %%)' % \
+                    ( name, Ec, t_Ec, dev ))
             if test is None:
                 if abs(dev) > dev_thres:
-                    print '            --- Warning: Property off by more than '\
-                        '%i %%.' % dev_thres
+                    print('            --- Warning: Property off by more than '\
+                        '%i %%.' % dev_thres)
                     nfail += 1
                 else:
                     nok += 1
@@ -360,16 +362,16 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
         a0          = sqrt(np.dot(c1, c1))/sx
         if t_a0 is None:
             if test is None:
-                print '            a0   = %10.3f A ' % a0
+                print('            a0   = %10.3f A ' % a0)
         else:
             t_a0 = float(t_a0)
             dev = (a0 - t_a0)*100/t_a0
             if test is None:
-                print '            a0   = %10.3f A   (%10.3f A - %7.2f %%)' % \
-                    ( a0, t_a0, dev )
+                print('            a0   = %10.3f A   (%10.3f A - %7.2f %%)' % \
+                    ( a0, t_a0, dev ))
                 if abs(dev) > dev_thres:
-                    print '            --- Warning: Property off by more than '\
-                        '%i %%.' % dev_thres
+                    print('            --- Warning: Property off by more than '\
+                        '%i %%.' % dev_thres)
                     nfail += 1
                 else:
                     nok += 1
@@ -386,16 +388,16 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
 
         if t_C11 is None:
             if test is None:
-                print '            C11  = %10.4f GPa' % (C11/GPa)
+                print('            C11  = %10.4f GPa' % (C11/GPa))
         else:
             t_C11 = float(t_C11)
             dev = (C11/GPa - t_C11)*100/t_C11
             if test is None:
-                print '            C11  = %10.4f GPa (%10.4f GPa - ' \
-                      '%7.2f%%)' % (C11/GPa, t_C11, dev)
+                print('            C11  = %10.4f GPa (%10.4f GPa - ' \
+                      '%7.2f%%)' % (C11/GPa, t_C11, dev))
                 if abs(dev) > dev_thres:
-                    print '            --- Warning: Property off by more than '\
-                        '%f %%.' % dev_thres
+                    print('            --- Warning: Property off by more than '\
+                        '%f %%.' % dev_thres)
                     nfail += 1
                 else:
                     nok += 1
@@ -408,16 +410,16 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
 
         if t_C12 is None:
             if test is None:
-                print '            C12  = %10.4f GPa GPa' %  (C12/GPa)
+                print('            C12  = %10.4f GPa GPa' %  (C12/GPa))
         else:
             t_C12 = float(t_C12)
             dev = (C12/GPa - t_C12)*100/t_C12
             if test is None:
-                print '            C12  = %10.4f GPa (%10.4f GPa ' \
-                    '- %7.2f %%)' % (C12/GPa, t_C12, dev)
+                print('            C12  = %10.4f GPa (%10.4f GPa ' \
+                    '- %7.2f %%)' % (C12/GPa, t_C12, dev))
                 if abs(dev) > dev_thres:
-                    print '            --- Warning: Property off by more than '\
-                        '%f %%.' % (dev_thres)
+                    print('            --- Warning: Property off by more than '\
+                        '%f %%.' % (dev_thres))
                     nfail += 1
                 else:
                     nok += 1
@@ -430,17 +432,17 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
 
         if t_C44 is None:
             if test is None:
-                print '            C44  = %10.4f GPa' % (C44r/GPa)
+                print('            C44  = %10.4f GPa' % (C44r/GPa))
         else:
             t_C44 = float(t_C44)
             dev = (C44r/GPa - t_C44)*100/t_C44
             if test is None:
-                print '            C44  = %10.4f GPa (%10.4f GPa - ' \
-                    '%7.2f %%)' % ( C44r/GPa, t_C44, dev )
+                print('            C44  = %10.4f GPa (%10.4f GPa - ' \
+                    '%7.2f %%)' % ( C44r/GPa, t_C44, dev ))
             if test is None:
                 if abs(dev) > dev_thres:
-                    print '            --- Warning: Property off by more than '\
-                        '%f %%.' % (dev_thres)
+                    print('            --- Warning: Property off by more than '\
+                        '%f %%.' % (dev_thres))
                     nfail += 1
                 else:
                     nok += 1
@@ -453,17 +455,17 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
 
         if t_C440 is None:
             if test is None:
-                print '            C440 = %10.4f GPa' % (C44/GPa)
+                print('            C440 = %10.4f GPa' % (C44/GPa))
         else:
             t_C440 = float(t_C440)
             dev = (C44/GPa - t_C440)*100/t_C440
             if test is None:
-                print '            C440 = %10.4f GPa (%10.4f GPa - ' \
-                      '%7.2f %%)' % (C44/GPa, t_C440, dev )
+                print('            C440 = %10.4f GPa (%10.4f GPa - ' \
+                      '%7.2f %%)' % (C44/GPa, t_C440, dev ))
             if test is None:
                 if abs(dev) > dev_thres:
-                    print '            --- Warning: Property off by more than '\
-                        '%f %%.' % (dev_thres)
+                    print('            --- Warning: Property off by more than '\
+                        '%f %%.' % (dev_thres))
                     nfail += 1
                 else:
                     nok += 1
@@ -476,17 +478,17 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
 
         if t_B is None:
             if test is None:
-                print '            B    = %10.4f GPa' % (B/GPa)
+                print('            B    = %10.4f GPa' % (B/GPa))
         else:
             t_B = float(t_B)
             dev = (B/GPa - t_B)*100/t_B
             if test is None:
-                print '            B    = %10.4f GPa (%10.4f GPa ' \
-                    '- %7.2f %%)' % (B/GPa, t_B, dev)
+                print('            B    = %10.4f GPa (%10.4f GPa ' \
+                    '- %7.2f %%)' % (B/GPa, t_B, dev))
             if test is None:
                 if abs(dev) > dev_thres:
-                    print '            --- Warning: Property off by more than '\
-                        '%f %%.' % (dev_thres)
+                    print('            --- Warning: Property off by more than '\
+                        '%f %%.' % (dev_thres))
                     nfail += 1
                 else:
                     nok += 1
@@ -499,17 +501,17 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
 
         if t_Cp is None:
             if test is None:
-                print '            Cp   = %10.4f GPa' % (Cp/GPa)
+                print('            Cp   = %10.4f GPa' % (Cp/GPa))
         else:
             t_Cp = float(t_Cp)
             dev = (Cp/GPa - t_Cp)*100/t_Cp
             if test is None:
-                print '            Cp   = %10.4f GPa (%10.4f GPa ' \
-                    '- %7.2f %%)'% (Cp/GPa, t_Cp, dev)
+                print('            Cp   = %10.4f GPa (%10.4f GPa ' \
+                    '- %7.2f %%)'% (Cp/GPa, t_Cp, dev))
             if test is None:
                 if abs(dev) > dev_thres:
-                    print '            --- Warning: Property off by more than '\
-                        '%f %%.' % (dev_thres)
+                    print('            --- Warning: Property off by more than '\
+                        '%f %%.' % (dev_thres))
                     nfail += 1
                 else:
                     nok += 1
@@ -526,10 +528,10 @@ def test_hexagonal_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
     except:
         potname = pot.__class__.__name__
     if test is None:
-        print '--- %s ---' % potname
+        print('--- %s ---' % potname)
     if par is not None:
         if test is None and '__ref__' in par:
-            print '    %s' % par['__ref__']
+            print('    %s' % par['__ref__'])
         c  = pot(**par)
     else:
         c  = pot
@@ -563,12 +565,12 @@ def test_hexagonal_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
 
         Ec = a.get_potential_energy()/len(a)
         if t_Ec is None:
-            print '%10s: Ec  = %10.3f eV' % ( name, Ec )
+            print('%10s: Ec  = %10.3f eV' % ( name, Ec ))
         else:
             dev = (Ec + t_Ec)*100/t_Ec
-            print '%10s: Ec  = %10.3f eV  (%10.3f eV - %7.2f %%)' % ( name, Ec, t_Ec, dev )
+            print('%10s: Ec  = %10.3f eV  (%10.3f eV - %7.2f %%)' % ( name, Ec, t_Ec, dev ))
             if abs(dev) > dev_thres:
-                print '            --- Warning: Property off by more than %i %%.' % dev_thres
+                print('            --- Warning: Property off by more than %i %%.' % dev_thres)
 
         c1, c2, c3  = a.get_cell()
         a0          = sqrt(np.dot(c1, c1))/sx
@@ -577,19 +579,19 @@ def test_hexagonal_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
         a0 = (a0/sqrt(3.0)+b0)/2
         #a0 /= sqrt(3.0)
         if t_a0 is None:
-            print '            a0  = %10.3f A ' % a0
+            print('            a0  = %10.3f A ' % a0)
         else:
             dev = (a0 - t_a0)*100/t_a0
-            print '            a0  = %10.3f A   (%10.3f A - %7.2f %%)' % ( a0, t_a0, dev )
+            print('            a0  = %10.3f A   (%10.3f A - %7.2f %%)' % ( a0, t_a0, dev ))
             if abs(dev) > dev_thres:
-                print '            --- Warning: Property off by more than %i %%.' % dev_thres
+                print('            --- Warning: Property off by more than %i %%.' % dev_thres)
         if t_c0 is None:
-            print '            c0  = %10.3f A ' % c0
+            print('            c0  = %10.3f A ' % c0)
         else:
             dev = (c0 - t_c0)*100/t_c0
-            print '            c0  = %10.3f A   (%10.3f A - %7.2f %%)' % ( c0, t_c0, dev )
+            print('            c0  = %10.3f A   (%10.3f A - %7.2f %%)' % ( c0, t_c0, dev ))
             if abs(dev) > dev_thres:
-                print '            --- Warning: Property off by more than %i %%.' % dev_thres
+                print('            --- Warning: Property off by more than %i %%.' % dev_thres)
 
 
 def test_surface_energies(mats, pot, par=None, sx=1, vacuum=10.0, find_a0=True,
@@ -599,10 +601,10 @@ def test_surface_energies(mats, pot, par=None, sx=1, vacuum=10.0, find_a0=True,
     except:
         potname = pot.__class__.__name__
     if test is None:
-        print '--- %s ---' % potname
+        print('--- %s ---' % potname)
     if par is not None:
         if test is None and '__ref__' in par:
-            print '    %s' % par['__ref__']
+            print('    %s' % par['__ref__'])
         c = pot(**par)
     else:
         c = pot
@@ -653,7 +655,7 @@ def test_surface_energies(mats, pot, par=None, sx=1, vacuum=10.0, find_a0=True,
 
         Ebulk = bulk.get_potential_energy()
         if test is None:
-            print '%-20s: Ec            = %10.3f eV' % (name, Ebulk/len(a))
+            print('%-20s: Ec            = %10.3f eV' % (name, Ebulk/len(a)))
 
         cx, cy, cz = bulk.get_cell().diagonal()
         a.set_cell([cx,cy,cz], scale_atoms=True)
@@ -665,8 +667,8 @@ def test_surface_energies(mats, pot, par=None, sx=1, vacuum=10.0, find_a0=True,
         Es_Jm2 = Es*Jm2/(cx*cy)
         Es /= sx*sx
         if test is None:
-            print '                      Es,unrelaxed  = %10.3f eV/cell ' \
-                  '(%10.3f J/m^2)' % (Es, Es_Jm2)
+            print('                      Es,unrelaxed  = %10.3f eV/cell ' \
+                  '(%10.3f J/m^2)' % (Es, Es_Jm2))
         else:
             if t_Es_u is not None:
                 dev = (Es - t_Es_u)*100/t_Es_u
@@ -685,8 +687,8 @@ def test_surface_energies(mats, pot, par=None, sx=1, vacuum=10.0, find_a0=True,
         Es_Jm2 = Es*Jm2/(cx*cy)
         Es /= sx*sx
         if test is None:
-            print '                      Es,relaxed    = %10.3f eV/cell ' \
-                  '(%10.3f J/m^2)' % (Es, Es_Jm2)
+            print('                      Es,relaxed    = %10.3f eV/cell ' \
+                  '(%10.3f J/m^2)' % (Es, Es_Jm2))
         else:
             if t_Es_r is not None:
                 dev = (Es - t_Es_r)*100/t_Es_r

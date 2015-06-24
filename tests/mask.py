@@ -29,7 +29,6 @@ import ase.io as io
 from ase.lattice.cubic import Diamond, FaceCenteredCubic
 
 import atomistica
-print atomistica.__file__
 from atomistica import LJCut, TabulatedAlloyEAM, Tersoff, TersoffScr
 
 ###

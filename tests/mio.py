@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # ======================================================================
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
@@ -18,9 +20,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
+
 """
 Test the mio parametrization of Frauenheim and co-workers.
 """
+
+from __future__ import print_function
 
 import os
 import sys
@@ -124,10 +129,10 @@ db2 = {
 
 def check_db(c, db, test=None):
     if test is None:
-        print "%10s %10s %10s ( %10s )" \
-            % ( "bond", "value", "reference", "error" )
-        print "%10s %10s %10s ( %10s )" \
-            % ( "----", "-----", "---------", "-----" )
+        print("%10s %10s %10s ( %10s )" \
+            % ( "bond", "value", "reference", "error" ))
+        print("%10s %10s %10s ( %10s )" \
+            % ( "----", "-----", "---------", "-----" ))
     for mol, values in db.iteritems():
         #if mol == 'H2O':
         if 1:
@@ -142,8 +147,8 @@ def check_db(c, db, test=None):
             for name, ( ( i1, i2 ), refvalue ) in values.iteritems():
                 value = a.get_distance(i1, i2)
                 if test is None:
-                    print '%10s %10.3f %10.3f ( %10.3f )' % \
-                        ( name, value, refvalue, abs(value-refvalue) )
+                    print('%10s %10.3f %10.3f ( %10.3f )' % \
+                        ( name, value, refvalue, abs(value-refvalue) ))
                 else:
                     test.assertTrue(abs(value-refvalue) < 0.01)
 
@@ -177,8 +182,8 @@ class TestMIO(unittest.TestCase):
 
     def test_mio(self):
         if os.getenv('MIO') is None:
-            print 'Skipping MIO test. Specify path to mio Slater-Koster ' \
-                  'tables in MIO environment variable if you want to run it.'
+            print('Skipping MIO test. Specify path to mio Slater-Koster ' \
+                  'tables in MIO environment variable if you want to run it.')
         else:
             run_mio_test(self)
 

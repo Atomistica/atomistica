@@ -23,6 +23,8 @@
 ASE interface to Atomistica.
 """
 
+from __future__ import print_function
+
 import copy
 import inspect
 from math import sqrt, log
@@ -52,7 +54,7 @@ def convpar(p):
     nel = len(els)
 
     q = { }
-    for name, values in p.iteritems():
+    for name, values in p.items():
         
         if isinstance(values, dict):
             # This is a dictionary. We need to first understand what it is and
@@ -503,10 +505,10 @@ class Atomistica(object):
     def _warn_lees_edwards(self):
         global _warned_about_lees_edwards
         if not _warned_about_lees_edwards:
-            print "Warning: Setting Lees-Edwards boundary conditions from " \
-                "information found in the %s entry of the Atoms.info " \
-                "dictionary. Is this really what you intended?" % \
-                self._lees_edwards_info_str
+            print("Warning: Setting Lees-Edwards boundary conditions from " \
+                  "information found in the %s entry of the Atoms.info " \
+                  "dictionary. Is this really what you intended?" % \
+                  self._lees_edwards_info_str)
             _warned_about_lees_edwards = True
 
 

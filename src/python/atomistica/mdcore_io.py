@@ -24,6 +24,8 @@ This file contains input and output filters for a deprecated file format used
 at Fraunhofer IWM.
 """
 
+from __future__ import print_function
+
 import os
 
 import numpy as np
@@ -136,7 +138,7 @@ def read_atoms(fn, cycfn=None, pos_only=False, conv=1.0):
                 if len(aux) == n_atoms:
                     this.set_array(key, np.asarray(aux))
                 else:
-                    print "Warning: Encountered field '%s' which does not seem to be per-atom data." % key
+                    print("Warning: Encountered field '%s' which does not seem to be per-atom data." % key)
 
             if l is None:
                 l = f.readline().strip()

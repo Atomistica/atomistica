@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # ======================================================================
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
@@ -18,8 +20,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-#! /usr/bin/env python
 
+from __future__ import print_function
 
 import math
 import sys
@@ -67,7 +69,7 @@ def random_solid(els, density):
 def assign_charges(a, els):
     syms = np.array(a.get_chemical_symbols())
     qs = np.zeros(len(a))
-    for el, q in els.iteritems():
+    for el, q in els.items():
         qs[syms==el] = q
     if hasattr(a, 'set_initial_charges'):
         a.set_initial_charges(qs)
@@ -210,13 +212,13 @@ def run_forces_and_virial_test(test=None):
         except:
             potname = pot.__class__.__name__
         if test is None:
-            print "--- %s ---" % potname
+            print("--- %s ---" % potname)
         if par is None:
             c  = pot()
         else:
             c  = pot(**par)
             if test is None and '__ref__' in par:
-                print "    %s" % par["__ref__"]
+                print("    %s" % par["__ref__"])
 
         for imat in mats:
             rattle = 0.5
@@ -231,7 +233,7 @@ def run_forces_and_virial_test(test=None):
                 if 'mask' in imat:
                     mask = imat['mask']
             if test is None:
-                print "Material:  ", name
+                print("Material:  ", name)
             a.translate([0.1,0.1,0.1])
             a.set_calculator(c)
 
@@ -245,16 +247,16 @@ def run_forces_and_virial_test(test=None):
                     errmsg = 'potential: {0}; material: {1}; equilibrium' \
                         .format(potname, name)
                     if test is None:
-                        print '=== equilibrium ==='
+                        print('=== equilibrium ===')
                 else:
                     errmsg = 'potential: {0}; material: {1}; distorted' \
                         .format(potname, name)
                     if test is None:
-                        print '=== distorted ==='
+                        print('=== distorted ===')
 
                 for mask in masks:
                     if test is None and mask is not None:
-                        print '--- using random mask ---'
+                        print('--- using random mask ---')
                     c.set_mask(mask)
 
                     ffd, f0, maxdf = test_forces(a, dx=dx)
@@ -262,23 +264,23 @@ def run_forces_and_virial_test(test=None):
                     if test is None:
                         if abs(maxdf) < tol:
                             nok += 1
-                            print "forces .ok."
+                            print("forces .ok.")
                         else:
                             nfail += 1
-                            print "forces .failed."
-                            print "max(df)  = %f" % maxdf
+                            print("forces .failed.")
+                            print("max(df)  = %f" % maxdf)
 
-                            print "f - from potential"
+                            print("f - from potential")
                             for i, f in enumerate(f0):
-                                print i, f
+                                print(i, f)
 
-                            print "f - numerically"
+                            print("f - numerically")
                             for i, f in enumerate(ffd):
-                                print i, f
+                                print(i, f)
 
-                            print "difference between the above"
+                            print("difference between the above")
                             for i, f in enumerate(f0-ffd):
-                                print i, f
+                                print(i, f)
                     else:
                       test.assertTrue(abs(maxdf) < tol,
                                         msg=errmsg+'; forces')
@@ -288,20 +290,20 @@ def run_forces_and_virial_test(test=None):
                     if test is None:
                         if abs(maxds) < tol:
                             nok += 1
-                            print "virial .ok."
+                            print("virial .ok.")
                         else:
                             nfail += 1
-                            print "virial .failed."
-                            print "max(ds)  = %f" % maxds
+                            print("virial .failed.")
+                            print("max(ds)  = %f" % maxds)
                     
-                            print "s - from potential"
-                            print s0
+                            print("s - from potential")
+                            print(s0)
                 
-                            print "s - numerically"
-                            print sfd
+                            print("s - numerically")
+                            print(sfd)
 
-                            print "difference between the above"
-                            print s0-sfd
+                            print("difference between the above")
+                            print(s0-sfd)
                     else:
                         test.assertTrue(abs(maxds) < tol,
                                         msg=errmsg+'; virial')
@@ -311,27 +313,27 @@ def run_forces_and_virial_test(test=None):
                     if test is None:
                         if abs(maxdp) < tol:
                             nok += 1
-                            print "potential .ok."
+                            print("potential .ok.")
                         else:
                             nfail += 1
-                            print "potential .failed."
-                            print "max(dp)  = %f" % maxdp
+                            print("potential .failed.")
+                            print("max(dp)  = %f" % maxdp)
                     
-                            print "p - from potential"
-                            print p0
+                            print("p - from potential")
+                            print(p0)
                 
-                            print "p - numerically"
-                            print pfd
+                            print("p - numerically")
+                            print(pfd)
 
-                            print "difference between the above"
-                            print p0-pfd
+                            print("difference between the above")
+                            print(p0-pfd)
                     else:
                         test.assertTrue(abs(maxds) < tol,
                                         msg=errmsg+'; virial')
             
                 a.rattle(rattle)
     if test is None:
-        print '{0} tests passed, {1} tests failed.'.format(nok, nfail)
+        print('{0} tests passed, {1} tests failed.'.format(nok, nfail))
 
 ###
 

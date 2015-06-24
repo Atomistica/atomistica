@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # ======================================================================
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
@@ -18,12 +20,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-#! /usr/bin/env python
 
+"""
+Test the bulk properties for a set of potentials
+"""
 
-#
-# Test the bulk properties for a set of potentials
-#
+from __future__ import print_function
 
 import sys
 
@@ -210,4 +212,4 @@ if __name__ == '__main__':
         _nok, _nfail = test_cubic_elastic_constants(mats, pot, par, sx, dev_thres)
         nok += _nok
         nfail += _nfail
-    print '{0} tests passed, {1} tests failed.'.format(nok, nfail)
+    print('{0} tests passed, {1} tests failed.'.format(nok, nfail))
