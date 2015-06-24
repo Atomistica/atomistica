@@ -58,6 +58,8 @@ void real_ptr_by_name(void *, char *, void **, int *);
 void integer_ptr_by_name(void *, char *, void **, int *);
 void realx_ptr_by_name(void *, char *, void **, int *);
 void realxxx_ptr_by_name(void *, char *, void **, int *);
+void integer_attr_by_name(void *, char *, void **, int *);
+void integer3_attr_by_name(void *, char *, void **, int *);
 void real_attr_by_name(void *, char *, void **, int *);
 void real3_attr_by_name(void *, char *, void **, int *);
 void real3x3_attr_by_name(void *, char *, void **, int *);
