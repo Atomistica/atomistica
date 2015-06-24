@@ -57,7 +57,7 @@ neighbors_dealloc(neighbors_t *self)
   printf("[neighbors_dealloc] self = %p\n", self);
 #endif
   f_neighbors_free(self->f90obj);
-  self->ob_type->tp_free((PyObject*) self);
+  Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
 
@@ -252,8 +252,13 @@ neighbors_find_neighbor(neighbors_t *self, PyObject *args)
 
   r = PyTuple_New(2);
   /* Indices in C and Python start at 0. */
+#if PY_MAJOR_VERSION >= 3
+  PyTuple_SET_ITEM(r, 0, PyLong_FromLong(n1-1));
+  PyTuple_SET_ITEM(r, 1, PyLong_FromLong(n2-1));
+#else
   PyTuple_SET_ITEM(r, 0, PyInt_FromLong(n1-1));
   PyTuple_SET_ITEM(r, 1, PyInt_FromLong(n2-1));
+#endif
   return r;
 }
 
@@ -297,7 +302,11 @@ neighbors_coordination(neighbors_t *self, PyObject *args)
 
   c = f_get_coordination(self->f90obj, i, cutoff);
 
+#if PY_MAJOR_VERSION >= 3
+  return PyLong_FromLong(c);
+#else
   return PyInt_FromLong(c);
+#endif
 }
 
 

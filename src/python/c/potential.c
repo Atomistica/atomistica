@@ -58,10 +58,11 @@ potential_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
   if (self != NULL) {
 
     /* FIXME: the offset *12* assumes the namespace is always _atomistica.* */
-    name  = strdup(self->ob_type->tp_name + 12);
+    name  = strdup(Py_TYPE(self)->tp_name + 12);
 
 #ifdef DEBUG
-    printf("[potential_new] Potential name: %s (%s)\n", name, self->ob_type->tp_name);
+    printf("[potential_new] Potential name: %s (%s)\n", name,
+           Py_TYPE(self)->tp_name);
 #endif
 
     self->f90class  = NULL;
@@ -96,7 +97,7 @@ potential_dealloc(potential_t *self)
 
   self->f90class->free_instance(self->f90obj);
 
-  self->ob_type->tp_free((PyObject*) self);
+  Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
 
@@ -135,8 +136,20 @@ potential_getattro(potential_t *self, PyObject *pyname)
   char *name;
   property_t *p;
 
-  name = PyString_AsString(pyname);
-  if (!name) return NULL;
+#if PY_MAJOR_VERSION >= 3
+  if (!PyUnicode_Check(pyname)) {
+#else
+  if (!PyString_Check(pyname)) {
+#endif
+    PyErr_SetString(PyExc_ValueError, "Key must be a string.");
+    return NULL;
+  }
+
+#if PY_MAJOR_VERSION >= 3
+  name = PyUnicode_AS_DATA(pyname);
+#else
+  name = PyString_AS_STRING(pyname);
+#endif
 
 #ifdef DEBUG
   printf("[potential_getattro] %p %p %s\n", self, pyname, name);
@@ -192,7 +205,11 @@ potential_getattro(potential_t *self, PyObject *pyname)
 static PyObject *
 potential_str(potential_t *self, PyObject *args)
 {
+#if PY_MAJOR_VERSION >= 3
+  return PyUnicode_FromString(self->f90class->name);
+#else
   return PyString_FromString(self->f90class->name);
+#endif
 }
 
 

@@ -50,7 +50,7 @@ particles_get_ptr(particles_t *self)
   f_particles_get_data(self->f90obj, &self->f90data);
 #ifdef DEBUG
   printf("[particles_get_ptr] self->f90obj = %p, self->f90data = %p\n",
-	 self->f90obj, self->f90data);
+   self->f90obj, self->f90data);
 #endif
 }
 
@@ -94,7 +94,7 @@ particles_dealloc(particles_t *self)
   if (self->initialized)
     f_particles_del(self->f90obj);
   f_particles_free(self->f90obj);
-  self->ob_type->tp_free((PyObject*) self);
+  Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
 
@@ -217,7 +217,7 @@ data_array_by_name(particles_t *self, char *key)
 #ifdef DEBUG
   printf("[data_array_by_name] self = %p, key = %p\n", self, key);
   printf("[data_array_by_name] self->f90obj = %p, self->f90data = %p\n",
-	 self->f90obj, self->f90data);
+   self->f90obj, self->f90data);
   printf("[data_array_by_name] key = %s\n", key);
 #endif
 
@@ -243,7 +243,7 @@ data_array_by_name(particles_t *self, char *key)
       printf("[data_array_by_name] TYPE_REAL, dim = %i\n", dims[0]);
 #endif
       r  = PyArray_New(&PyArray_Type, 1, dims, NPY_DOUBLE, NULL, array, 0,
-		       NPY_FARRAY, NULL);
+           NPY_FARRAY, NULL);
       break;
 
     case TYPE_INTEGER:
@@ -256,7 +256,7 @@ data_array_by_name(particles_t *self, char *key)
       printf("[data_array_by_name] TYPE_INTEGER, dim = %i\n", dims[0]);
 #endif
       r  = PyArray_New(&PyArray_Type, 1, dims, NPY_INT, NULL, array, 0,
-		       NPY_FARRAY, NULL);
+           NPY_FARRAY, NULL);
       break;
 
     case TYPE_REAL3:
@@ -270,10 +270,10 @@ data_array_by_name(particles_t *self, char *key)
       strides[1]  = NPY_SIZEOF_DOUBLE;
 #ifdef DEBUG
       printf("[data_array_by_name] TYPE_REAL3, dim = %i %i, strides = %i %i\n",
-	     dims[0], dims[1], strides[0], strides[1]);
+       dims[0], dims[1], strides[0], strides[1]);
 #endif
       r  = PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, strides, array, 0,
-		       NPY_BEHAVED, NULL);
+           NPY_BEHAVED, NULL);
       break;
 
     case TYPE_REAL3x3:
@@ -289,10 +289,10 @@ data_array_by_name(particles_t *self, char *key)
       dims[2] = 3;
 #ifdef DEBUG
       printf("[data_array_by_name] TYPE_REAL3x3, dim = %i %i %i\n", dims[0],
-	     dims[1], dims[2]);
+       dims[1], dims[2]);
 #endif
       r  = PyArray_New(&PyArray_Type, 3, dims, NPY_DOUBLE, NULL, array, 0,
-		       NPY_FARRAY, NULL);
+           NPY_FARRAY, NULL);
       break;
 
     case TYPE_REAL_ATTR:
@@ -316,7 +316,7 @@ data_array_by_name(particles_t *self, char *key)
       printf("[data_array_by_name] TYPE_REAL3_ATTR, dim = %i\n", dims[0]);
 #endif
       r  = PyArray_New(&PyArray_Type, 1, dims, NPY_DOUBLE, NULL, array, 0,
-		       NPY_FARRAY, NULL);
+           NPY_FARRAY, NULL);
       break;
 
     case TYPE_REAL3x3_ATTR:
@@ -328,10 +328,10 @@ data_array_by_name(particles_t *self, char *key)
       dims[1] = 3;
 #ifdef DEBUG
       printf("[data_array_by_name] TYPE_REAL3_ATTR, dim = %i %i\n", dims[0],
-	     dims[1]);
+       dims[1]);
 #endif
       r  = PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, NULL, array, 0,
-		       NPY_FARRAY, NULL);
+           NPY_FARRAY, NULL);
       break;
 
     case TYPE_INTEGER_ATTR:
@@ -342,7 +342,11 @@ data_array_by_name(particles_t *self, char *key)
 #ifdef DEBUG
       printf("[data_array_by_name] TYPE_INTEGER_ATTR\n");
 #endif
+#if PY_MAJOR_VERSION >= 3
+      r  = PyLong_FromLong(*((int*) array));
+#else
       r  = PyInt_FromLong(*((int*) array));
+#endif
       break;
 
     case TYPE_INTEGER3_ATTR:
@@ -360,8 +364,13 @@ data_array_by_name(particles_t *self, char *key)
 
     default:
 
+#if PY_MAJOR_VERSION >= 3
       sprintf(errstr, "InternalError: Unknown type returned for field or "
-	      "attribute '%s'.", PyString_AS_STRING(key));
+              "attribute '%s'.", PyUnicode_AS_DATA(key));
+#else
+      sprintf(errstr, "InternalError: Unknown type returned for field or "
+              "attribute '%s'.", PyString_AS_STRING(key));
+#endif
       PyErr_SetString(PyExc_KeyError, errstr);
       r  = NULL;
 
@@ -386,7 +395,11 @@ particles_getitem(particles_t *self, PyObject *key)
   PyObject *r;
   char errstr[100];
 
+#if PY_MAJOR_VERSION >= 3
+  if (!PyUnicode_Check(key)) {
+#else
   if (!PyString_Check(key)) {
+#endif
     PyErr_SetString(PyExc_ValueError, "Key must be a string.");
     return NULL;
   }
@@ -395,11 +408,19 @@ particles_getitem(particles_t *self, PyObject *key)
   printf("[particles_getitem] key = %s\n", PyString_AS_STRING(key));
 #endif
 
+#if PY_MAJOR_VERSION >= 3
+  r = (PyObject*) data_array_by_name(self, PyUnicode_AS_DATA(key));
+#else
   r = (PyObject*) data_array_by_name(self, PyString_AS_STRING(key));
+#endif
 
   if (!r) {
     sprintf(errstr, "No field or attribute '%s' defined for this object.",
-	    PyString_AS_STRING(key));
+#if PY_MAJOR_VERSION >= 3
+            PyUnicode_AS_DATA(key));
+#else
+            PyString_AS_STRING(key));
+#endif
     PyErr_SetString(PyExc_KeyError, errstr);
   };
 
@@ -419,7 +440,11 @@ particles_getattro(particles_t *self, PyObject *key)
   
   r = NULL;
   if (self->initialized) {
+#if PY_MAJOR_VERSION >= 3
+    r = (PyObject*) data_array_by_name(self, PyUnicode_AS_DATA(key));
+#else
     r = (PyObject*) data_array_by_name(self, PyString_AS_STRING(key));
+#endif
   }
 
 #ifdef DEBUG
@@ -491,7 +516,7 @@ particles_set_cell(particles_t *self, PyObject *args)
 
 #ifdef DEBUG
   printf("[particles_set_cell] pbc_for %i, %i, %i\n", pbc_for[0], pbc_for[1],
-	 pbc_for[2]);
+   pbc_for[2]);
 #endif
   f_particles_set_cell(self->f90obj, Abox, pbc_for, &ierror);
   if (error_to_py(ierror))
@@ -556,22 +581,22 @@ PyTypeObject particles_type = {
     0,                                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   /*tp_flags*/
     "Particles objects",                        /* tp_doc */
-    0,		                                /* tp_traverse */
-    0,		                                /* tp_clear */
-    0,		                                /* tp_richcompare */
-    0,		          	                /* tp_weaklistoffset */
-    0,		         	                /* tp_iter */
-    0,		         	                /* tp_iternext */
-    particles_methods,   	                /* tp_methods */
-    0,                   	                /* tp_members */
-    0,      	   	                        /* tp_getset */
-    0,           	                        /* tp_base */
-    0,              	                        /* tp_dict */
-    0,             	                        /* tp_descr_get */
-    0,                  	                /* tp_descr_set */
-    0,                  	                /* tp_dictoffset */
-    (initproc)particles_init,    	        /* tp_init */
-    0,                         	                /* tp_alloc */
-    particles_new,               	        /* tp_new */
+    0,                                    /* tp_traverse */
+    0,                                    /* tp_clear */
+    0,                                    /* tp_richcompare */
+    0,                                /* tp_weaklistoffset */
+    0,                              /* tp_iter */
+    0,                              /* tp_iternext */
+    particles_methods,                    /* tp_methods */
+    0,                                    /* tp_members */
+    0,                                    /* tp_getset */
+    0,                                    /* tp_base */
+    0,                                        /* tp_dict */
+    0,                                      /* tp_descr_get */
+    0,                                    /* tp_descr_set */
+    0,                                    /* tp_dictoffset */
+    (initproc)particles_init,             /* tp_init */
+    0,                                          /* tp_alloc */
+    particles_new,                        /* tp_new */
 };
 

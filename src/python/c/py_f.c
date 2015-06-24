@@ -53,8 +53,13 @@ py_to_error(char *file, int line, int *ierror)
   PyObject *ptype, *pvalue, *ptraceback;
   PyErr_Fetch(&ptype, &pvalue, &ptraceback); 
 
-  c_push_error_with_info(PyString_AsString(pvalue), file, line,
+#if PY_MAJOR_VERSION >= 3
+  c_push_error_with_info(PyUnicode_AS_DATA(pvalue), file, line,
                          ERROR_UNSPECIFIED);
+#else
+  c_push_error_with_info(PyString_AS_STRING(pvalue), file, line,
+                         ERROR_UNSPECIFIED);
+#endif
 
   PyErr_Clear();
 
@@ -73,7 +78,11 @@ pystring_to_fstring(PyObject *pystr, char *forstr, int len)
   char *str;
   int j;
 
+#if PY_MAJOR_VERSION >= 3
+  str = PyUnicode_AS_DATA(pystr);
+#else
   str = PyString_AS_STRING(pystr);
+#endif
   strncpy(forstr, str, len);
   j = strlen(str);
   if (j < len)  memset(forstr+j, ' ', len-j);
@@ -102,7 +111,11 @@ fstring_to_pystring(char *forstr, int len)
   while (j > 0 && str[j] == ' ')  j--;
   str[j+1] = 0;
 
+#if PY_MAJOR_VERSION >= 3
+  return PyUnicode_FromString(str);
+#else
   return PyString_FromString(str);
+#endif
 }
 
 
@@ -131,7 +144,11 @@ pyobject_to_property(PyObject *value, property_t *p)
 
   switch (p->kind) {
   case PK_INT:
+#if PY_MAJOR_VERSION >= 3
+    i = PyLong_AsLong(value);
+#else
     i = PyInt_AsLong(value);
+#endif
     if (i == -1 && PyErr_Occurred())
       return -1;
     *((int*) p->ptr) = i;
@@ -149,18 +166,30 @@ pyobject_to_property(PyObject *value, property_t *p)
     *((BOOL*) p->ptr) = b;
     break;
   case PK_STRING:
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(value)) {
+#else
     if (!PyString_Check(value)) {
+#endif
       sprintf(errstr,
               "Property '%s' of section '%s' should be a string.\n",
               p->name, p->parent->name);
       PyErr_SetString(PyExc_ValueError, errstr);
       return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    str = PyUnicode_AS_DATA(value);
+#else
     str = PyString_AS_STRING(value);
+#endif
     strncpy((char*) p->ptr, str, p->tag-1);
     break;
   case PK_FORTRAN_STRING:
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(value)) {
+#else
     if (!PyString_Check(value)) {
+#endif
       sprintf(errstr,
               "Property '%s' of section '%s' should be a string.\n",
               p->name, p->parent->name);
@@ -216,7 +245,11 @@ pyobject_to_property(PyObject *value, property_t *p)
     }
     for (i = 0; i < 3; i++) {
       t = PyTuple_GET_ITEM(value, i);
+#if PY_MAJOR_VERSION >= 3
+      if (!PyLong_Check(t)) {
+#else
       if (!PyInt_Check(t)) {
+#endif
         sprintf(errstr,
                 "Property '%s' of section '%s' should be a 3-tuple of "
                 "integers.\n",
@@ -224,7 +257,11 @@ pyobject_to_property(PyObject *value, property_t *p)
         PyErr_SetString(PyExc_ValueError, errstr);
         return -1;
       }
+#if PY_MAJOR_VERSION >= 3
+      ((int *) p->ptr)[i] = PyLong_AS_LONG(t);
+#else
       ((int *) p->ptr)[i] = PyInt_AS_LONG(t);
+#endif
     }
     
     break;
@@ -271,9 +308,17 @@ pyobject_to_property(PyObject *value, property_t *p)
     }
     break;
   case PK_INT_LIST:
-    if (PyInt_Check(value)) {
+#if PY_MAJOR_VERSION >= 3
+      if (!PyLong_Check(value)) {
+#else
+      if (!PyInt_Check(value)) {
+#endif
       *p->tag5 = 1;
+#if PY_MAJOR_VERSION >= 3
+      *((int*) p->ptr) = PyLong_AS_LONG(value);
+#else
       *((int*) p->ptr) = PyInt_AS_LONG(value);
+#endif
     } else {
       PyArray_Converter(value, (PyObject**) &arr);
       if (!PyArray_ISINTEGER(arr)) {
@@ -313,7 +358,11 @@ pyobject_to_property(PyObject *value, property_t *p)
     }
     break;
   case PK_FORTRAN_STRING_LIST:
-    if (PyString_Check(value)) {
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(value)) {
+#else
+    if (!PyString_Check(value)) {
+#endif
       *p->tag5 = 1;
       pystring_to_fstring(value, (char*) p->ptr, p->tag);
     } else {
@@ -345,14 +394,22 @@ pyobject_to_property(PyObject *value, property_t *p)
     }
     break;
   case PK_ENUM:
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(value)) {
+#else
     if (!PyString_Check(value)) {
+#endif
       sprintf(errstr,
               "Property '%s' of section '%s' should be a string.\n",
               p->name, p->parent->name);
       PyErr_SetString(PyExc_ValueError, errstr);
       return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    str = PyUnicode_AS_DATA(value);
+#else
     str = PyString_AS_STRING(value);
+#endif
     j = -1;
     for (i = 0; i < p->tag; i++) {
       if (!strcmp(str, p->tag4 + i*p->tag2))
@@ -551,12 +608,20 @@ pydict_to_ptrdict(PyObject *dict, section_t *s)
 
   pos = 0;
   while (PyDict_Next(dict, &pos, &pkey, &value)) {
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(pkey)) {
+#else
     if (!PyString_Check(pkey)) {
+#endif
       PyErr_SetString(PyExc_TypeError, "Dictionary key needs to be string.");
       return -1;
     }
 
+#if PY_MAJOR_VERSION >= 3
+    key = PyUnicode_AS_DATA(pkey);
+#else
     key = PyString_AS_STRING(pkey);
+#endif
 
 #ifdef DEBUG
     printf("[pydict_to_ptrdict] key = %s\n", key);
@@ -641,7 +706,11 @@ property_to_pyobject(property_t *p)
 
   switch (p->kind) {
   case PK_INT:
+#if PY_MAJOR_VERSION >= 3
+    r = PyLong_FromLong(*((int*) p->ptr));
+#else
     r = PyInt_FromLong(*((int*) p->ptr));
+#endif
     break;
   case PK_DOUBLE:
     r = PyFloat_FromDouble(*((double*) p->ptr));

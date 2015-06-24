@@ -59,7 +59,7 @@ coulomb_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
   if (self != NULL) {
 
     /* FIXME: the offset *12* assumes the namespace is always _atomistica.* */
-    name  = strdup(self->ob_type->tp_name + 12);
+    name  = strdup(Py_TYPE(self)->tp_name + 12);
 
 #ifdef DEBUG
     printf("[coulomb_new] Coulomb name: %s\n", name);
@@ -97,7 +97,7 @@ coulomb_dealloc(coulomb_t *self)
 
   self->f90class->free_instance(self->f90obj);
 
-  self->ob_type->tp_free((PyObject*) self);
+  Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
 
@@ -142,9 +142,20 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
   PyObject **odata;
   int i, j, k;
 
-  name = PyString_AsString(pyname);
-  if (!name)
+#if PY_MAJOR_VERSION >= 3
+  if (!PyUnicode_Check(pyname)) {
+#else
+  if (!PyString_Check(pyname)) {
+#endif
+    PyErr_SetString(PyExc_ValueError, "Key must be a string.");
     return NULL;
+  }
+
+#if PY_MAJOR_VERSION >= 3
+  name = PyUnicode_AS_DATA(pyname);
+#else
+  name = PyString_AS_STRING(pyname);
+#endif
 
   p = self->f90members->first_property;
 
@@ -156,7 +167,11 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
     r = NULL;
     switch (p->kind) {
     case PK_INT:
+#if PY_MAJOR_VERSION >= 3
+      r = PyLong_FromLong(*((int*) p->ptr));
+#else
       r = PyInt_FromLong(*((int*) p->ptr));
+#endif
       break;
     case PK_DOUBLE:
       r = PyFloat_FromDouble(*((double*) p->ptr));
@@ -166,30 +181,30 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
       break;
     case PK_LIST:
       if (*p->tag5 == 1) {
-	r = PyFloat_FromDouble(*((double*) p->ptr));
+        r = PyFloat_FromDouble(*((double*) p->ptr));
       } else {
-	dims[0] = *p->tag5;
-	arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims,
-						 NPY_DOUBLE);
-	data = (double *) PyArray_DATA(arr);
-	for (i = 0; i < *p->tag5; i++) {
-	  data[i] = ((double*) p->ptr)[i];
-	}
-	r = (PyObject*) arr;
+        dims[0] = *p->tag5;
+        arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims,
+                                                 NPY_DOUBLE);
+        data = (double *) PyArray_DATA(arr);
+        for (i = 0; i < *p->tag5; i++) {
+          data[i] = ((double*) p->ptr)[i];
+        }
+        r = (PyObject*) arr;
       }
       break;
     case PK_FORTRAN_STRING_LIST:
       if (*p->tag5 == 1) {
-	r = fstring_to_pystring((char*) p->ptr, p->tag);
+        r = fstring_to_pystring((char*) p->ptr, p->tag);
       } else {
-	dims[0] = *p->tag5;
-	arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims,
-						 NPY_OBJECT);
-	odata = (PyObject **) PyArray_DATA(arr);
-	for (i = 0; i < *p->tag5; i++) {
-	  odata[i] = fstring_to_pystring(((char*) p->ptr + i*p->tag), p->tag);
-	}
-	r = (PyObject*) arr;
+        dims[0] = *p->tag5;
+        arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims,
+                                                 NPY_OBJECT);
+        odata = (PyObject **) PyArray_DATA(arr);
+        for (i = 0; i < *p->tag5; i++) {
+          odata[i] = fstring_to_pystring(((char*) p->ptr + i*p->tag), p->tag);
+        }
+        r = (PyObject*) arr;
       }
       break;
     case PK_ARRAY2D:
@@ -198,9 +213,9 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
       arr = (PyArrayObject*) PyArray_SimpleNew(2, (npy_intp*) dims, NPY_DOUBLE);
       data = (double *) PyArray_DATA(arr);
       for (i = 0; i < p->tag; i++) {
-	for (j = 0; j < p->tag2; j++) {
-	  data[j + i*p->tag2] = ((double*) p->ptr)[i + j*p->tag];
-	}
+        for (j = 0; j < p->tag2; j++) {
+          data[j + i*p->tag2] = ((double*) p->ptr)[i + j*p->tag];
+        }
       }
       //        memcpy(data, p->ptr, p->tag*p->tag2*sizeof(double));
       r = (PyObject*) arr;
@@ -212,12 +227,12 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
       arr = (PyArrayObject*) PyArray_SimpleNew(3, (npy_intp*) dims, NPY_DOUBLE);
       data = (double *) PyArray_DATA(arr);
       for (i = 0; i < p->tag; i++) {
-	for (j = 0; j < p->tag2; j++) {
-	  for (k = 0; k < p->tag3; k++) {
-	    data[k + (j + i*p->tag2)*p->tag3] = 
-	      ((double*) p->ptr)[i + (j + k*p->tag2)*p->tag];
-	  }
-	}
+        for (j = 0; j < p->tag2; j++) {
+          for (k = 0; k < p->tag3; k++) {
+            data[k + (j + i*p->tag2)*p->tag3] = 
+              ((double*) p->ptr)[i + (j + k*p->tag2)*p->tag];
+          }
+        }
       }
       //        memcpy(data, p->ptr, p->tag*p->tag2*p->tag3*sizeof(double));
       r = (PyObject*) arr;
@@ -228,7 +243,6 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
     }
   } else {
     r = PyObject_GenericGetAttr((PyObject *) self, pyname);
-    // Py_FindMethod(self->ob_type->tp_methods, (PyObject *) self, name);
   }
 
   return r;
@@ -240,7 +254,11 @@ coulomb_getattro(coulomb_t *self, PyObject *pyname)
 static PyObject *
 coulomb_str(coulomb_t *self, PyObject *args)
 {
+#if PY_MAJOR_VERSION >= 3
+  return PyUnicode_FromString(self->f90class->name);
+#else
   return PyString_FromString(self->f90class->name);
+#endif
 }
 
 
@@ -282,7 +300,7 @@ coulomb_set_Hubbard_U(coulomb_t *self, PyObject *args)
 
   if (self->f90class->set_Hubbard_U) {
     self->f90class->set_Hubbard_U(self->f90obj, a->f90obj, PyArray_DATA(arr_U),
-				  &ierror);
+                                  &ierror);
 
     if (error_to_py(ierror)) {
       Py_DECREF(arr_U);
@@ -362,7 +380,7 @@ coulomb_energy_and_forces(coulomb_t *self, PyObject *args, PyObject *kwargs)
     strides[0] = dims[1]*NPY_SIZEOF_DOUBLE;
     strides[1] = NPY_SIZEOF_DOUBLE;
     f = (PyObject*) PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, strides,
-				NULL, 0, NPY_FARRAY, NULL);
+                                NULL, 0, NPY_FARRAY, NULL);
     memset(PyArray_DATA(f), 0, dims[0]*dims[1]*NPY_SIZEOF_DOUBLE);
   }
 
@@ -434,7 +452,7 @@ coulomb_potential(coulomb_t *self, PyObject *args, PyObject *kwargs)
 #endif
 
   if (!PyArg_ParseTuple(args, "O!O!O|O!", &particles_type, &a,
-			&neighbors_type, &n, &q_in, &PyArray_Type, &phi))
+                        &neighbors_type, &n, &q_in, &PyArray_Type, &phi))
     return NULL;
   
   q = PyArray_FROMANY(q_in, NPY_DOUBLE, 1, 1, 0);
@@ -451,19 +469,19 @@ coulomb_potential(coulomb_t *self, PyObject *args, PyObject *kwargs)
 
 #ifdef DEBUG
   printf("[coulomb_potential] self->f90class->name = %s\n",
-	 self->f90class->name);
+         self->f90class->name);
   printf("[coulomb_potential] self->f90obj = %p\n",
-	 self->f90obj);
+         self->f90obj);
   printf("[coulomb_potential] a->f90obj = %p\n",
-	 a->f90obj);
+         a->f90obj);
   printf("[coulomb_potential] n->f90obj = %p\n",
-	 n->f90obj);
+         n->f90obj);
   printf("[coulomb_potential] self->f90class->potential = %p\n",
-	 self->f90class->potential);
+         self->f90class->potential);
 #endif
 
   self->f90class->potential(self->f90obj, a->f90obj, n->f90obj,
-			    PyArray_DATA(q), PyArray_DATA(phi), &ierror);
+                            PyArray_DATA(q), PyArray_DATA(phi), &ierror);
 
   Py_DECREF(q);
   if (error_to_py(ierror)) {
@@ -522,12 +540,12 @@ PyTypeObject coulomb_type = {
     0,                                          /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   /*tp_flags*/
     "Coulomb objects",                          /* tp_doc */
-    0,		                                /* tp_traverse */
-    0,		                                /* tp_clear */
-    0,		                                /* tp_richcompare */
-    0,		                                /* tp_weaklistoffset */
-    0,		                                /* tp_iter */
-    0,		                                /* tp_iternext */
+    0,                                          /* tp_traverse */
+    0,                                          /* tp_clear */
+    0,                                          /* tp_richcompare */
+    0,                                          /* tp_weaklistoffset */
+    0,                                          /* tp_iter */
+    0,                                          /* tp_iternext */
     coulomb_methods,                            /* tp_methods */
     0,                                          /* tp_members */
     0,                                          /* tp_getset */
