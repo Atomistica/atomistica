@@ -11,6 +11,11 @@ TODO
 Change log
 ==========
 
+master
+------
+
+- Python 3 compatibility
+
 v0.3.2
 ------
 
