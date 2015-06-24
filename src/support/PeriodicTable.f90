@@ -139,15 +139,15 @@ contains
     if (verify(trim(adjustl(atomic_symbol)),"0123456789") == 0) then ! an integer
        read (atomic_symbol, *) atomic_number_from_symbol
        if (atomic_number_from_symbol < 1 .or. atomic_number_from_symbol > size(ElementName)) then
-	  atomic_number_from_symbol = 0
+          atomic_number_from_symbol = 0
        endif
        return
     else ! not an integer, hopefully an element abbreviation
        do i = 1, 116
-	  if (trim(lower_case(adjustl(atomic_symbol)))==trim(lower_case(ElementName(i)))) then
-	     atomic_number_from_symbol = i
-	     return
-	  end if
+          if (trim(lower_case(adjustl(atomic_symbol)))==trim(lower_case(ElementName(i)))) then
+             atomic_number_from_symbol = i
+             return
+          end if
        end do
     end if
 
