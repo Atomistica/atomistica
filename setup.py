@@ -182,7 +182,10 @@ metadata = scanallmeta(['{0}/{1}'.format(srcdir, x) for x in
 # Coulomb modules
 mods1, fns1 = get_module_list(metadata, 'coulomb',
                               include_list = inc_dirs)
-lib_srcs += fns1
+if sys.version_info >= (3,0):
+    lib_srcs += fns1
+else:
+    lib_srcs += [ fn.encode('ascii') for fn in fns1 ]
 
 print('* Found the following Coulomb modules:')
 for f90name, f90type, name, features, methods in mods1:
@@ -206,7 +209,10 @@ lib_srcs += [ '%s/python/f90/coulomb_dispatch.f90' % (srcdir),
 # Potential modules
 mods2, fns2 = get_module_list(metadata, 'potentials',
                               include_list = inc_dirs)
-lib_srcs += fns2
+if sys.version_info >= (3,0):
+    lib_srcs += fns2
+else:
+    lib_srcs += [ fn.encode('ascii') for fn in fns2 ]
 
 print('* Found the following potential modules:')
 for f90name, f90type, name, features, methods in mods2:
