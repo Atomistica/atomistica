@@ -309,9 +309,9 @@ pyobject_to_property(PyObject *value, property_t *p)
     break;
   case PK_INT_LIST:
 #if PY_MAJOR_VERSION >= 3
-      if (!PyLong_Check(value)) {
+    if (PyLong_Check(value)) {
 #else
-      if (!PyInt_Check(value)) {
+    if (PyInt_Check(value)) {
 #endif
       *p->tag5 = 1;
 #if PY_MAJOR_VERSION >= 3
@@ -359,9 +359,9 @@ pyobject_to_property(PyObject *value, property_t *p)
     break;
   case PK_FORTRAN_STRING_LIST:
 #if PY_MAJOR_VERSION >= 3
-    if (!PyUnicode_Check(value)) {
+    if (PyUnicode_Check(value)) {
 #else
-    if (!PyString_Check(value)) {
+    if (PyString_Check(value)) {
 #endif
       *p->tag5 = 1;
       pystring_to_fstring(value, (char*) p->ptr, p->tag);
