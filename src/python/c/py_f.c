@@ -376,23 +376,10 @@ pyobject_to_property(PyObject *value, property_t *p)
       *p->tag5 = 1;
       pystring_to_fstring(value, (char*) p->ptr, p->tag);
     } else {
-      PyArray_Converter(value, (PyObject**) &arr);
-      if (!PyArray_ISSTRING(arr)) {
-        sprintf(errstr,
-                "Property '%s' of section '%s' should be a list of "
-                "strings.\n",
-                p->name, p->parent->name);
-        PyErr_SetString(PyExc_TypeError, errstr);
+      arr = PyArray_FROMANY(value, NPY_STRING, 1, 1, NPY_DEFAULT);
+      if (!arr)
         return -1;
-      }
-      if (arr->nd == 1) {
-        *p->tag5 = PyArray_DIM(arr, 0);
-      } else {
-        Py_DECREF(arr);
-        PyErr_SetString(PyExc_TypeError, "Array needs to be scalar or "
-                        "one-dimensional.");
-        return -1;
-      }
+      *p->tag5 = PyArray_DIM(arr, 0);
       k = PyArray_STRIDE(arr, 0);
       str2 = (char *) p->ptr;
       for (i = 0; i < *p->tag5; i++) {
@@ -466,7 +453,7 @@ pyobject_to_property(PyObject *value, property_t *p)
     }
     if (PyArray_DIM(arr, 0) != p->tag) {
       sprintf(errstr, "Wrong dimensions: Array needs to be of length %i.", 
-              p->tag, p->tag2);
+              p->tag);
       PyErr_SetString(PyExc_TypeError, errstr);
       return -1;
     }
