@@ -22,14 +22,14 @@ Currently supported simulation environments are...
 
 1.  ...the Atomistic Simulation Environment   
     (ASE - see https://wiki.fysik.dtu.dk/ase/)
-    * Build instructions are in [README.PYTHON]
-    * Examples are in [examples/ASE]
+    * Build instructions are in [README.PYTHON](README.PYTHON)
+    * Examples are in [examples/ASE](examples/ASE)
     * Tests are in tests
 
 2.  ...the Large-scale Atomic/Molecular Massively Parallel Simulator   
     (LAMMPS - see https://lammps.sandia.gov/)
-    * Build instructions are in [README.LAMMPS]
-    * Examples are in [examples/LAMMPS]
+    * Build instructions are in [README.LAMMPS](README.LAMMPS)
+    * Examples are in [examples/LAMMPS](examples/LAMMPS)
 
 You need the following packages:
 
