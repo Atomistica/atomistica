@@ -1565,6 +1565,7 @@
 #ifdef NUM_NEIGHBORS
                       else
 
+                         fcik  = this%cutfcnnc(ik)
                          nconji = nconjit - fcik * fxik(ikc)
 
 #endif
