@@ -34,6 +34,7 @@ import _atomistica
 import numpy as np
 
 from ase.atoms import string2symbols
+from ase.calculators.calculator import Calculator
 from ase.data import atomic_numbers
 from ase.units import Hartree, Bohr
 
@@ -136,10 +137,13 @@ def convpar(p):
 ###
 
 _warned_about_lees_edwards = False
-class Atomistica(object):
+class Atomistica(Calculator):
     """
     Atomistica ASE calculator.
     """
+
+    implemented_properties = ['energy', 'stress', 'forces', 'charges']
+    default_parameters = {}
 
     CELL_TOL = 1e-16
     POSITIONS_TOL = 1e-16
@@ -202,16 +206,13 @@ class Atomistica(object):
         self.lees_edwards_dx = None
         self.lees_edwards_dv = None
 
-        self.compute_epot_per_at = False
         self.compute_epot_per_bond = False
         self.compute_f_per_bond = False
         self.compute_wpot_per_at = False
         self.compute_wpot_per_bond = False
 
-        self.epot_per_at = None
         self.epot_per_bond = None
         self.f_per_bond = None
-        self.wpot_per_at = None
         self.wpot_per_bond = None
 
 
@@ -290,14 +291,6 @@ class Atomistica(object):
         self.force_update = True
 
 
-    def set_per_at(self, epot=None, wpot=None):
-        if epot is not None:
-            self.compute_epot_per_at = epot
-        if wpot is not None:
-            self.compute_wpot_per_at = wpot
-        self.force_update = True
-
-
     def set_per_bond(self, epot=None, f=None, wpot=None):
         if epot is not None:
             self.compute_epot_per_bond = epot
@@ -320,15 +313,12 @@ class Atomistica(object):
             self.initialize(atoms)
 
         # Cell changed? FIXME! Add PBC,LEBC changed
-        cell_chgd  = False
         cell       = self.particles.cell
         pbc        = self.particles.pbc
         #if np.any(np.abs(cell - atoms.get_cell()) > self.CELL_TOL):
         if np.any(cell != atoms.get_cell()) or np.any(pbc != atoms.get_pbc()):
             self.particles.set_cell(atoms.get_cell(), atoms.get_pbc())
-            cell_chgd  = True
 
-        pos_chgd   = False
         positions  = self.particles.coordinates
         scaled     = np.linalg.solve(cell.T, positions.T).T
         for i in range(3):
@@ -341,11 +331,9 @@ class Atomistica(object):
         #if np.any(np.abs(scaled - atoms.get_scaled_positions()) > self.POSITIONS_TOL):
         if np.any(scaled != atoms.get_scaled_positions()):
             positions[:, :]  = atoms.get_positions()[:, :]
-            pos_chgd         = True
             # Notify the Particles object of a change
             self.particles.I_changed_positions()
 
-        lebc_chgd = False            
         if self._lees_edwards_info_str in atoms.info:
             if self.lees_edwards_dx is None or \
                 np.any(atoms.info[self._lees_edwards_info_str] != \
@@ -353,7 +341,6 @@ class Atomistica(object):
 
                 self._warn_lees_edwards()
                 self.lees_edwards_dx = atoms.info[self._lees_edwards_info_str]
-                lebc_chgd = True
                 assert self.lees_edwards_dx.shape == (3,)
 
         if self.lees_edwards_dx is not None:
@@ -361,7 +348,6 @@ class Atomistica(object):
                                             self.lees_edwards_dv)
 
         # Charges changed?
-        charges_chgd = False
         if self.q is not None:
             if atoms.has('charges'):
                 q = atoms.get_array('charges')
@@ -369,63 +355,22 @@ class Atomistica(object):
                 q = atoms.get_charges()
             if np.any(self.q != q):
                 self.q = q
-                charges_chgd = True
-
-        if pos_chgd or cell_chgd or lebc_chgd or charges_chgd or \
-                self.force_update or force_update:
-
-            self.calculate()
-            self.force_update  = False
-
-        if self.q is not None:
-            atoms.set_initial_charges(self.q)
-
-    def get_potential_energy(self, atoms, force_consistent=False):
-        self.update(atoms)
-        return self.epot
 
 
     def get_potential_energies(self, atoms):
-        self.update(atoms)
-        if not self.compute_epot_per_at:
-            self.compute_epot_per_at = True
-            self.calculate()
-        return self.epot_per_at
-
-
-    def get_forces(self, atoms):
-        self.update(atoms)
-
-        return self.forces.copy()
-
-
-    def get_stress(self, atoms):
-        self.update(atoms)
-
-        st = self.wpot/atoms.get_volume()
-
-        return np.array( [ st[0,0], st[1,1], st[2,2], (st[1,2]+st[2,1])/2,
-                           (st[0,2]+st[2,0])/2, (st[0,1]+st[1,0])/2 ] )
+        self.calculate(atoms, ['energies'])
+        return self.results['energies']
 
 
     def get_stresses(self, atoms):
-        self.update(atoms)
-        if not self.compute_wpot_per_at:
-            self.compute_wpot_per_at = True
-            self.calculate()
-        return np.transpose([
-                self.wpot_per_at[:,0,0],
-                self.wpot_per_at[:,1,1],
-                self.wpot_per_at[:,2,2],
-                (self.wpot_per_at[:,1,2]+self.wpot_per_at[:,2,1])/2,
-                (self.wpot_per_at[:,0,2]+self.wpot_per_at[:,2,0])/2,
-                (self.wpot_per_at[:,0,1]+self.wpot_per_at[:,1,0])/2])
-
-
-    def get_charges(self, atoms=None):
-        self.update(atoms)
-
-        return self.q
+        self.calculate(atoms, ['stresses'])
+        wpot_per_at = self.results['stresses']
+        return np.transpose([wpot_per_at[:,0,0],
+                             wpot_per_at[:,1,1],
+                             wpot_per_at[:,2,2],
+                             (wpot_per_at[:,1,2]+wpot_per_at[:,2,1])/2,
+                             (wpot_per_at[:,0,2]+wpot_per_at[:,2,0])/2,
+                             (wpot_per_at[:,0,1]+wpot_per_at[:,1,0])/2])
 
 
     def get_electrostatic_potential(self, atoms=None):
@@ -441,15 +386,24 @@ class Atomistica(object):
                 return pot.get_per_bond_property(self.particles, self.nl, name)
 
 
-    def calculate(self):
-        self.epot = 0.0
-        self.forces = np.zeros([len(self.particles),3])
-        self.wpot = np.zeros([3,3])
+    def calculate(self, atoms, properties, system_changes):
+        Calculator.calculate(self, atoms, properties, system_changes)
 
-        kwargs = dict(epot_per_at = self.compute_epot_per_at,
+        self.update(atoms)
+
+        epot = 0.0
+        forces = np.zeros([len(self.particles),3])
+        wpot = np.zeros([3,3])
+
+        self.results = {}
+
+        compute_epot_per_at = 'energies' in properties
+        compute_wpot_per_at = 'stresses' in properties
+
+        kwargs = dict(epot_per_at = compute_epot_per_at,
                       epot_per_bond = self.compute_epot_per_bond,
                       f_per_bond = self.compute_f_per_bond,
-                      wpot_per_at = self.compute_wpot_per_at,
+                      wpot_per_at = compute_wpot_per_at,
                       wpot_per_bond = self.compute_wpot_per_bond)
 
         if self.mask is not None:
@@ -457,25 +411,25 @@ class Atomistica(object):
         if self.q is None:
             # No charges? Just call the potentials...
             for pot in self.pots:
-                _epot, _forces, _wpot, self.epot_per_at, self.epot_per_bond, \
-                    self.f_per_bond, self.wpot_per_at, self.wpot_per_bond  = \
+                _epot, _forces, _wpot, epot_per_at, self.epot_per_bond, \
+                    self.f_per_bond, wpot_per_at, self.wpot_per_bond  = \
                         pot.energy_and_forces(self.particles, self.nl,
-                                              forces = self.forces,
+                                              forces = forces,
                                               **kwargs)
-                self.epot += _epot
-                self.wpot += _wpot
+                epot += _epot
+                wpot += _wpot
 
         else:
             # Charges? Pass charge array to potentials and ...
             for pot in self.pots:
-                _epot, _forces, _wpot, self.epot_per_at, self.epot_per_bond, \
-                    self.f_per_bond, self.wpot_per_at, self.wpot_per_bond  = \
+                _epot, _forces, _wpot, epot_per_at, self.epot_per_bond, \
+                    self.f_per_bond, wpot_per_at, self.wpot_per_bond  = \
                         pot.energy_and_forces(self.particles, self.nl,
-                                              forces = self.forces,
+                                              forces = forces,
                                               charges = self.q,
                                               **kwargs)
-                self.epot += _epot
-                self.wpot += _wpot
+                epot += _epot
+                wpot += _wpot
 
             # ... call Coulomb solvers to get potential and fields
             epot_coul = 0.0
@@ -494,13 +448,36 @@ class Atomistica(object):
             forces_coul *= Hartree * Bohr
             wpot_coul *= Hartree * Bohr
 
-            self.epot += epot_coul
-            self.wpot += wpot_coul
+            epot += epot_coul
+            wpot += wpot_coul
 
             # Sum forces
-            self.forces += forces_coul
-            
-            
+            forces += forces_coul
+
+            self.results['charges'] = self.q
+        
+        self.results['energy'] = epot
+        # Convert to Voigt
+        volume = self.atoms.get_volume()
+        self.results['stress'] = np.array([wpot[0,0], wpot[1,1], wpot[2,2],
+                                           (wpot[1,2]+wpot[2,1])/2,
+                                           (wpot[0,2]+wpot[2,0])/2,
+                                           (wpot[0,1]+wpot[1,0])/2])/volume
+        self.results['forces'] = forces
+
+        if compute_epot_per_at:
+            self.results['energies'] = epot_per_at
+        if compute_wpot_per_at:
+            # Convert to Voigt
+            self.results['stresses'] = \
+                np.transpose([wpot_per_at[:,0,0],
+                              wpot_per_at[:,1,1],
+                              wpot_per_at[:,2,2],
+                              (wpot_per_at[:,1,2]+wpot_per_at[:,2,1])/2,
+                              (wpot_per_at[:,0,2]+wpot_per_at[:,2,0])/2,
+                              (wpot_per_at[:,0,1]+wpot_per_at[:,1,0])/2])
+
+
     ### Convenience
     def _warn_lees_edwards(self):
         global _warned_about_lees_edwards
@@ -576,7 +553,7 @@ for name, cls in inspect.getmembers(_atomistica):
             avgn = spec_avgn[cls.__name__]
         elif cls.__name__.endswith('Scr'):
             avgn = 1000
-        globals()[cls.__name__] = type(cls.__name__, (Atomistica,), {
+        globals()[cls.__name__] = type(cls.__name__, (Atomistica, object), {
             'name': cls.__name__,
             'potential_class': cls,
             'avgn': avgn
