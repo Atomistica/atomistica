@@ -458,23 +458,24 @@ contains
 
     integer  :: noi, noj  ! number of orbitals
     integer  :: eli, elj  ! element numbers
-    integer  :: m         ! maximum orbital to consider
     integer  :: nr        ! number of contributing orbital combinations
     integer  :: bo        ! bond (orbital combination) index
     integer  :: ia, ia0, jb, jb0  ! orbital numbers (in global matrix)
-    integer  :: a, b, q
+    integer  :: a, b, a0, b0, q, m
     real(8)  :: he_ij(10), se_ij(10), he_ji(10), se_ji(10)
 
     WF_T(DP)  :: H_el, S_el
 
     ! ---
 
-    ! list tells the MELs needed when 
-    ! you know the maximum of number of orbitals of the atom pair
-    ! the zeroth position tells the number of MELs
-    list(0:1,1) = (/1,10/)
-    list(0:4,4) = (/4,6,7,9,10/)
-    list( : ,9) = (/10,1,2,3,4,5,6,7,8,9,10/)
+    ! list tells the bond integrals needed when you know the maximum of number
+    ! of orbitals of the atom pair the zeroth position tells the number of MELs
+    !                   dds ddp ddd pds pdp pps ppp sds sps sss
+    !                    1   2   3   4   5   6   7   8   9   10
+    list(0:1,  1) = [1,                                      10] ! s
+    list(0:4,  4) = [4,                      6,  7,      9,  10] ! sp
+    list(0:4,  5) = [4,  1,      3,                  8,      10] ! sd
+    list(0:10, 9) = [10, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10] ! spd
 
     eli = el_i%enr
     elj = el_j%enr
@@ -483,14 +484,14 @@ contains
     ia0 = el_i%o1
     jb0 = el_j%o1
 
-    m  = max( noi,noj )
-    nr = list(0,m)                                 ! number of non-vanishing matrix elements
-    a = interval(db%HS(eli, elj), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
+    m  = max(noi, noj)
+    nr = list(0, m)                    ! number of non-vanishing matrix elements
+    a  = interval(db%HS(eli, elj), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
     PASS_ERROR(error)
-    b = interval(db%HS(elj, eli), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
+    b  = interval(db%HS(elj, eli), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
     PASS_ERROR(error)
     do q = 1, nr
-       bo = list(q,m)   ! bond order
+       bo = list(q, m)   ! bond order
        he_ij(bo) = f(db%HS(eli, elj), bo,          my_r_ij, a)
        se_ij(bo) = f(db%HS(eli, elj), bo+MAX_NORB, my_r_ij, a)
        he_ji(bo) = f(db%HS(elj, eli), bo,          my_r_ij, b)
@@ -508,15 +509,20 @@ contains
     !
     !---------------------------------------
 !    call timer('setup_hs_2',1)
-    a_loop: do a=1, noi
-       ia=ia0 + a-1
-       b_loop: do b=1, noj
-          jb=jb0 + b-1
+    a_loop: do a0 = 1, noi
+       ia = ia0 + a0-1
+       a  = a0
+       ! if noi == 5, this element has just s and d orbitals defined
+       if (noi == 5 .and. a > 1)  a = a+4
+       b_loop: do b0 = 1, noj
+          jb = jb0 + b0-1
+          b  = b0
+          ! if noj == 5, this element has just s and d orbitals defined
+          if (noi == 5 .and. b > 1)  b = b+4
           !------------------------------------------------------- 
           ! if b>a (i.e. ang.momenta l_b>l_a), we must use
           ! the other table
           !------------------------------------------------------- 
-
           if (a <= b) then
              H_el = transform_orb( a, b, n_ij, he_ij )
              S_el = transform_orb( a, b, n_ij, se_ij )

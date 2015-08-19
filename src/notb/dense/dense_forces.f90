@@ -93,19 +93,14 @@ contains
     call c_f_pointer(tb%e, tb_e, [tb%norb, tb%norb, tb%nk])
     call c_f_pointer(tb%at, tb_at, [tb%nat])
 
-    ! list tells the MELs needed when 
-    ! you know the maximum of number of orbitals of the atom pair
-    ! the zeroth position tells the number of MELs
-    ! Notation for the orbital-integrals:
-    !  dds ddp ddd pds pdp pps ppp sds sps sss
-    !   1   2   3   4   5   6   7   8   9   10
-
-    ! Both elements have s-orbitals only
-    list(0:1,1)  = [1,O_sss]
-    ! At least one element has p-orbitals
-    list(0:4,4)  = [4,O_pps,O_ppp,O_sps,O_sss]
-    ! At least one element has d-orbitals
-    list( : ,9)  = [10,O_dds,O_ddp,O_ddd,O_pds,O_pdp,O_pps,O_ppp,O_sds,O_sps,O_sss]
+    ! list tells the bond integrals needed when you know the maximum of number
+    ! of orbitals of the atom pair the zeroth position tells the number of MELs
+    !                   dds ddp ddd pds pdp pps ppp sds sps sss
+    !                    1   2   3   4   5   6   7   8   9   10
+    list(0:1,  1) = [1,                                      10] ! s
+    list(0:4,  4) = [4,                      6,  7,      9,  10] ! sp
+    list(0:4,  5) = [4,  1,      3,                  8,      10] ! sd
+    list(0:10, 9) = [10, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10] ! spd
 
     lo     = (/0,1,1,1,2,2,2,2,2/)
 
@@ -303,7 +298,7 @@ contains
     real(DP)  :: s3
 
     real(DP)  :: l,m,n,ll,mm,nn,li,mi,ni,g,d,lli,mmi,nni,c(-10:10)
-    integer   :: a,b,i,mx
+    integer   :: a,b,a0,b0,i,mx
 
     real(DP)  :: dds, ddp, ddd, pds, pdp, pps, ppp, sds, sps, sss
     real(DP)  :: ddsi,ddpi,dddi,pdsi,pdpi,ppsi,pppi,sdsi,spsi,sssi
@@ -346,10 +341,14 @@ contains
        nni = 2*n*ni
 
 
-       a_loop: do a = 1,mx
-          b_loop: do b = a,mx
-
-
+       a_loop: do a0 = 1,mx
+          a = a0
+          ! if noi == 5, this element has just s and d orbitals defined
+          if (noi == 5 .and. a > 1)  a = a+4
+          b_loop: do b0 = a,mx
+             b = b0
+             ! if noj == 5, this element has just s and d orbitals defined
+             if (noi == 5 .and. b > 1)  b = b+4
 
              !-------------------------------------------
              !
