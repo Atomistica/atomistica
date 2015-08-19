@@ -77,31 +77,24 @@ module materials
 
      logical(C_BOOL)         :: exists = .false.
 
-     character(kind=C_CHAR)  :: name(2)=["X","X"]    ! name of element
-     character(kind=C_CHAR)  :: cname(10)=["n","o","n","a","m","e"," "," "," "," "]  ! common name of element
-     integer(C_INT)          :: elem=10000      ! number of element (official)
-     integer(C_INT)          :: no=10000        ! number of orbitals
-     integer(C_INT)          :: l(9)=(/0,1,1,1,2,2,2,2,2/) !angular momenta of orbitals
-     integer(C_INT)          :: lmax=1000       ! maximum angular momentum
-     real(C_DOUBLE)          :: m=1E10          ! mass
-     real(C_DOUBLE)          :: e(9)=1E30       ! orbital energies [ e(1:no) ]
-     real(C_DOUBLE)          :: occ(9)=1E10     ! occupations in neutral atom
-     real(C_DOUBLE)          :: el_max=0        ! max number of valence electrons on an atom
-     real(C_DOUBLE)          :: U=1E30          ! Hubbard U
-     real(C_DOUBLE)          :: q0=1E30         ! charge (nr of electrons in neutral)
-     real(C_DOUBLE)          :: FWHM=1E30       ! .. of Gaussian charge distribution
-     real(C_DOUBLE)          :: vib=0d0         ! vibrational frequency of dimer [cm^-1]
-     real(C_DOUBLE)          :: Dnn=0d0         ! nearest neighbor distance in bulk 
+     character(kind=C_CHAR)  :: name(2)   = ["X","X"]  ! name of element
+     character(kind=C_CHAR)  :: cname(10) = ["n","o","n","a","m","e"," "," "," "," "]  ! common name of element
+     integer(C_INT)          :: elem      = 10000      ! number of element (official)
+     integer(C_INT)          :: no        = 10000      ! number of orbitals
+     integer(C_INT)          :: l(9)      = [0,1,1,1,2,2,2,2,2] !angular momenta of orbitals
+     integer(C_INT)          :: lmax      = 1000       ! maximum angular momentum
+     real(C_DOUBLE)          :: e(9)      = 1E30       ! orbital energies [ e(1:no) ]
+     real(C_DOUBLE)          :: el_max    = 0          ! max number of valence electrons on an atom
+     real(C_DOUBLE)          :: U         = 1E30       ! Hubbard U
+     real(C_DOUBLE)          :: q0        = 1E30       ! charge (nr of electrons in neutral)
   
      ! variables for HOTBIT
-     real(C_DOUBLE)          :: guess_dq=0d0    ! guessed initial excess charge
-     real(C_DOUBLE)          :: fixed_dq=1E10   ! initial charges for TDTB propagation
-     integer(C_INT)          :: o1=1E5          ! index of the first orbital
-     integer(C_INT)          :: enr=1E5         ! element number in the internal book-keeping
+     integer(C_INT)          :: o1        = 1E5        ! index of the first orbital
+     integer(C_INT)          :: enr       = 1E5        ! element number in the internal book-keeping
 
      ! spin-related variables
-     logical(C_BOOL)         :: spin = .false.  ! spin-parameters set?
-     real(C_DOUBLE)          :: W(0:2,0:2)      ! W parameter values, 0,1,2 = s,p,d, W(0,0) = Wss, W(0,1) = Wsp etc.
+     logical(C_BOOL)         :: spin      = .false.    ! spin-parameters set?
+     real(C_DOUBLE)          :: W(0:2,0:2)             ! W parameter values, 0,1,2 = s,p,d, W(0,0) = Wss, W(0,1) = Wsp etc.
 
   endtype notb_element_t
 
@@ -804,7 +797,6 @@ contains
        case("common");
           hlp(j)%cname = ' '
           hlp(j)%cname(1:min(10,len_trim(dat))) = s2a(trim(dat))
-       case("m");     read(dat,*) hlp(j)%m
        case("q0");    read(dat,*) hlp(j)%q0
        case("no")
           read(dat,*) hlp(j)%no
@@ -814,10 +806,6 @@ contains
        case("U")
           read(dat,*) hlp(j)%U
           hlp(j)%U = hlp(j)%U * econv
-       case("FWHM");  read(dat,*) hlp(j)%FWHM
-       case("vib");   read(dat,*) hlp(j)%vib
-       case("Dnn");   read(dat,*) hlp(j)%Dnn
-       case("occ");   read(dat,*) hlp(j)%occ(1:hlp(j)%no)
        case default
           cycle
        end select

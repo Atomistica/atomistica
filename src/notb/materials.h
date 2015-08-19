@@ -39,22 +39,15 @@ struct notb_element_t {
   int no;           /* number of orbitals */
   int l[9];         /* angular momenta of orbitals */
   int lmax;         /* maximum angular momentum */
-  double m;         /* mass */
   double e[9];      /* orbital energies [ e(1:no) ] */
-  double occ[9];    /* occupations in neutral atom */
   double el_max;    /* max number of valence electrons on an atom */
   double U;         /* Hubbard U */
   double q0;        /* charge (nr of electrons in neutral) */
-  double FWHM;      /* .. of Gaussian charge distribution */
-  double vib;       /* vibrational frequency of dimer [cm^-1] */
-  double Dnn;       /* nearest neighbor distance in bulk  */
        
   /*
    * internal bookkeeping
    */
 
-  double guess_dq;  /* guessed initial excess charge */
-  double fixed_dq;  /* initial charges for TDTB propagation */
   int o1;           /* index of the first orbital */
   int enr;          /* element number in the internal book-keeping */
 
