@@ -25,7 +25,7 @@
 module dense_hs
   use, intrinsic :: iso_c_binding
 
-  use libAtoms_module
+  use supplib
 
   use nonuniform_spline
   use timer

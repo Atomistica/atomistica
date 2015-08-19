@@ -28,7 +28,7 @@
 module dense_force_calc
   use, intrinsic :: iso_c_binding
 
-  use libAtoms_module
+  use supplib
   
   use particles
   use neighbors

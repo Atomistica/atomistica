@@ -36,7 +36,7 @@
 module materials
   use, intrinsic  :: iso_c_binding
 
-  use libAtoms_module
+  use supplib
 
   use io
   use logging

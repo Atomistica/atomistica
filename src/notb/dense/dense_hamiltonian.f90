@@ -27,7 +27,7 @@
 #include "filter.inc"
 
 module dense_hamiltonian
-  use libAtoms_module
+  use supplib
 
   use particles
   use materials

@@ -32,7 +32,7 @@
 module dense_solver_cp
   use, intrinsic :: iso_c_binding
 
-  use libAtoms_module
+  use supplib
 
   use particles
   use materials
