@@ -67,14 +67,16 @@ contains
 
     ! ---
 
-    integer   :: ni, I, J, mu, nu, kk
+    integer   :: list(0:10,9) = -1
+
+    integer   :: ni, I, J, mu, nu, mu0, nu0, kk
     integer   :: elI, elJ, noI, noJ, Imu, Jnu
     real(DP)  :: rIJ(3), abs_rIJ, l(3)
     real(DP)  :: Hdiff_ij(3,9,9),Sdiff_ij(3,9,9),Hdiff_ji(3,9,9),Sdiff_ji(3,9,9)
     real(DP)  :: dH_ij(-10:10),dS_ij(-10:10),dH_ji(-10:10),dS_ji(-10:10)
     real(DP)  :: w(3, 3), wij(3, 3)
     WF_T(DP)  :: Ft(3), F2(3), rho_ImuJnu, e_ImuJnu
-    integer   :: list(0:10,1:9), lo(9), m, nr, q, a, b
+    integer   :: lo(9), m, nr, q, a, b
 
     integer   :: k!, tmpun
 
@@ -98,8 +100,11 @@ contains
     !                   dds ddp ddd pds pdp pps ppp sds sps sss
     !                    1   2   3   4   5   6   7   8   9   10
     list(0:1,  1) = [1,                                      10] ! s
+    list(0:2,  3) = [2,                      6,  7             ] ! p
     list(0:4,  4) = [4,                      6,  7,      9,  10] ! sp
-    list(0:4,  5) = [4,  1,      3,                  8,      10] ! sd
+    list(0:3,  5) = [3,  1,  2,  3                             ] ! d
+    list(0:5,  6) = [5,  1,  2,  3,                  8,      10] ! sd
+    list(0:7,  8) = [7,  1,  2,  3,  4,  5,  6,  7             ] ! pd
     list(0:10, 9) = [10, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10] ! spd
 
     lo     = (/0,1,1,1,2,2,2,2,2/)
@@ -200,10 +205,13 @@ contains
 
                       F2   = 0
                       k_loop: do k = 1, tb%nk
-                         mu_loop: do mu = 1, noI
-                            nu_loop: do nu = 1, noJ
-                               Imu = tb_at(I)%o1 + mu - 1 
-                               Jnu = tb_at(J)%o1 + nu - 1
+                         mu_loop: do mu0 = 1, noI
+                            mu = get_orbital(noI, mu0)
+                            nu_loop: do nu0 = 1, noJ
+                               nu = get_orbital(noJ, nu0)
+
+                               Imu = tb_at(I)%o1 + mu0 - 1 
+                               Jnu = tb_at(J)%o1 + nu0 - 1
                       
                                rho_ImuJnu = tb_rho(Imu, Jnu, k)
                                e_ImuJnu   = tb_e(Imu, Jnu, k)
@@ -298,7 +306,7 @@ contains
     real(DP)  :: s3
 
     real(DP)  :: l,m,n,ll,mm,nn,li,mi,ni,g,d,lli,mmi,nni,c(-10:10)
-    integer   :: a,b,a0,b0,i,mx
+    integer   :: a,b,i,mx
 
     real(DP)  :: dds, ddp, ddd, pds, pdp, pps, ppp, sds, sps, sss
     real(DP)  :: ddsi,ddpi,dddi,pdsi,pdpi,ppsi,pppi,sdsi,spsi,sssi
@@ -341,18 +349,8 @@ contains
        nni = 2*n*ni
 
 
-       a_loop: do a0 = 1,mx
-          a = a0
-          ! if noi == 5, this element has just d orbitals defined
-          if (noi == 5)  a = a+4
-          ! if noi == 6, this element has just s and d orbitals defined
-          if (noi == 6 .and. a > 1)  a = a+3
-          b_loop: do b0 = a,mx
-             b = b0
-             ! if noj == 5, this element has just d orbitals defined
-             if (noj == 5)  b = b+4
-             ! if noj == 6, this element has just s and d orbitals defined
-             if (noi == 6 .and. b > 1)  b = b+3
+       a_loop: do a = 1, mx
+          b_loop: do b = a, mx
 
              !-------------------------------------------
              !

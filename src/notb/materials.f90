@@ -135,6 +135,11 @@ module materials
      module procedure materials_element_by_Z
   endinterface
 
+  public :: get_orbital
+  interface get_orbital
+     module procedure materials_get_orbital
+  endinterface
+
   integer, parameter :: valence_orbitals(116) =  &
      [ 1,-1, &
        4, 4, 4, 4, 4, 4, 4,-1, &
@@ -157,6 +162,30 @@ module materials
   endtype bopfox_table_t
 
 contains
+
+  !>
+  !! Convert condensed orbital index into absolute orbital index
+  !<
+  function materials_get_orbital(no, a0) result(a)
+    implicit none
+
+    integer, intent(in) :: no, a0
+    integer             :: a
+
+    ! ---
+    
+    a = a0
+    ! if no == 1, no == 4 or no == 9 we are all set
+    !     ^s       ^sp        ^spd
+    ! if no == 5, this element has just d orbitals defined
+    if (no == 5)  a = a+4
+    ! if no == 5, this element has p and d orbitals defined
+    if (no == 8)  a = a+1
+    ! if no == 6, this element has just s and d orbitals defined
+    if (no == 6 .and. a > 1)  a = a+3
+
+  endfunction materials_get_orbital
+
 
   !>
   !! Convert string to all lower case
@@ -870,26 +899,26 @@ contains
              ! for pairs i-j and j-i, which makes ten bond-integrals each.
              ! We need to spread BOPFOXs data out.
 
-             tab(eli, elj)%HS(:, O_sss) = d(1, :) ! sss
-             tab(elj, eli)%HS(:, O_sss) = d(1, :) ! sss
-             tab(eli, elj)%HS(:, O_sps) = d(2, :) ! sps
-             tab(elj, eli)%HS(:, O_sps) = d(3, :) ! pss
-             tab(eli, elj)%HS(:, O_pps) = d(4, :) ! pps
-             tab(elj, eli)%HS(:, O_pps) = d(4, :) ! pps
-             tab(eli, elj)%HS(:, O_ppp) = d(5, :) ! ppp
-             tab(elj, eli)%HS(:, O_ppp) = d(5, :) ! ppp
-             tab(eli, elj)%HS(:, O_sds) = d(6, :) ! sds
-             tab(elj, eli)%HS(:, O_sds) = d(7, :) ! dss
-             tab(eli, elj)%HS(:, O_pds) = d(8, :) ! pds
-             tab(elj, eli)%HS(:, O_pds) = d(9, :) ! dps
-             tab(eli, elj)%HS(:, O_pdp) = d(10, :) ! pdp
-             tab(elj, eli)%HS(:, O_pdp) = d(11, :) ! dpp
-             tab(eli, elj)%HS(:, O_dds) = d(12, :) ! dda
-             tab(elj, eli)%HS(:, O_dds) = d(12, :) ! dda
-             tab(eli, elj)%HS(:, O_ddp) = d(13, :) ! ddp
-             tab(elj, eli)%HS(:, O_ddp) = d(13, :) ! ddp
-             tab(eli, elj)%HS(:, O_ddd) = d(14, :) ! ddd
-             tab(elj, eli)%HS(:, O_ddd) = d(14, :) ! ddd
+             tab(eli, elj)%HS(:, O_sss) = d(2, :) ! sss
+             tab(elj, eli)%HS(:, O_sss) = d(2, :) ! sss
+             tab(eli, elj)%HS(:, O_sps) = d(3, :) ! sps
+             tab(elj, eli)%HS(:, O_sps) = d(4, :) ! pss
+             tab(eli, elj)%HS(:, O_pps) = d(5, :) ! pps
+             tab(elj, eli)%HS(:, O_pps) = d(5, :) ! pps
+             tab(eli, elj)%HS(:, O_ppp) = d(6, :) ! ppp
+             tab(elj, eli)%HS(:, O_ppp) = d(6, :) ! ppp
+             tab(eli, elj)%HS(:, O_sds) = d(7, :) ! sds
+             tab(elj, eli)%HS(:, O_sds) = d(8, :) ! dss
+             tab(eli, elj)%HS(:, O_pds) = d(9, :) ! pds
+             tab(elj, eli)%HS(:, O_pds) = d(10, :) ! dps
+             tab(eli, elj)%HS(:, O_pdp) = d(11, :) ! pdp
+             tab(elj, eli)%HS(:, O_pdp) = d(12, :) ! dpp
+             tab(eli, elj)%HS(:, O_dds) = d(13, :) ! dda
+             tab(elj, eli)%HS(:, O_dds) = d(13, :) ! dda
+             tab(eli, elj)%HS(:, O_ddp) = d(14, :) ! ddp
+             tab(elj, eli)%HS(:, O_ddp) = d(14, :) ! ddp
+             tab(eli, elj)%HS(:, O_ddd) = d(15, :) ! ddd
+             tab(elj, eli)%HS(:, O_ddd) = d(15, :) ! ddd
 
              deallocate(d)
           case("overtable")
@@ -925,26 +954,26 @@ contains
              ! for pairs i-j and j-i, which makes ten bond-integrals each.
              ! We need to spread BOPFOXs data out.
 
-             tab(eli, elj)%HS(:, 10+O_sss) = d(1, :) ! sss
-             tab(elj, eli)%HS(:, 10+O_sss) = d(1, :) ! sss
-             tab(eli, elj)%HS(:, 10+O_sps) = d(2, :) ! sps
-             tab(elj, eli)%HS(:, 10+O_sps) = d(3, :) ! pss
-             tab(eli, elj)%HS(:, 10+O_pps) = d(4, :) ! pps
-             tab(elj, eli)%HS(:, 10+O_pps) = d(4, :) ! pps
-             tab(eli, elj)%HS(:, 10+O_ppp) = d(5, :) ! ppp
-             tab(elj, eli)%HS(:, 10+O_ppp) = d(5, :) ! ppp
-             tab(eli, elj)%HS(:, 10+O_sds) = d(6, :) ! sds
-             tab(elj, eli)%HS(:, 10+O_sds) = d(7, :) ! dss
-             tab(eli, elj)%HS(:, 10+O_pds) = d(8, :) ! pds
-             tab(elj, eli)%HS(:, 10+O_pds) = d(9, :) ! dps
-             tab(eli, elj)%HS(:, 10+O_pdp) = d(10, :) ! pdp
-             tab(elj, eli)%HS(:, 10+O_pdp) = d(11, :) ! dpp
-             tab(eli, elj)%HS(:, 10+O_dds) = d(12, :) ! dda
-             tab(elj, eli)%HS(:, 10+O_dds) = d(12, :) ! dda
-             tab(eli, elj)%HS(:, 10+O_ddp) = d(13, :) ! ddp
-             tab(elj, eli)%HS(:, 10+O_ddp) = d(13, :) ! ddp
-             tab(eli, elj)%HS(:, 10+O_ddd) = d(14, :) ! ddd
-             tab(elj, eli)%HS(:, 10+O_ddd) = d(14, :) ! ddd
+             tab(eli, elj)%HS(:, 10+O_sss) = d(2, :) ! sss
+             tab(elj, eli)%HS(:, 10+O_sss) = d(2, :) ! sss
+             tab(eli, elj)%HS(:, 10+O_sps) = d(3, :) ! sps
+             tab(elj, eli)%HS(:, 10+O_sps) = d(4, :) ! pss
+             tab(eli, elj)%HS(:, 10+O_pps) = d(5, :) ! pps
+             tab(elj, eli)%HS(:, 10+O_pps) = d(5, :) ! pps
+             tab(eli, elj)%HS(:, 10+O_ppp) = d(6, :) ! ppp
+             tab(elj, eli)%HS(:, 10+O_ppp) = d(6, :) ! ppp
+             tab(eli, elj)%HS(:, 10+O_sds) = d(7, :) ! sds
+             tab(elj, eli)%HS(:, 10+O_sds) = d(8, :) ! dss
+             tab(eli, elj)%HS(:, 10+O_pds) = d(9, :) ! pds
+             tab(elj, eli)%HS(:, 10+O_pds) = d(10, :) ! dps
+             tab(eli, elj)%HS(:, 10+O_pdp) = d(11, :) ! pdp
+             tab(elj, eli)%HS(:, 10+O_pdp) = d(12, :) ! dpp
+             tab(eli, elj)%HS(:, 10+O_dds) = d(13, :) ! dda
+             tab(elj, eli)%HS(:, 10+O_dds) = d(13, :) ! dda
+             tab(eli, elj)%HS(:, 10+O_ddp) = d(14, :) ! ddp
+             tab(elj, eli)%HS(:, 10+O_ddp) = d(14, :) ! ddp
+             tab(eli, elj)%HS(:, 10+O_ddd) = d(15, :) ! ddd
+             tab(elj, eli)%HS(:, 10+O_ddd) = d(15, :) ! ddd
 
              deallocate(d)
           case("reptable")
@@ -1158,7 +1187,6 @@ contains
           case("onsitelevels")
              k = maxval(l(:, e(j)%no))
              read(values, *)  onsitelevels(1:k)
-             onsitelevels(1:k) = onsitelevels(1:k) * econv
              do i = 1, 9
                 if (l(i, e(j)%no) > 0) then
                    e(j)%e(i) = onsitelevels(l(i, e(j)%no))
@@ -1166,7 +1194,6 @@ contains
              enddo
           case("Jii")
              read(values, *)  e(j)%U
-             e(j)%U = e(j)%U * econv
           case default
              cycle
           end select
