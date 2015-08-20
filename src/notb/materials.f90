@@ -135,7 +135,7 @@ module materials
      module procedure materials_element_by_Z
   endinterface
 
-  integer, parameter :: number_of_orbitals(116) =  &
+  integer, parameter :: valence_orbitals(116) =  &
      [ 1,-1, &
        4, 4, 4, 4, 4, 4, 4,-1, &
        4, 4, 4, 4, 4, 4, 4,-1, &
@@ -750,9 +750,252 @@ contains
 
 
   !>
-  !! Reads element data from elements.dat
+  !! Load the Slater-Koster tables (DFTB format)
   !<
-  subroutine materials_init_elements(db, econv, lconv, error)
+  subroutine materials_read_sltab_bopfox(db, econv, lconv, error)
+    implicit none
+
+    type(materials_t), intent(inout)  :: db
+    real(DP), intent(in)              :: econv, lconv
+    integer, intent(inout), optional  :: error
+
+    ! ---
+
+    real(DP), parameter  :: REP_DX    = 0.005
+    real(DP), parameter  :: REP_X0    = 1.00
+
+    integer, parameter   :: MAX_DATA  = 10000
+
+    ! ---
+
+    integer                :: un, i, j, i1, i2, n, io
+    character(2)           :: e1, e2, f1, f2
+    character(1000)        :: fil, fil3
+    logical                :: ex, ex3
+
+    real(DP)               :: conv(2*MAX_NORB)
+
+    real(DP)               :: eself(3), espin, u(3)
+    real(DP)               :: cx, dx, c1, c2, c3, x1, x2, splc(6), cutoff
+    real(DP)               :: q(3)
+    character(200)         :: line
+
+    real(DP), allocatable  :: x(:), y(:)
+
+    ! ---
+
+    write (ilog, '(A)')  "- materials_read_sltab_bopfox -"
+
+    allocate(x(MAX_DATA), y(MAX_DATA))
+
+    conv(HTAB) = econv
+    conv(STAB) = 1.0
+
+    do i1 = 1, db%nel
+       if (db%e(i1)%no > 0) then
+          do i2 = 1, db%nel
+             if (db%e(i2)%no > 0) then
+                e1    = trim(a2s(db%e(i1)%name))
+                e2    = trim(a2s(db%e(i2)%name))
+
+                f1    = e1
+                call lowercase(f1)
+                f1 = uppercase(f1(1:1)) // f1(2:2)
+                f2    = e2
+                call lowercase(f2)
+                f2 = uppercase(f2(1:1)) // f2(2:2)
+
+                fil   = trim(db%folder)//'/'//trim(f1)//trim(f2)//'.spl'
+                !fil3  = trim(db%folder)//'/'//trim(uppercase(f1))//'-'//trim(uppercase(f2))//'.skf'
+                fil3  = trim(db%folder)//'/'//trim(f1)//'-'//trim(f2)//'.skf'
+                inquire(file=fil, exist=ex)
+                inquire(file=fil3, exist=ex3)
+
+                un = -1
+
+                if (ex) then
+                   un = fopen(fil)
+                   write (ilog, '(5X,A)')  "DFTB tables for "//trim(e1)//"-"//trim(e2)//" found."
+                else if (ex3) then
+                   un = fopen(fil3)
+                   write (ilog, '(5X,A)')  "DFTB tables for "//trim(e1)//"-"//trim(e2)//" found."
+                endif
+
+                file_exists: if (un > 0) then
+
+                   if (db%HS(i1, i2)%n > 0 .or. db%R(i1, i2)%n > 0) then
+                      write (ilog, '(5X,A)')  "WARNING: "//e1//"-"//e2//" tables already read."
+                   endif
+
+                   ! cutoff, number of grid points in Hamiltonian/Overlap
+                   read (un, *) dx, n
+                   n = n-1 ! Sometimes, there seems to be a line thats missing
+
+                   do i = 1, n
+                      x(i) = (i-1)*dx
+                   enddo
+
+                   if (i1 == i2) then
+                      ! We were able to get fundamental data on this element
+                      db%e(i1)%exists = .true.
+
+                      ! self energies, spin polarization energy(?), Hubbard U's, number of electrons
+                      read (un, *) eself(:), espin, u(:), q(:)
+
+                      eself  = eself * econv
+
+                      if (i1 == i2) then
+                         write (ilog, '(5X,A)')  "WARNING: Overriding self-energies and Hubbard-U from 'elements.dat'."
+
+                         db%e(i1)%e  = (/ &
+                              eself(3), &
+                              eself(2), eself(2), eself(2), &
+                              eself(1), eself(1), eself(1), eself(1), eself(1) &
+                              /)
+
+                         db%e(i1)%U  = u(3) * econv
+                      endif
+
+                   endif
+
+                   ! read spline data
+                   call read(db%HS(i1, i2), un, 2*MAX_NORB+1, lconv, conv, n, x, error)
+                   PASS_ERROR(error)
+
+#ifdef DEBUG
+                   call write(db%HS(i1, i2), "HS_"//trim(e1)//'_'//trim(e2)//".out")
+#endif
+
+                   ! Look for 'Spline'
+                   read (un, *, iostat=io) line
+                   do while (trim(line) /= "Spline" .and. io == 0)
+                      read (un, *, iostat=io) line
+                   enddo
+
+                   if (io /= 0) then
+                      RAISE_ERROR("End of file reached while looking for keyword 'Spline'.", error)
+                   endif
+
+                   !
+                   ! Reading the repulsive part. We will construct a tabulated version of the repulsion
+                   ! and then use our spline module.
+                   !
+
+                   read (un, *) n, cutoff
+                   read (un, *) c1, c2, c3
+
+                   read (un, *) x1, x2, splc(1:4)
+
+                   !
+                   ! The tail of the repulsive function is given by an exponential
+                   !
+
+                   cx  = REP_X0
+                   i   = 1
+                   do while (cx < x1)
+                      x(i)  = cx
+                      y(i)  = c3 + exp(c2-c1*cx)
+
+                      cx  = cx + REP_DX
+                      i   = i + 1
+                   enddo
+
+                   n = n - 1
+
+                   !
+                   ! The rest is spline coefficients
+                   !
+
+                   do while (n > 1)
+
+                      do while (cx < x2)
+                         x(i)  = cx
+                         y(i)  = splc(1)
+                         dx    = cx-x1
+                         do j = 2, 4
+                            y(i)  = y(i) + splc(j)*dx
+                            dx    = dx*(cx-x1)
+                         enddo
+
+                         cx  = cx + REP_DX
+                         i  = i + 1
+                      enddo
+
+                      read (un, *) x1, x2, splc(1:4)
+
+                      n  = n - 1
+
+                   enddo
+
+                   do while (cx < x2)
+                      x(i)  = cx
+                      y(i)  = splc(1)
+                      dx    = cx-x1
+                      do j = 2, 4
+                         y(i)  = y(i) + splc(j)*dx
+                         dx    = dx*(cx-x1)
+                      enddo
+
+                      cx  = cx + REP_DX
+                      i  = i + 1
+                   enddo
+
+                   !
+                   ! The last one is an fifth order polynomial
+                   !
+
+                   read (un, *) x1, x2, splc(1:6)
+
+                   do while (cx < x2)
+                      x(i)  = cx
+                      y(i)  = splc(1)
+                      dx    = cx-x1
+                      do j = 2, 6
+                         y(i)  = y(i) + splc(j)*dx
+                         dx    = dx*(cx-x1)
+                      enddo
+
+                      cx  = cx + REP_DX
+                      i   = i + 1
+                   enddo
+
+                   if (i > MAX_DATA) then
+                      RAISE_ERROR("i > MAX_DATA", error)
+                   endif
+
+                   !
+                   ! Construct spline
+                   !
+
+                   x  = x * lconv
+                   y  = y * econv
+                   call nonuniform_spline_init(db%R(i1, i2), MAX_DATA, i-1, x, 1, (/ y /))
+
+#ifdef DEBUG
+                   call write(db%R(i1, i2), "rep_"//trim(e1)//'_'//trim(e2)//".out")
+#endif
+
+                   call fclose(un)
+
+                endif file_exists
+
+             endif
+          enddo
+       endif
+    enddo
+
+    deallocate(x)
+    deallocate(y)
+
+    write (ilog, *)
+
+  endsubroutine materials_read_sltab_bopfox
+
+
+  !>
+  !! Reads element data from HOTBITs elements.dat
+  !<
+  subroutine materials_read_elements_hotbit(db, econv, lconv, error)
     implicit none
 
     type(materials_t), intent(inout) :: db
@@ -761,31 +1004,16 @@ contains
 
     ! ---
 
-    integer               :: i,j,k,un,io,lmx(9)
-    character(200)        :: line,dat,key,fn
+    integer               :: i, j, k, un, io, lmx(9)
+    character(200)        :: line, dat, key, fn
     logical               :: ex
 
     type(notb_element_t)  :: hlp(MAX_Z)
 
     ! ---
 
-    INIT_ERROR(error)
-
-    write (ilog, '(A)')  "- materials_init_elements -"
-
     lmx = 1000
     lmx(1)=0; lmx(4)=1; lmx(9)=2 !lmax = lmx(no)
-
-    db%nel = MAX_Z
-    allocate(db%e(db%nel))
-    ! Initialize default valency. This can be overridden by the Slater-Koster
-    ! tables.
-    do i = 1, MAX_Z
-       db%e(i)%name = ElementName(i)
-       db%e(i)%no   = number_of_orbitals(i)
-    enddo
-
-    ! Read information from elements.dat if it exists
 
     fn = trim(db%folder) // "/elements.dat"
 
@@ -855,6 +1083,43 @@ contains
    
        write (ilog, '(5X,I5,A)')  j, " elements found in 'elements.dat'."
     endif
+    write (ilog, *)
+
+  endsubroutine materials_read_elements_hotbit
+
+
+  !>
+  !! Reads element data from elements.dat
+  !<
+  subroutine materials_init_elements(db, econv, lconv, error)
+    implicit none
+
+    type(materials_t), intent(inout) :: db
+    real(DP),          intent(in)    :: econv, lconv
+    integer, optional, intent(out)   :: error
+
+    ! ---
+
+    integer :: i
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    write (ilog, '(A)')  "- materials_init_elements -"
+
+    db%nel = MAX_Z
+    allocate(db%e(db%nel))
+    ! Initialize default valency. This can be overridden by the Slater-Koster
+    ! tables.
+    do i = 1, MAX_Z
+       db%e(i)%name = ElementName(i)
+       db%e(i)%no   = valence_orbitals(i)
+    enddo
+
+    call materials_read_elements_hotbit(db, econv, lconv, error)
+    PASS_ERROR(error)
+
     write (ilog, *)
 
   endsubroutine materials_init_elements
