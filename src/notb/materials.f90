@@ -832,12 +832,14 @@ contains
              if (noj /= db%e(elj)%no) then
                 RAISE_ERROR("'bonds.bx' reports '"//trim(valj)//"' valence for element '"//trim(symj)//"' ("//noj//" orbitals), but 'atoms.bx' reports "//db%e(elj)%no//" orbitals.", error)
              endif
-          case("scaline")
+          case("scaling")
              read (values, *)  scaling
              if (abs(scaling - 1.0) > 1e-9) then
                 RAISE_ERROR("'bonds.bx' reports scaling != 1 for "//trim(symi)//"-"//trim(symj)//" bond integrals. Don't know how to handle this.", error)
              endif
           case("bondtable")
+             call prlog("Hamiltonian for "//trim(symi)//"-"//trim(symj)//" found.")
+
              read (values, *)  n
              allocate(d(15, n))
              read (un, *)  d
@@ -891,6 +893,8 @@ contains
 
              deallocate(d)
           case("overtable")
+             call prlog("Overlap matrix for "//trim(symi)//"-"//trim(symj)//" found.")
+
              read (values, *)  n
              allocate(d(15, n))
              read (un, *)  d
@@ -944,6 +948,8 @@ contains
 
              deallocate(d)
           case("reptable")
+             call prlog("Repulsion for "//trim(symi)//"-"//trim(symj)//" found.")
+
              read (values, *)  n
              allocate(d(2, n))
              read (un, *)  d
