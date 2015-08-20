@@ -333,7 +333,7 @@ contains
 
     ! ---
 
-    integer   :: i,ia0,ia,a,j,noi,ni
+    integer   :: i,ia0,ia,a,a0,j,noi,ni
     integer   :: eli,elj,x,y,z
     real(DP)  :: dr,c(3)
     real(DP)  :: vec(3)
@@ -366,8 +366,9 @@ contains
           noi = this_at(i)%no    ! number of atomic orbitals
           ia0 = this_at(i)%o1    ! first orbital (in global list)
 
-          do a = 1, noi
-             ia = ia0 + a-1
+          do a0 = 1, noi
+             ia = ia0 + a0-1
+             a  = get_orbital(noi, a0)
 
              tls_mat1(ia, ia) = this_at(i)%e(a)    ! orbital energy
              tls_mat2(ia, ia) = 1.0_DP             ! orbitals are normalized
@@ -454,7 +455,7 @@ contains
 
     ! ---
     
-    integer  :: list(0:10,9)
+    integer  :: list(0:10,9) = -1
 
     integer  :: noi, noj  ! number of orbitals
     integer  :: eli, elj  ! element numbers
@@ -473,8 +474,11 @@ contains
     !                   dds ddp ddd pds pdp pps ppp sds sps sss
     !                    1   2   3   4   5   6   7   8   9   10
     list(0:1,  1) = [1,                                      10] ! s
+    list(0:2,  3) = [2,                      6,  7             ] ! p
     list(0:4,  4) = [4,                      6,  7,      9,  10] ! sp
-    list(0:4,  5) = [4,  1,      3,                  8,      10] ! sd
+    list(0:3,  5) = [3,  1,  2,  3                             ] ! d
+    list(0:5,  6) = [5,  1,  2,  3,                  8,      10] ! sd
+    list(0:7,  8) = [7,  1,  2,  3,  4,  5,  6,  7             ] ! pd
     list(0:10, 9) = [10, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10] ! spd
 
     eli = el_i%enr
@@ -492,6 +496,9 @@ contains
     PASS_ERROR(error)
     do q = 1, nr
        bo = list(q, m)   ! bond order
+       if (bo <= 0) then
+          RAISE_ERROR("bo <= 0!", error)
+       endif
        he_ij(bo) = f(db%HS(eli, elj), bo,          my_r_ij, a)
        se_ij(bo) = f(db%HS(eli, elj), bo+MAX_NORB, my_r_ij, a)
        he_ji(bo) = f(db%HS(elj, eli), bo,          my_r_ij, b)
@@ -511,18 +518,10 @@ contains
 !    call timer('setup_hs_2',1)
     a_loop: do a0 = 1, noi
        ia = ia0 + a0-1
-       a  = a0
-       ! if noi == 5, this element has just d orbitals defined
-       if (noi == 5)  a = a+4
-       ! if noi == 6, this element has just s and d orbitals defined
-       if (noi == 6 .and. a > 1)  a = a+3
+       a  = get_orbital(noi, a0)
        b_loop: do b0 = 1, noj
           jb = jb0 + b0-1
-          b  = b0
-          ! if noj == 5, this element has just d orbitals defined
-          if (noj == 5)  b = b+4
-          ! if noj == 6, this element has just s and d orbitals defined
-          if (noi == 6 .and. b > 1)  b = b+3
+          b  = get_orbital(noj, b0)
           !------------------------------------------------------- 
           ! if b>a (i.e. ang.momenta l_b>l_a), we must use
           ! the other table
