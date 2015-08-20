@@ -512,13 +512,17 @@ contains
     a_loop: do a0 = 1, noi
        ia = ia0 + a0-1
        a  = a0
-       ! if noi == 5, this element has just s and d orbitals defined
-       if (noi == 5 .and. a > 1)  a = a+4
+       ! if noi == 5, this element has just d orbitals defined
+       if (noi == 5)  a = a+4
+       ! if noi == 6, this element has just s and d orbitals defined
+       if (noi == 6 .and. a > 1)  a = a+3
        b_loop: do b0 = 1, noj
           jb = jb0 + b0-1
           b  = b0
-          ! if noj == 5, this element has just s and d orbitals defined
-          if (noi == 5 .and. b > 1)  b = b+4
+          ! if noj == 5, this element has just d orbitals defined
+          if (noj == 5)  b = b+4
+          ! if noj == 6, this element has just s and d orbitals defined
+          if (noi == 6 .and. b > 1)  b = b+3
           !------------------------------------------------------- 
           ! if b>a (i.e. ang.momenta l_b>l_a), we must use
           ! the other table
