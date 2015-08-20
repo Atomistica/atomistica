@@ -75,7 +75,7 @@ module materials
   public :: notb_element_t
   type, bind(C) :: notb_element_t
 
-     logical(C_BOOL)         :: exists = .false.
+     logical(C_BOOL)         :: exists    = .false.
 
      character(kind=C_CHAR)  :: name(2)   = ["X","X"]  ! name of element
      character(kind=C_CHAR)  :: cname(10) = ["n","o","n","a","m","e"," "," "," "," "]  ! common name of element
@@ -134,6 +134,18 @@ module materials
   interface element_by_Z
      module procedure materials_element_by_Z
   endinterface
+
+  integer, parameter :: number_of_orbitals(116) =  &
+     [ 1,-1, &
+       4, 4, 4, 4, 4, 4, 4,-1, &
+       4, 4, 4, 4, 4, 4, 4,-1, &
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
+      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
+      -1,-1,-1,-1]
 
 contains
 
@@ -537,9 +549,9 @@ contains
     conv(STAB) = 1.0
 
     do i1 = 1, db%nel
-       if (db%e(i1)%exists) then
+       if (db%e(i1)%no > 0) then
           do i2 = 1, db%nel
-             if (db%e(i2)%exists) then
+             if (db%e(i2)%no > 0) then
                 e1    = trim(a2s(db%e(i1)%name))
                 e2    = trim(a2s(db%e(i2)%name))
 
@@ -581,6 +593,8 @@ contains
                    enddo
 
                    if (i1 == i2) then
+                      ! We were able to get fundamental data on this element
+                      db%e(i1)%exists = .true.
 
                       ! self energies, spin polarization energy(?), Hubbard U's, number of electrons
                       read (un, *) eself(:), espin, u(:), q(:)
@@ -738,7 +752,7 @@ contains
   !>
   !! Reads element data from elements.dat
   !<
-  subroutine materials_read_elements(db, econv, lconv, error)
+  subroutine materials_init_elements(db, econv, lconv, error)
     implicit none
 
     type(materials_t), intent(inout) :: db
@@ -757,68 +771,73 @@ contains
 
     INIT_ERROR(error)
 
-    write (ilog, '(A)')  "- materials_read_elements -"
+    write (ilog, '(A)')  "- materials_init_elements -"
 
     lmx = 1000
     lmx(1)=0; lmx(4)=1; lmx(9)=2 !lmax = lmx(no)
 
     db%nel = MAX_Z
     allocate(db%e(db%nel))
+    ! Initialize default valency. This can be overridden by the Slater-Koster
+    ! tables.
+    do i = 1, MAX_Z
+       db%e(i)%name = ElementName(i)
+       db%e(i)%no   = number_of_orbitals(i)
+    enddo
+
+    ! Read information from elements.dat if it exists
 
     fn = trim(db%folder) // "/elements.dat"
 
     inquire(file=fn, exist=ex)
 
-    if (.not. ex) then
-       RAISE_ERROR("ERROR: Could not open '" // trim(fn) // "'.", error)
-    endif
-
-    un = fopen(trim(fn))
-    call filestart(un)
-
-    j=0
-    do
-       read(un,'(200a)',iostat=io) line  
-       if( io/=0 ) exit !EOF
-       k = scan(line,'=')
-       if( k/=0 ) then
-          key = adjustl(line(1:k-1))
-          dat = line(k+1:)
-       else
-          cycle 
-       end if
+    if (ex) then
+       un = fopen(trim(fn))
+       call filestart(un)
    
-       select case(trim(key))
-       case("element")   ! starts the set for new element
-          j=j+1
-          hlp(j)%name = ' '
-          hlp(j)%name(1:min(2,len_trim(dat))) = s2a(trim(dat))
-       case("Z");     read(dat,*) hlp(j)%elem
-       case("common");
-          hlp(j)%cname = ' '
-          hlp(j)%cname(1:min(10,len_trim(dat))) = s2a(trim(dat))
-       case("q0");    read(dat,*) hlp(j)%q0
-       case("no")
-          read(dat,*) hlp(j)%no
-          hlp(j)%lmax = lmx(hlp(j)%no)
-          read(un ,*) hlp(j)%e(1:hlp(j)%no)
-          hlp(j)%e(1:hlp(j)%no) = hlp(j)%e(1:hlp(j)%no) * econv
-       case("U")
-          read(dat,*) hlp(j)%U
-          hlp(j)%U = hlp(j)%U * econv
-       case default
-          cycle
-       end select
-    end do
-
-    call fclose(un)
-
-    ! set dependent variables and sort according to Z
-    do i=1,j
-
-       if (hlp(i)%elem > 0 .and. hlp(i)%elem <= MAX_Z) then
-          if (trim(a2s(hlp(i)%name)) /= trim(ElementName(hlp(i)%elem))) then
-             write (ilog, '(5X,5A)')  "WARNING: Name '", hlp(i)%name, "' in 'elements.dat' not equal common element name '", ElementName(hlp(i)%elem), "'."
+       j=0
+       do
+          read(un,'(200a)',iostat=io) line  
+          if( io/=0 ) exit !EOF
+          k = scan(line,'=')
+          if( k/=0 ) then
+             key = adjustl(line(1:k-1))
+             dat = line(k+1:)
+          else
+             cycle 
+          end if
+      
+          select case(trim(key))
+          case("element")   ! starts the set for new element
+             j=j+1
+             hlp(j)%name = ' '
+             hlp(j)%name(1:min(2,len_trim(dat))) = s2a(trim(dat))
+          case("Z");     read(dat,*) hlp(j)%elem
+          case("common");
+             hlp(j)%cname = ' '
+             hlp(j)%cname(1:min(10,len_trim(dat))) = s2a(trim(dat))
+          case("q0");    read(dat,*) hlp(j)%q0
+          case("no")
+             read(dat,*) hlp(j)%no
+             hlp(j)%lmax = lmx(hlp(j)%no)
+             read(un ,*) hlp(j)%e(1:hlp(j)%no)
+             hlp(j)%e(1:hlp(j)%no) = hlp(j)%e(1:hlp(j)%no) * econv
+          case("U")
+             read(dat,*) hlp(j)%U
+             hlp(j)%U = hlp(j)%U * econv
+          case default
+             cycle
+          end select
+       end do
+   
+       call fclose(un)
+   
+       ! set dependent variables and sort according to Z
+       do i=1,j
+   
+          if (hlp(i)%elem > 0 .and. hlp(i)%elem <= MAX_Z) then
+             if (trim(a2s(hlp(i)%name)) /= trim(ElementName(hlp(i)%elem))) then
+                write (ilog, '(5X,5A)')  "WARNING: Name '", hlp(i)%name, "' in 'elements.dat' not equal common element name '", ElementName(hlp(i)%elem), "'."
           endif
 
           hlp(i)%el_max = 0d0
@@ -831,13 +850,14 @@ contains
        else
           write (ilog, '(5X,A,I5,A)')  "WARNING: Unknown element found in 'elements.dat' (Z = ", hlp(i)%elem, ")."
        endif
-
-    end do
-
-    write (ilog, '(5X,I5,A)')  j, " elements found in 'elements.dat'."
+   
+       end do
+   
+       write (ilog, '(5X,I5,A)')  j, " elements found in 'elements.dat'."
+    endif
     write (ilog, *)
 
-  endsubroutine materials_read_elements
+  endsubroutine materials_init_elements
 
 
   !>
@@ -876,7 +896,7 @@ contains
 
     ! reset
     do i = 1, db%nel
-       db%e(i)%W(:,:) = 0.0_DP
+       db%e(i)%W = 0.0_DP
     end do
 
     ! open file and return if none found
@@ -979,7 +999,7 @@ contains
     write (ilog, '(5X,A)')  "Looking for tables in directory '", trim(db%folder), "'."
     write (ilog, *)         ""
 
-    call materials_read_elements(db, econv, lconv, error)
+    call materials_init_elements(db, econv, lconv, error)
     PASS_ERROR(error)
 
     allocate(db%cut(db%nel, db%nel))
