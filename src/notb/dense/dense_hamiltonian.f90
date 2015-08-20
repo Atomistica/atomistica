@@ -249,7 +249,8 @@ contains
 
     ! ---
 
-    integer  :: i, q0
+    integer  :: i, a0, a
+    real(DP) :: q0
 
     type(notb_element_t), pointer  :: at(:)
 
@@ -261,12 +262,19 @@ contains
 
     e = 0.0_DP
     do i = 1, p%natloc
-       q0 = int(at(i)%q0)
+       q0 = at(i)%q0
 
-       e = e + 2*sum(at(i)%e(1:q0/2))
-       if (mod(q0, 2) /= 0) then
-          e = e + at(i)%e(q0/2+1)
-       endif
+       do a0 = 1, at(i)%no
+          a = get_orbital(at(i)%no, a0)
+          if (q0 > 0.0_DP) then
+             q0 = q0 - 0.5_DP
+             e = e + at(i)%e(a)
+          endif
+          if (q0 > 0.0_DP) then
+             q0 = q0 - 0.5_DP
+             e = e + at(i)%e(a)
+          endif
+       enddo
     enddo
 
   endfunction dense_hamiltonian_e_atomic
