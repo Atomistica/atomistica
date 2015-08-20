@@ -83,7 +83,7 @@ module materials
      integer(C_INT)          :: no        = 10000      ! number of orbitals
      integer(C_INT)          :: l(9)      = [0,1,1,1,2,2,2,2,2] !angular momenta of orbitals
      integer(C_INT)          :: lmax      = 1000       ! maximum angular momentum
-     real(C_DOUBLE)          :: e(9)      = 1E30       ! orbital energies [ e(1:no) ]
+     real(C_DOUBLE)          :: e(9)      = 1E30       ! on-site energies [ e(1:no) ]
      real(C_DOUBLE)          :: el_max    = 0          ! max number of valence electrons on an atom
      real(C_DOUBLE)          :: U         = 1E30       ! Hubbard U
      real(C_DOUBLE)          :: q0        = 1E30       ! charge (nr of electrons in neutral)
@@ -146,6 +146,15 @@ module materials
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
       -1,-1,-1,-1]
+
+  !>
+  !! Temporary storage for data read from bonds.bx file
+  !<
+  type bopfox_table_t
+     integer               :: n = 0
+     real(DP), allocatable :: x(:)
+     real(DP), allocatable :: HS(:, :)
+  endtype bopfox_table_t
 
 contains
 
@@ -755,239 +764,218 @@ contains
   subroutine materials_read_sltab_bopfox(db, econv, lconv, error)
     implicit none
 
-    type(materials_t), intent(inout)  :: db
-    real(DP), intent(in)              :: econv, lconv
-    integer, intent(inout), optional  :: error
+    type(materials_t), intent(inout) :: db
+    real(DP),          intent(in)    :: econv, lconv
+    integer, optional, intent(inout) :: error
 
     ! ---
 
-    real(DP), parameter  :: REP_DX    = 0.005
-    real(DP), parameter  :: REP_X0    = 1.00
-
-    integer, parameter   :: MAX_DATA  = 10000
-
-    ! ---
-
-    integer                :: un, i, j, i1, i2, n, io
-    character(2)           :: e1, e2, f1, f2
-    character(1000)        :: fil, fil3
-    logical                :: ex, ex3
-
-    real(DP)               :: conv(2*MAX_NORB)
-
-    real(DP)               :: eself(3), espin, u(3)
-    real(DP)               :: cx, dx, c1, c2, c3, x1, x2, splc(6), cutoff
-    real(DP)               :: q(3)
-    character(200)         :: line
-
-    real(DP), allocatable  :: x(:), y(:)
+    integer               :: i, j, k, n, eli, elj, noi, noj, un, io
+    real(DP)              :: scaling
+    real(DP), allocatable :: d(:, :)
+    character(1024)       :: fn, line, values, key
+    character(2)          :: symi, symj
+    character(3)          :: vali, valj
+    logical               :: ex
+ 
+    type(bopfox_table_t)  :: tab(db%nel, db%nel)
 
     ! ---
 
-    write (ilog, '(A)')  "- materials_read_sltab_bopfox -"
+    call prlog("- materials_read_sltab_bopfox -")
 
-    allocate(x(MAX_DATA), y(MAX_DATA))
+    fn = trim(db%folder) // "/bonds.bx"
+    inquire(file=fn, exist=ex)
 
-    conv(HTAB) = econv
-    conv(STAB) = 1.0
+    if (ex) then
+       un = fopen(trim(fn))
+   
+       eli = -1
+       elj = -1
+       do
+          read (un, '(200a)', iostat=io)  line
+          if (io /= 0)  exit ! EOF
+          if (line(1:2) == '/')  cycle ! Comment
+          k = scan(line, '=')
+          if (k /= 0) then
+             key    = lower_case(adjustl(line(1:k-1)))
+             values = line(k+1:)
+          else
+             ! Skip all lines that are different from "key = values"
+             cycle
+          endif
+      
+          select case(trim(key))
+          case("bond")   ! starts the set for new element
+             read (values, *)  symi, symj
+             if (.not. element_by_symbol(db, symi, enr=eli)) then
+                RAISE_ERROR("Could no find element '"//trim(symi)//"' in NOTB database.", error)
+             endif
+             if (.not. element_by_symbol(db, symj, enr=elj)) then
+                RAISE_ERROR("Could no find element '"//trim(symj)//"' in NOTB database.", error)
+             endif
+          case("valence")
+             read (values, *)  vali, valj
+             noi = 0
+             noj = 0
+             do i = 1, 3
+                if (vali(i:i) == 's')  noi = noi + 1
+                if (vali(i:i) == 'p')  noi = noi + 3
+                if (vali(i:i) == 'd')  noi = noi + 5
+                if (valj(i:i) == 's')  noj = noj + 1
+                if (valj(i:i) == 'p')  noj = noj + 3
+                if (valj(i:i) == 'd')  noj = noj + 5
+             enddo
+             if (noi /= db%e(eli)%no) then
+                RAISE_ERROR("'bonds.bx' reports '"//trim(vali)//"' valence for element '"//trim(symi)//"' ("//noi//" orbitals), but 'atoms.bx' reports "//db%e(eli)%no//" orbitals.", error)
+             endif
+             if (noj /= db%e(elj)%no) then
+                RAISE_ERROR("'bonds.bx' reports '"//trim(valj)//"' valence for element '"//trim(symj)//"' ("//noj//" orbitals), but 'atoms.bx' reports "//db%e(elj)%no//" orbitals.", error)
+             endif
+          case("scaline")
+             read (values, *)  scaling
+             if (abs(scaling - 1.0) > 1e-9) then
+                RAISE_ERROR("'bonds.bx' reports scaling != 1 for "//trim(symi)//"-"//trim(symj)//" bond integrals. Don't know how to handle this.", error)
+             endif
+          case("bondtable")
+             read (values, *)  n
+             allocate(d(15, n))
+             read (un, *)  d
 
-    do i1 = 1, db%nel
-       if (db%e(i1)%no > 0) then
-          do i2 = 1, db%nel
-             if (db%e(i2)%no > 0) then
-                e1    = trim(a2s(db%e(i1)%name))
-                e2    = trim(a2s(db%e(i2)%name))
-
-                f1    = e1
-                call lowercase(f1)
-                f1 = uppercase(f1(1:1)) // f1(2:2)
-                f2    = e2
-                call lowercase(f2)
-                f2 = uppercase(f2(1:1)) // f2(2:2)
-
-                fil   = trim(db%folder)//'/'//trim(f1)//trim(f2)//'.spl'
-                !fil3  = trim(db%folder)//'/'//trim(uppercase(f1))//'-'//trim(uppercase(f2))//'.skf'
-                fil3  = trim(db%folder)//'/'//trim(f1)//'-'//trim(f2)//'.skf'
-                inquire(file=fil, exist=ex)
-                inquire(file=fil3, exist=ex3)
-
-                un = -1
-
-                if (ex) then
-                   un = fopen(fil)
-                   write (ilog, '(5X,A)')  "DFTB tables for "//trim(e1)//"-"//trim(e2)//" found."
-                else if (ex3) then
-                   un = fopen(fil3)
-                   write (ilog, '(5X,A)')  "DFTB tables for "//trim(e1)//"-"//trim(e2)//" found."
+             if (tab(eli, elj)%n > 0) then
+                if (tab(eli, elj)%n /= n) then
+                   RAISE_ERROR("Mismatch in number of grid points for Hamiltonian and overlap tables for "//trim(symi)//"-"//trim(symj)//" bond integrals.", error)
                 endif
+                if (any(abs(tab(eli, elj)%x - d(1, :)) > 1d-9)) then
+                   RAISE_ERROR("Mismatch in number of grid positions for Hamiltonian and overlap tables for "//trim(symi)//"-"//trim(symj)//" bond integrals.", error)
+                endif
+             else
+                tab(eli, elj)%n = n
+                allocate(tab(eli, elj)%x(n))
+                allocate(tab(eli, elj)%HS(n, 20))
+                tab(eli, elj)%x = d(1, :)
 
-                file_exists: if (un > 0) then
+                if (eli /= elj) then
+                   tab(elj, eli)%n = n
+                   allocate(tab(elj, eli)%x(n))
+                   allocate(tab(elj, eli)%HS(n, 20))
+                   tab(elj, eli)%x = d(1, :)
+                endif
+             endif
 
-                   if (db%HS(i1, i2)%n > 0 .or. db%R(i1, i2)%n > 0) then
-                      write (ilog, '(5X,A)')  "WARNING: "//e1//"-"//e2//" tables already read."
-                   endif
+             ! BOPFOX is a bit more clever. It stores the 14 independent
+             ! bond-integrals for a pair of elements. We store them separately
+             ! for pairs i-j and j-i, which makes ten bond-integrals each.
+             ! We need to spread BOPFOXs data out.
 
-                   ! cutoff, number of grid points in Hamiltonian/Overlap
-                   read (un, *) dx, n
-                   n = n-1 ! Sometimes, there seems to be a line thats missing
+             tab(eli, elj)%HS(:, O_sss) = d(1, :) ! sss
+             tab(elj, eli)%HS(:, O_sss) = d(1, :) ! sss
+             tab(eli, elj)%HS(:, O_sps) = d(2, :) ! sps
+             tab(elj, eli)%HS(:, O_sps) = d(3, :) ! pss
+             tab(eli, elj)%HS(:, O_pps) = d(4, :) ! pps
+             tab(elj, eli)%HS(:, O_pps) = d(4, :) ! pps
+             tab(eli, elj)%HS(:, O_ppp) = d(5, :) ! ppp
+             tab(elj, eli)%HS(:, O_ppp) = d(5, :) ! ppp
+             tab(eli, elj)%HS(:, O_sds) = d(6, :) ! sds
+             tab(elj, eli)%HS(:, O_sds) = d(7, :) ! dss
+             tab(eli, elj)%HS(:, O_pds) = d(8, :) ! pds
+             tab(elj, eli)%HS(:, O_pds) = d(9, :) ! dps
+             tab(eli, elj)%HS(:, O_pdp) = d(10, :) ! pdp
+             tab(elj, eli)%HS(:, O_pdp) = d(11, :) ! dpp
+             tab(eli, elj)%HS(:, O_dds) = d(12, :) ! dda
+             tab(elj, eli)%HS(:, O_dds) = d(12, :) ! dda
+             tab(eli, elj)%HS(:, O_ddp) = d(13, :) ! ddp
+             tab(elj, eli)%HS(:, O_ddp) = d(13, :) ! ddp
+             tab(eli, elj)%HS(:, O_ddd) = d(14, :) ! ddd
+             tab(elj, eli)%HS(:, O_ddd) = d(14, :) ! ddd
 
-                   do i = 1, n
-                      x(i) = (i-1)*dx
-                   enddo
+             deallocate(d)
+          case("overtable")
+             read (values, *)  n
+             allocate(d(15, n))
+             read (un, *)  d
 
-                   if (i1 == i2) then
-                      ! We were able to get fundamental data on this element
-                      db%e(i1)%exists = .true.
+             if (tab(eli, elj)%n > 0) then
+                if (tab(eli, elj)%n /= n) then
+                   RAISE_ERROR("Mismatch in number of grid points for Hamiltonian and overlap tables for "//trim(symi)//"-"//trim(symj)//" bond integrals.", error)
+                endif
+                if (any(abs(tab(eli, elj)%x - d(1, :)) > 1d-9)) then
+                   RAISE_ERROR("Mismatch in number of grid positions for Hamiltonian and overlap tables for "//trim(symi)//"-"//trim(symj)//" bond integrals.", error)
+                endif
+             else
+                tab(eli, elj)%n = n
+                allocate(tab(eli, elj)%x(n))
+                allocate(tab(eli, elj)%HS(n, 20))
+                tab(eli, elj)%x = d(1, :)
 
-                      ! self energies, spin polarization energy(?), Hubbard U's, number of electrons
-                      read (un, *) eself(:), espin, u(:), q(:)
+                if (eli /= elj) then
+                   tab(elj, eli)%n = n
+                   allocate(tab(elj, eli)%x(n))
+                   allocate(tab(elj, eli)%HS(n, 20))
+                   tab(elj, eli)%x = d(1, :)
+                endif
+             endif
 
-                      eself  = eself * econv
+             ! BOPFOX is a bit more clever. It stores the 14 independent
+             ! bond-integrals for a pair of elements. We store them separately
+             ! for pairs i-j and j-i, which makes ten bond-integrals each.
+             ! We need to spread BOPFOXs data out.
 
-                      if (i1 == i2) then
-                         write (ilog, '(5X,A)')  "WARNING: Overriding self-energies and Hubbard-U from 'elements.dat'."
+             tab(eli, elj)%HS(:, 10+O_sss) = d(1, :) ! sss
+             tab(elj, eli)%HS(:, 10+O_sss) = d(1, :) ! sss
+             tab(eli, elj)%HS(:, 10+O_sps) = d(2, :) ! sps
+             tab(elj, eli)%HS(:, 10+O_sps) = d(3, :) ! pss
+             tab(eli, elj)%HS(:, 10+O_pps) = d(4, :) ! pps
+             tab(elj, eli)%HS(:, 10+O_pps) = d(4, :) ! pps
+             tab(eli, elj)%HS(:, 10+O_ppp) = d(5, :) ! ppp
+             tab(elj, eli)%HS(:, 10+O_ppp) = d(5, :) ! ppp
+             tab(eli, elj)%HS(:, 10+O_sds) = d(6, :) ! sds
+             tab(elj, eli)%HS(:, 10+O_sds) = d(7, :) ! dss
+             tab(eli, elj)%HS(:, 10+O_pds) = d(8, :) ! pds
+             tab(elj, eli)%HS(:, 10+O_pds) = d(9, :) ! dps
+             tab(eli, elj)%HS(:, 10+O_pdp) = d(10, :) ! pdp
+             tab(elj, eli)%HS(:, 10+O_pdp) = d(11, :) ! dpp
+             tab(eli, elj)%HS(:, 10+O_dds) = d(12, :) ! dda
+             tab(elj, eli)%HS(:, 10+O_dds) = d(12, :) ! dda
+             tab(eli, elj)%HS(:, 10+O_ddp) = d(13, :) ! ddp
+             tab(elj, eli)%HS(:, 10+O_ddp) = d(13, :) ! ddp
+             tab(eli, elj)%HS(:, 10+O_ddd) = d(14, :) ! ddd
+             tab(elj, eli)%HS(:, 10+O_ddd) = d(14, :) ! ddd
 
-                         db%e(i1)%e  = (/ &
-                              eself(3), &
-                              eself(2), eself(2), eself(2), &
-                              eself(1), eself(1), eself(1), eself(1), eself(1) &
-                              /)
+             deallocate(d)
+          case("reptable")
+             read (values, *)  n
+             allocate(d(2, n))
+             read (un, *)  d
 
-                         db%e(i1)%U  = u(3) * econv
-                      endif
+             call init(db%R(eli, elj), n, n, d(1, :), 1, d(2:2, :))
+             call init(db%R(elj, eli), n, n, d(1, :), 1, d(2:2, :))
 
-                   endif
+             deallocate(d)
+          case default
+             cycle
+          end select
+       end do
 
-                   ! read spline data
-                   call read(db%HS(i1, i2), un, 2*MAX_NORB+1, lconv, conv, n, x, error)
-                   PASS_ERROR(error)
+       call fclose(un)
 
-#ifdef DEBUG
-                   call write(db%HS(i1, i2), "HS_"//trim(e1)//'_'//trim(e2)//".out")
-#endif
+       ! Initialize splines
+       do eli = 1, db%nel
+          do elj = 1, db%nel
+             if (tab(eli, elj)%n > 0) then
+                call init(db%HS(eli, elj), tab(eli, elj)%n, tab(eli, elj)%n, &
+                          tab(eli, elj)%x, 20, tab(eli, elj)%HS)
 
-                   ! Look for 'Spline'
-                   read (un, *, iostat=io) line
-                   do while (trim(line) /= "Spline" .and. io == 0)
-                      read (un, *, iostat=io) line
-                   enddo
-
-                   if (io /= 0) then
-                      RAISE_ERROR("End of file reached while looking for keyword 'Spline'.", error)
-                   endif
-
-                   !
-                   ! Reading the repulsive part. We will construct a tabulated version of the repulsion
-                   ! and then use our spline module.
-                   !
-
-                   read (un, *) n, cutoff
-                   read (un, *) c1, c2, c3
-
-                   read (un, *) x1, x2, splc(1:4)
-
-                   !
-                   ! The tail of the repulsive function is given by an exponential
-                   !
-
-                   cx  = REP_X0
-                   i   = 1
-                   do while (cx < x1)
-                      x(i)  = cx
-                      y(i)  = c3 + exp(c2-c1*cx)
-
-                      cx  = cx + REP_DX
-                      i   = i + 1
-                   enddo
-
-                   n = n - 1
-
-                   !
-                   ! The rest is spline coefficients
-                   !
-
-                   do while (n > 1)
-
-                      do while (cx < x2)
-                         x(i)  = cx
-                         y(i)  = splc(1)
-                         dx    = cx-x1
-                         do j = 2, 4
-                            y(i)  = y(i) + splc(j)*dx
-                            dx    = dx*(cx-x1)
-                         enddo
-
-                         cx  = cx + REP_DX
-                         i  = i + 1
-                      enddo
-
-                      read (un, *) x1, x2, splc(1:4)
-
-                      n  = n - 1
-
-                   enddo
-
-                   do while (cx < x2)
-                      x(i)  = cx
-                      y(i)  = splc(1)
-                      dx    = cx-x1
-                      do j = 2, 4
-                         y(i)  = y(i) + splc(j)*dx
-                         dx    = dx*(cx-x1)
-                      enddo
-
-                      cx  = cx + REP_DX
-                      i  = i + 1
-                   enddo
-
-                   !
-                   ! The last one is an fifth order polynomial
-                   !
-
-                   read (un, *) x1, x2, splc(1:6)
-
-                   do while (cx < x2)
-                      x(i)  = cx
-                      y(i)  = splc(1)
-                      dx    = cx-x1
-                      do j = 2, 6
-                         y(i)  = y(i) + splc(j)*dx
-                         dx    = dx*(cx-x1)
-                      enddo
-
-                      cx  = cx + REP_DX
-                      i   = i + 1
-                   enddo
-
-                   if (i > MAX_DATA) then
-                      RAISE_ERROR("i > MAX_DATA", error)
-                   endif
-
-                   !
-                   ! Construct spline
-                   !
-
-                   x  = x * lconv
-                   y  = y * econv
-                   call nonuniform_spline_init(db%R(i1, i2), MAX_DATA, i-1, x, 1, (/ y /))
-
-#ifdef DEBUG
-                   call write(db%R(i1, i2), "rep_"//trim(e1)//'_'//trim(e2)//".out")
-#endif
-
-                   call fclose(un)
-
-                endif file_exists
-
+                deallocate(tab(eli, elj)%x)
+                deallocate(tab(eli, elj)%HS)
              endif
           enddo
-       endif
-    enddo
+       enddo
+    else
+       call prlog("No 'bonds.bx' file found in database directory. Skipping.")
+    endif
 
-    deallocate(x)
-    deallocate(y)
-
-    write (ilog, *)
+    call prlog
 
   endsubroutine materials_read_sltab_bopfox
 
@@ -1011,6 +999,8 @@ contains
     type(notb_element_t)  :: hlp(MAX_Z)
 
     ! ---
+
+    call prlog("- materials_read_elements_hotbit -")
 
     lmx = 1000
     lmx(1)=0; lmx(4)=1; lmx(9)=2 !lmax = lmx(no)
@@ -1082,10 +1072,120 @@ contains
        end do
    
        write (ilog, '(5X,I5,A)')  j, " elements found in 'elements.dat'."
+    else
+       call prlog("No 'elements.dat' found in database directory. Skipping.")
     endif
     write (ilog, *)
 
   endsubroutine materials_read_elements_hotbit
+
+
+  !>
+  !! Reads element data from HOTBITs elements.dat
+  !<
+  subroutine materials_read_elements_bopfox(db, econv, lconv, error)
+    implicit none
+
+    type(materials_t), intent(inout) :: db
+    real(DP),          intent(in)    :: econv, lconv
+    integer, optional, intent(out)   :: error
+
+    ! ---
+
+    ! Translation table for population of on-site energies read from BOPFOX
+    ! file. Number is index of energy in BOPFOX file.
+    integer, parameter :: l(9, 9) = &
+       reshape([ 1, 0, 0, 0, 0, 0, 0, 0, 0,   & ! s
+                 0, 0, 0, 0, 0, 0, 0, 0, 0,   &
+                 0, 1, 1, 1, 1, 0, 0, 0, 0,   & ! p
+                 1, 2, 2, 2, 0, 0, 0, 0, 0,   & ! sp
+                 0, 0, 0, 0, 1, 1, 1, 1, 1,   & ! d
+                 1, 0, 0, 0, 2, 2, 2, 2, 2,   & ! sd
+                 0, 0, 0, 0, 0, 0, 0, 0, 0,   &
+                 0, 1, 1, 1, 2, 2, 2, 2, 2,   & ! pd
+                 1, 2, 2, 2, 3, 3, 3, 3, 3 ], & ! spd
+                 [9, 9])
+
+    integer              :: i, j, k, un, io
+    real(DP)             :: onsitelevels(3)
+    character(1024)      :: fn, line, values, key
+    logical              :: ex
+
+    type(notb_element_t) :: e(MAX_Z)
+
+    ! ---
+
+    call prlog("- materials_read_elements_bopfox -")
+
+    fn = trim(db%folder) // "/atoms.bx"
+
+    inquire(file=fn, exist=ex)
+
+    if (ex) then
+       un = fopen(trim(fn))
+       call filestart(un)
+   
+       j = 0
+       do
+          read(un, '(1024a)', iostat=io)  line
+          if (io /= 0) exit !EOF
+          if (line(1:2) == '/')  cycle ! Comment
+          k = scan(line, '=')
+          if (k /= 0) then
+             key = lower_case(adjustl(line(1:k-1)))
+             values = adjustl(line(k+1:))
+          else
+             ! Skip all lines that are different from "key = value"
+             cycle
+          endif
+
+          select case(trim(key))
+          case("atom")   ! starts the set for new element
+             j = j + 1
+             e(j)%name = '  '
+             e(j)%name(1:min(2, len_trim(values))) = s2a(trim(values))
+             e(j)%elem = atomic_number_from_symbol(a2s(e(j)%name))
+          case("valenceorbitals")
+             read(values, *)  e(j)%no
+          case("valenceelectrons")
+             read(values,*)  e(j)%q0
+          case("onsitelevels")
+             k = maxval(l(:, e(j)%no))
+             read(values, *)  onsitelevels(1:k)
+             onsitelevels(1:k) = onsitelevels(1:k) * econv
+             do i = 1, 9
+                if (l(i, e(j)%no) > 0) then
+                   e(j)%e(i) = onsitelevels(l(i, e(j)%no))
+                endif
+             enddo
+          case("Jii")
+             read(values, *)  e(j)%U
+             e(j)%U = e(j)%U * econv
+          case default
+             cycle
+          end select
+       end do
+   
+       call fclose(un)
+   
+       ! set dependent variables and sort according to Z
+       do i = 1, j  
+          e(i)%el_max = 0d0
+          do k = 1, e(j)%no
+             e(i)%el_max = e(i)%el_max + (2d0*e(i)%l(k)+1d0)
+          enddo
+          db%e(e(i)%elem) = e(i)
+          db%e(e(i)%elem)%exists = .true.
+          db%e(e(i)%elem)%enr = e(i)%elem
+       enddo
+   
+       write (ilog, '(5X,I5,A)')  j, " elements found in 'atoms.bx'."
+    else
+       call prlog("No 'atoms.bx' found in database directory. Skipping.")
+    endif
+    write (ilog, *)
+
+  endsubroutine materials_read_elements_bopfox
 
 
   !>
@@ -1106,8 +1206,6 @@ contains
 
     INIT_ERROR(error)
 
-    write (ilog, '(A)')  "- materials_init_elements -"
-
     db%nel = MAX_Z
     allocate(db%e(db%nel))
     ! Initialize default valency. This can be overridden by the Slater-Koster
@@ -1119,8 +1217,8 @@ contains
 
     call materials_read_elements_hotbit(db, econv, lconv, error)
     PASS_ERROR(error)
-
-    write (ilog, *)
+    call materials_read_elements_bopfox(db, econv, lconv, error)
+    PASS_ERROR(error)
 
   endsubroutine materials_init_elements
 
@@ -1251,13 +1349,9 @@ contains
     if (present(folder)) then
        db%folder = folder
     else
-       ! Get input directory
-       inquire(file='param/elements.dat', exist=params_exists)
-       if(params_exists) then
-          db%folder = "param"
-       else
-          call getenv("TBPARAM", db%folder)
-          db%folder = trim(db%folder)
+       call get_environment_variable("TBPARAM", value=db%folder, status=i)
+       if (i > 0) then
+          db%folder = '.'
        endif
     endif
 
@@ -1274,6 +1368,8 @@ contains
     call materials_read_sltab_hotbit(db, econv, lconv, error)
     PASS_ERROR(error)
     call materials_read_sltab_dftb(db, econv, lconv, error)
+    PASS_ERROR(error)
+    call materials_read_sltab_bopfox(db, econv, lconv, error)
     PASS_ERROR(error)
 
     do i1 = 1, db%nel
