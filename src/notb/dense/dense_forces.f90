@@ -116,7 +116,7 @@ contains
     !$omp  parallel default(none) &
     !$omp& private(a, abs_rIJ, b, dH_ij, dH_ji, dS_ij, dS_ji, e_ImuJnu) &
     !$omp& private(elI, elJ, F2, Ft, Hdiff_ij, Hdiff_ji) &
-    !$omp& private(I, Imu, J, Jnu, kk, l, m, ni) &
+    !$omp& private(I, Imu, mu, J, Jnu, nu, kk, l, m, ni) &
     !$omp& private(noI, noJ, nr, q, rho_ImuJnu, rIJ) &
     !$omp& private(Sdiff_ij, Sdiff_ji, wij) &
     !$omp& shared(db, f, list, lo, nl, p, tb, wpot_per_bond) &
