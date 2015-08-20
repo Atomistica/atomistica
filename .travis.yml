@@ -1,10 +1,8 @@
+sudo: true
 language: python
 python:
   - "2.7"
   - "3.4"
-before_install:
-  - "sudo apt-get update"
-  - "sudo apt-get install gfortran liblapack-dev python-numpy"
 install:
   # Compile LAMMPS interface
   - "cd build_lammps ; cp Makefile.gnu Makefile ; make lammps_factories ; make atomistica ; cd .."
@@ -16,3 +14,9 @@ install:
   - "cp setup.cfg.travis setup.cfg ; python setup.py install"
 script:
   - "cd tests ; python run_tests.py"
+addons:
+  apt:
+    packages:
+    - gfortran
+    - liblapack-dev
+    - python-numpy
