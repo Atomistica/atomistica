@@ -92,7 +92,7 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
     mkf = io.open(mkfn, mode='a', encoding='latin-1')
     cfgf = io.open(cfgfn, mode='a', encoding='latin-1')
 
-    print(u'%s_MODS = \\' % interface.upper(), file=mkf)
+    print(u'%s_MODS += \\' % interface.upper(), file=mkf)
 
     depalready = []
     for path, metapath in metadata.items():
