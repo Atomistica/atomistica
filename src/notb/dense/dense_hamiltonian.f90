@@ -287,31 +287,43 @@ contains
     INIT_ERROR(error)
 
     if (this%nk == 1) then
-       call ptrdict_register_array2d_property(dict%ptrdict, this%H, &
-                                              this%norb, this%norb, &
-                                              CSTR("Hamiltonian_matrix"), &
-                                              CSTR("N/A"))
-       call ptrdict_register_array2d_property(dict%ptrdict, this%S, &
-                                              this%norb, this%norb, &
-                                              CSTR("overlap_matrix"), &
-                                              CSTR("N/A"))
-       call ptrdict_register_array2d_property(dict%ptrdict, this%rho, &
-                                              this%norb, this%norb, &
-                                              CSTR("density_matrix"), &
-                                              CSTR("N/A"))
+       if (c_associated(this%H)) then
+          call ptrdict_register_array2d_property(dict%ptrdict, this%H, &
+                                                 this%norb, this%norb, &
+                                                 CSTR("Hamiltonian_matrix"), &
+                                                 CSTR("N/A"))
+       endif 
+       if (c_associated(this%S)) then
+          call ptrdict_register_array2d_property(dict%ptrdict, this%S, &
+                                                 this%norb, this%norb, &
+                                                 CSTR("overlap_matrix"), &
+                                                 CSTR("N/A"))
+       endif
+       if (c_associated(this%rho)) then
+          call ptrdict_register_array2d_property(dict%ptrdict, this%rho, &
+                                                 this%norb, this%norb, &
+                                                 CSTR("density_matrix"), &
+                                                 CSTR("N/A"))
+       endif
     else
-       call ptrdict_register_array3d_property(dict%ptrdict, this%H, &
-                                              this%norb, this%norb, this%nk, &
-                                              CSTR("Hamiltonian_matrix"), &
-                                              CSTR("N/A"))
-       call ptrdict_register_array3d_property(dict%ptrdict, this%S, &
-                                              this%norb, this%norb, this%nk, &
-                                              CSTR("overlap_matrix"), &
-                                              CSTR("N/A"))
-       call ptrdict_register_array3d_property(dict%ptrdict, this%rho, &
-                                              this%norb, this%norb, this%nk, &
-                                              CSTR("density_matrix"), &
-                                              CSTR("N/A"))
+       if (c_associated(this%H)) then
+          call ptrdict_register_array3d_property(dict%ptrdict, this%H, &
+                                                 this%norb, this%norb, this%nk, &
+                                                 CSTR("Hamiltonian_matrix"), &
+                                                 CSTR("N/A"))
+       endif
+       if (c_associated(this%S)) then
+          call ptrdict_register_array3d_property(dict%ptrdict, this%S, &
+                                                 this%norb, this%norb, this%nk, &
+                                                 CSTR("overlap_matrix"), &
+                                                 CSTR("N/A"))
+       endif
+       if (c_associated(this%rho)) then
+          call ptrdict_register_array3d_property(dict%ptrdict, this%rho, &
+                                                 this%norb, this%norb, this%nk, &
+                                                 CSTR("density_matrix"), &
+                                                 CSTR("N/A"))
+       endif
     endif
 
   endsubroutine dense_hamiltonian_get_dict
