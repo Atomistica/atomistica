@@ -62,9 +62,13 @@
 
 #define RAISE_ERROR(message, error)   if (.true.) then ; call push_error_with_info(message, __FILE__, __LINE__) ; if (present(error)) then ; error = ERROR_UNSPECIFIED ; return ; else ; call error_abort(error) ; endif ; endif
 
+#define RAISE_ERROR_AND_STOP_TIMER(message, timer, error)   if (.true.) then ; call push_error_with_info(message, __FILE__, __LINE__) ; if (present(error)) then ; error = ERROR_UNSPECIFIED ; call timer_stop(timer) ; return ; else ; call error_abort(error) ; endif ; endif
+
 #define RAISE_ERROR_WITH_KIND(kind, message, error)   if (.true.) then ; call push_error_with_info(message, __FILE__, __LINE__, kind) ; if (present(error)) then ; error = kind ; return ; else ; call error_abort(error) ; endif ; endif
 
 #define PASS_ERROR(error)  if (present(error)) then ; if (error /= ERROR_NONE) then ; call push_error(__FILE__, __LINE__) ; return ; endif ; endif
+
+#define PASS_ERROR_AND_STOP_TIMER(timer, error)  if (present(error)) then ; if (error /= ERROR_NONE) then ; call push_error(__FILE__, __LINE__) ; call timer_stop(timer) ; return ; endif ; endif
 
 #define PASS_ERROR_WITH_INFO(message, error)  if (present(error)) then ; if (error /= ERROR_NONE) then ; call push_error_with_info(message, __FILE__, __LINE__) ; return ; endif ; endif
 
