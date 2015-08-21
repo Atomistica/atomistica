@@ -18,6 +18,7 @@
 !! You should have received a copy of the GNU General Public License
 !! along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !! ======================================================================
+
 !**********************************************************************
 ! Tight-binding force calculation
 !**********************************************************************
@@ -314,6 +315,8 @@ contains
 !    call timer('mdiff',1)
     s3  = sqrt(3.0_DP)
 
+    diff = 0.0_DP
+
     !-------------------------------------------
     ! initial arrangements...
     ! using mx this way is an easy way to speed
@@ -389,11 +392,11 @@ contains
                    d = s3*n*l*sdsi
                    g = s3*(ni*l+n*li)*sds
                 case(8)
-                   d = 0.5*s3*(ll-mm)*sdsi
-                   g = 0.5*s3*(lli-mmi)*sds
+                   d = 0.5_DP*s3*(ll-mm)*sdsi
+                   g = 0.5_DP*s3*(lli-mmi)*sds
                 case(9)
-                   d = (nn-0.5*(ll+mm))*sdsi
-                   g = (nni-0.5*(lli+mmi))*sds
+                   d = (nn-0.5_DP*(ll+mm))*sdsi
+                   g = (nni-0.5_DP*(lli+mmi))*sds
                 case default
                    stop 'transf. not defined'
                 end select
@@ -418,11 +421,11 @@ contains
                    d =                   s3*ll*n*pdsi +                 n*(1-2*ll)*pdpi
                    g =          s3*(lli*n+ll*ni)*pds  + ( ni*(1-2*ll)+n*(-2*lli) )*pdp
                 case(8)
-                   d =             0.5*s3                 *l*(ll-mm)*pdsi +                   l*(1-ll+mm)*pdpi
-                   g =             0.5*s3*( li*(ll-mm)+l*(lli-mmi) )*pds  + ( li*(1-ll+mm)+l*(-lli+mmi) )*pdp
+                   d =             0.5_DP*s3                 *l*(ll-mm)*pdsi +                   l*(1-ll+mm)*pdpi
+                   g =             0.5_DP*s3*( li*(ll-mm)+l*(lli-mmi) )*pds  + ( li*(1-ll+mm)+l*(-lli+mmi) )*pdp
                 case(9)
-                   d =                            l*(nn-0.5*(ll+mm))*pdsi              -          s3*l*nn*pdpi
-                   g = ( li*(nn-0.5*(ll+mm))+l*(nni-0.5*(lli+mmi)) )*pds               - s3*(li*nn+l*nni)*pdp
+                   d =                            l*(nn-0.5_DP*(ll+mm))*pdsi              -          s3*l*nn*pdpi
+                   g = ( li*(nn-0.5_DP*(ll+mm))+l*(nni-0.5_DP*(lli+mmi)) )*pds               - s3*(li*nn+l*nni)*pdp
                 case default
                    stop 'transf. not defined'
                 end select
@@ -444,11 +447,11 @@ contains
                    d =                          s3*m*n*l*pdsi                      - 2*m*n*l*pdpi
                    g =         s3*(mi*n*l+m*ni*l+m*n*li)*pds      - 2*(mi*n*l+m*ni*l+m*n*li)*pdp
                 case(8)
-                   d =                  0.5*s3*m*(ll-mm)*pdsi                  - m*(1+ll-mm)*pdpi
-                   g = 0.5*s3*( mi*(ll-mm)+m*(lli-mmi) )*pds  - ( mi*(1+ll-mm)+m*(lli-mmi) )*pdp
+                   d =                  0.5_DP*s3*m*(ll-mm)*pdsi                  - m*(1+ll-mm)*pdpi
+                   g = 0.5_DP*s3*( mi*(ll-mm)+m*(lli-mmi) )*pds  - ( mi*(1+ll-mm)+m*(lli-mmi) )*pdp
                 case(9)
-                   d =                m*(nn-0.5*(ll+mm))*pdsi                      - s3*m*nn*pdpi
-                   g = ( mi*(nn-0.5*(ll+mm))+m*(nni-0.5*(lli+mmi)) )*pds   -s3*(mi*nn+m*nni)*pdp
+                   d =                m*(nn-0.5_DP*(ll+mm))*pdsi                      - s3*m*nn*pdpi
+                   g = ( mi*(nn-0.5_DP*(ll+mm))+m*(nni-0.5_DP*(lli+mmi)) )*pds   -s3*(mi*nn+m*nni)*pdp
                 case default
                    stop 'transf. not defined'
                 end select
@@ -467,11 +470,11 @@ contains
                    d =                           s3*nn*l*pdsi                   + l*(1-2*nn)*pdpi
                    g =                  s3*(nni*l+nn*li)*pds    + ( li*(1-2*nn)+l*(-2*nni) )*pdp
                 case(8)
-                   d =                  0.5*s3*n*(ll-mm)*pdsi                    - n*(ll-mm)*pdpi
-                   g = 0.5*s3*( ni*(ll-mm)+n*(lli-mmi) )*pds    - ( ni*(ll-mm)+n*(lli-mmi) )*pdp
+                   d =                  0.5_DP*s3*n*(ll-mm)*pdsi                    - n*(ll-mm)*pdpi
+                   g = 0.5_DP*s3*( ni*(ll-mm)+n*(lli-mmi) )*pds    - ( ni*(ll-mm)+n*(lli-mmi) )*pdp
                 case(9)
-                   d =                n*(nn-0.5*(ll+mm))*pdsi                 + s3*n*(ll+mm)*pdpi
-                   g = ( ni*(nn-0.5*(ll+mm))+n*(nni-0.5*(lli+mmi)) )*pds + s3*( ni*(ll+mm)+n*(lli+mmi) )*pdp
+                   d =                n*(nn-0.5_DP*(ll+mm))*pdsi                 + s3*n*(ll+mm)*pdpi
+                   g = ( ni*(nn-0.5_DP*(ll+mm))+n*(nni-0.5_DP*(lli+mmi)) )*pds + s3*( ni*(ll+mm)+n*(lli+mmi) )*pdp
                 case default
                    stop 'transf. not defined'
                 end select
@@ -491,15 +494,15 @@ contains
                         + ( mi*n*(1-4*ll)+m*ni*(1-4*ll)+m*n*(-4*lli) )*ddp &
                         + ( mi*n*(ll-1)+m*ni*(ll-1)+m*n*(lli) )*ddd
                 case(8)
-                   d = 1.5*l*m*(ll-mm)*ddsi + 2*l*m*(mm-ll)*ddpi + 0.5*l*m*(ll-mm)*dddi
-                   g = 1.5*( li*m*(ll-mm)+l*mi*(ll-mm)+l*m*(lli-mmi) )*dds &
+                   d = 1.5_DP*l*m*(ll-mm)*ddsi + 2*l*m*(mm-ll)*ddpi + 0.5_DP*l*m*(ll-mm)*dddi
+                   g = 1.5_DP*( li*m*(ll-mm)+l*mi*(ll-mm)+l*m*(lli-mmi) )*dds &
                         + 2*( li*m*(mm-ll)+l*mi*(mm-ll)+l*m*(mmi-lli) )*ddp &
-                        + 0.5*( li*m*(ll-mm)+l*mi*(ll-mm)+l*m*(lli-mmi) )*ddd
+                        + 0.5_DP*( li*m*(ll-mm)+l*mi*(ll-mm)+l*m*(lli-mmi) )*ddd
                 case(9)
-                   d = s3*l*m*(nn-0.5*(ll+mm))*ddsi - 2*s3*l*m*nn*ddpi + 0.5*s3*l*m*(1+nn)*dddi
-                   g = s3*( li*m*(nn-0.5*(ll+mm))+l*mi*(nn-0.5*(ll+mm))+l*m*(nni-0.5*(lli+mmi)) )*dds &
+                   d = s3*l*m*(nn-0.5_DP*(ll+mm))*ddsi - 2*s3*l*m*nn*ddpi + 0.5_DP*s3*l*m*(1+nn)*dddi
+                   g = s3*( li*m*(nn-0.5_DP*(ll+mm))+l*mi*(nn-0.5_DP*(ll+mm))+l*m*(nni-0.5_DP*(lli+mmi)) )*dds &
                         -2*s3*(li*m*nn+l*mi*nn+l*m*nni)*ddp &
-                        + 0.5*s3*( li*m*(1+nn)+l*mi*(1+nn)+l*m*(nni) )*ddd
+                        + 0.5_DP*s3*( li*m*(1+nn)+l*mi*(1+nn)+l*m*(nni) )*ddd
                 case default
                    stop 'transf. not defined'
                 end select
@@ -516,15 +519,15 @@ contains
                         + ( mi*l*(1-4*nn)+m*li*(1-4*nn)+m*l*(-4*nni) )*ddp &
                         + ( mi*l*(nn-1)+m*li*(nn-1)+m*l*(nni) )*ddd
                 case(8)
-                   d = 1.5*m*n*(ll-mm)*ddsi - m*n*(1+2*(ll-mm))*ddpi + m*n*(1+0.5*(ll-mm))*dddi
-                   g =                     1.5*( mi*n*(ll-mm)+m*ni*(ll-mm)+m*n*(lli-mmi) )*dds &
+                   d = 1.5_DP*m*n*(ll-mm)*ddsi - m*n*(1+2*(ll-mm))*ddpi + m*n*(1+0.5_DP*(ll-mm))*dddi
+                   g =                     1.5_DP*( mi*n*(ll-mm)+m*ni*(ll-mm)+m*n*(lli-mmi) )*dds &
                         - ( mi*n*(1+2*(ll-mm))+m*ni*(1+2*(ll-mm))+m*n*(2*lli-2*mmi) )*ddp &
-                        + ( mi*n*(1+0.5*(ll-mm))+m*ni*(1+0.5*(ll-mm))+m*n*(0.5*(lli-mmi)) )*ddd
+                        + ( mi*n*(1+0.5_DP*(ll-mm))+m*ni*(1+0.5_DP*(ll-mm))+m*n*(0.5_DP*(lli-mmi)) )*ddd
                 case(9)
-                   d = s3*m*n*(nn-0.5*(ll+mm))*ddsi + s3*m*n*(ll+mm-nn)*ddpi - 0.5*s3*m*n*(ll+mm)*dddi
-                   g = s3*( mi*n*(nn-0.5*(ll+mm)) + m*ni*(nn-0.5*(ll+mm))+m*n*(nni-0.5*(lli+mmi)) ) * dds &
+                   d = s3*m*n*(nn-0.5_DP*(ll+mm))*ddsi + s3*m*n*(ll+mm-nn)*ddpi - 0.5_DP*s3*m*n*(ll+mm)*dddi
+                   g = s3*( mi*n*(nn-0.5_DP*(ll+mm)) + m*ni*(nn-0.5_DP*(ll+mm))+m*n*(nni-0.5_DP*(lli+mmi)) ) * dds &
                         + s3*( mi*n*(ll+mm-nn)+m*ni*(ll+mm-nn)+m*n*(lli+mmi-nni) )* ddp &
-                        - 0.5*s3*( mi*n*(ll+mm)+m*ni*(ll+mm)+m*n*(lli+mmi) )* ddd
+                        - 0.5_DP*s3*( mi*n*(ll+mm)+m*ni*(ll+mm)+m*n*(lli+mmi) )* ddd
                 case default
                    stop 'transf. not defined'
                 end select
@@ -536,40 +539,40 @@ contains
                         + ( nni+lli-4*(nni*ll+nn*lli) )*ddp &
                         + (mmi+nni*ll+nn*lli)*ddd
                 case(8)
-                   d = 1.5*n*l*(ll-mm)*ddsi + n*l*(1-2*(ll-mm))*ddpi - n*l*(1-0.5*(ll-mm))*dddi
-                   g =                      1.5*( ni*l*(ll-mm)+n*li*(ll-mm)+n*l*(lli-mmi) )*dds &
+                   d = 1.5_DP*n*l*(ll-mm)*ddsi + n*l*(1-2*(ll-mm))*ddpi - n*l*(1-0.5_DP*(ll-mm))*dddi
+                   g =                      1.5_DP*( ni*l*(ll-mm)+n*li*(ll-mm)+n*l*(lli-mmi) )*dds &
                         + ( ni*l*(1-2*(ll-mm))+n*li*(1-2*(ll-mm))+n*l*(-2*(lli-mmi)) )*ddp &
-                        - ( ni*l*(1-0.5*(ll-mm))+n*li*(1-0.5*(ll-mm))+n*l*(-0.5*(lli-mmi)) )*ddd
+                        - ( ni*l*(1-0.5_DP*(ll-mm))+n*li*(1-0.5_DP*(ll-mm))+n*l*(-0.5_DP*(lli-mmi)) )*ddd
                 case(9)
-                   d =  s3*l*n*(nn-0.5*(ll+mm))*ddsi + s3*l*n*(ll+mm-nn)*ddpi - 0.5*s3*l*n*(ll+mm)*dddi
-                   g = s3*( li*n*(nn-0.5*(ll+mm))+l*ni*(nn-0.5*(ll+mm))+l*n*(nni-0.5*(lli+mmi)) ) *dds &
+                   d =  s3*l*n*(nn-0.5_DP*(ll+mm))*ddsi + s3*l*n*(ll+mm-nn)*ddpi - 0.5_DP*s3*l*n*(ll+mm)*dddi
+                   g = s3*( li*n*(nn-0.5_DP*(ll+mm))+l*ni*(nn-0.5_DP*(ll+mm))+l*n*(nni-0.5_DP*(lli+mmi)) ) *dds &
                         + s3*( li*n*(ll+mm-nn)+l*ni*(ll+mm-nn)+l*n*(lli+mmi-nni) )*ddp &
-                        - 0.5*s3*( li*n*(ll+mm)+l*ni*(ll+mm)+l*n*(lli+mmi) )*ddd
+                        - 0.5_DP*s3*( li*n*(ll+mm)+l*ni*(ll+mm)+l*n*(lli+mmi) )*ddd
                 case default
                    stop 'transf. not defined'
                 end select
              case(8)
                 select case(b)
                 case(8)
-                   d = 0.75*(ll-mm)**2*ddsi + (ll+mm-(ll-mm)**2)*ddpi + (nn+0.25*(ll-mm)**2)*dddi
-                   g =         0.75*2*(ll-mm)*(lli-mmi)*dds &
+                   d = 0.75_DP*(ll-mm)**2*ddsi + (ll+mm-(ll-mm)**2)*ddpi + (nn+0.25_DP*(ll-mm)**2)*dddi
+                   g =         0.75_DP*2*(ll-mm)*(lli-mmi)*dds &
                         + (lli+mmi-2*(ll-mm)*(lli-mmi))*ddp &
-                        + (nni+0.25*2*(ll-mm)*(lli-mmi))*ddd
+                        + (nni+0.25_DP*2*(ll-mm)*(lli-mmi))*ddd
                 case(9)
-                   d = 0.5*s3*(ll-mm)*(nn-0.5*(ll+mm))*ddsi + s3*nn*(mm-ll)*ddpi + 0.25*s3*(1+nn)*(ll-mm)*dddi
-                   g = 0.5*s3*( (lli-mmi)*(nn-0.5*(ll+mm))+(ll-mm)*(nni-0.5*(lli+mmi)) )*dds &
+                   d = 0.5_DP*s3*(ll-mm)*(nn-0.5_DP*(ll+mm))*ddsi + s3*nn*(mm-ll)*ddpi + 0.25_DP*s3*(1+nn)*(ll-mm)*dddi
+                   g = 0.5_DP*s3*( (lli-mmi)*(nn-0.5_DP*(ll+mm))+(ll-mm)*(nni-0.5_DP*(lli+mmi)) )*dds &
                         + s3*( nni*(mm-ll)+nn*(mmi-lli) )*ddp &
-                        + 0.25*s3*( nni*(ll-mm)+(1+nn)*(lli-mmi) )*ddd
+                        + 0.25_DP*s3*( nni*(ll-mm)+(1+nn)*(lli-mmi) )*ddd
                 case default
                    stop 'transf. not defined'
                 end select
              case(9)
                 select case(b)
                 case(9)
-                   d = (nn-0.5*(ll+mm))**2*ddsi + 3*nn*(ll+mm)*ddpi + 0.75*(ll+mm)**2*dddi
-                   g =        2*(nn-0.5*(ll+mm))*(nni-0.5*(lli+mmi))*dds &
+                   d = (nn-0.5_DP*(ll+mm))**2*ddsi + 3*nn*(ll+mm)*ddpi + 0.75_DP*(ll+mm)**2*dddi
+                   g =        2*(nn-0.5_DP*(ll+mm))*(nni-0.5_DP*(lli+mmi))*dds &
                         + 3*( nni*(ll+mm)+nn*(lli+mmi) )*ddp &
-                        + 0.75*2*(ll+mm)*(lli+mmi)*ddd
+                        + 0.75_DP*2*(ll+mm)*(lli+mmi)*ddd
                 case default
                    stop 'transf. not defined'
                 end select

@@ -144,9 +144,9 @@ contains
        case(7) !(*)
           r = s3*n*l*sds
        case(8)
-          r = 0.5*s3*(ll-mm)*sds
+          r = 0.5_DP*s3*(ll-mm)*sds
        case(9)
-          r = (nn-0.5*(ll+mm))*sds
+          r = (nn-0.5_DP*(ll+mm))*sds
        case default
           stop 'transf. not defined'
        end select
@@ -165,9 +165,9 @@ contains
        case(7)
           r = s3*ll*n*pds + n*(1-2*ll)*pdp
        case(8)
-          r = 0.5*s3*l*(ll-mm)*pds + l*(1-ll+mm)*pdp
+          r = 0.5_DP*s3*l*(ll-mm)*pds + l*(1-ll+mm)*pdp
        case(9)
-          r = l*(nn-0.5*(ll+mm))*pds - s3*l*nn*pdp
+          r = l*(nn-0.5_DP*(ll+mm))*pds - s3*l*nn*pdp
        case default
           stop 'transf. not defined'
        end select
@@ -184,9 +184,9 @@ contains
        case(7) !(*)
           r = s3*m*n*l*pds - 2*m*n*l*pdp
        case(8)
-          r = 0.5*s3*m*(ll-mm)*pds - m*(1+ll-mm)*pdp
+          r = 0.5_DP*s3*m*(ll-mm)*pds - m*(1+ll-mm)*pdp
        case(9)
-          r = m*(nn-0.5*(ll+mm))*pds - s3*m*nn*pdp
+          r = m*(nn-0.5_DP*(ll+mm))*pds - s3*m*nn*pdp
        case default
           stop 'transf. not defined'
        end select
@@ -201,9 +201,9 @@ contains
        case(7) !(*)
           r = s3*nn*l*pds + l*(1-2*nn)*pdp
        case(8)
-          r = 0.5*s3*n*(ll-mm)*pds - n*(ll-mm)*pdp
+          r = 0.5_DP*s3*n*(ll-mm)*pds - n*(ll-mm)*pdp
        case(9)
-          r = n*(nn-0.5*(ll+mm))*pds + s3*n*(ll+mm)*pdp
+          r = n*(nn-0.5_DP*(ll+mm))*pds + s3*n*(ll+mm)*pdp
        case default
           stop 'transf. not defined'
        end select
@@ -216,9 +216,9 @@ contains
        case(7)
           r = 3*ll*m*n*dds + m*n*(1-4*ll)*ddp + m*n*(ll-1)*ddd
        case(8)
-          r = 1.5*l*m*(ll-mm)*dds + 2*l*m*(mm-ll)*ddp + 0.5*l*m*(ll-mm)*ddd
+          r = 1.5*l*m*(ll-mm)*dds + 2*l*m*(mm-ll)*ddp + 0.5_DP*l*m*(ll-mm)*ddd
        case(9)
-          r = s3*l*m*(nn-0.5*(ll+mm))*dds - 2*s3*l*m*nn*ddp + 0.5*s3*l*m*(1+nn)*ddd
+          r = s3*l*m*(nn-0.5_DP*(ll+mm))*dds - 2*s3*l*m*nn*ddp + 0.5_DP*s3*l*m*(1+nn)*ddd
        case default
           stop 'transf. not defined'
        end select
@@ -229,9 +229,9 @@ contains
        case(7) !(*)
           r = 3*m*nn*l*dds + m*l*(1-4*nn)*ddp + m*l*(nn-1)*ddd
        case(8)
-          r = 1.5*m*n*(ll-mm)*dds - m*n*(1+2*(ll-mm))*ddp + m*n*(1+0.5*(ll-mm))*ddd
+          r = 1.5*m*n*(ll-mm)*dds - m*n*(1+2*(ll-mm))*ddp + m*n*(1+0.5_DP*(ll-mm))*ddd
        case(9)
-          r = s3*m*n*(nn-0.5*(ll+mm))*dds + s3*m*n*(ll+mm-nn)*ddp - 0.5*s3*m*n*(ll+mm)*ddd
+          r = s3*m*n*(nn-0.5_DP*(ll+mm))*dds + s3*m*n*(ll+mm-nn)*ddp - 0.5_DP*s3*m*n*(ll+mm)*ddd
        case default
           stop 'transf. not defined'
        end select
@@ -240,25 +240,25 @@ contains
        case(7) !(*)
           r = 3*nn*ll*dds + (nn+ll-4*nn*ll)*ddp + (mm+nn*ll)*ddd
        case(8)
-          r = 1.5*n*l*(ll-mm)*dds + n*l*(1-2*(ll-mm))*ddp - n*l*(1-0.5*(ll-mm))*ddd
+          r = 1.5*n*l*(ll-mm)*dds + n*l*(1-2*(ll-mm))*ddp - n*l*(1-0.5_DP*(ll-mm))*ddd
        case(9)
-          r = s3*l*n*(nn-0.5*(ll+mm))*dds + s3*l*n*(ll+mm-nn)*ddp - 0.5*s3*l*n*(ll+mm)*ddd
+          r = s3*l*n*(nn-0.5_DP*(ll+mm))*dds + s3*l*n*(ll+mm-nn)*ddp - 0.5_DP*s3*l*n*(ll+mm)*ddd
        case default
           stop 'transf. not defined'
        end select
     case(8)
        select case(b)
        case(8)
-          r = 0.75*(ll-mm)**2*dds + (ll+mm-(ll-mm)**2)*ddp + (nn+0.25*(ll-mm)**2)*ddd
+          r = 0.75_DP*(ll-mm)**2*dds + (ll+mm-(ll-mm)**2)*ddp + (nn+0.25_DP*(ll-mm)**2)*ddd
        case(9)
-          r = 0.5*s3*(ll-mm)*(nn-0.5*(ll+mm))*dds + s3*nn*(mm-ll)*ddp + 0.25*s3*(1+nn)*(ll-mm)*ddd
+          r = 0.5_DP*s3*(ll-mm)*(nn-0.5_DP*(ll+mm))*dds + s3*nn*(mm-ll)*ddp + 0.25_DP*s3*(1+nn)*(ll-mm)*ddd
        case default
           stop 'transf. not defined'
        end select
     case(9)
        select case(b)
        case(9)
-          r = (nn-0.5*(ll+mm))**2*dds + 3*nn*(ll+mm)*ddp + 0.75*(ll+mm)**2*ddd
+          r = (nn-0.5_DP*(ll+mm))**2*dds + 3*nn*(ll+mm)*ddp + 0.75_DP*(ll+mm)**2*ddd
        case default
           stop 'transf. not defined'
        end select
