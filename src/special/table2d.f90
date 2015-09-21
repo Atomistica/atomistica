@@ -408,7 +408,7 @@ contains
        enddo
        fmt = trim(fmt) // ")"
 
-       write (un, fmt)  i, row(0:k-1)
+       write (un, fmt)  j, row(0:k-1)
     enddo
 
   endsubroutine table2d_print_un
