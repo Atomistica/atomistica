@@ -42,9 +42,6 @@ VPATH = \
 	$(SRCDIR)/potentials/coulomb \
 	$(SRCDIR)/potentials_nonfree/coulomb \
 	$(SRCDIR)/potentials/eam \
-	$(SRCDIR)/potentials_nonfree/bop/rebo2sich \
-	$(SRCDIR)/potentials_nonfree/bop/rebo2x \
-	$(SRCDIR)/potentials_nonfree/coulomb \
 	$(SRCDIR)/qeq \
 	$(SRCDIR)/special \
 	$(SRCDIR)/standalone \
@@ -240,10 +237,12 @@ versioninfo.f90:
 # Exclude compilation of certain modules here by adding a --exlude flag, see below.
 #
 lammps_factories:
-	rm -f _Makefile.modules potentials.classes
+	rm -f potentials.classes
+	echo "POTENTIALS_MOD =" > _Makefile.modules
 	echo "#ifndef __HAVE_INC" > have.inc
 	echo "#define __HAVE_INC" >> have.inc
 	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR)/potentials potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR)/potentials_nonfree potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)  
 	echo "#endif" >> have.inc
 	python $(SRCDIR)/lammps/gen_factory.py $(SRCDIR)/lammps $(FC) $(MACHINE) $(SYSTEM)
 

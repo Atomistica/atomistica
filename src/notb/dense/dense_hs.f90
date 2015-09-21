@@ -25,7 +25,7 @@
 module dense_hs
   use, intrinsic :: iso_c_binding
 
-  use libAtoms_module
+  use supplib
 
   use nonuniform_spline
   use timer
@@ -144,9 +144,9 @@ contains
        case(7) !(*)
           r = s3*n*l*sds
        case(8)
-          r = 0.5*s3*(ll-mm)*sds
+          r = 0.5_DP*s3*(ll-mm)*sds
        case(9)
-          r = (nn-0.5*(ll+mm))*sds
+          r = (nn-0.5_DP*(ll+mm))*sds
        case default
           stop 'transf. not defined'
        end select
@@ -165,9 +165,9 @@ contains
        case(7)
           r = s3*ll*n*pds + n*(1-2*ll)*pdp
        case(8)
-          r = 0.5*s3*l*(ll-mm)*pds + l*(1-ll+mm)*pdp
+          r = 0.5_DP*s3*l*(ll-mm)*pds + l*(1-ll+mm)*pdp
        case(9)
-          r = l*(nn-0.5*(ll+mm))*pds - s3*l*nn*pdp
+          r = l*(nn-0.5_DP*(ll+mm))*pds - s3*l*nn*pdp
        case default
           stop 'transf. not defined'
        end select
@@ -184,9 +184,9 @@ contains
        case(7) !(*)
           r = s3*m*n*l*pds - 2*m*n*l*pdp
        case(8)
-          r = 0.5*s3*m*(ll-mm)*pds - m*(1+ll-mm)*pdp
+          r = 0.5_DP*s3*m*(ll-mm)*pds - m*(1+ll-mm)*pdp
        case(9)
-          r = m*(nn-0.5*(ll+mm))*pds - s3*m*nn*pdp
+          r = m*(nn-0.5_DP*(ll+mm))*pds - s3*m*nn*pdp
        case default
           stop 'transf. not defined'
        end select
@@ -201,9 +201,9 @@ contains
        case(7) !(*)
           r = s3*nn*l*pds + l*(1-2*nn)*pdp
        case(8)
-          r = 0.5*s3*n*(ll-mm)*pds - n*(ll-mm)*pdp
+          r = 0.5_DP*s3*n*(ll-mm)*pds - n*(ll-mm)*pdp
        case(9)
-          r = n*(nn-0.5*(ll+mm))*pds + s3*n*(ll+mm)*pdp
+          r = n*(nn-0.5_DP*(ll+mm))*pds + s3*n*(ll+mm)*pdp
        case default
           stop 'transf. not defined'
        end select
@@ -216,9 +216,9 @@ contains
        case(7)
           r = 3*ll*m*n*dds + m*n*(1-4*ll)*ddp + m*n*(ll-1)*ddd
        case(8)
-          r = 1.5*l*m*(ll-mm)*dds + 2*l*m*(mm-ll)*ddp + 0.5*l*m*(ll-mm)*ddd
+          r = 1.5*l*m*(ll-mm)*dds + 2*l*m*(mm-ll)*ddp + 0.5_DP*l*m*(ll-mm)*ddd
        case(9)
-          r = s3*l*m*(nn-0.5*(ll+mm))*dds - 2*s3*l*m*nn*ddp + 0.5*s3*l*m*(1+nn)*ddd
+          r = s3*l*m*(nn-0.5_DP*(ll+mm))*dds - 2*s3*l*m*nn*ddp + 0.5_DP*s3*l*m*(1+nn)*ddd
        case default
           stop 'transf. not defined'
        end select
@@ -229,9 +229,9 @@ contains
        case(7) !(*)
           r = 3*m*nn*l*dds + m*l*(1-4*nn)*ddp + m*l*(nn-1)*ddd
        case(8)
-          r = 1.5*m*n*(ll-mm)*dds - m*n*(1+2*(ll-mm))*ddp + m*n*(1+0.5*(ll-mm))*ddd
+          r = 1.5*m*n*(ll-mm)*dds - m*n*(1+2*(ll-mm))*ddp + m*n*(1+0.5_DP*(ll-mm))*ddd
        case(9)
-          r = s3*m*n*(nn-0.5*(ll+mm))*dds + s3*m*n*(ll+mm-nn)*ddp - 0.5*s3*m*n*(ll+mm)*ddd
+          r = s3*m*n*(nn-0.5_DP*(ll+mm))*dds + s3*m*n*(ll+mm-nn)*ddp - 0.5_DP*s3*m*n*(ll+mm)*ddd
        case default
           stop 'transf. not defined'
        end select
@@ -240,25 +240,25 @@ contains
        case(7) !(*)
           r = 3*nn*ll*dds + (nn+ll-4*nn*ll)*ddp + (mm+nn*ll)*ddd
        case(8)
-          r = 1.5*n*l*(ll-mm)*dds + n*l*(1-2*(ll-mm))*ddp - n*l*(1-0.5*(ll-mm))*ddd
+          r = 1.5*n*l*(ll-mm)*dds + n*l*(1-2*(ll-mm))*ddp - n*l*(1-0.5_DP*(ll-mm))*ddd
        case(9)
-          r = s3*l*n*(nn-0.5*(ll+mm))*dds + s3*l*n*(ll+mm-nn)*ddp - 0.5*s3*l*n*(ll+mm)*ddd
+          r = s3*l*n*(nn-0.5_DP*(ll+mm))*dds + s3*l*n*(ll+mm-nn)*ddp - 0.5_DP*s3*l*n*(ll+mm)*ddd
        case default
           stop 'transf. not defined'
        end select
     case(8)
        select case(b)
        case(8)
-          r = 0.75*(ll-mm)**2*dds + (ll+mm-(ll-mm)**2)*ddp + (nn+0.25*(ll-mm)**2)*ddd
+          r = 0.75_DP*(ll-mm)**2*dds + (ll+mm-(ll-mm)**2)*ddp + (nn+0.25_DP*(ll-mm)**2)*ddd
        case(9)
-          r = 0.5*s3*(ll-mm)*(nn-0.5*(ll+mm))*dds + s3*nn*(mm-ll)*ddp + 0.25*s3*(1+nn)*(ll-mm)*ddd
+          r = 0.5_DP*s3*(ll-mm)*(nn-0.5_DP*(ll+mm))*dds + s3*nn*(mm-ll)*ddp + 0.25_DP*s3*(1+nn)*(ll-mm)*ddd
        case default
           stop 'transf. not defined'
        end select
     case(9)
        select case(b)
        case(9)
-          r = (nn-0.5*(ll+mm))**2*dds + 3*nn*(ll+mm)*ddp + 0.75*(ll+mm)**2*ddd
+          r = (nn-0.5_DP*(ll+mm))**2*dds + 3*nn*(ll+mm)*ddp + 0.75_DP*(ll+mm)**2*ddd
        case default
           stop 'transf. not defined'
        end select
@@ -333,7 +333,7 @@ contains
 
     ! ---
 
-    integer   :: i,ia0,ia,a,j,noi,ni
+    integer   :: i,ia0,ia,a,a0,j,noi,ni
     integer   :: eli,elj,x,y,z
     real(DP)  :: dr,c(3)
     real(DP)  :: vec(3)
@@ -366,8 +366,9 @@ contains
           noi = this_at(i)%no    ! number of atomic orbitals
           ia0 = this_at(i)%o1    ! first orbital (in global list)
 
-          do a = 1, noi
-             ia = ia0 + a-1
+          do a0 = 1, noi
+             ia = ia0 + a0-1
+             a  = get_orbital(noi, a0)
 
              tls_mat1(ia, ia) = this_at(i)%e(a)    ! orbital energy
              tls_mat2(ia, ia) = 1.0_DP             ! orbitals are normalized
@@ -454,27 +455,31 @@ contains
 
     ! ---
     
-    integer  :: list(0:10,9)
+    integer  :: list(0:10,9) = -1
 
     integer  :: noi, noj  ! number of orbitals
     integer  :: eli, elj  ! element numbers
-    integer  :: m         ! maximum orbital to consider
     integer  :: nr        ! number of contributing orbital combinations
     integer  :: bo        ! bond (orbital combination) index
     integer  :: ia, ia0, jb, jb0  ! orbital numbers (in global matrix)
-    integer  :: a, b, q
+    integer  :: a, b, a0, b0, q, m
     real(8)  :: he_ij(10), se_ij(10), he_ji(10), se_ji(10)
 
     WF_T(DP)  :: H_el, S_el
 
     ! ---
 
-    ! list tells the MELs needed when 
-    ! you know the maximum of number of orbitals of the atom pair
-    ! the zeroth position tells the number of MELs
-    list(0:1,1) = (/1,10/)
-    list(0:4,4) = (/4,6,7,9,10/)
-    list( : ,9) = (/10,1,2,3,4,5,6,7,8,9,10/)
+    ! list tells the bond integrals needed when you know the maximum of number
+    ! of orbitals of the atom pair the zeroth position tells the number of MELs
+    !                   dds ddp ddd pds pdp pps ppp sds sps sss
+    !                    1   2   3   4   5   6   7   8   9   10
+    list(0:1,  1) = [1,                                      10] ! s
+    list(0:2,  3) = [2,                      6,  7             ] ! p
+    list(0:4,  4) = [4,                      6,  7,      9,  10] ! sp
+    list(0:3,  5) = [3,  1,  2,  3                             ] ! d
+    list(0:5,  6) = [5,  1,  2,  3,                  8,      10] ! sd
+    list(0:7,  8) = [7,  1,  2,  3,  4,  5,  6,  7             ] ! pd
+    list(0:10, 9) = [10, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10] ! spd
 
     eli = el_i%enr
     elj = el_j%enr
@@ -483,14 +488,17 @@ contains
     ia0 = el_i%o1
     jb0 = el_j%o1
 
-    m  = max( noi,noj )
-    nr = list(0,m)                                 ! number of non-vanishing matrix elements
-    a = interval(db%HS(eli, elj), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
+    m  = max(noi, noj)
+    nr = list(0, m)                    ! number of non-vanishing matrix elements
+    a  = interval(db%HS(eli, elj), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
     PASS_ERROR(error)
-    b = interval(db%HS(elj, eli), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
+    b  = interval(db%HS(elj, eli), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
     PASS_ERROR(error)
     do q = 1, nr
-       bo = list(q,m)   ! bond order
+       bo = list(q, m)   ! bond order
+       if (bo <= 0) then
+          RAISE_ERROR("bo <= 0!", error)
+       endif
        he_ij(bo) = f(db%HS(eli, elj), bo,          my_r_ij, a)
        se_ij(bo) = f(db%HS(eli, elj), bo+MAX_NORB, my_r_ij, a)
        he_ji(bo) = f(db%HS(elj, eli), bo,          my_r_ij, b)
@@ -508,15 +516,16 @@ contains
     !
     !---------------------------------------
 !    call timer('setup_hs_2',1)
-    a_loop: do a=1, noi
-       ia=ia0 + a-1
-       b_loop: do b=1, noj
-          jb=jb0 + b-1
+    a_loop: do a0 = 1, noi
+       ia = ia0 + a0-1
+       a  = get_orbital(noi, a0)
+       b_loop: do b0 = 1, noj
+          jb = jb0 + b0-1
+          b  = get_orbital(noj, b0)
           !------------------------------------------------------- 
           ! if b>a (i.e. ang.momenta l_b>l_a), we must use
           ! the other table
           !------------------------------------------------------- 
-
           if (a <= b) then
              H_el = transform_orb( a, b, n_ij, he_ij )
              S_el = transform_orb( a, b, n_ij, se_ij )

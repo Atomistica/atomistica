@@ -27,7 +27,7 @@
 #include "filter.inc"
 
 module dense_hamiltonian
-  use libAtoms_module
+  use supplib
 
   use particles
   use materials
@@ -159,7 +159,7 @@ contains
        if (IS_EL(this%f, p, i)) then
 
           if (.not. element_by_Z(this_mat, p%el2Z(p%el(i)), enr=enr)) then
-              RAISE_ERROR("[notb_init] Unknown element '" // p%el2Z(p%el(i)) // "' encountered.", error)
+              RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(i))))//"'.", "dense_hamiltonian_assign_orbitals", error)
           endif
 
           this%norb = this%norb + this_mat%e(enr)%no
@@ -169,7 +169,7 @@ contains
              if (IS_EL(this%f, p, j)) then
 
                 if (.not. element_by_Z(this_mat, p%el2Z(p%el(j)), enr=enrj)) then
-                   RAISE_ERROR("[notb_init] Unknown element '" // p%el2Z(p%el(j)) // "' encountered.", error)
+                   RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(j))))//"'.", "dense_hamiltonian_assign_orbitals", error)
                 endif
 
                 c = max(c, this_mat%cut(enr, enrj))
@@ -198,13 +198,13 @@ contains
 #endif
 
              if (.not. element_by_Z(this_mat, p%el2Z(p%el(i)), enr=enr)) then
-                RAISE_ERROR("[notb_init] Unknown element '" // p%el2Z(p%el(i)) // "' encountered.", error)
+                RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(i))))//"'.", "dense_hamiltonian_assign_orbitals", error)
              endif
              this_at(i)     = this_mat%e(enr)
              this_at(i)%o1  = ia
              ia             = ia + this_at(i)%no
 
-!             write (*, *) i // " is " // this_at(i)%enr
+!             write (*, *) i//" is "//this_at(i)%enr
 
 #ifdef LAMMPS
           else
@@ -213,13 +213,13 @@ contains
              do j = 1, p%natloc
                 if (p%tag(i) == p%tag(j)) then
                    this_at(i) = this_at(j)
-!                   write (*, *) i // "->" // j // "; " // p%tag(i) // "->" // p%tag(j) // "; is " // this_at(i)%enr
+!                   write (*, *) i//"->"//j//"; "//p%tag(i)//"->"//p%tag(j)//"; is "//this_at(i)%enr
                    found = .true.
                 endif
              enddo
 
              if (.not. found) then
-                RAISE_ERROR("Could not find tag " // p%tag(i) // " of atom " // i // " in simulation.", error)
+                RAISE_ERROR_AND_STOP_TIMER("Could not find tag "//p%tag(i)//" of atom "//i//" in simulation.", "dense_hamiltonian_assign_orbitals", error)
              endif
           endif
 #endif
@@ -249,7 +249,8 @@ contains
 
     ! ---
 
-    integer  :: i, q0
+    integer  :: i, a0, a
+    real(DP) :: q0
 
     type(notb_element_t), pointer  :: at(:)
 
@@ -261,12 +262,19 @@ contains
 
     e = 0.0_DP
     do i = 1, p%natloc
-       q0 = int(at(i)%q0)
+       q0 = at(i)%q0
 
-       e = e + 2*sum(at(i)%e(1:q0/2))
-       if (mod(q0, 2) /= 0) then
-          e = e + at(i)%e(q0/2+1)
-       endif
+       do a0 = 1, at(i)%no
+          a = get_orbital(at(i)%no, a0)
+          if (q0 > 0.0_DP) then
+             q0 = q0 - 0.5_DP
+             e = e + at(i)%e(a)
+          endif
+          if (q0 > 0.0_DP) then
+             q0 = q0 - 0.5_DP
+             e = e + at(i)%e(a)
+          endif
+       enddo
     enddo
 
   endfunction dense_hamiltonian_e_atomic
@@ -287,31 +295,43 @@ contains
     INIT_ERROR(error)
 
     if (this%nk == 1) then
-       call ptrdict_register_array2d_property(dict%ptrdict, this%H, &
-                                              this%norb, this%norb, &
-                                              CSTR("Hamiltonian_matrix"), &
-                                              CSTR("N/A"))
-       call ptrdict_register_array2d_property(dict%ptrdict, this%S, &
-                                              this%norb, this%norb, &
-                                              CSTR("overlap_matrix"), &
-                                              CSTR("N/A"))
-       call ptrdict_register_array2d_property(dict%ptrdict, this%rho, &
-                                              this%norb, this%norb, &
-                                              CSTR("density_matrix"), &
-                                              CSTR("N/A"))
+       if (c_associated(this%H)) then
+          call ptrdict_register_array2d_property(dict%ptrdict, this%H, &
+                                                 this%norb, this%norb, &
+                                                 CSTR("Hamiltonian_matrix"), &
+                                                 CSTR("N/A"))
+       endif 
+       if (c_associated(this%S)) then
+          call ptrdict_register_array2d_property(dict%ptrdict, this%S, &
+                                                 this%norb, this%norb, &
+                                                 CSTR("overlap_matrix"), &
+                                                 CSTR("N/A"))
+       endif
+       if (c_associated(this%rho)) then
+          call ptrdict_register_array2d_property(dict%ptrdict, this%rho, &
+                                                 this%norb, this%norb, &
+                                                 CSTR("density_matrix"), &
+                                                 CSTR("N/A"))
+       endif
     else
-       call ptrdict_register_array3d_property(dict%ptrdict, this%H, &
-                                              this%norb, this%norb, this%nk, &
-                                              CSTR("Hamiltonian_matrix"), &
-                                              CSTR("N/A"))
-       call ptrdict_register_array3d_property(dict%ptrdict, this%S, &
-                                              this%norb, this%norb, this%nk, &
-                                              CSTR("overlap_matrix"), &
-                                              CSTR("N/A"))
-       call ptrdict_register_array3d_property(dict%ptrdict, this%rho, &
-                                              this%norb, this%norb, this%nk, &
-                                              CSTR("density_matrix"), &
-                                              CSTR("N/A"))
+       if (c_associated(this%H)) then
+          call ptrdict_register_array3d_property(dict%ptrdict, this%H, &
+                                                 this%norb, this%norb, this%nk, &
+                                                 CSTR("Hamiltonian_matrix"), &
+                                                 CSTR("N/A"))
+       endif
+       if (c_associated(this%S)) then
+          call ptrdict_register_array3d_property(dict%ptrdict, this%S, &
+                                                 this%norb, this%norb, this%nk, &
+                                                 CSTR("overlap_matrix"), &
+                                                 CSTR("N/A"))
+       endif
+       if (c_associated(this%rho)) then
+          call ptrdict_register_array3d_property(dict%ptrdict, this%rho, &
+                                                 this%norb, this%norb, this%nk, &
+                                                 CSTR("density_matrix"), &
+                                                 CSTR("N/A"))
+       endif
     endif
 
   endsubroutine dense_hamiltonian_get_dict
