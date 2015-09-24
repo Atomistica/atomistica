@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # ======================================================================
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
@@ -18,7 +20,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-#! /usr/bin/env python
 
 """
 Test the surface properties for a set of potentials
@@ -88,18 +89,53 @@ def dia_111_glide(sym, a0):
     return a
 
 
-def dia_111_pandey(sym, a0):
+def dia_111_pandey(sym, a0, nx=nx, ny=nx, nz=nz):
     """2x1 Pandey reconstructed (111) surface."""
-    ref_a0 = 5.4455
-    a = ase.io.read('111_2x1_pandey_relaxed.xyz')
-    cell = [ [ 6.68461568,  0.00000000, 0.00000000 ],
-             [ 0.00000000, 45.99705392, 0.00000000 ],
-             [ 0.00000000,  0.00000000, 3.85936466 ] ]
-    a.set_cell(cell, scale_atoms=False)
-    a.set_cell(a.get_cell()*a0/ref_a0, scale_atoms=True)
-    a.set_chemical_symbols(sym*len(a))
+    sym = string2symbols(sym)
+    if len(sym) == 1:
+        a = Diamond(sym[0],
+                    size             = [nx, ny, nz],
+                    latticeconstant  = a0,
+                    directions=[ [1,-1,0], [1,1,-2], [1,1,1] ]
+                    )
+    else:
+        a = B3(sym,
+               size             = [nx, ny, nz],
+               latticeconstant  = a0,
+               directions=[ [1,-1,0], [1,1,-2], [1,1,1] ]
+               )
+    sx, sy, sz = a.get_cell().diagonal()
+    a.translate([sx/(12*nx), sy/(4*ny), sz/(6*nz)])
+    a.set_scaled_positions(a.get_scaled_positions()%1.0)
 
-    return a
+    bulk = a.copy()
+
+    bondlen = a0*sqrt(3)/4
+
+    x, y, z = a.positions.T
+    mask = np.abs(z-z.max()) < 0.1*a0
+    top1, top2 = np.arange(len(a))[mask].reshape(-1, 2).T
+    mask = np.logical_and(np.abs(z-z.max()) < bondlen, np.logical_not(mask))
+    topA, topB = np.arange(len(a))[mask].reshape(-1, 2).T
+    y[topA] += bondlen/3
+    y[topB] -= bondlen/3
+    y[top1] += bondlen
+    x[top1] += a.cell[0,0]/(2*nx)
+    x[top2] += a.cell[0,0]/(2*nx)
+
+    mask = np.abs(z-z.min()) < 0.1*a0
+    bot1, bot2 = np.arange(len(a))[mask].reshape(-1, 2).T
+    mask = np.logical_and(np.abs(z-z.min()) < bondlen, np.logical_not(mask))
+    botA, botB = np.arange(len(a))[mask].reshape(-1, 2).T
+    y[botA] += bondlen/3
+    y[botB] -= bondlen/3
+    y[bot2] -= bondlen
+    x[bot2] += a.cell[0,0]/(2*nx)
+    x[bot1] += a.cell[0,0]/(2*nx)
+
+    a.set_scaled_positions(a.get_scaled_positions()%1.0)
+
+    return bulk, a
 
 
 def dia_110(sym, a0):
@@ -175,11 +211,13 @@ vacuum = 10.0
 tests = [
     ( Brenner, Erhart_PRB_71_035211_SiC,
       [ dict( name="dia-C-111", struct=dia_111('C', 3.566), r_Jm2=2.06 ),
+        dict( name="dia-C-111-pandey", struct=dia_111_pandey('C', 3.566) ),
         dict( name="dia-C-110", struct=dia_110('C', 3.566), r_Jm2=2.96 ),
         dict( name="dia-C-100", struct=dia_100('C', 3.566), r_Jm2=5.59 ),
         dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566),
               r_Jm2=5.65 ), 
         dict( name="dia-Si-111", struct=dia_111('Si', 5.432), r_Jm2=0.999 ),
+        dict( name="dia-Si-111-pandey", struct=dia_111_pandey('Si', 5.432) ),
         dict( name="dia-Si-110", struct=dia_110('Si', 5.432), r_Jm2=1.23 ),
         dict( name="dia-Si-100", struct=dia_100('Si', 5.432), r_Jm2=1.95 ),
         dict( name="dia-Si-100-2x1", struct=dia_100_2x1('Si', 5.432),
@@ -192,11 +230,13 @@ tests = [
         ] ),
     ( BrennerScr, Erhart_PRB_71_035211_SiC__Scr,
       [ dict( name="dia-C-111", struct=dia_111('C', 3.566), r_Jm2=2.06 ),
+        dict( name="dia-C-111-pandey", struct=dia_111_pandey('C', 3.566) ),
         dict( name="dia-C-110", struct=dia_110('C', 3.566), r_Jm2=2.96 ),
         dict( name="dia-C-100", struct=dia_100('C', 3.566), r_Jm2=5.88 ),
         dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566),
               r_Jm2=5.89 ), 
         dict( name="dia-Si-111", struct=dia_111('Si', 5.432), r_Jm2=0.999 ),
+        dict( name="dia-Si-111-pandey", struct=dia_111_pandey('Si', 5.432) ),
         dict( name="dia-Si-110", struct=dia_110('Si', 5.432), r_Jm2=1.23 ),
         dict( name="dia-Si-100", struct=dia_100('Si', 5.432), r_Jm2=1.90 ),
         dict( name="dia-Si-100-2x1", struct=dia_100_2x1('Si', 5.432),
@@ -209,6 +249,7 @@ tests = [
         ] ),
     ( Kumagai, Kumagai_CompMaterSci_39_457_Si,
       [ dict( name="dia-Si-111", struct=dia_111('Si', 5.429) ),
+        dict( name="dia-Si-111-pandey", struct=dia_111_pandey('Si', 5.429) ),
         dict( name="dia-Si-110", struct=dia_110('Si', 5.429) ),
         dict( name="dia-Si-100", struct=dia_100('Si', 5.429) ),
         dict( name="dia-Si-100-2x1", struct=dia_100_2x1('Si', 5.429) ),
@@ -216,6 +257,7 @@ tests = [
     ( Rebo2, {},
       [ dict( name="dia-C-111", struct=dia_111('C', 3.566) ),
         dict( name="dia-C-111-glide", struct=dia_111_glide('C', 3.566) ),
+        dict( name="dia-C-111-pandey", struct=dia_111_pandey('C', 3.566) ),
         dict( name="dia-C-110", struct=dia_110('C', 3.566) ),
         dict( name="dia-C-100", struct=dia_100('C', 3.566) ),
         dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566) ),
@@ -223,17 +265,38 @@ tests = [
     ( Rebo2Scr, {},
       [ dict( name="dia-C-111", struct=dia_111('C', 3.566) ),
         dict( name="dia-C-111-glide", struct=dia_111_glide('C', 3.566) ),
+        dict( name="dia-C-111-pandey", struct=dia_111_pandey('C', 3.566) ),
         dict( name="dia-C-110", struct=dia_110('C', 3.566) ),
         dict( name="dia-C-100", struct=dia_100('C', 3.566) ),
         dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566) ),
         ] ),
+    ( Rebo2SiCHScr, {},
+      [ dict( name="dia-C-111", struct=dia_111('C', 3.566) ),
+        dict( name="dia-C-111-glide", struct=dia_111_glide('C', 3.566) ),
+        dict( name="dia-C-111-pandey", struct=dia_111_pandey('C', 3.566) ),
+        dict( name="dia-C-110", struct=dia_110('C', 3.566) ),
+        dict( name="dia-C-100", struct=dia_100('C', 3.566) ),
+        dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566) ),
+        dict( name="dia-Si-111", struct=dia_111('Si', 5.429) ),
+        dict( name="dia-Si-111-pandey", struct=dia_111_pandey('Si', 5.429) ),
+        dict( name="dia-Si-110", struct=dia_110('Si', 5.429) ),
+        dict( name="dia-Si-100", struct=dia_100('Si', 5.429) ),
+        dict( name="dia-Si-100-2x1", struct=dia_100_2x1('Si', 5.429) ),
+        dict( name="dia-SiC-111", struct=dia_111('SiC', 4.360) ),
+        dict( name="dia-SiC-111-pandey", struct=dia_111_pandey('SiC', 4.360) ),
+        dict( name="dia-SiC-110", struct=dia_110('SiC', 4.360) ),
+        dict( name="dia-SiC-100", struct=dia_100('SiC', 4.360) ),
+        dict( name="dia-SiC-100-2x1", struct=dia_100_2x1('SiC', 4.360) )
+        ] ),
     ( Tersoff, Tersoff_PRB_39_5566_Si_C,
       [ dict( name="dia-C-111", struct=dia_111('C', 3.566) ),
         dict( name="dia-C-111-glide", struct=dia_111_glide('C', 3.566) ),
+        dict( name="dia-C-111-pandey", struct=dia_111_pandey('C', 3.566) ),
         dict( name="dia-C-110", struct=dia_110('C', 3.566) ),
         dict( name="dia-C-100", struct=dia_100('C', 3.566) ),
         dict( name="dia-C-100-2x1", struct=dia_100_2x1('C', 3.566) ),
         dict( name="dia-Si-111", struct=dia_111('Si', 5.432) ),
+        dict( name="dia-Si-111-pandey", struct=dia_111_pandey('Si', 5.432) ),
         dict( name="dia-Si-110", struct=dia_110('Si', 5.432) ),
         dict( name="dia-Si-100", struct=dia_100('Si', 5.432) ),
         dict( name="dia-Si-100-2x1", struct=dia_100_2x1('Si', 5.432) ),
