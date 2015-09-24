@@ -294,6 +294,9 @@ contains
     call c_f_pointer(this%H, this_H, [this%norb, this%norb, this%nk])
     call c_f_pointer(this%S, this_S, [this%norb, this%norb, this%nk])
 
+    this_H = 0.0_DP
+    this_S = 0.0_DP
+
     do k = 1, this%nk
 
        call hs_setup_single_k( &
