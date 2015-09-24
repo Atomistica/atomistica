@@ -1035,6 +1035,8 @@ contains
 
     ! ---
 
+    INIT_ERROR(error)
+
     call prlog("- materials_read_elements_hotbit -")
 
     lmx = 1000
@@ -1149,6 +1151,8 @@ contains
     type(notb_element_t) :: e(MAX_Z)
 
     ! ---
+
+    INIT_ERROR(error)
 
     call prlog("- materials_read_elements_bopfox -")
 
