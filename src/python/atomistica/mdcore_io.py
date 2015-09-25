@@ -258,7 +258,7 @@ def write_atoms(fn, this, cycfn=None, conv=1.0, symbols=True):
     f.write("%f %f %f\n" % tuple(cell[1, :]))
     f.write("%f %f %f\n" % tuple(cell[2, :]))
 
-    for name, aux in this.arrays.iteritems():
+    for name, aux in this.arrays.items():
         if not name in atoms_default_fields:
             f.write("<--- %s\n" % name)
             if aux.dtype == int:
