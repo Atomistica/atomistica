@@ -68,7 +68,7 @@ using namespace LAMMPS_NS;
 
 /* ---------------------------------------------------------------------- */
 
-extern "C" get_atomistica_pair_style_git_ident(char *ident)
+extern "C" void get_atomistica_pair_style_git_ident(char *ident)
 {
   strcpy(ident, ATOMISTICA_PAIR_STYLE_GIT_IDENT);
 }

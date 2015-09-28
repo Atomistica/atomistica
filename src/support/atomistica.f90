@@ -23,6 +23,7 @@
 !!
 !! The main atomistica module
 !<
+
 module atomistica
 #ifdef _OPENMP
   use omp_lib
@@ -43,6 +44,18 @@ module atomistica
 
   integer, private :: start_time_and_date(8)
   
+#ifdef LAMMPS
+#define DEFINE_GIT_IDENT
+#include "../src/lammps/pair_style/pair_atomistica.cpp"
+  interface get_atomistica_pair_style_git_ident
+     subroutine get_atomistica_pair_style_git_ident(ident) bind(C)
+        use, intrinsic :: iso_c_binding
+        character(C_CHAR) :: ident(*)
+     endsubroutine get_atomistica_pair_style_git_ident
+  endinterface
+
+#endif
+
 contains
 
   !>
@@ -66,6 +79,10 @@ contains
 
 #ifdef HAVE_MKL
     character(200)                   :: mklversion
+#endif
+
+#ifdef LAMMPS
+    character(C_CHAR), target        :: pair_style_git_ident(1024)
 #endif
 
     ! ---
@@ -113,6 +130,14 @@ contains
 #elif defined(_MPI)
     call prscrlog("   Using MPI:            " // mpi_n_procs() // " processes")
     call prscrlog
+#endif
+
+#ifdef LAMMPS
+    ! Check if Atomistica library and LAMMPS' Atomistica pair_style versions are identical.
+    call get_atomistica_pair_style_git_ident(pair_style_git_ident)
+    if (a2s(c_f_string(c_loc(pair_style_git_ident(1)))) /= ATOMISTICA_PAIR_STYLE_GIT_IDENT) then
+       stop "Fatal: GIT blobs of pair_atomistica.cpp used when compiling the Atomistica library and LAMMPS do not agree. Please copy the current pair_atomistica.cpp and pair_atomistica.h to your LAMMPS src directory."
+    endif
 #endif
 
 !    call rng_init(now(7)+1)
