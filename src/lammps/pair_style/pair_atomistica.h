@@ -102,6 +102,8 @@ int error2lmp(Error *, const char *, int, int);
 
 extern "C" {
 
+  void get_atomistica_pair_style_git_ident(char *);
+
   void particles_new(void **self);            // allocate particles object
   void particles_free(void *self);            // free particles object
   

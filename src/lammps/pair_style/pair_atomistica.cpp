@@ -37,6 +37,10 @@
    Contributing author: Tim Kunze (FZDR), Lars Pastewka (Fh-IWM, JHU)
 ------------------------------------------------------------------------- */
 
+#define ATOMISTICA_PAIR_STYLE_GIT_IDENT "$Id$"
+
+#ifndef DEFINE_GIT_IDENT
+
 #include "math.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -61,6 +65,13 @@ using namespace LAMMPS_NS;
 
 #define ERROR_NONE 0
 #define ERRSTRLEN 10000
+
+/* ---------------------------------------------------------------------- */
+
+extern "C" get_atomistica_pair_style_git_ident(char *ident)
+{
+  strcpy(ident, ATOMISTICA_PAIR_STYLE_GIT_IDENT);
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -544,3 +555,4 @@ double PairAtomistica::memory_usage()
   return bytes;
 }
 
+#endif
