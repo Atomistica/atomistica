@@ -180,6 +180,8 @@ contains
                       b = interval(db%HS(elJ, elI), abs_rIJ, error_loc)
                       TRACE_DELAYED_ERROR_WITH_INFO("elI = " // elI // ", elJ = " // elJ // ", abs_rIJ = " // abs_rIJ, error_loc)
 
+                      dH_ij = 0.0_DP
+                      dS_ij = 0.0_DP
                       do q = 1,nr
                          kk = list(q,m)
                          call f_and_df(db%HS(elI, elJ), kk,          abs_rIJ, a, dH_ij(kk), dH_ij(-kk))
