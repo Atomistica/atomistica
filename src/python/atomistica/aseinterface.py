@@ -564,7 +564,7 @@ for name, cls in inspect.getmembers(_atomistica):
 
 if hasattr(_atomistica, 'TightBinding'):
     class TightBinding(Atomistica):
-        """Non-othogonal tight-binding.
+        """Non-orthogonal tight-binding.
         """
 
         potential_class = _atomistica.TightBinding
@@ -583,5 +583,5 @@ if hasattr(_atomistica, 'TightBinding'):
 
             d['avgn'] = 1000
 
-            apply(Atomistica.__init__, (self,), d)
+            Atomistica.__init__(self, **d)
 
