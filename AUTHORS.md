@@ -5,7 +5,7 @@ Authors and contributors
   Loughborough University  
   Original bond-order potential code
 
-* Tommi Järvi (tommi.jarvi@iki.fi)  
+* Tommi Järvi  
   Fraunhofer IWM  
   Handling of molecules, many further enhancements and bug fixes
 
