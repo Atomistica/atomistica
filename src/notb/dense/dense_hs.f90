@@ -303,8 +303,8 @@ contains
             this, db, p, nl, &
             this_H(:, :, k), this_S(:, :, k), &
             error)
-       PASS_ERROR_WITH_INFO_AND_STOP_TIMER("H and S setup for k-point number " // k // ".", "hs_setup", error)
-       
+       PASS_ERROR_WITH_INFO_AND_STOP_TIMER("H and S setup for k-point/spin number " // k // ".", "hs_setup", error)
+
     enddo
 
     call timer_stop("hs_setup")
