@@ -72,7 +72,7 @@
 
 #define PASS_ERROR_WITH_INFO(message, error)  if (present(error)) then ; if (error /= ERROR_NONE) then ; call push_error_with_info(message, __FILE__, __LINE__) ; return ; endif ; endif
 
-#define PASS_ERROR_WITH_INFO_AND_STOP_TIMER(message, timer, error)  if (present(error)) then ; if (error /= ERROR_NONE) then ; call push_error_with_info(message, __FILE__, __LINE__) ; return ; endif ; endif
+#define PASS_ERROR_WITH_INFO_AND_STOP_TIMER(message, timer, error)  if (present(error)) then ; if (error /= ERROR_NONE) then ; call push_error_with_info(message, __FILE__, __LINE__) ; call timer_stop(timer) ; return ; endif ; endif
 
 #define HANDLE_ERROR(error)  if (error /= ERROR_NONE) then ; call push_error(__FILE__, __LINE__) ; call error_abort(error) ; endif
 
