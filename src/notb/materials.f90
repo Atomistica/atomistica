@@ -70,6 +70,9 @@ module materials
 #define HTAB 1:MAX_NORB
 #define STAB MAX_NORB+1:2*MAX_NORB
 
+  character(3), parameter :: electronic_configuration(9) = &
+  	 ["s", "---", " p", "sp", "  d", "s d", "---", " pd", "spd"]
+
   ! IF YOU MODIFY THIS STRUCTURE, *ALWAYS* ALSO MODIFY THE CORRESPONDING
   ! STRUCTURE IN materials.h
   public :: notb_element_t
@@ -651,6 +654,8 @@ contains
                          db%e(i1)%U  = u(3) * econv
                       endif
 
+                      db%e(i1)%exists = .true.
+
                    endif
 
                    ! read spline data
@@ -1196,7 +1201,7 @@ contains
                    e(j)%e(i) = onsitelevels(l(i, e(j)%no))
                 endif
              enddo
-          case("Jii")
+          case("jii")
              read(values, *)  e(j)%U
           case default
              cycle
@@ -1248,7 +1253,10 @@ contains
     ! Initialize default valency. This can be overridden by the Slater-Koster
     ! tables.
     do i = 1, MAX_Z
-       db%e(i)%name = ElementName(i)
+       db%e(i)%name = s2a(ElementName(i))
+       db%e(i)%elem = i
+       db%e(i)%enr  = i
+       db%e(i)%q0   = valence_orbitals(i)
        db%e(i)%no   = valence_orbitals(i)
     enddo
 
@@ -1377,6 +1385,7 @@ contains
     ! ---
 
     integer  :: i1, i2, i
+    real(DP) :: onsite(9)
     logical  :: params_exists
 
     ! ---
@@ -1421,6 +1430,21 @@ contains
     enddo
 
     call materials_read_spin_params(db, econv, error)
+
+    call prlog("element number charge orbitals Hubbard-U on-site levels")
+    call prlog("======= ====== ====== ======== ========= ==============")
+    do i1 = 1, db%nel
+       if (db%e(i1)%exists) then
+          if (db%e(i1)%no > 0 .and. db%e(i1)%no < 10) then
+             do i2 = 1, db%e(i1)%no
+                onsite(i2) = db%e(i1)%e(get_orbital(db%e(i1)%no, i2))
+             enddo
+             write (ilog, '(5X,A7,I7,F7.3,A9,F10.3,9F10.3)') a2s(db%e(i1)%name), db%e(i1)%elem, db%e(i1)%q0, electronic_configuration(db%e(i1)%no), db%e(i1)%U, onsite(1:db%e(i1)%no)
+          else
+             write (ilog, '(5X,A7,I7,F7.3,I9)') a2s(db%e(i1)%name), db%e(i1)%elem, db%e(i1)%q0, db%e(i1)%no
+          endif
+       endif
+    enddo
 
     write (ilog, *)
 
