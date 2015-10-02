@@ -332,7 +332,7 @@ contains
     nn  = n**2
     dds = ci(1); ddp=ci(2); ddd=ci(3); pds=ci(4); pdp=ci(5)
     pps = ci(6); ppp=ci(7); sds=ci(8); sps=ci(9); sss=ci(10)
-    mx  = max(noi,noj) 
+    mx  = max(get_orbital(noi, noi), get_orbital(noj, noj))
 
     !---------------------------------------------------------
     !e.g. spsi is the derivative of (sps) with respect to x_i
