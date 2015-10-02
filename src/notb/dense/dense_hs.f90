@@ -303,7 +303,7 @@ contains
             this, db, p, nl, &
             this_H(:, :, k), this_S(:, :, k), &
             error)
-       PASS_ERROR_WITH_INFO("H and S setup for k-point number " // k // ".", error)
+       PASS_ERROR_WITH_INFO_AND_STOP_TIMER("H and S setup for k-point number " // k // ".", "hs_setup", error)
        
     enddo
 
@@ -364,7 +364,7 @@ contains
     !$omp do
     i_loop: do i = 1, p%natloc
 
-       if (IS_EL(this%f, p, i)) then
+       if (IS_EL(this%f, p, i) .and. error_loc /= ERROR_NONE) then
 
           noi = this_at(i)%no    ! number of atomic orbitals
           ia0 = this_at(i)%o1    ! first orbital (in global list)
@@ -383,7 +383,7 @@ contains
 
              j = GET_NEIGHBOR(nl, ni)
 
-             if (IS_EL(this%f, p, j)) then
+             if (IS_EL(this%f, p, j) .and. error_loc /= ERROR_NONE) then
 
                 DIST(p, nl, i, ni, vec, dr)
 
@@ -417,7 +417,7 @@ contains
                            this_at(i), this_at(j), dr, c, &
                            tls_mat1, tls_mat2, &
                            error_loc)
-!                      PASS_ERROR_WITH_INFO("Computation of matrix element between atom " // trim(int2str(i)) // " and atom " // trim(int2str(j)) // ".", error)
+                      TRACE_DELAYED_ERROR_WITH_INFO("Computation of matrix element between atom " // i // " and atom " // j // ".", error_loc)
                    endif
 
                 endif

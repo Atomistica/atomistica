@@ -603,31 +603,31 @@ contains
 
     INIT_ERROR(ierror)
 
-    call timer_start("dense_notb_energy_and_forces")
-
     ! Verify pointers
     if(.not. associated(this%solver)) then
        RAISE_ERROR("No solver object associated to NOTB.", ierror)
     end if
 
+    call timer_start("dense_notb_energy_and_forces")
+
     ! Update neighbor list
     call update(nl, p, ierror)
-    PASS_ERROR(ierror)
+    PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
 
 #ifdef LAMMPS
     ! Update the atom to H/S matrix-block match
     call assign_orbitals(this%tb, p, error=ierror)
-    PASS_ERROR(ierror)
+    PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
 #endif
 
     call hs_setup(this%tb, this%mat, p, nl, error=ierror)
-    PASS_ERROR(ierror)
+    PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
 
     ! Solve either with or without charge self-consistency
     if (associated(this%scc)) then
 
        if (.not. present(q)) then
-          RAISE_ERROR("Please provide a charge-array for the self-consistent solution.", ierror)
+          RAISE_ERROR_AND_STOP_TIMER("Please provide a charge-array for the self-consistent solution.", "dense_notb_energy_and_forces", ierror)
        endif
 
        this%it  = this%it + 1
@@ -639,11 +639,11 @@ contains
        PASS_ERROR(ierror)
     else
        call diag_start(this%solver, this%tb, error=ierror)
-       PASS_ERROR(ierror)
+       PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
        call diag_HS(this%solver, this%tb, this%noc, error=ierror)
-       PASS_ERROR(ierror)
+       PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
        call diag_stop(this%solver, this%tb, error=ierror)
-       PASS_ERROR(ierror)
+       PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
     endif
 
     ! Calculate forces and energies
@@ -654,7 +654,7 @@ contains
     !   e_rep    = Repulsive energy
     !   e_atomic = Energy of the individual charge neutral atoms
     call forces(p, nl, this%tb, this%mat, f, wpot, wpot_per_bond, error=ierror)
-    PASS_ERROR(ierror)
+    PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
     epot  = epot + e_bs(this%solver, this%tb) + &
          e_rep(this%tb, this%mat, p, nl) - e_atomic(this%tb, p)
 

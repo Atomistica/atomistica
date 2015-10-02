@@ -339,10 +339,12 @@ contains
 
     ! ---
 
-    integer  :: i, j, a, b, ia, jb, info
+    integer :: i, j, a, b, ia, jb, info
 
-    type(particles_t),    pointer  :: tb_p
-    type(notb_element_t), pointer  :: tb_at(:)
+    type(particles_t),    pointer :: tb_p
+    type(notb_element_t), pointer :: tb_at(:)
+
+    character(14) :: timer_str = "-------------"
 
     ! ---
 
@@ -379,14 +381,16 @@ contains
     endif
 
     if (this%solver_type == ST_STANDARD) then
-       call timer_start("LAPACK dsygv")
+       timer_str = "LAPACK dsygv"
     else if (this%solver_type == ST_DIVIDE_AND_CONQUER) then
-       call timer_start("LAPACK dsygvd")
+       timer_str = "LAPACK dsygvd"
     else if (this%solver_type == ST_EXPERT) then
-       call timer_start("LAPACK dsygvx")
+       timer_str = "LAPACK dsygvx"
     else
        RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
     endif
+
+    call timer_start(trim(timer_str))
 
     call resize(this%S2, tb%norb, tb%norb)
 
@@ -470,7 +474,7 @@ contains
 !          allocate(work(lwork))
 !
     else
-       RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
+       RAISE_ERROR_AND_STOP_TIMER("Solver type " // this%solver_type // " is unknown.", trim(timer_str), error)
     endif
 
 #else
@@ -531,7 +535,7 @@ contains
 !          allocate(work(lwork))
 !
     else
-       RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
+       RAISE_ERROR_AND_STOP_TIMER("Solver type " // this%solver_type // " is unknown.", trim(timer_str), error)
     endif
 
 #endif
@@ -571,7 +575,7 @@ contains
 !            work, lwork, rwork, iwork, ifail, info)
 
     else
-       RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
+       RAISE_ERROR_AND_STOP_TIMER("Solver type " // this%solver_type // " is unknown.", trim(timer_str), error)
     endif
 
 #else
@@ -605,7 +609,7 @@ contains
 !            work, lwork, iwork, ifail, info)
 
     else
-       RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
+       RAISE_ERROR_AND_STOP_TIMER("Solver type " // this%solver_type // " is unknown.", trim(timer_str), error)
     endif
 
 #endif
@@ -624,7 +628,7 @@ contains
 !
 !       endif
 
-       RAISE_ERROR("Diagonalization failed with error code "//info//".", error)
+       RAISE_ERROR_AND_STOP_TIMER("Diagonalization failed with error code "//info//".", trim(timer_str), error)
     endif
 
 !    if (this%solver_type == ST_EXPERT) then
@@ -639,15 +643,7 @@ contains
 !
 !    endif
 
-    if (this%solver_type == ST_STANDARD) then
-       call timer_stop("LAPACK dsygv")
-    else if (this%solver_type == ST_DIVIDE_AND_CONQUER) then
-       call timer_stop("LAPACK dsygvd")
-    else if (this%solver_type == ST_EXPERT) then
-       call timer_stop("LAPACK dsygvx")
-    else
-       RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
-    endif
+    call timer_stop(trim(timer_str))
 
   endsubroutine dense_solver_lapack_solve_HS
 
@@ -680,7 +676,7 @@ contains
     call c_f_pointer(tb%H, tb_H, [tb%norb, tb%norb, tb%nk])
     call c_f_pointer(tb%S, tb_S, [tb%norb, tb%norb, tb%nk])
 
-    call timer_start('solver_lapack_diag')
+    call timer_start("solver_lapack_diag")
 
     !
     ! We have to solve the eigenvalue problem for each k-point
@@ -694,7 +690,7 @@ contains
                tb_H(:, :, k), tb_S(:, :, k), &
                this%evals(:, k), this%evecs(:, :, k), &
                phi(:), error=error)
-          PASS_ERROR(error)
+          PASS_ERROR_AND_STOP_TIMER("solver_lapack_diag", error)
        enddo
 
     else
@@ -705,13 +701,13 @@ contains
                tb_H(:, :, k), tb_S(:, :, k), &
                this%evals(:, k), this%evecs(:, :, k), &
                error=error)
-          PASS_ERROR(error)
+          PASS_ERROR_AND_STOP_TIMER("solver_lapack_diag", error)
        enddo
 
     endif
 
     call occupy(tb, this%evals, noc, this%Tele, this%f, error=error)
-    PASS_ERROR(error)
+    PASS_ERROR_AND_STOP_TIMER("solver_lapack_diag", error)
 
     if (present(phi)) then
 
@@ -723,7 +719,7 @@ contains
 
     endif
 
-    call timer_stop('solver_lapack_diag')
+    call timer_stop("solver_lapack_diag")
 
   endsubroutine dense_solver_lapack_diag
 
