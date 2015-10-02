@@ -352,7 +352,7 @@ contains
     H  = 0.0_DP   ! tls_mat1
     S  = 0.0_DP   ! tls_mat2
 
-    error_loc  = ERROR_NONE
+    error_loc = ERROR_NONE
 
     !$omp  parallel default(none) &
     !$omp& private(a, c, dr, eli, elj, i, ia, ia0, ni, noi, j, vec, x, y, z) &
@@ -364,7 +364,7 @@ contains
     !$omp do
     i_loop: do i = 1, p%natloc
 
-       if (IS_EL(this%f, p, i) .and. error_loc /= ERROR_NONE) then
+       if (IS_EL(this%f, p, i) .and. error_loc == ERROR_NONE) then
 
           noi = this_at(i)%no    ! number of atomic orbitals
           ia0 = this_at(i)%o1    ! first orbital (in global list)
@@ -383,7 +383,7 @@ contains
 
              j = GET_NEIGHBOR(nl, ni)
 
-             if (IS_EL(this%f, p, j) .and. error_loc /= ERROR_NONE) then
+             if (IS_EL(this%f, p, j) .and. error_loc == ERROR_NONE) then
 
                 DIST(p, nl, i, ni, vec, dr)
 
