@@ -142,9 +142,6 @@ tests  = [
     ( TabulatedAlloyEAM, dict(fn='Au-Grochola-JCP05.eam.alloy'),
       [ dict( name="fcc-Au", struct=FaceCenteredCubic("Au", size=[sx,sx,sx]),
               rattle=0.1, mask=True ) ] ),
-    ( TightBinding, None,
-      [ dict(name='NbN', struct=NaCl(['Nb', 'N'], latticeconstant=6.0,
-                                     size=[2, 2, 2]) ) ] ),
     ]
 
 # Coulomb potential tests
