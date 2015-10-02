@@ -185,7 +185,7 @@ contains
     p = current
     if (trim(name) /= trim(names(p))) then
        times(p) = 0
-       RAISE_ERROR("Warning: Timer '" // name // "' not started.", error)
+       RAISE_ERROR("Warning: Timer '" // name // "' not current. Current timer: '" // trim(names(p)) // "'", error)
     else
 #ifdef MKL
        times(p)   = times(p) + ( t_now - t(p,1) )
