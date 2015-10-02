@@ -985,13 +985,25 @@ contains
 
     nk = size(this%evals, 2)
     if (nk == 1) then
-       call register(dict, this%evals(:, 1), "eigenvalues")
-       call register(dict, this%evecs(:, :, 1), "eigenvectors")
-       call register(dict, this%f(:, 1), "occupation")
+       if (allocated(this%evals)) then
+          call register(dict, this%evals(:, 1), "eigenvalues")
+       endif
+       if (allocated(this%evecs)) then
+          call register(dict, this%evecs(:, :, 1), "eigenvectors")
+       endif
+       if (allocated(this%f)) then
+          call register(dict, this%f(:, 1), "occupation")
+       endif
     else
-       call register(dict, this%evals, "eigenvalues")
-       call register(dict, this%evecs, "eigenvectors")
-       call register(dict, this%f, "occupation")
+       if (allocated(this%evals)) then
+          call register(dict, this%evals, "eigenvalues")
+       endif
+       if (allocated(this%evecs)) then
+          call register(dict, this%evecs, "eigenvectors")
+       endif
+       if (allocated(this%f)) then
+          call register(dict, this%f, "occupation")
+       endif
     endif
 
   endsubroutine dense_solver_lapack_get_dict
