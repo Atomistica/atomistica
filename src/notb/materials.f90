@@ -71,7 +71,7 @@ module materials
 #define STAB MAX_NORB+1:2*MAX_NORB
 
   character(3), parameter :: electronic_configuration(9) = &
-  	 ["s", "---", " p", "sp", "  d", "s d", "---", " pd", "spd"]
+     ["s  ", "---", " p ", "sp ", "  d", "s d", "---", " pd", "spd"]
 
   ! IF YOU MODIFY THIS STRUCTURE, *ALWAYS* ALSO MODIFY THE CORRESPONDING
   ! STRUCTURE IN materials.h
