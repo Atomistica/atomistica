@@ -467,7 +467,7 @@ contains
        a = 1
        b = 1
        nonuniform_spline_interval = 1
-       RAISE_ERROR("x = " // x // " sits outside of the interval for which the spline is defined.", ierror)
+       RAISE_ERROR("x = "//x//" sits outside of the interval ["//this%x(1)//", "//this%x(this%n)//"] for which the spline is defined.", ierror)
     endif
 
     a = 1
@@ -484,7 +484,7 @@ contains
     enddo
 
     if (a == b) then
-       RAISE_ERROR("a=b in interval(2)", ierror)
+       RAISE_ERROR("a == b in interval(2)", ierror)
     endif
 
     nonuniform_spline_interval = a
