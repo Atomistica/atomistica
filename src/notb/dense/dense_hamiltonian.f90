@@ -269,6 +269,8 @@ contains
        if (mod(q0, 2) /= 0) then
           e = e + at(i)%e(get_orbital(at(i)%no, q0/2+1))
        endif
+       ! If atom has fractional charge...
+       e = e + (at(i)%q0-q0)*at(i)%e(get_orbital(at(i)%no, q0/2+1))
     enddo
 
   endfunction dense_hamiltonian_e_atomic
