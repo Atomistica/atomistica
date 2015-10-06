@@ -24,11 +24,11 @@
 ! @endmeta
 
 !>
-!! Müller-Plathe method for imposing a heat flux on an atomistic system
+!! Muller-Plathe method for imposing a heat flux on an atomistic system
 !!
-!! Florian Müller-Plathe's method for imposing a heat flux on an atomistic
+!! Florian Muller-Plathe's method for imposing a heat flux on an atomistic
 !! (for the computation of thermal conductivities).
-!! See: F. Müller-Plathe, J. Chem. Phys. 106, 6082 (1997)
+!! See: F. Muller-Plathe, J. Chem. Phys. 106, 6082 (1997)
 !>
 
 #include "macros.inc"
@@ -240,7 +240,7 @@ contains
     this%out_freq    = 100.0_DP
 
     m = ptrdict_register_section(cfg, CSTR("HeatFlux"), &
-         CSTR("Impose a heat flux upon the system. This is Florian MÃ¼ller-Plathe's method for the computation of thermal conductivity. See: F. MÃ¼ller-Plathe, J. Chem. Phys. 106, 6083 (1997)"))
+         CSTR("Impose a heat flux upon the system. This is Florian Muller-Plathe's method for the computation of thermal conductivity. See: F. Muller-Plathe, J. Chem. Phys. 106, 6083 (1997)"))
 
     call ptrdict_register_integer_property(m, this%n_bins, CSTR("n_bins"), &
          CSTR("Number of bins."))

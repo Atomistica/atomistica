@@ -21,7 +21,7 @@
 
 !>
 !! Determine the covalent bond energies
-!! See: Börnsen et al., J.Phys.: Cond. Mat. 11, L287 (1999)
+!! See: Bornsen et al., J.Phys.: Cond. Mat. 11, L287 (1999)
 !<
 
 #include "macros.inc"
