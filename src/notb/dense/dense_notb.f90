@@ -636,7 +636,7 @@ contains
             this%noc, &
             f     = this%tb%f, &
             error = ierror)
-       PASS_ERROR(ierror)
+       PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
     else
        call diag_start(this%solver, this%tb, error=ierror)
        PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)

@@ -561,8 +561,6 @@ contains
        return
     end if
 
-    call timer_start('scc_establish_self_consistency')
-
     this%niterations = this%niterations + 1
 
     !
@@ -592,6 +590,8 @@ contains
        PASS_ERROR(error)
     end if
 
+    call timer_start("scc_establish_self_consistency")
+
     ! pack charges from q to f_q_prev
     call filter_pack(filter, p, q, f_q_prev)
 
@@ -619,7 +619,7 @@ contains
 
        ! solve: calculate potential -> diagonalize -> calculate new charges
        call solve(error=error)
-       PASS_ERROR(error)
+       PASS_ERROR_AND_STOP_TIMER("scc_establish_self_consistency", error)
 
        ! new charges from q to f_q_new
        call filter_pack(filter, p, q, f_q_new)
@@ -676,7 +676,7 @@ contains
     phi  = 0.0_DP
     call coulomb_potential(part, nl, phi_in)
     call diag_HS(this%solv, tb, part, noc, phi_in, error=error)
-    PASS_ERROR(error)
+    PASS_ERROR_AND_STOP_TIMER("scc_establish_self_consistency", error)
     e1 = e_bs(solver)
     e2 = 0.0_DP
     call coulomb_force(part, nl, e2)
@@ -694,7 +694,7 @@ contains
        phi_in  = 0.0_DP
        call coulomb_potential(part, nl, phi_in)
        call diag_HS(solver, tb, part, noc, phi_in, error=error)
-       PASS_ERROR(error)
+       PASS_ERROR_AND_STOP_TIMER("scc_establish_self_consistency", error)
        e1 = e_bs(solver)
        e2 = 0.0_DP
        call coulomb_force(part, nl, e2)
@@ -707,7 +707,7 @@ contains
 
 #endif
 
-    call timer_stop('scc_establish_self_consistency')
+    call timer_stop("scc_establish_self_consistency")
 
   contains
 
