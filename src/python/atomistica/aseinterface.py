@@ -148,7 +148,7 @@ class Atomistica(Calculator):
     CELL_TOL = 1e-16
     POSITIONS_TOL = 1e-16
 
-    name = None
+    name = 'Atomistica'
     potential_class = None
     avgn = 100
     
