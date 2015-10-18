@@ -398,8 +398,10 @@ contains
     if (allocated(this%q)) then
        deallocate(this%q)
     endif
-    allocate(this%r(3, p%maxnatloc, this%extrapolation_memory))
-    allocate(this%q(p%maxnatloc, this%extrapolation_memory))
+    if (this%extrapolation_memory >= 2) then
+       allocate(this%r(3, p%maxnatloc, this%extrapolation_memory))
+       allocate(this%q(p%maxnatloc, this%extrapolation_memory))
+    endif
 
     this%tb    => tb
 
@@ -430,7 +432,11 @@ contains
 
        ! Report
        call prlog("- dense_scc_internal_init -")
-       call prlog("     Self-consistent charge scheme ready for use")
+       call prlog("dq_crit              = "//this%dq_crit)
+       call prlog("miximg               = "//this%beta)
+       call prlog("andersen_memory      = "//this%andersen_memory)
+       call prlog("max_nit              = "//this%max_nit)
+       call prlog("extrapolation_memory = "//this%extrapolation_memory)
        call prlog
 
        call dense_scc_copy_Hubbard_U(this%coul, this%p, this%tb, error)
@@ -567,8 +573,10 @@ contains
     ! Extrapolate charges
     !
 
-    call extrapolate_charges(this, p, q, error=error)
-    PASS_ERROR(error)
+    if (this%extrapolation_memory >= 2) then
+       call extrapolate_charges(this, p, q, error=error)
+       PASS_ERROR(error)
+    endif
 
     !
     ! Init
@@ -845,11 +853,11 @@ contains
 
     call ptrdict_register_integer_property(m, c_loc(this%andersen_memory), &
          CSTR("andersen_memory"), &
-         CSTR("Anderson mixing memory."))
+         CSTR("Andersen mixing memory."))
 
     call ptrdict_register_integer_property(m, c_loc(this%extrapolation_memory), &
          CSTR("extrapolation_memory"), &
-         CSTR("Number of past time steps to consider for charge extrapolation (min 2)."))
+         CSTR("Number of past time steps to consider for charge extrapolation (min 2, extrapolation disabled if less)."))
 
     call ptrdict_register_integer_property(m, c_loc(this%warn), CSTR("warn"), &
          CSTR("Warn after a number of iterations without self-consistency."))
@@ -860,5 +868,4 @@ contains
   endsubroutine dense_scc_register
 
 endmodule dense_scc
-
 
