@@ -11,6 +11,13 @@ TODO
 Change log
 ==========
 
+v0.4.1
+------
+
+- Regression fix: Charge extrapolation did not work because charges were
+  overriden with initial charges at every step. This was introduced when
+  changing to the new ASE Calculator class.
+
 v0.4.0
 ------
 

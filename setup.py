@@ -246,7 +246,7 @@ scripts = glob.glob('src/python/tools/*.py')
 
 setup(
     name = 'atomistica',
-    version = '0.4.0',
+    version = '0.4.1',
     description = 'Atomistica is a library of interatomic potentials that is compatible with ASE and LAMMPS',
     maintainer = 'Lars Pastewka',
     maintainer_email = 'lars.pastewka@kit.edu',
