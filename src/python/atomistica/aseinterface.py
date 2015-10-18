@@ -267,10 +267,8 @@ class Atomistica(Calculator):
             pot.bind_to(self.particles, self.nl)
 
         if len(self.couls) > 0:
-            if atoms.has('charges'):
+            if self.q is None and atoms.has('charges'):
                 self.q = atoms.get_array('charges')
-            else:
-                self.q = atoms.get_charges()
             if self.q is None:
                 self.q = np.zeros(len(atoms))
             self.E = np.zeros([3,len(atoms)])
@@ -346,15 +344,6 @@ class Atomistica(Calculator):
         if self.lees_edwards_dx is not None:
             self.particles.set_lees_edwards(self.lees_edwards_dx,
                                             self.lees_edwards_dv)
-
-        # Charges changed?
-        if self.q is not None:
-            if atoms.has('charges'):
-                q = atoms.get_array('charges')
-            else:
-                q = atoms.get_charges()
-            if np.any(self.q != q):
-                self.q = q
 
 
     def get_potential_energies(self, atoms):
