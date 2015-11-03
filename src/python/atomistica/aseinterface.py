@@ -347,20 +347,13 @@ class Atomistica(Calculator):
 
 
     def get_potential_energies(self, atoms):
-        self.calculate(atoms, ['energies'])
+        self.calculate(atoms, ['energies'], [])
         return self.results['energies']
 
 
     def get_stresses(self, atoms):
-        self.calculate(atoms, ['stresses'])
-        wpot_per_at = self.results['stresses']
-        return np.transpose([wpot_per_at[:,0,0],
-                             wpot_per_at[:,1,1],
-                             wpot_per_at[:,2,2],
-                             (wpot_per_at[:,1,2]+wpot_per_at[:,2,1])/2,
-                             (wpot_per_at[:,0,2]+wpot_per_at[:,2,0])/2,
-                             (wpot_per_at[:,0,1]+wpot_per_at[:,1,0])/2])
-
+        self.calculate(atoms, ['stresses'], [])
+        return self.results['stresses']
 
     def get_electrostatic_potential(self, atoms=None):
         self.phi = np.zeros(len(self.particles))
