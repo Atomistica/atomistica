@@ -195,7 +195,8 @@ class Atomistica(Calculator):
         self.particles = None
         self.nl = None
 
-        self.q = None
+        self.charges = None
+        self.initial_charges = None
 
         self.mask = None
 
@@ -267,11 +268,16 @@ class Atomistica(Calculator):
             pot.bind_to(self.particles, self.nl)
 
         if len(self.couls) > 0:
-            if self.q is None and atoms.has('charges'):
-                self.q = atoms.get_array('charges')
-            if self.q is None:
-                self.q = np.zeros(len(atoms))
-            self.E = np.zeros([3,len(atoms)])
+            if atoms.has('charges'):
+                if self.charges is None or \
+                    (self.initial_charges is not None and \
+                     np.any(atoms.get_array('charges') != self.initial_charges)\
+                    ):
+                    self.charges = atoms.get_array('charges')
+                    self.initial_charges = self.charges.copy()
+            if self.charges is None:
+                self.charges = np.zeros(len(atoms))
+            self.E = np.zeros([3, len(atoms)])
             # Coulomb callback should be directed to this wrapper object
             for pot in self.pots:
                 pot.set_Coulomb(self)
@@ -332,6 +338,11 @@ class Atomistica(Calculator):
             # Notify the Particles object of a change
             self.particles.I_changed_positions()
 
+        if atoms.has('charges') and self.initial_charges is not None and \
+            np.any(atoms.get_array('charges') != self.initial_charges):
+            self.charges = atoms.get_array('charges')
+            self.initial_charges = self.charges.copy()
+
         if self._lees_edwards_info_str in atoms.info:
             if self.lees_edwards_dx is None or \
                 np.any(atoms.info[self._lees_edwards_info_str] != \
@@ -357,7 +368,7 @@ class Atomistica(Calculator):
 
     def get_electrostatic_potential(self, atoms=None):
         self.phi = np.zeros(len(self.particles))
-        self.potential(self.particles, self.nl, self.q, self.phi)
+        self.potential(self.particles, self.nl, self.charges, self.phi)
 
         return self.phi
 
@@ -390,7 +401,7 @@ class Atomistica(Calculator):
 
         if self.mask is not None:
             kwargs['mask'] = self.mask
-        if self.q is None:
+        if self.charges is None:
             # No charges? Just call the potentials...
             for pot in self.pots:
                 _epot, _forces, _wpot, epot_per_at, self.epot_per_bond, \
@@ -408,7 +419,7 @@ class Atomistica(Calculator):
                     self.f_per_bond, wpot_per_at, self.wpot_per_bond  = \
                         pot.energy_and_forces(self.particles, self.nl,
                                               forces = forces,
-                                              charges = self.q,
+                                              charges = self.charges,
                                               **kwargs)
                 epot += _epot
                 wpot += _wpot
@@ -420,8 +431,8 @@ class Atomistica(Calculator):
 
             for coul in self.couls:
                 _epot, _forces, _wpot = \
-                    coul.energy_and_forces(self.particles, self.nl, self.q,
-                                           forces_coul)
+                    coul.energy_and_forces(self.particles, self.nl,
+                                           self.charges, forces_coul)
                 epot_coul += _epot
                 wpot_coul += _wpot
 
@@ -436,7 +447,7 @@ class Atomistica(Calculator):
             # Sum forces
             forces += forces_coul
 
-            self.results['charges'] = self.q
+            self.results['charges'] = self.charges
         
         self.results['energy'] = epot
         # Convert to Voigt
