@@ -3,7 +3,9 @@ To compile the LAMMPS-Atomistica interface do the following:
 1. Extract the current version of Atomistica to a directory _outside_ of your
    LAMMPS source directory. Alternative: clone the git-repository directly via
 
-     `git clone https://github.com/Atomistica/atomistica.git`
+     ```
+     git clone https://github.com/Atomistica/atomistica.git
+     ```
 
    Cloning the git-repository will download the latest development version, not
    the latest release. It may be safer to download the release tarball.
