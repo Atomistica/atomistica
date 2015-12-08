@@ -10,7 +10,7 @@ To compile the LAMMPS-Atomistica interface do the following:
    Cloning the git-repository will download the latest development version, not
    the latest release. It may be safer to download the release tarball.
 
-   This should give the follow directory hierachy
+   This should give the following directory hierachy
 
      ```
      atomistica/
@@ -39,7 +39,7 @@ To compile the LAMMPS-Atomistica interface do the following:
    `atomistica/src/lammps/pair_style` directory to LAMMPS' `src` directory.
 
 3. Modify your LAMMPS Makefile to link the main executable with
-   `libatomistica.a` created by step 1. Add
+   `libatomistica.a` created by step 2. Add
 
      ```
      -L/path/to/atomistica/build_lammps -latomistica
@@ -66,9 +66,12 @@ To compile the LAMMPS-Atomistica interface do the following:
 
    to the compile flags of LAMMPS.
 
-   Atomistica additionally needs to be linked with some LAPACK implementation.
-   The details of LAPACK depend on your system. If you are using the Intel
-   compiler suite, the easiest solution may be to add
+   Atomistica additionally needs to be linked with some LAPACK implementation,
+   the Fortran runtime and the MPI library, the details depend on the compiler
+   and MPI version.
+   
+   The following instructions are for _Intel compilers_ only. To link with LAPACK,
+   add
 
      ```
      -mkl=sequential
@@ -83,7 +86,7 @@ To compile the LAMMPS-Atomistica interface do the following:
      ```
      
    to the link flags of LAMMPS. Finally, it will be necessary to link with the 
-   Fortran mpi bindings. The name of the library depends on the MPI implementation
+   Fortran MPI bindings. The name of the library depends on the MPI implementation
    that is used for compiling LAMMPS. Try adding
    
      ```
@@ -93,8 +96,8 @@ To compile the LAMMPS-Atomistica interface do the following:
    to the link line of LAMMPS.
 
    The `atomistica/src/lammps/MAKE` subdirectory of the atomistica source
-   packages contains sample makefiles, but they may be outdated. It is
-   recommended to modify the LAMMPS makefile by hand.
+   packages contains a sample makefile, but it is likely outdated. It is
+   recommended to modify your LAMMPS makefile by hand!
 
 4. Compile LAMMPS. 
 
