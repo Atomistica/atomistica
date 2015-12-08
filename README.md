@@ -15,21 +15,27 @@ Usage
 -----
 
 Atomistica can be used in two distinct manners. It is recommended to compile the
-ASE interface first and run the tests in the "tests" subdirectory. (See ASE
+ASE interface first and run the tests in the `tests` subdirectory. (See ASE
 intructions below.)
 
 Currently supported simulation environments are...
 
 1.  ...the Atomistic Simulation Environment   
     (ASE - see https://wiki.fysik.dtu.dk/ase/)
-    * Build instructions are in [README.PYTHON](README.PYTHON)
+    * Build instructions are in [README.PYTHON.md](README.PYTHON)
     * Examples are in [examples/ASE](examples/ASE)
     * Tests are in tests
+    * Atomistica supports Python 2 and Python 3
 
 2.  ...the Large-scale Atomic/Molecular Massively Parallel Simulator   
     (LAMMPS - see https://lammps.sandia.gov/)
-    * Build instructions are in [README.LAMMPS](README.LAMMPS)
+    * Build instructions are in [README.LAMMPS.md](README.LAMMPS)
     * Examples are in [examples/LAMMPS](examples/LAMMPS)
+
+3.  ...MDCORE, the standalone molecular dynamics code of Atomistica.
+    Note that there is _no documentation_ for the standalone version.
+    * Build instruction are in [README.STANDALONE.md](README.STANDALONE)
+    * Examples are in [examples/STANDALONE](examples/STANDALONE)
 
 You need the following packages:
 
