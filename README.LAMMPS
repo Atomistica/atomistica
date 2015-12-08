@@ -1,32 +1,74 @@
 To compile the LAMMPS-Atomistica interface do the following:
 
-1. In the build_lammps directory copy one of the Makefile.* to Makefile and
-   edit appropriately. Example makefiles for the Intel and GNU compilers are
-   provided. Then type
+1. Extract the current version of Atomistica to a directory _outside_ of your
+   LAMMPS source directory. Alternative: clone the git-repository directly via
+
+     git clone https://github.com/Atomistica/atomistica.git
+
+   Cloning the git-repository will download the latest development version, not
+   the latest release. It may be safer to download the release tarball.
+
+   This should give the follow directory hierachy
+
+     atomistica/
+        build/
+        build_lammps/
+        build_standalone/
+        build_unittests/
+        ...
+
+2. Change to the atomistica/build_lammps directory. This directory contains
+   makefiles for compilation with the GNU compiler suite (`Makefile.gnu`),
+   for compilation with the Intel compiler suite (`Makefile.intel`) and for
+   compilation with the XL compiler suite on Blue Gene (`Makefile.xl`). It is
+   recommended to use the same compiler used for compiling LAMMPS. Copy one of
+   the Makefile.* to Makefile and edit if necessary. Then compile with
 
     make lammps_factories
     make atomistica
 
-   This should create the file "libatomistica.a".
+   The final output of this procedure is the file "libatomistica.a".
 
-2. Copy "pair_atomistica.cpp" and "pair_atomistica.h" from the
-   "src/lammps/pair_style" directory to the LAMMPS "src" directory.
+2. Copy the files `pair_atomistica.cpp` and `pair_atomistica.h` from the
+   `atomistica/src/lammps/pair_style` directory to LAMMPS' `src` directory.
 
-3. Modify your LAMMPS Makefile to link "libatomistica.a" created by step 1.
-   pair_atomistica.h includes the files "ptrdict.h" and
-   "potentials_factory_c.h" from the atomistica source directory. They are
+3. Modify your LAMMPS Makefile to link the main executable with
+   `libatomistica.a` created by step 1. Add
+
+     -L/path/to/atomistica/build_lammps -latomistica
+
+   to the link flags of LAMMPS.
+
+   `pair_atomistica.h` additionally needs
+   to be able to find the files `ptrdict.h` and `potentials_factory_c.h` during
+   from the atomistica source directory during compilation. These files are
    located here:
 
-     src/support/ptrdict.h 
-     build_lammps/potentials_factory_c.h
+     atomistica/src/support/ptrdict.h 
+     atomistica/build_lammps/potentials_factory_c.h
 
-   Modify your LAMMPS Makefile to add these paths to the header search path.
+   Modify your LAMMPS Makefile to add these paths to the header search path by
+   adding
 
-4. Compile LAMMPS. The "src/lammps/MAKE" subdirectory contains sample
-   makefiles.
+     -I/path/to/atomistica/src/support -I/path/to/atomistica/build_lammps
 
+   to the compile flags of LAMMPS.
 
-Atomistica potentials are available under the "atomistica" pair style. A typical
+   Atomistica additionally needs to be linked with some LAPACK implementation.
+   The details of LAPACK depend on your system. If you are using the Intel
+   compiler suite, the easiest solution may be to add
+
+     -mkl=sequential
+
+   to the link flags of LAMMPS.
+
+   The `atomistica/src/lammps/MAKE` subdirectory of the atomistica source
+   packages contains sample makefiles, but they may be outdated. It is
+   recommended to modify the LAMMPS makefile by hand.
+
+4. Compile LAMMPS. 
+
+Atomistica potentials are available via the "atomistica" pair style. A typical
 LAMMPS script looks like
 
   ...
