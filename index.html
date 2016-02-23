@@ -19,22 +19,27 @@
     </section>
 
     <section class="main-content">
-      <h1>
-<a id="atomistica" class="anchor" href="#atomistica" aria-hidden="true"><span class="octicon octicon-link"></span></a>Atomistica</h1>
+      <p><img src="https://github.com/Atomistica/atomistica/blob/master/images/logo.png" alt="Atomistica"></p>
 
-<p>Atomistica is a library of interatomic potentials written in Fortran. It is
-designed to be used with different computational engines. Currently supported
-are ASE and LAMMPS (see below). A list of supported interatomic potentials can
-be found <a href="https://github.com/Atomistica/atomistica/blob/master/POTENTIALS.md">here</a>.</p>
+<p>Atomistica is a library of interatomic potentials. It is designed to be plugged
+into different simulation environments. We currently support the
+<a href="https://wiki.fysik.dtu.dk/ase/">Atomic Simulation Environment (ASE)</a> and
+the <a href="http://lammps.sandia.gov/">Large-scale Atomic/Molecular Massively Parallel Simulator (LAMMPS)</a>.
+A list of interatomic potentials can be found <a href="POTENTIALS.md">here</a>.</p>
 
 <h2>
-<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+<a id="build-status" class="anchor" href="#build-status" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build status</h2>
+
+<p><a href="https://travis-ci.org/Atomistica/atomistica"><img src="https://travis-ci.org/Atomistica/atomistica.svg?branch=master" alt="Build Status"></a></p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
 
 <p>Atomistica can be used in two distinct manners. It is recommended to compile the
-ASE interface first and run the tests in the "tests" subdirectory. (See ASE
+ASE interface first and run the tests in the <code>tests</code> subdirectory. (See ASE
 intructions below.)</p>
 
-<p>Currently supported engines are...</p>
+<p>Currently supported simulation environments are...</p>
 
 <ol>
 <li>
@@ -42,9 +47,12 @@ intructions below.)</p>
 (ASE - see <a href="https://wiki.fysik.dtu.dk/ase/">https://wiki.fysik.dtu.dk/ase/</a>)</p>
 
 <ul>
-<li>Build instructions are in README.PYTHON</li>
-<li>Examples are in examples/ASE</li>
+<li>Build instructions are in <a href="https://github.com/Atomistica/atomistica/blob/master/README.PYTHON.md">README.PYTHON.md</a>
+</li>
+<li>Examples are in <a href="https://github.com/Atomistica/atomistica/blob/master/examples/ASE">examples/ASE</a>
+</li>
 <li>Tests are in tests</li>
+<li>Atomistica supports Python 2 and Python 3</li>
 </ul>
 </li>
 <li>
@@ -52,8 +60,21 @@ intructions below.)</p>
 (LAMMPS - see <a href="https://lammps.sandia.gov/">https://lammps.sandia.gov/</a>)</p>
 
 <ul>
-<li>Build instructions are in README.LAMMPS</li>
-<li>Examples are in examples/LAMMPS</li>
+<li>Build instructions are in <a href="https://github.com/Atomistica/atomistica/blob/master/README.LAMMPS.md">README.LAMMPS.md</a>
+</li>
+<li>Examples are in <a href="https://github.com/Atomistica/atomistica/blob/master/examples/LAMMPS">examples/LAMMPS</a>
+</li>
+</ul>
+</li>
+<li>
+<p>...MDCORE, the standalone molecular dynamics code of Atomistica.
+Note that there is <em>no documentation</em> for the standalone version.</p>
+
+<ul>
+<li>Build instruction are in <a href="https://github.com/Atomistica/atomistica/blob/master/README.STANDALONE.md">README.STANDALONE.md</a>
+</li>
+<li>Examples are in <a href="https://github.com/Atomistica/atomistica/blob/master/examples/STANDALONE">examples/STANDALONE</a>
+</li>
 </ul>
 </li>
 </ol>
@@ -61,13 +82,19 @@ intructions below.)</p>
 <p>You need the following packages:</p>
 
 <ul>
-<li>Python 2.4.0 or greater (even if you do not compile the Python interface)</li>
+<li>Python 2.6.0 or greater (Python is needed even if you do not compile the
+Python interface to auto-generate parts of the source code)</li>
 </ul>
 
 <h2>
-<a id="contact" class="anchor" href="#contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contact</h2>
+<a id="contact" class="anchor" href="#contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contact</h2>
 
-<p>This software is mainly developed at <a href="http://www.en.iwm.fraunhofer.de/business-units/tribology/multiscale-modeling-and-tribosimulation/">Fraunhofer IWM</a> and <a href="http://www.iam.kit.edu/zbs/english/">Karlsruhe Institute of Technology</a>. Please write to Lars Pastewka (<a href="mailto:lars.pastewka@kit.edu">lars.pastewka@kit.edu</a>) for questions and suggestions. A detailed list of contributors can be found <a href="https://github.com/Atomistica/atomistica/blob/master/AUTHORS.md">here</a>.</p>
+<p>This software is developed at
+<a href="http://www.yin.kit.edu/english/1103_1692.php">Karlsruhe Institute of Technology</a>
+and
+<a href="http://www.en.iwm.fraunhofer.de/business-units/tribology/multiscale-modeling-and-tribosimulation/">Fraunhofer IWM</a>.
+Please write to Lars Pastewka (<a href="mailto:lars.pastewka@kit.edu">lars.pastewka@kit.edu</a>) for questions and suggestions.
+A complete list of contributors can be found <a href="https://github.com/Atomistica/atomistica/blob/master/AUTHORS.md">here</a>.</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/Atomistica/atomistica">Atomistica</a> is maintained by <a href="https://github.com/Atomistica">Atomistica</a>.</span>
