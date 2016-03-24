@@ -32,6 +32,8 @@ import numpy as np
 
 from numpy.distutils.core import setup, Extension
 
+import versioneer
+
 from meta import scanallmeta
 from listclasses import get_module_list
 from gen_factory import write_factory_f90, write_factory_c
@@ -246,7 +248,8 @@ scripts = glob.glob('src/python/tools/*.py')
 
 setup(
     name = 'atomistica',
-    version = '0.4.1',
+    version = versioneer.get_version(),
+    cmdclass = versioneer.get_cmdclass(),
     description = 'Atomistica is a library of interatomic potentials that is compatible with ASE and LAMMPS',
     maintainer = 'Lars Pastewka',
     maintainer_email = 'lars.pastewka@kit.edu',
