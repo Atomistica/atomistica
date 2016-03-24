@@ -18,5 +18,5 @@ libraries=gomp,gfortran
 VCS = git
 style = pep440
 versionfile_source = src/python/atomistica/_version.py
-versionfile_build = src/python/atomistica/_version.py
+versionfile_build = atomistica/_version.py
 tag_prefix =
