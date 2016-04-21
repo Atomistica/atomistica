@@ -31,12 +31,17 @@ module cutoff
 
   private
 
-  public :: trig_cutoff, exp_cutoff
+  public :: trig_on, trig_off, exp_cutoff
 
-  public :: trig_cutoff_t
-  type trig_cutoff_t
+  public :: trig_on_t
+  type trig_on_t
      real(DP) :: r1, r2, fac
-  endtype trig_cutoff_t
+  endtype trig_on_t
+
+  public :: trig_off_t
+  type trig_off_t
+     real(DP) :: r1, r2, fac
+  endtype trig_off_t
 
   public :: exp_cutoff_t
   type exp_cutoff_t
@@ -45,12 +50,12 @@ module cutoff
 
   public :: init
   interface init
-     module procedure trig_cutoff_init, exp_cutoff_init
+     module procedure trig_on_init, trig_off_init, exp_cutoff_init
   endinterface
 
   public :: fc
   interface fc
-     module procedure trig_cutoff_f, exp_cutoff_f
+     module procedure trig_on_f, trig_off_f, exp_cutoff_f
   endinterface fc
 
 contains
@@ -58,11 +63,11 @@ contains
   !>
   !! Initialize trigonometric cutoff
   !<
-  elemental subroutine trig_cutoff_init(this, r1, r2)
+  elemental subroutine trig_on_init(this, r1, r2)
     implicit none
 
-    type(trig_cutoff_t), intent(out) :: this
-    real(DP),            intent(in)  :: r1, r2
+    type(trig_on_t), intent(out) :: this
+    real(DP),        intent(in)  :: r1, r2
 
     ! ---
 
@@ -70,19 +75,99 @@ contains
     this%r2  = r2
     this%fac = PI/( this%r2 - this%r1 )
 
-  endsubroutine trig_cutoff_init
+  endsubroutine trig_on_init
 
 
   !>
   !! This if f(x)=0.5(1+cos(pi*x)).
   !! Function is differentiable once.
   !<
-  subroutine trig_cutoff_f(this, r, val, dval)
+  subroutine trig_on_f(this, r, val, dval)
     implicit none
 
-    type(trig_cutoff_t), intent(in)  :: this
-    real(DP),            intent(in)  :: r
-    real(DP),            intent(out) :: val, dval
+    type(trig_on_t), intent(in)  :: this
+    real(DP),        intent(in)  :: r
+    real(DP),        intent(out) :: val, dval
+
+    ! ---
+
+    real(DP) :: x
+
+    ! ---
+
+    if (r <= this%r1) then
+       val  = 0.0_DP
+       dval = 0.0_DP
+    else if (r >= this%r2) then
+       val  = 1.0_DP
+       dval = 0.0_DP
+    else
+       x    = this%fac*( r - this%r1 )
+       val  = 0.5_DP *  ( 1.0_DP - cos( x ) )
+       dval = 0.5_DP * this%fac * sin( x )
+    endif
+
+  endsubroutine trig_on_f
+
+
+  !>
+  !! This if f(x)=0.5(1+cos(pi*x)).
+  !! Function is differentiable once.
+  !<
+  subroutine trig_on(r1, r2, r, val, dval)
+    implicit none
+
+    real(DP), intent(in)  :: r1, r2, r
+    real(DP), intent(out) :: val, dval
+
+    ! ---
+
+    type(trig_on_t) :: this
+
+    ! ---
+
+    if (r <= r1) then
+       val  = 0.0_DP
+       dval = 0.0_DP
+    else if (r >= r2) then
+       val  = 1.0_DP
+       dval = 0.0_DP
+    else
+       call init(this, r1, r2)
+       call fc(this, r, val, dval)
+    endif
+
+  endsubroutine trig_on
+
+
+  !>
+  !! Initialize trigonometric cutoff
+  !<
+  elemental subroutine trig_off_init(this, r1, r2)
+    implicit none
+
+    type(trig_off_t), intent(out) :: this
+    real(DP),         intent(in)  :: r1, r2
+
+    ! ---
+
+    this%r1  = r1
+    this%r2  = r2
+    this%fac = PI/( this%r2 - this%r1 )
+
+  endsubroutine trig_off_init
+
+
+  !>
+  !! This if f(x)=0.5(1+cos(pi*x)).
+  !! Function is differentiable once.
+  !<
+  subroutine trig_off_f(this, r, val, dval)
+    implicit none
+
+    type(trig_off_t), intent(in)  :: this
+    real(DP),         intent(in)  :: r
+    real(DP),         intent(out) :: val, dval
 
     ! ---
 
@@ -102,14 +187,14 @@ contains
        dval = -0.5_DP * this%fac * sin( x )
     endif
 
-  endsubroutine trig_cutoff_f
+  endsubroutine trig_off_f
 
 
   !>
   !! This if f(x)=0.5(1+cos(pi*x)).
   !! Function is differentiable once.
   !<
-  subroutine trig_cutoff(r1, r2, r, val, dval)
+  subroutine trig_off(r1, r2, r, val, dval)
     implicit none
 
     real(DP), intent(in)  :: r1, r2, r
@@ -117,7 +202,7 @@ contains
 
     ! ---
 
-    type(trig_cutoff_t) :: this
+    type(trig_off_t) :: this
 
     ! ---
 
@@ -132,7 +217,7 @@ contains
        call fc(this, r, val, dval)
     endif
 
-  endsubroutine trig_cutoff
+  endsubroutine trig_off
 
 
   !>

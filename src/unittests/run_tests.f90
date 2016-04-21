@@ -10,7 +10,8 @@ program run_tests
 
   ! test_cutoff
   call test_exp_cutoff
-  call test_trig_cutoff
+  call test_trig_on
+  call test_trig_off
 
   ! test_linearalgebra
   call test_det
