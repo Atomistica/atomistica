@@ -16,7 +16,7 @@ contains
     real(DP), parameter :: dr = 1e-6 ;                                   \
     real(DP) :: val, dval, val2, dval2 ;                                 \
     integer :: i ;                                                       \
-    call init(cutoff, r1, r2) ;                                          \
+    call init(cutoff, 1.05*r1, 0.95*r2) ;                                \
     call fc(cutoff, r1, val, dval) ;                                     \
     call assert_equals(lower, val, tol, "lower val") ;                   \
     call assert_equals(0.0_DP, dval, tol, "lower dval") ;                \
