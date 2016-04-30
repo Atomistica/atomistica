@@ -31,6 +31,7 @@ import unittest
 from numpy.random import random_integers
 
 import ase
+import ase.io as io
 from ase.units import mol
 
 from ase.lattice.cubic import Diamond, FaceCenteredCubic, SimpleCubic
@@ -93,16 +94,19 @@ tests  = [
               mask=True, rattle=0.1 ) ] ),
     ( Brenner, Erhart_PRB_71_035211_SiC,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
+        ( "a-C", io.read("aC_small.cfg") ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
         ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
                           size=[sx,sx,sx]) ) ] ),
     ( BrennerScr, Erhart_PRB_71_035211_SiC__Scr,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
+        ( "a-C", io.read("aC_small.cfg") ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
         ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
                           size=[sx,sx,sx]) ) ] ),
     ( Brenner, Henriksson_PRB_79_114107_FeC,
       [ dict( name='dia-C', struct=Diamond('C', size=[sx,sx,sx]), mask=True ),
+        dict( name="a-C", struct=io.read("aC_small.cfg"), mask=True ),
         dict( name='bcc-Fe',
               struct=BodyCenteredCubic('Fe', size=[sx,sx,sx]), mask=True ),
         dict( name='fcc-Fe',
@@ -124,16 +128,24 @@ tests  = [
       [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
     ( Tersoff, Tersoff_PRB_39_5566_Si_C,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
+        ( "a-C", io.read("aC_small.cfg") ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
+        ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
+                          size=[sx,sx,sx]) ) ] ),
     ( TersoffScr, Tersoff_PRB_39_5566_Si_C__Scr,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
+        ( "a-C", io.read("aC_small.cfg") ),
         ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
+        ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
+                          size=[sx,sx,sx]) ) ] ),
     ( Rebo2, None,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
+        ( "a-C", io.read("aC_small.cfg") ),
         ( 'random-C-H', random_solid( [('C',50),('H',10)], 3.0 ) ),
         ] ),
     ( Rebo2Scr, None,
       [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
+        ( "a-C", io.read("aC_small.cfg") ),
         ( 'random-C-H', random_solid( [('C',50),('H',10)], 3.0 ) ),
         ] ),
     ( TabulatedEAM, dict(fn='Au_u3.eam'),
