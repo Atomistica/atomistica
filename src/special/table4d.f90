@@ -73,7 +73,8 @@ contains
   !! copyright: Keith Beardmore 30/11/93.
   !!            Lars Pastewka 05/07
   !<
-  subroutine table4d_init(t, nx, ny, nz, nt, values, error)
+  subroutine table4d_init(t, nx, ny, nz, nt, values, dvdx, dvdy, dvdz, dvdt, &
+                          error)
     implicit none
 
     type(table4d_t), intent(inout)    :: t
@@ -82,6 +83,10 @@ contains
     integer, intent(in)               :: nz
     integer, intent(in)               :: nt
     real(DP), intent(in)              :: values(0:, 0:, 0:, 0:)
+    real(DP), optional, intent(in)    :: dvdx(0:nx, 0:ny, 0:nz, 0:nt)
+    real(DP), optional, intent(in)    :: dvdy(0:nx, 0:ny, 0:nz, 0:nt)
+    real(DP), optional, intent(in)    :: dvdz(0:nx, 0:ny, 0:nz, 0:nt)
+    real(DP), optional, intent(in)    :: dvdt(0:nx, 0:ny, 0:nz, 0:nt)
     integer, intent(inout), optional  :: error
 
     ! ---
@@ -122,8 +127,68 @@ contains
     if (lbound(values, 3) /= 0 .or. ubound(values, 3) /= nz) then
        RAISE_ERROR("Third index of *values* must run from 0 to " // nz // ", but does run from " // lbound(values, 3) // " to " // ubound(values, 3) // ".", error)
     endif
-    if (lbound(values, 4) /= 0 .or. ubound(values, 4) /= nz) then
+    if (lbound(values, 4) /= 0 .or. ubound(values, 4) /= nt) then
        RAISE_ERROR("Fourth index of *values* must run from 0 to " // nt // ", but does run from " // lbound(values, 4) // " to " // ubound(values, 4) // ".", error)
+    endif
+
+    if (present(dvdx)) then
+       if (lbound(dvdx, 1) /= 0 .or. ubound(dvdx, 1) /= nx) then
+          RAISE_ERROR("First index of *dvdx* must run from 0 to " // nx // ", but does run from " // lbound(dvdx, 1) // " to " // ubound(dvdx, 1) // ".", error)
+       endif
+       if (lbound(dvdx, 2) /= 0 .or. ubound(dvdx, 2) /= ny) then
+          RAISE_ERROR("Second index of *dvdx* must run from 0 to " // ny // ", but does run from " // lbound(dvdx, 2) // " to " // ubound(dvdx, 2) // ".", error)
+       endif
+       if (lbound(dvdx, 3) /= 0 .or. ubound(dvdx, 3) /= nz) then
+          RAISE_ERROR("Third index of *dvdx* must run from 0 to " // nz // ", but does run from " // lbound(dvdx, 3) // " to " // ubound(dvdx, 3) // ".", error)
+       endif
+       if (lbound(dvdx, 4) /= 0 .or. ubound(dvdx, 4) /= nt) then
+          RAISE_ERROR("Third index of *dvdx* must run from 0 to " // nt // ", but does run from " // lbound(dvdx, 3) // " to " // ubound(dvdx, 3) // ".", error)
+       endif
+    endif
+
+    if (present(dvdy)) then
+       if (lbound(dvdy, 1) /= 0 .or. ubound(dvdy, 1) /= nx) then
+          RAISE_ERROR("First index of *dvdy* must run from 0 to " // nx // ", but does run from " // lbound(dvdy, 1) // " to " // ubound(dvdy, 1) // ".", error)
+       endif
+       if (lbound(dvdy, 2) /= 0 .or. ubound(dvdy, 2) /= ny) then
+          RAISE_ERROR("Second index of *dvdy* must run from 0 to " // ny // ", but does run from " // lbound(dvdy, 2) // " to " // ubound(dvdy, 2) // ".", error)
+       endif
+       if (lbound(dvdy, 3) /= 0 .or. ubound(dvdy, 3) /= nz) then
+          RAISE_ERROR("Third index of *dvdy* must run from 0 to " // nz // ", but does run from " // lbound(dvdy, 3) // " to " // ubound(dvdy, 3) // ".", error)
+       endif
+       if (lbound(dvdy, 4) /= 0 .or. ubound(dvdy, 4) /= nt) then
+          RAISE_ERROR("Third index of *dvdy* must run from 0 to " // nt // ", but does run from " // lbound(dvdy, 3) // " to " // ubound(dvdy, 3) // ".", error)
+       endif
+    endif
+
+    if (present(dvdz)) then
+       if (lbound(dvdz, 1) /= 0 .or. ubound(dvdz, 1) /= nx) then
+          RAISE_ERROR("First index of *dvdz* must run from 0 to " // nx // ", but does run from " // lbound(dvdz, 1) // " to " // ubound(dvdz, 1) // ".", error)
+       endif
+       if (lbound(dvdz, 2) /= 0 .or. ubound(dvdz, 2) /= ny) then
+          RAISE_ERROR("Second index of *dvdz* must run from 0 to " // ny // ", but does run from " // lbound(dvdz, 2) // " to " // ubound(dvdz, 2) // ".", error)
+       endif
+       if (lbound(dvdz, 3) /= 0 .or. ubound(dvdz, 3) /= nz) then
+          RAISE_ERROR("Third index of *dvdz* must run from 0 to " // nz // ", but does run from " // lbound(dvdz, 3) // " to " // ubound(dvdz, 3) // ".", error)
+       endif
+       if (lbound(dvdz, 4) /= 0 .or. ubound(dvdz, 4) /= nt) then
+          RAISE_ERROR("Third index of *dvdz* must run from 0 to " // nt // ", but does run from " // lbound(dvdz, 3) // " to " // ubound(dvdz, 3) // ".", error)
+       endif
+    endif
+
+    if (present(dvdt)) then
+       if (lbound(dvdt, 1) /= 0 .or. ubound(dvdt, 1) /= nx) then
+          RAISE_ERROR("First index of *dvdt* must run from 0 to " // nx // ", but does run from " // lbound(dvdt, 1) // " to " // ubound(dvdt, 1) // ".", error)
+       endif
+       if (lbound(dvdt, 2) /= 0 .or. ubound(dvdt, 2) /= ny) then
+          RAISE_ERROR("Second index of *dvdt* must run from 0 to " // ny // ", but does run from " // lbound(dvdt, 2) // " to " // ubound(dvdt, 2) // ".", error)
+       endif
+       if (lbound(dvdt, 3) /= 0 .or. ubound(dvdt, 3) /= nz) then
+          RAISE_ERROR("Third index of *dvdt* must run from 0 to " // nz // ", but does run from " // lbound(dvdt, 3) // " to " // ubound(dvdt, 3) // ".", error)
+       endif
+       if (lbound(dvdt, 4) /= 0 .or. ubound(dvdt, 4) /= nt) then
+          RAISE_ERROR("Third index of *dvdt* must run from 0 to " // nt // ", but does run from " // lbound(dvdt, 3) // " to " // ubound(dvdt, 3) // ".", error)
+       endif
     endif
 
     ! ---
@@ -263,6 +328,7 @@ contains
     ! loop through boxes.
     !
 
+    B = 0.0_DP
     do nibox = 0, nx-1
        do njbox = 0, ny-1
           do ncbox = 0, nz-1
@@ -277,21 +343,18 @@ contains
                    ! values of function and derivatives at corner.
                    B(irow         ,icol) = values(nx1, nx2, nx3, nx4)
                    !   all derivatives are supposed to be zero
-                   B(irow+ ncorn  ,icol) = 0.0
-                   B(irow+ 2*ncorn,icol) = 0.0
-                   B(irow+ 3*ncorn,icol) = 0.0
-                   B(irow+ 4*ncorn,icol) = 0.0
-                   B(irow+ 5*ncorn,icol) = 0.0
-                   B(irow+ 6*ncorn,icol) = 0.0
-                   B(irow+ 7*ncorn,icol) = 0.0
-                   B(irow+ 8*ncorn,icol) = 0.0
-                   B(irow+ 9*ncorn,icol) = 0.0
-                   B(irow+10*ncorn,icol) = 0.0
-                   B(irow+11*ncorn,icol) = 0.0
-                   B(irow+12*ncorn,icol) = 0.0
-                   B(irow+13*ncorn,icol) = 0.0
-                   B(irow+14*ncorn,icol) = 0.0
-                   B(irow+15*ncorn,icol) = 0.0
+                   if (present(dvdx)) then
+                      B(irow+ ncorn  ,icol) = dvdx(nx1, nx2, nx3, nx4)
+                   endif
+                   if (present(dvdy)) then
+                      B(irow+ 2*ncorn,icol) = dvdy(nx1, nx2, nx3, nx4)
+                   endif
+                   if (present(dvdz)) then
+                      B(irow+ 3*ncorn,icol) = dvdz(nx1, nx2, nx3, nx4)
+                   endif
+                   if (present(dvdt)) then
+                      B(irow+ 4*ncorn,icol) = dvdt(nx1, nx2, nx3, nx4)
+                   endif
                 enddo
              enddo
           enddo
