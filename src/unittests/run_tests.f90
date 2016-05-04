@@ -4,6 +4,7 @@ program run_tests
   use test_linearalgebra
   use test_table2d
   use test_table3d
+  use test_table4d
 
   implicit none
 
@@ -23,6 +24,9 @@ program run_tests
 
   ! test_table3d
   call test_table3d_f_and_df
+
+  ! test_table4d
+  call test_table4d_f_and_df
 
   call fruit_summary
   call fruit_finalize

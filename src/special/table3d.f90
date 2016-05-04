@@ -230,7 +230,7 @@ contains
     ! loop through boxes.
     !
 
-    B(:, :) = 0.0
+    B = 0.0_DP
     do nibox = 0, nx-1
        do njbox = 0, ny-1
           do ncbox = 0, nz-1
@@ -386,7 +386,7 @@ contains
                       fcc    = fcc    *x1+       sfcc
           if (i > 1)  dfccdi = dfccdi *x1+ (i-1)*sfcc
                       dfccdj = dfccdj *x1+       sfccdj
-                   dfccdc = dfccdc *x1+       sfccdc
+                      dfccdc = dfccdc *x1+       sfccdc
        enddo
 
 !!$    endif

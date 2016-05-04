@@ -192,6 +192,7 @@ UNITTESTS = \
 	test_linearalgebra.f90 \
 	test_table2d.f90 \
 	test_table3d.f90 \
+	test_table4d.f90 \
 	run_tests.f90
 UNITTESTS_O4 = $(UNITTESTS:.cpp=.o)
 UNITTESTS_O3 = $(UNITTESTS_O4:.c=.o)
