@@ -1,3 +1,7 @@
+#define ATOMISTICA_PAIR_STYLE_GIT_IDENT "$Id$"
+
+#ifndef DEFINE_GIT_IDENT
+
 /* ======================================================================
    Atomistica - Interatomic potential library
    https://github.com/pastewka/atomistica
@@ -36,10 +40,6 @@
 /* ----------------------------------------------------------------------
    Contributing author: Tim Kunze (FZDR), Lars Pastewka (Fh-IWM, JHU)
 ------------------------------------------------------------------------- */
-
-#define ATOMISTICA_PAIR_STYLE_GIT_IDENT "$Id$"
-
-#ifndef DEFINE_GIT_IDENT
 
 #include "math.h"
 #include "stdio.h"

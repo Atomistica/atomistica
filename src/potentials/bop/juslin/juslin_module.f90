@@ -427,7 +427,7 @@
 
     ! ---
 
-    integer  :: i, el(p%maxnatloc), nebmax, nebavg
+    integer  :: i, d, el(p%maxnatloc), nebmax, nebavg
 
     ! ---
 
@@ -443,8 +443,9 @@
        if (p%el2Z(p%el(i)) > 0) then
          el(i)  = this%Z2db(p%el2Z(p%el(i)))
        endif
-       nebmax = max(nebmax, nl%last(i)-nl%seed(i)+1)
-       nebavg = nebavg + nl%last(i)-nl%seed(i)+1
+       d = nl%last(i)-nl%seed(i)+1
+       nebmax = max(nebmax, d)
+       nebavg = nebavg + d
     enddo
     nebavg = nebavg/p%nat + 1
 

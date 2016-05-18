@@ -164,7 +164,7 @@
 
     ! ---
 
-    integer  :: i, nebmax, nebavg
+    integer :: i, d, nebmax, nebavg
 
     ! ---
 
@@ -189,8 +189,9 @@
              this%internal_el(i) = rebo2_H_
           endif
        endif
-       nebmax = max(nebmax, nl%last(i)-nl%seed(i)+1)
-       nebavg = nebavg + nl%last(i)-nl%seed(i)+1
+       d = nl%last(i)-nl%seed(i)+1
+       nebmax = max(nebmax, d)
+       nebavg = nebavg + d
     enddo
     nebavg = (nebavg+1)/p%nat+1
 

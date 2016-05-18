@@ -313,7 +313,7 @@ contains
 #endif
     do i = 1, p%natloc
        if (IS_EL2(this%els, p%el(i))) then
-          maxneb = max(maxneb, nl%last(i)-nl%seed(i)+1)
+          maxneb = max(maxneb, int(nl%last(i)-nl%seed(i)+1))
        endif
     enddo
 
