@@ -232,7 +232,7 @@ contains
 #ifndef _MP
     call write_prmtop(dyn%p, "traj.prmtop")
 #endif
-    call write_frame(this%nc, 0.0_DP, dyn%p)
+    call write_frame(this%nc, dyn%ti, dyn%p)
 
   endsubroutine output_nc_set_dynamics
 
