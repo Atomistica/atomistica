@@ -359,10 +359,15 @@ contains
     !$omp& shared(db, nl, H, p, S, this, this_at) &
     !$omp& reduction(+:error_loc)
 
+#ifdef _OPENMP
     call tls_init(this%norb, mat=2)
+#else
+#define tls_mat1 H
+#define tls_mat2 S
+#endif
     
     !$omp do
-    i_loop: do i = 1, p%natloc
+    i_loop: do i = 1, p%nat
 
        if (IS_EL(this%f, p, i) .and. error_loc == ERROR_NONE) then
 
@@ -430,7 +435,12 @@ contains
 
     enddo i_loop
 
+#ifdef _OPENMP
     call tls_reduce(this%norb, mat1=H, mat2=S)
+#else
+#undef H
+#undef S
+#endif
 
     !$omp end parallel
 

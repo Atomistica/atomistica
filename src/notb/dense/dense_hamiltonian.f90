@@ -154,7 +154,7 @@ contains
 
     c = 0.0
     this%norb = 0
-    do i = 1, p%natloc
+    do i = 1, p%nat
 
        if (IS_EL(this%f, p, i)) then
 
@@ -182,6 +182,8 @@ contains
        endif
 
     enddo
+
+    !write (*, *)  "assign_orbitals, this%norb = ", this%norb, p%nat, p%natloc
 
     this%cutoff = c
 
