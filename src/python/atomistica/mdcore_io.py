@@ -66,7 +66,7 @@ def read_atoms(fn, cycfn=None, pos_only=False, conv=1.0):
     T      = np.zeros( [ n_atoms ] )
 
     ats = [ ]
-    for i in xrange(n_atoms):
+    for i in range(n_atoms):
         s = l.split()
         #      type   x            y            z
         sym = None
@@ -92,7 +92,7 @@ def read_atoms(fn, cycfn=None, pos_only=False, conv=1.0):
             key = l.strip(" <-#\r\n")
 
             if key.upper() == "VELOCITIES":
-                for i in xrange(n_atoms):
+                for i in range(n_atoms):
                     s = f.readline().split()
                     m = this[i].mass
                     if m is None:
@@ -102,7 +102,7 @@ def read_atoms(fn, cycfn=None, pos_only=False, conv=1.0):
                 l = None
 
             elif key.upper() == "FORCES":
-                for i in xrange(n_atoms):
+                for i in range(n_atoms):
                     s = f.readline().split()
                     forces[i] =  np.array( [ float(s[0]), float(s[1]), float(s[2]) ] )
 
