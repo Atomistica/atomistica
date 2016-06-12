@@ -461,7 +461,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- materials_read_sltab_hotbit -"
+    call prlog("- materials_read_sltab_hotbit -")
 
     conv(HTAB) = econv
     conv(STAB) = 1.0
@@ -479,10 +479,10 @@ contains
                 inquire(file=fil2,exist=ex2)
                 if( ex ) then
                    un = fopen(fil)
-                   write (ilog, '(5X,A)')  "HOTBIT tables for "//trim(e1)//"-"//trim(e2)//" found."
+                   call prlog("HOTBIT tables for "//trim(e1)//"-"//trim(e2)//" found.")
                 else if( ex2 ) then
                    un = fopen(fil2)
-                   write (ilog, '(5X,A)')  "HOTBIT tables for "//trim(e1)//"-"//trim(e2)//" found."
+                   call prlog("HOTBIT tables for "//trim(e1)//"-"//trim(e2)//" found.")
                 else
 !                   write (ilog, '(5X,A,A,A,A,A)')  "WARNING: Skipping parametrizations for "//e1//" and "//e2//". Could not find '", trim(fil), "' or '", trim(fil2), "' file."
                    if( i1/=i2 )then
@@ -542,7 +542,7 @@ contains
        endif
     enddo
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine materials_read_sltab_hotbit
 
@@ -582,7 +582,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- materials_read_sltab_dftb -"
+    call prlog("- materials_read_sltab_dftb -")
 
     allocate(x(MAX_DATA), y(MAX_DATA))
 
@@ -613,16 +613,16 @@ contains
 
                 if (ex) then
                    un = fopen(fil)
-                   write (ilog, '(5X,A)')  "DFTB tables for "//trim(e1)//"-"//trim(e2)//" found."
+                   call prlog("DFTB tables for "//trim(e1)//"-"//trim(e2)//" found.")
                 else if (ex3) then
                    un = fopen(fil3)
-                   write (ilog, '(5X,A)')  "DFTB tables for "//trim(e1)//"-"//trim(e2)//" found."
+                   call prlog("DFTB tables for "//trim(e1)//"-"//trim(e2)//" found.")
                 endif
 
                 file_exists: if (un > 0) then
 
                    if (db%HS(i1, i2)%n > 0 .or. db%R(i1, i2)%n > 0) then
-                      write (ilog, '(5X,A)')  "WARNING: "//e1//"-"//e2//" tables already read."
+                      call prlog("WARNING: "//e1//"-"//e2//" tables already read.")
                    endif
 
                    ! cutoff, number of grid points in Hamiltonian/Overlap
@@ -643,7 +643,7 @@ contains
                       eself  = eself * econv
 
                       if (i1 == i2) then
-                         write (ilog, '(5X,A)')  "WARNING: Overriding self-energies and Hubbard-U from 'elements.dat'."
+                         call prlog("WARNING: Overriding self-energies and Hubbard-U from 'elements.dat'.")
 
                          db%e(i1)%e  = (/ &
                               eself(3), &
@@ -787,7 +787,7 @@ contains
     deallocate(x)
     deallocate(y)
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine materials_read_sltab_dftb
 
@@ -804,7 +804,7 @@ contains
 
     ! ---
 
-    integer               :: i, j, k, n, eli, elj, noi, noj, un, io
+    integer               :: i, k, n, eli, elj, noi, noj, un, io
     real(DP)              :: scaling
     real(DP), allocatable :: d(:, :)
     character(1024)       :: fn, line, values, key
@@ -1097,7 +1097,7 @@ contains
    
           if (hlp(i)%elem > 0 .and. hlp(i)%elem <= MAX_Z) then
              if (trim(a2s(hlp(i)%name)) /= trim(ElementName(hlp(i)%elem))) then
-                write (ilog, '(5X,5A)')  "WARNING: Name '", hlp(i)%name, "' in 'elements.dat' not equal common element name '", ElementName(hlp(i)%elem), "'."
+                call prlog("WARNING: Name '"//a2s(hlp(i)%name)//"' in 'elements.dat' not equal common element name '"//ElementName(hlp(i)%elem)//"'.")
           endif
 
           hlp(i)%el_max = 0d0
@@ -1108,16 +1108,16 @@ contains
           db%e(hlp(i)%elem)%exists = .true.
           db%e(hlp(i)%elem)%enr = hlp(i)%elem
        else
-          write (ilog, '(5X,A,I5,A)')  "WARNING: Unknown element found in 'elements.dat' (Z = ", hlp(i)%elem, ")."
+          call prlog("WARNING: Unknown element found in 'elements.dat' (Z = "//hlp(i)%elem//").")
        endif
    
        end do
    
-       write (ilog, '(5X,I5,A)')  j, " elements found in 'elements.dat'."
+       call prlog(""//j//" elements found in 'elements.dat'.")
     else
        call prlog("No 'elements.dat' found in database directory. Skipping.")
     endif
-    write (ilog, *)
+    call prlog
 
   endsubroutine materials_read_elements_hotbit
 
@@ -1221,11 +1221,11 @@ contains
           db%e(e(i)%elem)%enr = e(i)%elem
        enddo
    
-       write (ilog, '(5X,I5,A)')  j, " elements found in 'atoms.bx'."
+       call prlog(""//j//" elements found in 'atoms.bx'.")
     else
        call prlog("No 'atoms.bx' found in database directory. Skipping.")
     endif
-    write (ilog, *)
+    call prlog
 
   endsubroutine materials_read_elements_bopfox
 
@@ -1300,7 +1300,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- materials_read_spin_params -"
+    call prlog("- materials_read_spin_params -")
 
     ! reset
     do i = 1, db%nel
@@ -1312,10 +1312,10 @@ contains
     inquire(file=file, exist=exists)
     if(exists) then
        un = fopen(file)
-       write (ilog, '(5X,A)')  "Found input file for spin parameters: " // trim(file)
-       write (ilog, '(5X,A)')  "Expecting on each line: el Wss Wsp Wsd Wps Wpp Wpd Wds Wdp Wdd"
+       call prlog("Found input file for spin parameters: " // trim(file))
+       call prlog("Expecting on each line: el Wss Wsp Wsd Wps Wpp Wpd Wds Wdp Wdd")
     else
-       write (ilog, '(5X,A)')  "No spin parameters found, expecting non-spin-polarized calculation."
+       call prlog("No spin parameters found, expecting non-spin-polarized calculation.")
        return
     end if
 
@@ -1354,14 +1354,14 @@ contains
 
        ! report
        if(inserted) then
-          write (ilog, '(5X,A,9F10.3)')  "Read spin parameters for " // trim(el) // " -> ", W(1:9)
+          call prlog("Read spin parameters for "//trim(el)//" -> "//W(1:9))
        else
-          write (ilog, '(5X,A)')  "For element " // trim(el) // " in file, could not find corresponding database entry."
+          call prlog("For element "//trim(el)//" in file, could not find corresponding database entry.")
        end if
 
     end do
 
-    write (ilog, *)
+    call prlog
 
   end subroutine materials_read_spin_params
 
@@ -1390,7 +1390,7 @@ contains
 
     ! ---
 
-    write (ilog, '(A)')  "- materials_read_database -"
+    call prlog("- materials_read_database -")
 
     if (present(folder)) then
        db%folder = folder
@@ -1401,8 +1401,8 @@ contains
        endif
     endif
 
-    write (ilog, '(5X,A)')  "Looking for tables in directory '", trim(db%folder), "'."
-    write (ilog, *)         ""
+    call prlog("Looking for tables in directory '"//trim(db%folder)//"'.")
+    call prlog
 
     call materials_init_elements(db, econv, lconv, error)
     PASS_ERROR(error)
@@ -1439,14 +1439,18 @@ contains
              do i2 = 1, db%e(i1)%no
                 onsite(i2) = db%e(i1)%e(get_orbital(db%e(i1)%no, i2))
              enddo
-             write (ilog, '(5X,A7,I7,F7.3,A9,F10.3,9F10.3)') a2s(db%e(i1)%name), db%e(i1)%elem, db%e(i1)%q0, electronic_configuration(db%e(i1)%no), db%e(i1)%U, onsite(1:db%e(i1)%no)
+             if (ilog /= -1) then
+                write (ilog, '(5X,A7,I7,F7.3,A9,F10.3,9F10.3)') a2s(db%e(i1)%name), db%e(i1)%elem, db%e(i1)%q0, electronic_configuration(db%e(i1)%no), db%e(i1)%U, onsite(1:db%e(i1)%no)
+             endif
           else
-             write (ilog, '(5X,A7,I7,F7.3,I9)') a2s(db%e(i1)%name), db%e(i1)%elem, db%e(i1)%q0, db%e(i1)%no
+             if (ilog /= -1) then
+                write (ilog, '(5X,A7,I7,F7.3,I9)') a2s(db%e(i1)%name), db%e(i1)%elem, db%e(i1)%q0, db%e(i1)%no
+             endif
           endif
        endif
     enddo
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine materials_read_database
 
