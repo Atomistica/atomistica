@@ -101,8 +101,6 @@ module dense_solver_lapack
      ! Work buffers
      !
 
-     WF_T(DP), allocatable :: S2(:, :)
-
 #ifdef COMPLEX_WF
      WF_T(DP), allocatable :: work(:)
      real(DP), allocatable :: rwork(:)
@@ -207,7 +205,7 @@ contains
        RAISE_ERROR("Solver type " // this%solver_type // " is unknown.", error)
     endif
 
-    write (ilog, *)
+    call prlog
 
   endsubroutine dense_solver_lapack_init
 
@@ -228,7 +226,6 @@ contains
     if (allocated(this%evals))  deallocate(this%evals)
     if (allocated(this%evecs))  deallocate(this%evecs)
 
-    if (allocated(this%S2))     deallocate(this%S2)
     if (allocated(this%work))   deallocate(this%work)
 #ifdef COMPLEX_WF
     if (allocated(this%rwork))  deallocate(this%rwork)
@@ -341,6 +338,8 @@ contains
 
     integer :: i, j, a, b, ia, jb, info
 
+    real(DP), pointer :: S2(:, :)
+
     type(particles_t),    pointer :: tb_p
     type(notb_element_t), pointer :: tb_at(:)
 
@@ -392,8 +391,6 @@ contains
 
     call timer_start(trim(timer_str))
 
-    call resize(this%S2, tb%norb, tb%norb)
-
 !    if (this%solver_type == ST_EXPERT) then
 !       if (.not. allocated(H)) then 
 !          allocate(H(tb%norb, tb%norb))
@@ -406,6 +403,9 @@ contains
     !
     ! Allocate diagonalization workspace
     !
+
+    ! We abuse rho as a work buffer
+    call c_f_pointer(tb%rho, S2, [tb%norb, tb%norb])
 
 #ifdef COMPLEX_WF
 
@@ -438,7 +438,7 @@ contains
        call zhegvd( &
             1, 'V', 'U', tb%norb, &
             evecs(:, :), tb%norb, &
-            this%S2(:, :), tb%norb, &
+            S2(:, :), tb%norb, &
             evals(:), &
             opt_lwork, lwork, opt_lrwork, lrwork, opt_liwork, liwork, info)
 
@@ -485,7 +485,7 @@ contains
        call dsygv( &
             1, 'V', 'U', tb%norb, &
             evecs(:, :), tb%norb, &
-            this%S2(:, :), tb%norb, &
+            S2(:, :), tb%norb, &
             evals(:), &
             opt_lwork, lwork, info)
 
@@ -502,7 +502,7 @@ contains
        call dsygvd( &
             1, 'V', 'U', tb%norb, &
             evecs(:, :), tb%norb, &
-            this%S2(:, :), tb%norb, &
+            S2(:, :), tb%norb, &
             evals(:), &
             opt_lwork, lwork, opt_liwork, liwork, info)
 
@@ -541,7 +541,8 @@ contains
 #endif
 
     ! We have to solve the eigenvalue problem for each k-point
-    this%S2 = S(:, :)
+    ! We abuse rho as a work buffer
+    S2 = S(:, :)
 
 #ifdef COMPLEX_WF
 
@@ -549,7 +550,7 @@ contains
 
        call zhegv(1, 'V', 'L', &
             tb%norb, evecs(:, :), &
-            tb%norb, this%S2, &
+            tb%norb, S2, &
             tb%norb, evals(:), &
             this%work, lwork, this%rwork, info)
 
@@ -557,7 +558,7 @@ contains
 
        call zhegvd(1, 'V', 'L', &
             tb%norb, evecs(:, :), &
-            tb%norb, this%S2, &
+            tb%norb, S2, &
             tb%norb, evals(:), &
             this%work, lwork, this%rwork, lrwork, this%iwork, liwork, info)
 
@@ -583,7 +584,7 @@ contains
 
        call dsygv(1, 'V', 'L', &
             tb%norb, evecs(:, :), &
-            tb%norb, this%S2, &
+            tb%norb, S2, &
             tb%norb, evals(:), &
             this%work, lwork, info)
 
@@ -591,7 +592,7 @@ contains
 
        call dsygvd(1, 'V', 'L', &
             tb%norb, evecs(:, :), &
-            tb%norb, this%S2, &
+            tb%norb, S2, &
             tb%norb, evals(:), &
             this%work, lwork, this%iwork, liwork, info)
 
