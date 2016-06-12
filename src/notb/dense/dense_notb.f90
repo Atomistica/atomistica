@@ -46,6 +46,10 @@ module dense_notb
   use neighbors
   use filter
 
+#ifdef _MP
+  use communicator
+#endif
+
   use coulomb
 
   use materials
@@ -366,9 +370,9 @@ contains
 
     this%qtot = get_total_charge(p, this%el, this_tb_at, this%noc)
 
-    write (ilog, '(5X,A)')  "Total number of orbitals  = " // this%tb%norb
-    write (ilog, '(5X,A)')  "Occupied orbitals         = " // this%noc
-    write (ilog, '(5X,A)')  "Charge of TB subsystem    = " // this%qtot
+    call prlog("Total number of orbitals  = " // this%tb%norb)
+    call prlog("Occupied orbitals         = " // this%noc)
+    call prlog("Charge of TB subsystem    = " // this%qtot)
 
   endsubroutine notb_init_noc
 
@@ -396,11 +400,11 @@ contains
     call del(this%tb)
 
     ! - report
-    write (ilog, '(A)')  "- dense_notb_bind_to -"
+    call prlog("- dense_notb_bind_to -")
 #ifdef COMPLEX_WF
-    write (ilog, '(5X,A)')  "The tight-binding module has been compiled for complex arithmetics."
+    call prlog("The tight-binding module has been compiled for complex arithmetics.")
 #else
-    write (ilog, '(5X,A)')  "The tight-binding module has been compiled for real arithmetics."
+    call prlog("The tight-binding module has been compiled for real arithmetics.")
 #endif
 
     ! - init
@@ -614,11 +618,9 @@ contains
     call update(nl, p, ierror)
     PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
 
-#ifdef LAMMPS
     ! Update the atom to H/S matrix-block match
     call assign_orbitals(this%tb, p, error=ierror)
     PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
-#endif
 
     call hs_setup(this%tb, this%mat, p, nl, error=ierror)
     PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
@@ -694,6 +696,10 @@ contains
        end if
     end do
 
+#ifdef _MPI
+    call sum_in_place(mod_communicator%mpi, qc)
+#endif
+
     if(abs(qc-qtot) > 1e-10) then
        WARN("Adjusting charge of TB (sub)system from " // qc // " to " // qtot // ". Using homogeneous charge distribution.")
        do i = 1, p%natloc
@@ -736,6 +742,10 @@ contains
           occ = occ + at(i)%q0
        endif
     enddo
+
+#ifdef _MPI
+    call sum_in_place(mod_communicator%mpi, occ)
+#endif
 
     noc = (occ - q)/2
 
