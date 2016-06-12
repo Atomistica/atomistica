@@ -39,13 +39,13 @@ dense_hamiltonian_allocate(struct dense_hamiltonian_t *self, int nat, int norb)
   self->norb = norb;
 
   if (!self->H)
-    self->H = (double *) malloc(2*norb*norb*nk*sizeof(double));
+    self->H = (double *) malloc(norb*norb*nk*sizeof(double));
   if (!self->S)
-    self->S = (double *) malloc(2*norb*norb*nk*sizeof(double));
+    self->S = (double *) malloc(norb*norb*nk*sizeof(double));
   if (!self->rho)
-    self->rho = (double *) malloc(2*norb*norb*nk*sizeof(double));
+    self->rho = (double *) malloc(norb*norb*nk*sizeof(double));
   if (!self->e)
-    self->e = (double *) malloc(2*norb*norb*nk*sizeof(double));
+    self->e = (double *) malloc(norb*norb*nk*sizeof(double));
 
   if (!self->n)
     self->n = (double *) malloc(nat*sizeof(double));
