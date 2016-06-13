@@ -477,8 +477,8 @@ contains
        endif
 
        call prlog("     interaction_range  = "//this%interaction_range)
-       call prlog("     iverlet_shell       = "//this%verlet_shell)
-       call prlog("     icutoff             = "//this%cutoff)
+       call prlog("     verlet_shell       = "//this%verlet_shell)
+       call prlog("     cutoff             = "//this%cutoff)
 
        if (this%cutoff <= 0.0_DP) then
           RAISE_ERROR("Cutoff needs to be larger than zero.", error)
