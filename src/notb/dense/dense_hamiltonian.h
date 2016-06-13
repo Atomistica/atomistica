@@ -61,6 +61,7 @@ struct dense_hamiltonian_t {
   int nat; /* number of atoms */
   int nk; /* number of k-points */
   int norb; /* number of orbitals */
+  int norbloc;  /* number of orbitals local to this process */
 
   int *el; /* elements, points to particles_t elements */
 
