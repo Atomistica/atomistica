@@ -636,21 +636,21 @@ contains
 
     call timer_start("fill_neighbor_list")
 
-    Abox              = p%Abox
-    locally_pbc  = p%locally_pbc
-    shear_dx          = p%shear_dx
+    Abox        = p%Abox
+    locally_pbc = p%locally_pbc
+    shear_dx    = p%shear_dx
 
 #ifdef _OPENMP
-    chunk_len  = size(this%neighbors)/omp_get_max_threads()
+    chunk_len = size(this%neighbors)/omp_get_max_threads()
 #else
-    chunk_len  = size(this%neighbors)
+    chunk_len = size(this%neighbors)
 #endif
 
-    cutoff_sq  = this%cutoff**2
+    cutoff_sq = this%cutoff**2
 
     lebc  = .false.
     if (any(shear_dx /= 0.0_DP)) then
-       lebc  = .true.
+       lebc = .true.
     endif
 
     error_loc = ERROR_NONE
