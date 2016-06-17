@@ -568,6 +568,10 @@ contains
 
     call atomistica_shutdown
 
+#ifdef _MP
+    call finalise(mpi)
+#endif
+
     !
     ! Create the (empty) file DONE to let everyone know we finished properly
     !
