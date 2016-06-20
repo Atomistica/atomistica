@@ -19,7 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import glob
 import os
@@ -253,6 +253,8 @@ setup(
     description = 'Atomistica is a library of interatomic potentials that is compatible with ASE and LAMMPS',
     maintainer = 'Lars Pastewka',
     maintainer_email = 'lars.pastewka@kit.edu',
+    url = 'https://github.com/Atomistica/atomistica',
+    download_url = 'https://github.com/Atomistica/atomistica/tarball/'+versioneer.get_version(),
     license = 'GPLv3',
     packages = [
         'atomistica'
