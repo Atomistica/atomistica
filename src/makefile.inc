@@ -188,12 +188,20 @@ UNITTESTS = \
 	fruit_util.f90 \
 	fruit.f90 \
 	$(CORE_SUPPLIB) \
+        particles.f90 \
+        domain_decomposition.f90 \
+        neighbors.f90 \
+	filter.f90 \
+        cyclic.f90 \
+	molecules.f90 \
+        native_io.f90 \
+        versioninfo.f90 \
+        atomistica.f90 \
 	test_cutoff.f90 \
 	test_linearalgebra.f90 \
 	test_table2d.f90 \
 	test_table3d.f90 \
-	test_table4d.f90 \
-	run_tests.f90
+	test_table4d.f90
 UNITTESTS_O4 = $(UNITTESTS:.cpp=.o)
 UNITTESTS_O3 = $(UNITTESTS_O4:.c=.o)
 UNITTESTS_O2 = $(UNITTESTS_O3:.f=.o)
@@ -274,8 +282,11 @@ atomistica: versioninfo $(LAMMPS_ALL_O)
 mdcore: versioninfo $(STANDALONE_ALL_O) $(MAIN_O)
 	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-`cat $(SRCDIR)/REV | sed s/' '/''/ `_`cat $(SRCDIR)/REV_DATE` $(LIBS)
 
-unittests: versioninfo $(UNITTESTS_O)
-	$(F90C) -o unittests $(UNITTESTS_O) $(LIBS)
+unittests: versioninfo $(UNITTESTS_O) run_tests.o
+	$(LD) $(LDFLASG) $(UNITTESTS_O) -o unittests $(LIBS)
+
+test_communicator: versioninfo $(UNITTESTS_O) test_communicator.o
+	$(LD) $(LDFLASG) $(UNITTESTS_O) test_communicator.o -o test_communicator $(LIBS)
 
 clean:
 	rm -f *.o *.a
