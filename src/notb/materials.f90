@@ -559,8 +559,8 @@ contains
 
     ! ---
 
-    real(DP), parameter  :: REP_DX    = 0.005
-    real(DP), parameter  :: REP_X0    = 1.00
+    real(DP), parameter  :: REP_DX    = 0.005_DP
+    real(DP), parameter  :: REP_X0    = 0.0_DP
 
     integer, parameter   :: MAX_DATA  = 10000
 
