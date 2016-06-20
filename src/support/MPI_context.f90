@@ -51,6 +51,7 @@
 #include "error.inc"
 
 module MPI_context_module
+use c_f
 use error_module
 use system_module
 
