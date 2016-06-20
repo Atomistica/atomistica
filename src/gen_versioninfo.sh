@@ -39,6 +39,7 @@ else
     echo $atomistica_date > $1/REV_DATE
 fi
 
+mkdir -p $2
 cat<<EOF > $2/versioninfo.f90
 module versioninfo
 implicit none
