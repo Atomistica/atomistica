@@ -43,7 +43,7 @@ module kumagai
 
   private
 
-#define CUTOFF_T             trig_cutoff_t
+#define CUTOFF_T             trig_off_t
 
 #define BOP_NAME             kumagai
 #define BOP_NAME_STR         "kumagai"

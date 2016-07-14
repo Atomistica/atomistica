@@ -351,10 +351,7 @@ contains
 
     call c_f_pointer(this_cptr, this)
 
-    s = 0
-    do i = 1, this%p%nat
-       s = s + this%last(i)-this%seed(i)+1
-    enddo
+    s = get_number_of_all_neighbors(this)
 
   endfunction f_get_number_of_all_neighbors
 
@@ -503,27 +500,16 @@ contains
 
     implicit none
 
-    type(c_ptr),    value  :: this_cptr
-    real(c_double)         :: r1(*)
-    real(c_double)         :: r2(*)
+    type(c_ptr), value :: this_cptr
+    real(c_double)     :: r1(*)
+    real(c_double)     :: r2(*)
 
-    type(neighbors_t), pointer  :: this
-
-    ! ---
-
-    integer :: i, ni, j
+    type(neighbors_t), pointer :: this
 
     ! ---
 
     call c_f_pointer(this_cptr, this)
-
-    j = 0
-    do i = 1, this%p%nat
-       do ni = this%seed(i), this%last(i)
-          j = j + 1
-          r2(j) = r1(ni)
-       enddo
-    enddo
+    call pack(this, r1, r2)
 
   endsubroutine f_pack_per_bond_scalar
 
@@ -536,11 +522,11 @@ contains
 
     implicit none
 
-    type(c_ptr),    value  :: this_cptr
-    real(c_double)         :: r1(3,3,*)
-    real(c_double)         :: r2(3,3,*)
+    type(c_ptr), value :: this_cptr
+    real(c_double)     :: r1(3,3,*)
+    real(c_double)     :: r2(3,3,*)
 
-    type(neighbors_t), pointer  :: this
+    type(neighbors_t), pointer :: this
 
     ! ---
 

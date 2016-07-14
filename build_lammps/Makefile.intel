@@ -20,8 +20,8 @@ MPI_FLAGS =
 #
 # OpenMP parallelization or hybrid MPI/OpenMP
 #
-#OMP_FLAGS = 
-OMP_FLAGS = -openmp -openmp-report2
+OMP_FLAGS = 
+#OMP_FLAGS = -openmp -openmp-report2
 
 
 #

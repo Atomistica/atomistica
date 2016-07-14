@@ -11,10 +11,30 @@ TODO
 Change log
 ==========
 
-master
+v0.4.1
 ------
 
-- Python 3 compatibility
+- Regression fix: Charge extrapolation did not work because charges were
+  overriden with initial charges at every step. This was introduced when
+  changing to the new ASE Calculator class.
+
+v0.4.0
+------
+
+- Python 3 compatibility.
+
+- Python interface based on new ASE Calculator base class.
+
+- Tight binding: Removed necessity for an 'elements.dat' file.
+  Code auto-detects elements from files found in the database directory.
+
+- Tight binding: Added support for d, sd and pd electronic configurations.
+
+- LAMMPS interface automatically checks git fingerprint to ensure
+  compatibility between pair_style and Atomistica library.
+
+- Fixed proper stopping of timer when errors are raised or passed in some
+  parts of the code.
 
 v0.3.2
 ------

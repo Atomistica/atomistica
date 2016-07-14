@@ -221,7 +221,7 @@
     integer          :: i, j, npairs, Z, ii, jj, nel
 
 #ifdef SCREENING
-    real(DP)         :: x(this%db%nel*(this%db%nel+1)/2)
+    real(DP)         :: x(this%db%nel**2)
 #endif
 
     ! ---
@@ -298,6 +298,14 @@
         endif
       enddo
     enddo
+
+
+#ifdef SCREENING
+    this%Cmin      = this%db%Cmin
+    this%Cmax      = this%db%Cmax
+    this%dC        = this%Cmax-this%Cmin
+    this%C_dr_cut  = this%Cmax**2/(4*(this%Cmax-1))
+#endif
 
 
     this%Z2db  = 0
@@ -427,7 +435,7 @@
 
     ! ---
 
-    integer  :: i, el(p%maxnatloc), nebmax, nebavg
+    integer  :: i, d, el(p%maxnatloc), nebmax, nebavg
 
     ! ---
 
@@ -443,8 +451,9 @@
        if (p%el2Z(p%el(i)) > 0) then
          el(i)  = this%Z2db(p%el2Z(p%el(i)))
        endif
-       nebmax = max(nebmax, nl%last(i)-nl%seed(i)+1)
-       nebavg = nebavg + nl%last(i)-nl%seed(i)+1
+       d = nl%last(i)-nl%seed(i)+1
+       nebmax = max(nebmax, d)
+       nebavg = nebavg + d
     enddo
     nebavg = nebavg/p%nat + 1
 

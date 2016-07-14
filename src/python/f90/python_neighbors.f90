@@ -169,6 +169,16 @@ module neighbors
      module procedure neighbors_find_neighbor
   endinterface
 
+  public :: get_number_of_all_neighbors
+  interface get_number_of_all_neighbors
+     module procedure neighbors_get_number_of_all_neighbors
+  endinterface
+
+  public :: pack
+  interface pack
+     module procedure neighbors_pack_scalar
+  endinterface
+
 !--- Internal
 
   interface set_particles
@@ -1040,5 +1050,57 @@ contains
     enddo
 
   endsubroutine neighbors_find_neighbor
+
+
+  !>
+  !! Return total number of neighbors
+  !<
+  function neighbors_get_number_of_all_neighbors(this) result(s)
+    use, intrinsic :: iso_c_binding
+
+    implicit none
+
+    type(neighbors_t), intent(in) :: this
+    integer                       :: s
+
+    ! ---
+
+    integer :: i
+
+    ! ---
+
+    s = 0
+    do i = 1, this%p%nat
+       s = s + this%last(i)-this%seed(i)+1
+    enddo
+
+  endfunction neighbors_get_number_of_all_neighbors
+
+
+  !>
+  !! Bring a list of scalar per bond information into order
+  !<
+  subroutine neighbors_pack_scalar(this, r1, r2)
+    implicit none
+
+    type(neighbors_t), intent(in)  :: this
+    real(DP),          intent(in)  :: r1(*)
+    real(DP),          intent(out) :: r2(*)
+
+    ! ---
+
+    integer :: i, ni, j
+
+    ! ---
+
+    j = 0
+    do i = 1, this%p%nat
+       do ni = this%seed(i), this%last(i)
+          j = j + 1
+          r2(j) = r1(ni)
+       enddo
+    enddo
+
+  endsubroutine neighbors_pack_scalar
 
 endmodule neighbors

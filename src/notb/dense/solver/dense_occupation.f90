@@ -103,7 +103,7 @@ contains
 
     ! ---
 
-    call timer_start('occu')
+    call timer_start("occupy")
 
     INIT_ERROR(error)
 
@@ -112,7 +112,7 @@ contains
     !
 
     mu  = SolveMu(tb, evals, Tele, 2*noc, error)
-    PASS_ERROR(error)
+    PASS_ERROR_AND_STOP_TIMER("occupy", error)
 
     F = 0.0_DP
 
@@ -133,7 +133,7 @@ contains
 
     tb%mu = mu
 
-    call timer_stop('occu')
+    call timer_stop("occupy")
 
   endsubroutine occupy
 

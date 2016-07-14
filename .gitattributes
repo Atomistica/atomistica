@@ -1,1 +1,2 @@
 src/lammps/pair_style/pair_atomistica.cpp ident
+src/python/atomistica/_version.py export-subst

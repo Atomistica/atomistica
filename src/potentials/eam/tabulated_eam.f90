@@ -90,7 +90,7 @@ module tabulated_eam
      type(simple_spline_t)  :: fF        !< Embedding function
      type(simple_spline_t)  :: fZ        !< Z(r) - effective charge for repulsive part
      type(simple_spline_t)  :: frho      !< rho(r) - embedding density
-     
+
 
      real(DP)               :: cutoff    !< Cut-off radius
 
@@ -208,7 +208,7 @@ contains
     call write(this%fZ, "fZ_sq.out", 0.01_DP)
     call write(this%frho, "frho_sq.out", 0.01_DP)
 #endif
-         
+
     call fclose(f)
 
   endsubroutine tabulated_eam_init
@@ -306,12 +306,14 @@ contains
     PASS_ERROR(ierror)
 
     maxneb = 0
+#ifndef __GFORTRAN__
     !$omp  parallel do default(none) &
     !$omp& shared(nl, p, this) &
     !$omp& reduction(max:maxneb)
+#endif
     do i = 1, p%natloc
        if (IS_EL2(this%els, p%el(i))) then
-          maxneb = max(maxneb, nl%last(i)-nl%seed(i)+1)
+          maxneb = max(maxneb, int(nl%last(i)-nl%seed(i)+1))
        endif
     enddo
 
@@ -454,7 +456,7 @@ contains
 
           SPLINE_F_AND_DF(F, rho, Fi, dFi)
           tls_sca1(i)  = tls_sca1(i) + Fi
-        
+
           !
           ! Repulsive energy and forces
           !   phi = Z**2/r

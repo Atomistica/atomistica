@@ -69,6 +69,7 @@ module dense_hamiltonian_type
      integer(C_INT)     :: nat          ! number of atoms
      integer(C_INT)     :: nk = 1       ! number of k-points/spins
      integer(C_INT)     :: norb         ! number of orbitals
+     integer(C_INT)     :: norbloc      ! number of orbitals (local to this process)
 
      type(C_PTR)        :: el           ! list of elements (from particles_t)
 

@@ -1,0 +1,4 @@
+include versioneer.py
+graft src
+graft tools
+global-exclude *.pyc __pycache__ potentials_nonfree

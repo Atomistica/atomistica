@@ -41,3 +41,7 @@ _atomistica.startup()
 atexit.register(_atomistica.shutdown)
 
 
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

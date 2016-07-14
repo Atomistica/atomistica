@@ -20,6 +20,7 @@
 !! ======================================================================
 ! @meta
 !   shared
+!   dependencies:verlet_support.f90
 !   classtype:fire_t classname:FIRE interface:integrators
 ! @endmeta
 

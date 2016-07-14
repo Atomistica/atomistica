@@ -46,6 +46,10 @@ module dense_notb
   use neighbors
   use filter
 
+#ifdef _MP
+  use communicator
+#endif
+
   use coulomb
 
   use materials
@@ -99,8 +103,6 @@ module dense_notb
      !! If this is specified on input, qtot should not be,
      !! and vice versa.
      !<
-     real(DP)                  :: in_noc  = 0.0_DP
-     
      real(DP)                  :: noc  = 0.0_DP
 
      !>
@@ -122,11 +124,20 @@ module dense_notb
      !! charge of the system is non-zero, but then things
      !! will probably not work always, so be careful!
      !<
-     real(DP)                  :: in_qtot = 0.0_DP
-     real(DP)                  :: qtot  = 0.0_DP
+     real(DP)                  :: qtot = 0.0_DP
 
      character(MAX_EL_STR)     :: elements  = "*"  !< Elements included in tight-binding
      integer                   :: el
+
+#ifdef _MPI
+     !> Cutoff for divide-and-conquer buffer zone
+     !!
+     !! Determine the cutoff for the divide-and-conquer buffer zone in
+     !! distance units. If negative, the Hamiltonian cutoff is used as the
+     !! buffer zone cutoff.
+     !<
+     real(DP)                  :: buffer_cutoff = -1.0_DP
+#endif _MPI
 
      !
      ! Debug
@@ -232,7 +243,7 @@ contains
 
     ASSIGN_PROPERTY(elements)
     if (present(qtot)) then
-       this%in_qtot = qtot
+       this%qtot = qtot
     endif
 
     ! init materials database
@@ -330,50 +341,6 @@ contains
 
 
   !>
-  !! Compute the number of occupied orbitals
-  !!
-  !! Compute the number of occupied orbitals
-  !<
-  subroutine notb_init_noc(this, p, ierror)
-    implicit none
-
-    type(dense_notb_t), intent(inout)  :: this
-    type(particles_t),  intent(in)     :: p
-    integer,  optional, intent(inout)  :: ierror
-
-    ! ---
-
-    type(notb_element_t), pointer  :: this_tb_at(:)
-
-    ! ---    
-
-    INIT_ERROR(ierror)
-    call c_f_pointer(this%tb%at, this_tb_at, [p%nat])
-
-    if (this%in_noc <= 0.0_DP) then
-
-       this%noc  = get_occupied_orbitals(p, this%el, this_tb_at, this%in_qtot)
-
-    else
-
-       if(this%in_qtot /= 0.0_DP) then
-          RAISE_ERROR("Only number of occupied orbitals OR the total charge should be specified on input!", ierror)
-       endif
-
-       this%noc = this%in_noc
-
-    endif
-
-    this%qtot = get_total_charge(p, this%el, this_tb_at, this%noc)
-
-    write (ilog, '(5X,A)')  "Total number of orbitals  = " // this%tb%norb
-    write (ilog, '(5X,A)')  "Occupied orbitals         = " // this%noc
-    write (ilog, '(5X,A)')  "Charge of TB subsystem    = " // this%qtot
-
-  endsubroutine notb_init_noc
-
-
-  !>
   !! Initialize
   !!
   !! Initialize this NOTB object if all information is available
@@ -395,15 +362,15 @@ contains
     INIT_ERROR(ierror)
     call del(this%tb)
 
-    ! - report
-    write (ilog, '(A)')  "- dense_notb_bind_to -"
+    ! Report
+    call prlog("- dense_notb_bind_to -")
 #ifdef COMPLEX_WF
-    write (ilog, '(5X,A)')  "The tight-binding module has been compiled for complex arithmetics."
+    call prlog("The tight-binding module has been compiled for complex arithmetics.")
 #else
-    write (ilog, '(5X,A)')  "The tight-binding module has been compiled for real arithmetics."
+    call prlog("The tight-binding module has been compiled for real arithmetics.")
 #endif
 
-    ! - init
+    ! Init
 
     this%el  = filter_from_string(this%elements, p, ierror=ierror)
     PASS_ERROR(ierror)
@@ -414,15 +381,17 @@ contains
          error = ierror)
     PASS_ERROR(ierror)
 
-    ! - Occupied orbitals / total charge
-
-    call notb_init_noc(this, p, ierror)
-    PASS_ERROR(ierror)
-
-    ! - Request interaction range
+    ! Request interaction range
     call request_interaction_range(nl, this%tb%cutoff)
 
-    ! - Init other stuff
+#ifdef _MP
+    ! Request border for buffer zone
+    if (this%buffer_cutoff > 0.0_DP) then
+       call request_border(mod_communicator, p, this%buffer_cutoff)
+    endif
+#endif
+
+    ! Init other stuff
 
     this%it  = 0
 
@@ -601,6 +570,10 @@ contains
 
     ! ---
 
+    real(DP) :: noc
+
+    ! ---
+
     INIT_ERROR(ierror)
 
     ! Verify pointers
@@ -614,14 +587,15 @@ contains
     call update(nl, p, ierror)
     PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
 
-#ifdef LAMMPS
     ! Update the atom to H/S matrix-block match
-    call assign_orbitals(this%tb, p, error=ierror)
+    call update_orbitals(this%tb, p, error=ierror)
     PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
-#endif
 
     call hs_setup(this%tb, this%mat, p, nl, error=ierror)
     PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
+
+    ! Compute number of occupied orbitals
+    noc = get_occupied_orbitals(p, this%el, this%tb, this%qtot)
 
     ! Solve either with or without charge self-consistency
     if (associated(this%scc)) then
@@ -633,14 +607,14 @@ contains
        this%it  = this%it + 1
        call establish_self_consistency( &
             this%scc, p, nl, this%tb, q, &
-            this%noc, &
+            noc, &
             f     = this%tb%f, &
             error = ierror)
-       PASS_ERROR(ierror)
+       PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
     else
        call diag_start(this%solver, this%tb, error=ierror)
        PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
-       call diag_HS(this%solver, this%tb, this%noc, error=ierror)
+       call diag_HS(this%solver, this%tb, noc, error=ierror)
        PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
        call diag_stop(this%solver, this%tb, error=ierror)
        PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
@@ -694,6 +668,10 @@ contains
        end if
     end do
 
+#ifdef _MPI
+    call sum_in_place(mod_communicator%mpi, qc)
+#endif
+
     if(abs(qc-qtot) > 1e-10) then
        WARN("Adjusting charge of TB (sub)system from " // qc // " to " // qtot // ". Using homogeneous charge distribution.")
        do i = 1, p%natloc
@@ -713,15 +691,15 @@ contains
   !! Calculates the total number of occupied orbitals from the elements in the system
   !! (to form a neutral molecule (occ=0), anion (occ=-1), or cation (occ=-2) )
   !<
-  function get_occupied_orbitals(p, f, at, q) result(noc)
+  function get_occupied_orbitals(p, f, tb, q) result(noc)
     implicit none
 
-    type(particles_t),    intent(in)  :: p          !< Particles object
-    integer,              intent(in)  :: f          !< Filter for atom types
-    type(notb_element_t), intent(in)  :: at(p%nat)  !< Atom type data from materials database
-    real(DP),             intent(in)  :: q          !< Total charge
+    type(particles_t),         intent(in) :: p    !< Particles object
+    integer,                   intent(in) :: f    !< Filter for atom types
+    type(dense_hamiltonian_t), intent(in) :: tb   !< Atom type data from materials database
+    real(DP),                  intent(in) :: q    !< Total charge
 
-    real(DP)                          :: noc        !< Number of occupied orbitals
+    real(DP)                              :: noc  !< Number of occupied orbitals
 
     ! ---
 
@@ -730,12 +708,22 @@ contains
 
     ! ---
 
+    type(notb_element_t), pointer :: at(:)
+
+    ! ---
+
+    call c_f_pointer(tb%at, at, [p%nat])
+
     occ = 0.0_DP
-    do i = 1, p%natloc
+    do i = 1, p%nat
        if (IS_EL(f, p, i)) then
           occ = occ + at(i)%q0
        endif
     enddo
+
+!#ifdef _MPI
+!    call sum_in_place(mod_communicator%mpi, occ)
+!#endif
 
     noc = (occ - q)/2
 
@@ -796,7 +784,7 @@ contains
          CSTR("elements"), &
          CSTR("Elements for which to activate this module."))
 
-    call ptrdict_register_real_property(m, c_loc(this%in_noc), &
+    call ptrdict_register_real_property(m, c_loc(this%noc), &
          CSTR("occupied_orbitals"), &
          CSTR("Number of occupied orbitals (automatically determined if set to zero)."))
 
@@ -807,6 +795,12 @@ contains
     call ptrdict_register_string_property(m, c_locs(this%database_folder), &
          DENSE_NOTB_MAX_FOLDER_STRING, CSTR("database_folder"), &
          CSTR("Folder containing the NOTB parametrization."))
+
+#ifdef _MPI
+    call ptrdict_register_real_property(m, c_loc(this%buffer_cutoff), &
+         CSTR("buffer_cutoff"), &
+         CSTR("Cutoff (width) of the divide-and-conquer buffer zone. Default: Same as Hamiltonian cutoff"))
+#endif
 
 
     allocate(this%solver)

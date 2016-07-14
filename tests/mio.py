@@ -133,7 +133,7 @@ def check_db(c, db, test=None):
             % ( "bond", "value", "reference", "error" ))
         print("%10s %10s %10s ( %10s )" \
             % ( "----", "-----", "---------", "-----" ))
-    for mol, values in db.iteritems():
+    for mol, values in db.items():
         #if mol == 'H2O':
         if 1:
             a = molecule(mol)
@@ -144,7 +144,7 @@ def check_db(c, db, test=None):
             a.set_calculator(c)
             FIRE(a, logfile=None).run(fmax=0.001)
 
-            for name, ( ( i1, i2 ), refvalue ) in values.iteritems():
+            for name, ( ( i1, i2 ), refvalue ) in values.items():
                 value = a.get_distance(i1, i2)
                 if test is None:
                     print('%10s %10.3f %10.3f ( %10.3f )' % \

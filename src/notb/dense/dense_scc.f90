@@ -398,8 +398,10 @@ contains
     if (allocated(this%q)) then
        deallocate(this%q)
     endif
-    allocate(this%r(3, p%maxnatloc, this%extrapolation_memory))
-    allocate(this%q(p%maxnatloc, this%extrapolation_memory))
+    if (this%extrapolation_memory >= 2) then
+       allocate(this%r(3, p%maxnatloc, this%extrapolation_memory))
+       allocate(this%q(p%maxnatloc, this%extrapolation_memory))
+    endif
 
     this%tb    => tb
 
@@ -430,7 +432,11 @@ contains
 
        ! Report
        call prlog("- dense_scc_internal_init -")
-       call prlog("     Self-consistent charge scheme ready for use")
+       call prlog("dq_crit              = "//this%dq_crit)
+       call prlog("miximg               = "//this%beta)
+       call prlog("andersen_memory      = "//this%andersen_memory)
+       call prlog("max_nit              = "//this%max_nit)
+       call prlog("extrapolation_memory = "//this%extrapolation_memory)
        call prlog
 
        call dense_scc_copy_Hubbard_U(this%coul, this%p, this%tb, error)
@@ -561,16 +567,16 @@ contains
        return
     end if
 
-    call timer_start('scc_establish_self_consistency')
-
     this%niterations = this%niterations + 1
 
     !
     ! Extrapolate charges
     !
 
-    call extrapolate_charges(this, p, q, error=error)
-    PASS_ERROR(error)
+    if (this%extrapolation_memory >= 2) then
+       call extrapolate_charges(this, p, q, error=error)
+       PASS_ERROR(error)
+    endif
 
     !
     ! Init
@@ -591,6 +597,8 @@ contains
        filter = filter_from_string("*", p, ierror=error)
        PASS_ERROR(error)
     end if
+
+    call timer_start("scc_establish_self_consistency")
 
     ! pack charges from q to f_q_prev
     call filter_pack(filter, p, q, f_q_prev)
@@ -619,7 +627,7 @@ contains
 
        ! solve: calculate potential -> diagonalize -> calculate new charges
        call solve(error=error)
-       PASS_ERROR(error)
+       PASS_ERROR_AND_STOP_TIMER("scc_establish_self_consistency", error)
 
        ! new charges from q to f_q_new
        call filter_pack(filter, p, q, f_q_new)
@@ -676,7 +684,7 @@ contains
     phi  = 0.0_DP
     call coulomb_potential(part, nl, phi_in)
     call diag_HS(this%solv, tb, part, noc, phi_in, error=error)
-    PASS_ERROR(error)
+    PASS_ERROR_AND_STOP_TIMER("scc_establish_self_consistency", error)
     e1 = e_bs(solver)
     e2 = 0.0_DP
     call coulomb_force(part, nl, e2)
@@ -694,7 +702,7 @@ contains
        phi_in  = 0.0_DP
        call coulomb_potential(part, nl, phi_in)
        call diag_HS(solver, tb, part, noc, phi_in, error=error)
-       PASS_ERROR(error)
+       PASS_ERROR_AND_STOP_TIMER("scc_establish_self_consistency", error)
        e1 = e_bs(solver)
        e2 = 0.0_DP
        call coulomb_force(part, nl, e2)
@@ -707,7 +715,7 @@ contains
 
 #endif
 
-    call timer_stop('scc_establish_self_consistency')
+    call timer_stop("scc_establish_self_consistency")
 
   contains
 
@@ -845,11 +853,11 @@ contains
 
     call ptrdict_register_integer_property(m, c_loc(this%andersen_memory), &
          CSTR("andersen_memory"), &
-         CSTR("Anderson mixing memory."))
+         CSTR("Andersen mixing memory."))
 
     call ptrdict_register_integer_property(m, c_loc(this%extrapolation_memory), &
          CSTR("extrapolation_memory"), &
-         CSTR("Number of past time steps to consider for charge extrapolation (min 2)."))
+         CSTR("Number of past time steps to consider for charge extrapolation (min 2, extrapolation disabled if less)."))
 
     call ptrdict_register_integer_property(m, c_loc(this%warn), CSTR("warn"), &
          CSTR("Warn after a number of iterations without self-consistency."))
@@ -860,5 +868,4 @@ contains
   endsubroutine dense_scc_register
 
 endmodule dense_scc
-
 

@@ -96,7 +96,7 @@ module tabulated_alloy_eam
      type(simple_spline_t), allocatable  :: fF(:)      !< Embedding function
      type(simple_spline_t), allocatable  :: fphi(:, :) !< phi(r) - repulsive part
      type(simple_spline_t), allocatable  :: frho(:)    !< rho(r) - embedding density
-     
+
 
      real(DP)               :: cutoff    !< Cut-off radius
 
@@ -226,7 +226,7 @@ contains
                0.0001_DP)
           call write(this%frho(i), "frho_"//trim(this%db_elements(i))//".out", &
                0.01_DP)
-       endif 
+       endif
 
 #ifdef AVOID_SQRT
        call square_x_axis(this%frho(i), 10*this%frho(i)%n)
@@ -251,7 +251,7 @@ contains
           endif
        enddo
     enddo
-       
+
     call fclose(f)
 
     call prlog
@@ -390,15 +390,17 @@ contains
     PASS_ERROR(ierror)
 
     maxneb = 0
+#ifndef __GFORTRAN__
     !$omp  parallel do default(none) &
     !$omp  private(eli) &
     !$omp& shared(mask, nl, p, this) &
     !$omp& reduction(max:maxneb)
+#endif
     do i = 1, p%natloc
        if (.not. present(mask) .or. mask(i) /= 0) then
           eli = p%el(i)
           if (IS_EL2(this%els, eli) .and. this%el2db(eli) > 0) then
-             maxneb = max(maxneb, nl%last(i)-nl%seed(i)+1)
+             maxneb = max(maxneb, int(nl%last(i)-nl%seed(i)+1))
           endif
        endif
     enddo

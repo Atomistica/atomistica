@@ -54,9 +54,9 @@ module dense_hamiltonian
      module procedure dense_hamiltonian_del
   endinterface
 
-  public :: assign_orbitals
-  interface assign_orbitals
-     module procedure dense_hamiltonian_assign_orbitals
+  public :: update_orbitals
+  interface update_orbitals
+     module procedure dense_hamiltonian_update_orbitals
   endinterface
 
   public :: e_atomic
@@ -95,7 +95,7 @@ contains
     endif
 
     if (present(p)) then
-       call assign_orbitals(this, p, error)
+       call update_orbitals(this, p, error)
     endif
 
   endsubroutine dense_hamiltonian_init
@@ -119,7 +119,7 @@ contains
   !**********************************************************************
   ! Set the particles object
   !**********************************************************************
-  subroutine dense_hamiltonian_assign_orbitals(this, p, error)
+  subroutine dense_hamiltonian_update_orbitals(this, p, error)
     implicit none
 
     type(dense_hamiltonian_t), target     :: this
@@ -141,7 +141,7 @@ contains
 
     INIT_ERROR(error)
 
-    call timer_start("dense_hamiltonian_assign_orbitals")
+    call timer_start("dense_hamiltonian_update_orbitals")
 
     this%p = c_loc(p)
     call c_f_pointer(this%mat, this_mat)
@@ -154,22 +154,26 @@ contains
 
     c = 0.0
     this%norb = 0
-    do i = 1, p%natloc
+    this%norbloc = 0
+    do i = 1, p%nat
 
        if (IS_EL(this%f, p, i)) then
 
           if (.not. element_by_Z(this_mat, p%el2Z(p%el(i)), enr=enr)) then
-              RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(i))))//"'.", "dense_hamiltonian_assign_orbitals", error)
+              RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(i))))//"'.", "dense_hamiltonian_update_orbitals", error)
           endif
 
           this%norb = this%norb + this_mat%e(enr)%no
+          if (i <= p%natloc) then
+             this%norbloc = this%norbloc + this_mat%e(enr)%no
+          endif
 
           do j = 1, i
              
              if (IS_EL(this%f, p, j)) then
 
                 if (.not. element_by_Z(this_mat, p%el2Z(p%el(j)), enr=enrj)) then
-                   RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(j))))//"'.", "dense_hamiltonian_assign_orbitals", error)
+                   RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(j))))//"'.", "dense_hamiltonian_update_orbitals", error)
                 endif
 
                 c = max(c, this_mat%cut(enr, enrj))
@@ -182,6 +186,8 @@ contains
        endif
 
     enddo
+
+    !write (*, *)  "update_orbitals, this%norb = ", this%norb, p%nat, p%natloc
 
     this%cutoff = c
 
@@ -198,7 +204,7 @@ contains
 #endif
 
              if (.not. element_by_Z(this_mat, p%el2Z(p%el(i)), enr=enr)) then
-                RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(i))))//"'.", "dense_hamiltonian_assign_orbitals", error)
+                RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(i))))//"'.", "dense_hamiltonian_update_orbitals", error)
              endif
              this_at(i)     = this_mat%e(enr)
              this_at(i)%o1  = ia
@@ -219,7 +225,7 @@ contains
              enddo
 
              if (.not. found) then
-                RAISE_ERROR_AND_STOP_TIMER("Could not find tag "//p%tag(i)//" of atom "//i//" in simulation.", "dense_hamiltonian_assign_orbitals", error)
+                RAISE_ERROR_AND_STOP_TIMER("Could not find tag "//p%tag(i)//" of atom "//i//" in simulation.", "dense_hamiltonian_update_orbitals", error)
              endif
           endif
 #endif
@@ -228,9 +234,9 @@ contains
 
     enddo
 
-    call timer_stop("dense_hamiltonian_assign_orbitals")
+    call timer_stop("dense_hamiltonian_update_orbitals")
 
-  endsubroutine dense_hamiltonian_assign_orbitals
+  endsubroutine dense_hamiltonian_update_orbitals
 
 
   !>
@@ -249,8 +255,7 @@ contains
 
     ! ---
 
-    integer  :: i, a0, a
-    real(DP) :: q0
+    integer  :: i, a0, q0
 
     type(notb_element_t), pointer  :: at(:)
 
@@ -262,19 +267,16 @@ contains
 
     e = 0.0_DP
     do i = 1, p%natloc
-       q0 = at(i)%q0
+       q0 = int(at(i)%q0)
 
-       do a0 = 1, at(i)%no
-          a = get_orbital(at(i)%no, a0)
-          if (q0 > 0.0_DP) then
-             q0 = q0 - 0.5_DP
-             e = e + at(i)%e(a)
-          endif
-          if (q0 > 0.0_DP) then
-             q0 = q0 - 0.5_DP
-             e = e + at(i)%e(a)
-          endif
+       do a0 = 1, q0/2
+          e = e + 2*at(i)%e(get_orbital(at(i)%no, a0))
        enddo
+       if (mod(q0, 2) /= 0) then
+          e = e + at(i)%e(get_orbital(at(i)%no, q0/2+1))
+       endif
+       ! If atom has fractional charge...
+       e = e + (at(i)%q0-q0)*at(i)%e(get_orbital(at(i)%no, q0/2+1))
     enddo
 
   endfunction dense_hamiltonian_e_atomic

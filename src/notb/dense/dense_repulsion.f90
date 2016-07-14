@@ -82,12 +82,11 @@ contains
 
                 if (i <= j) then
 
-!                   dr  = nl%abs_dr(ni)
                    dr  = GET_ABS_DRJ(p, nl, i, j, ni)
                    if (dr < db%R(tb_at(i)%enr, tb_at(j)%enr)%cut) then
                       a = interval(db%R(tb_at(i)%enr, tb_at(j)%enr), dr)
                       erep0 = f(db%R(tb_at(i)%enr, tb_at(j)%enr), 1, dr, a)
-                      if (j > p%natloc) then
+                      if (i == j .or. j > p%natloc) then
                          ! Only count half of the energy if one atom is ghost
                          erep = erep + 0.5_DP*erep0
                       else
@@ -106,9 +105,7 @@ contains
     enddo i_loop
     
     res = erep
-!    res = 0.0
-    
-    !    res = res / 2
+
   endfunction E_rep
 
 endmodule dense_repulsion

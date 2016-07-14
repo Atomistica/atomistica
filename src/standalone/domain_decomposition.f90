@@ -422,6 +422,8 @@ contains
     call prlog("     Ghosts recv     = "//(1.0_DP*this%n_recv_g_tot)/this%nit_g)
     call prlog
 
+    call finalise(this%mpi)
+
   endsubroutine communicator_del
 
 
@@ -963,6 +965,11 @@ contains
   endsubroutine communicator_communicate_forces
 
 
+  !>
+  !! Register object introspection
+  !!
+  !! Expose state of communicator object through a dictionary object
+  !<
   subroutine communicator_register(this, cfg)
     use, intrinsic :: iso_c_binding
 
