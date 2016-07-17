@@ -126,16 +126,18 @@
              if (p%el2Z(j) > 0) then
                 ii = this%Z2db(p%el2Z(i))
                 jj = this%Z2db(p%el2Z(j))
-                nel = Z2pair(this, ii, jj)
+                if (ii > 0 .and. jj > 0) then
+                   nel = Z2pair(this, ii, jj)
 #ifdef SCREENING
-                cutoff = x(nel)*sqrt(this%max_cut_sq(nel))
+                   cutoff = x(nel)*sqrt(this%max_cut_sq(nel))
 #else
-                cutoff = this%cut_in_h(nel)
+                   cutoff = this%cut_in_h(nel)
 #endif
-                call request_interaction_range(nl, cutoff, i, j)
+                   call request_interaction_range(nl, cutoff, i, j)
 #ifdef LAMMPS
-                call set_interaction_range(p, 2*cutoff, i, j)
+                   call set_interaction_range(p, 2*cutoff, i, j)
 #endif
+                endif
              endif
           enddo
        endif
