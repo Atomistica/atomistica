@@ -11,6 +11,18 @@ TODO
 Change log
 ==========
 
+v0.4.3
+------
+
+- Preparation for PyPI release
+- Minor fixes to tight-binding solver (when used with MPI domain
+  decomposition)
+
+v0.4.2
+------
+
+- Support for new ASE calculator interface (thanks to James Kermode)
+
 v0.4.1
 ------
 
