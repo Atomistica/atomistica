@@ -70,10 +70,10 @@ OPTFLAGS = -xHost -O3 -ip -funroll-loops -unroll-aggressive -fp-model fast
 #                              upon SIGTERM, i.e. if wallclock time is reached)
 # 
 DEFINES  = \
+	-D_MPI \
 	-DHAVE_IFPORT \
 	-DLAMMPS \
-	-DHAVE_MKL \
-	-D_MPI
+	-DHAVE_MKL
 
 
 #

@@ -40,11 +40,11 @@ LIBTOOL  = ar r
 #
 # Normal
 #
-OPTFLAGS = -O3 -qstrict -qarch=qp -qtune=qp
+OPTFLAGS = -g -O3 -qstrict -qarch=qp -qtune=qp
 #
 # Debug
 #
-#OPTFLAGS = -g -qfullpath -qkeepparm
+#OPTFLAGS = -g -qfullpath -qkeepparm -qcheck
 
 #
 # * Defines
@@ -82,6 +82,7 @@ OPTFLAGS = -O3 -qstrict -qarch=qp -qtune=qp
 # - Would be nice to have all explained eventually.
 #
 DEFINES  = \
+	-WF,-D_MPI \
 	-WF,-DLAMMPS \
 	-WF,-DNO_BIND_C_OPTIONAL
 
@@ -95,12 +96,20 @@ GFFLAGS  = \
 	$(OPTFLAGS) \
 	$(MPI_FLAGS) \
 	$(OMP_FLAGS)
+
+
 #
-# GNU
+# MPI include files
 #
-FFLAGS   = $(GFFLAGS) 
-F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE) -qsuffix=cpp=f90
-CFLAGS   = -O3 -qstrict -qarch=qp -qtune=qp
+GFFLAGS += -I$(shell which mpicc | sed 's,bin/mpicc,include,g')
+
+
+#
+# XL
+#
+FFLAGS   = $(GFFLAGS) -q64
+F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE) -q64 -qsuffix=cpp=f90
+CFLAGS   = -q64 -O3 -qstrict -qarch=qp -qtune=qp
 
 #
 # Use LDFLAGS = -static if you want a static binary

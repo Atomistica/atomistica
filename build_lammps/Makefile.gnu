@@ -93,6 +93,7 @@ OPTFLAGS = -O3 -funroll-loops
 # - Would be nice to have all explained eventually.
 #
 DEFINES  = \
+	-D_MPI \
 	-DLAMMPS \
 	-DNO_BIND_C_OPTIONAL
 
