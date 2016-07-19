@@ -69,6 +69,7 @@ class PairAtomistica : public Pair {
   intptr_t *Atomistica_seed_;
   intptr_t *Atomistica_last_;
   int *Atomistica_neighb_;
+  int *Atomistica_neighb_endptr_;
   int Atomistica_nneighb_;
 
   int *mask_;
