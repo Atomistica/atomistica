@@ -531,7 +531,6 @@ void PairAtomistica::FAtomistica(int eflag, int vflag)
   // set pointers in neighbor list object
   neighbors_set_pointers(neighbors_,nall,Atomistica_seed_,Atomistica_last_,
                          Atomistica_neighb_endptr_-Atomistica_neighb_+1,Atomistica_neighb_);
-                         #Atomistica_nneighb_,Atomistica_neighb_);
 
   int ierror;
   epot = 0.0;
