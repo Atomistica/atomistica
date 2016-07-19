@@ -120,7 +120,9 @@ def write_factory_f90(mods, str, fn):
                 "  if (.not. associated(this_fptr))   stop '[lammps_%s_free] *this_fptr* is NULL.'\n" % f90name)
         if 'del' in methods:
             f.write("  call del(this_fptr)\n")
-        f.write("  deallocate(this_fptr)\n"  +
+        f.write("#ifndef __bg__\n" +
+                "  deallocate(this_fptr)\n"  +
+                "#endif\n" +
                 "endsubroutine lammps_%s_free\n\n\n" % f90name)
 
         if 'register_data' in methods:
