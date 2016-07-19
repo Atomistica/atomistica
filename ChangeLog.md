@@ -11,6 +11,12 @@ TODO
 Change log
 ==========
 
+v0.4.4
+------
+
+- Bug fix: Occasional NaNs in bond-order potentials
+- Maintenance: Fixed segfault on BlueGene 
+
 v0.4.3
 ------
 
