@@ -108,13 +108,13 @@ subroutine bo(this, ktypi, ijpot, zij, fcij, faij, bij, dfbij)
   implicit none
 
   type(BOP_TYPE), intent(in)  :: this
-  integer, intent(in)         :: ktypi
-  integer, intent(in)         :: ijpot
-  real(DP), intent(in)        :: zij
-  real(DP), intent(in)        :: fcij
-  real(DP), intent(in)        :: faij
-  real(DP), intent(out)       :: bij
-  real(DP), intent(out)       :: dfbij
+  integer,        intent(in)  :: ktypi
+  integer,        intent(in)  :: ijpot
+  real(DP),       intent(in)  :: zij
+  real(DP),       intent(in)  :: fcij
+  real(DP),       intent(in)  :: faij
+  real(DP),       intent(out) :: bij
+  real(DP),       intent(out) :: dfbij
 
   ! ---
 
@@ -124,22 +124,22 @@ subroutine bo(this, ktypi, ijpot, zij, fcij, faij, bij, dfbij)
 
   if (this%db%n(ijpot) == 1.0_DP) then
 
-     arg    = 1.0_DP + zij
-     bij    = arg ** this%bo_exp(ijpot)
-     dfbij  = this%bo_fac(ijpot) * fcij * faij * arg ** this%bo_exp1(ijpot)
+     arg   = 1.0_DP + zij
+     bij   = arg ** this%bo_exp(ijpot)
+     dfbij = this%bo_fac(ijpot) * fcij * faij * arg ** this%bo_exp1(ijpot)
 
   else
 
-     arg    = 1.0_DP + zij ** this%db%n(ijpot)
-     bij    = arg ** this%bo_exp(ijpot)
-
-     if (zij == 0.0_DP) then
-        dfbij  = 0.0_DP
-     else
-        dfbij  = &
+     if (zij > 0.0_DP) then
+        arg   = 1.0_DP + zij ** this%db%n(ijpot)
+        bij   = arg ** this%bo_exp(ijpot)
+        dfbij = &
              this%bo_fac(ijpot) * fcij * faij &
              * zij ** ( this%db%n(ijpot) - 1.0_DP ) &
              * arg ** this%bo_exp1(ijpot)
+     else
+        bij   = 0.0_DP
+        dfbij = 0.0_DP
      endif
 
   endif
