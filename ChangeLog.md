@@ -11,6 +11,12 @@ TODO
 Change log
 ==========
 
+v0.4.5
+------
+
+- Maintenance: Fixed problem with passing c_null_ptr through c_f_pointer when
+  using XLF
+
 v0.4.4
 ------
 
