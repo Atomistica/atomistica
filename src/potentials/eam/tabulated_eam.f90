@@ -451,6 +451,12 @@ contains
           enddo
 
           !
+          ! Make sure density is positive or zero
+          !
+
+          if (rho < 0.0_DP)  rho = 0.0_DP
+
+          !
           ! Embedding energy
           !
 
