@@ -189,9 +189,10 @@ def write_factory_f90(mods, str, fn):
                 "  type(particles_t), pointer :: p\n" +
                 "  type(neighbors_t), pointer :: nl\n")
         if 'mask' in features:
-                f.write("  integer(c_int), pointer :: mask(:)\n")
+                f.write("  integer(c_int), pointer :: mask(:) => NULL()\n")
         if 'per_at' in features:
-                f.write("  real(c_double), pointer :: epot_per_at(:), wpot_per_at(:,:)\n")
+                f.write("  real(c_double), pointer :: epot_per_at(:) => NULL()\n")
+                f.write("  real(c_double), pointer :: wpot_per_at(:,:) => NULL()\n")
         f.write("  error = ERROR_NONE\n" +
                 "  call c_f_pointer(this_cptr, this_fptr)\n" +
                 "  call c_f_pointer(p_cptr, p)\n" +
@@ -200,24 +201,27 @@ def write_factory_f90(mods, str, fn):
                 "  if (.not. associated(p))   stop '[lammps_%s_energy_and_forces] *p* is NULL.'\n" % f90name +
                 "  if (.not. associated(nl))   stop '[lammps_%s_energy_and_forces] *nl* is NULL.'\n" % f90name)
         optargs = []
+        f.write('  if (c_associated(mask_cptr)) then\n')
         if 'mask' in features:
-            f.write("  call c_f_pointer(mask_cptr, mask, [p%nat])\n")
+            f.write("     call c_f_pointer(mask_cptr, mask, [p%nat])\n")
             optargs += ['mask']
         else:
-            f.write('  if (c_associated(mask_cptr)) then\n' +
-                    '     RETURN_ERROR("*mask* argument present but not supported by potential %s.", error)\n' % name +
-                    '  endif\n')
+            f.write('     RETURN_ERROR("*mask* argument present but not supported by potential %s.", error)\n' % name)
+        f.write('  endif\n')
+        f.write('  if (c_associated(epot_per_at_cptr)) then\n')
         if 'per_at' in features:
-            f.write("  call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n" +
-                    "  call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n")
-            optargs += ['epot_per_at', 'wpot_per_at']
+            f.write("     call c_f_pointer(epot_per_at_cptr, epot_per_at, [p%nat])\n")
+            optargs += ['epot_per_at']
         else:
-            f.write('  if (c_associated(epot_per_at_cptr)) then\n' +
-                    '     RETURN_ERROR("*epot_per_at* argument present but not supported by potential %s.", error)\n' % name +
-                    '  endif\n' +
-                    '  if (c_associated(wpot_per_at_cptr)) then\n' +
-                    '     RETURN_ERROR("*wpot_per_at* argument present but not supported by potential %s.", error)\n' % name +
-                    '  endif\n')
+            f.write('     RETURN_ERROR("*epot_per_at* argument present but not supported by potential %s.", error)\n' % name)
+        f.write('  endif\n')
+        f.write('  if (c_associated(wpot_per_at_cptr)) then\n')
+        if 'per_at' in features:
+            f.write("     call c_f_pointer(wpot_per_at_cptr, wpot_per_at, [6,p%nat])\n")
+            optargs += ['wpot_per_at']
+        else:
+            f.write('     RETURN_ERROR("*wpot_per_at* argument present but not supported by potential %s.", error)\n' % name)
+        f.write('  endif\n')
         f.write(switch_optargs("energy_and_forces(this_fptr, p, nl, epot, f, wpot, %sierror=error)", optargs))
         f.write("endsubroutine lammps_%s_energy_and_forces\n\n\n" % f90name)
     

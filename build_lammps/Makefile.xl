@@ -20,8 +20,8 @@ LD        = bgxlf2008_r
 #
 # OpenMP parallelization or hybrid MPI/OpenMP
 #
-OMP_FLAGS = 
-#OMP_FLAGS = -qsmp=omp
+#OMP_FLAGS = 
+OMP_FLAGS = -qsmp=omp
 
 
 #
@@ -40,7 +40,7 @@ LIBTOOL  = ar r
 #
 # Normal
 #
-OPTFLAGS = -g -O3 -qstrict -qarch=qp -qtune=qp
+OPTFLAGS = -O3 -qstrict -qarch=qp -qtune=qp
 #
 # Debug
 #
