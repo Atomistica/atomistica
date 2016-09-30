@@ -533,14 +533,15 @@ contains
   !!
   !! Return the function value and derivative
   !<
-  subroutine simple_spline_f_and_df(this, x, f, df, ierror)
+  subroutine simple_spline_f_and_df(this, x, f, df, extrapolate, ierror)
     implicit none
 
-    type(simple_spline_t), intent(in)  :: this
-    real(DP), intent(in)               :: x
-    real(DP), intent(out)              :: f
-    real(DP), intent(out)              :: df
-    integer, intent(inout), optional   :: ierror
+    type(simple_spline_t), intent(in)    :: this
+    real(DP),              intent(in)    :: x
+    real(DP),              intent(out)   :: f
+    real(DP),              intent(out)   :: df
+    logical,     optional, intent(in)    :: extrapolate
+    integer,     optional, intent(inout) :: ierror
 
     ! ---
 
@@ -579,20 +580,31 @@ contains
 
     ! ---
 
-    dx  = this%dx
+    dx = this%dx
 
-    if (x == this%cut) then
-       xf        = this%n
-       i         = this%n-1
+    if (present(extrapolate) .and. extrapolate) then
+       xf = (x-this%x0)/dx+1
+       i  = floor(xf)
+
+       if (i < 1) then
+          i = 1
+       else if (i >= this%n) then
+          i = this%n-1
+       endif
     else
-       xf        = (x-this%x0)/dx+1
-       i         = floor(xf)
-    endif
+       if (x == this%cut) then
+          xf = this%n
+          i  = this%n-1
+       else
+          xf = (x-this%x0)/dx+1
+          i  = floor(xf)
+       endif
 
-    if (i < 1 .or. i >= this%n) then
-       f   = 1.0_DP
-       df  = 1.0_DP
-       RAISE_ERROR("x = " // x // " outside of the defined interval.", ierror)
+       if (i < 1 .or. i >= this%n) then
+          f  = 1.0_DP
+          df = 1.0_DP
+          RAISE_ERROR("x = " // x // " outside of the defined interval.", ierror)
+       endif
     endif
 
     B   = xf-i

@@ -36,6 +36,12 @@ import numpy as np
 import ase.io as io
 
 from atomistica import TabulatedAlloyEAM
+from atomistica.tests import test_forces
+
+###
+
+dx = 1e-6
+tol = 1e-6
 
 ###
 
@@ -45,6 +51,29 @@ class TestEAMSpecialCases(unittest.TestCase):
         a = io.read('eam_crash1.poscar')
         a.set_calculator(TabulatedAlloyEAM(fn='Cu_mishin1.eam.alloy'))
         a.get_potential_energy()
+
+    def test_dense_forces(self):
+        orig_a = io.read('eam_crash2.poscar')
+        c = TabulatedAlloyEAM(fn='Cu_mishin1.eam.alloy')
+        for fac in [0.2, 0.3, 0.4, 0.5]:
+            a = orig_a.copy()
+            a.set_cell(fac*a.cell, scale_atoms=True)
+            a.set_calculator(c)
+            ffd, f0, maxdf = test_forces(a, dx=dx)
+            if maxdf > tol:
+                nfail += 1
+                print("forces .failed.")
+                print("max(df)  = %f" % maxdf)
+                print("f - from potential")
+                for i, f in enumerate(f0):
+                    print(i, f)
+                print("f - numerically")
+                for i, f in enumerate(ffd):
+                    print(i, f)
+                print("difference between the above")
+                for i, f in enumerate(f0-ffd):
+                    print(i, f)
+            self.assertTrue(maxdf < tol)
 
 ###
 

@@ -545,9 +545,10 @@ contains
              !
 
 #ifdef _OPENMP
-             call f_and_df(this%fF(dbi), rho, Fi, dFi)
+             call f_and_df(this%fF(dbi), rho, Fi, dFi, extrapolate=.true.)
 #else
-             call f_and_df(this%fF(dbi), rho, Fi, dFi, ierror=ierror)
+             call f_and_df(this%fF(dbi), rho, Fi, dFi, extrapolate=.true., &
+                ierror=ierror)
              PASS_ERROR_WITH_INFO("Error evaluating the embedding energy for atom " // i // ". Is the density too large?", ierror)
 #endif
              tls_sca1(i)  = tls_sca1(i) + Fi
@@ -570,10 +571,11 @@ contains
                 !
 
 #ifdef _OPENMP
-                call f_and_df(this%fphi(dbi, dbj), abs_dr, phi, dphi)
+                call f_and_df(this%fphi(dbi, dbj), abs_dr, phi, dphi, &
+                  extrapolate=.true.)
 #else
                 call f_and_df(this%fphi(dbi, dbj), abs_dr, phi, dphi, &
-                  ierror=ierror)
+                  extrapolate=.true., ierror=ierror)
                 PASS_ERROR(ierror)
 #endif
                 r_abs_dr     = 1.0_DP/abs_dr
