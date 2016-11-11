@@ -1,5 +1,10 @@
 #! /bin/bash
 
+if [ ! -e $1/../setup.cfg ]; then
+  echo "Copying default setup.cfg..."
+  cp $1/../setup.cfg.gnu $1/../setup.cfg
+fi
+
 atomistica_revision=$( cd $1/.. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_version())")
 atomistica_date=$( cd $1/.. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_versions()['date'])")
 atomistica_url=$( cd $1 ; git config --get remote.origin.url )
