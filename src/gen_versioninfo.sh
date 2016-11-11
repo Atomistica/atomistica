@@ -1,8 +1,11 @@
-#! /bin/base
+#! /bin/bash
 
-atomistica_revision=$( cd $1 ; git describe --always --tags --dirty )
-atomistica_date=$( cd $1 ; git log -1 --format=%ct | awk '{print strftime("%d%b%y",$1)}' )
+atomistica_revision=$( cd $1/.. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_version())")
+atomistica_date=$( cd $1/.. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_versions()['date'])")
 atomistica_url=$( cd $1 ; git config --get remote.origin.url )
+if [ -z "$atomistica_url" ]; then
+  atomistica_url = "N/A"
+fi
 h=`hostname`
 m=`uname -m`
 
@@ -29,15 +32,6 @@ for i in "$@"; do
    fi
 done
 
-
-if [[ $atomistica_revision == "exported" ]]; then
-    if [[ -a $1/REV ]]; then
-	atomistica_revsion="$atomistica_revision, `cat $1/REV`"
-    fi
-else
-    echo $atomistica_revision > $1/REV
-    echo $atomistica_date > $1/REV_DATE
-fi
 
 mkdir -p $2
 cat<<EOF > $2/versioninfo.f90

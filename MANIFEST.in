@@ -2,3 +2,4 @@ include versioneer.py
 graft src
 graft tools
 global-exclude *.pyc __pycache__ potentials_nonfree
+include src/python/atomistica/_version.py

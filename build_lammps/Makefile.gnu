@@ -33,7 +33,7 @@ MPIROOT=$(shell which mpicc | sed 's,bin/mpicc,,')
 # *** Extra includes and libraries
 #
 #
-EXTRA_INCLUDE += -I$(MPIROOT)/include
+EXTRA_INCLUDE += -I$(MPIROOT)/include -I$(MPIROOT)/include/mpi
 EXTRA_LIB += -cxxlib
 #
 # *** LAPACK and BLAS link options here.

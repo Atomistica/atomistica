@@ -266,7 +266,7 @@ factories:
 	python $(SRCDIR)/standalone/gen_dispatch.py
 
 versioninfo:
-	sh $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(F90FLAGS)
+	bash $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(F90FLAGS)
 
 atomistica: versioninfo $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
