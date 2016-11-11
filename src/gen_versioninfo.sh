@@ -4,7 +4,7 @@ atomistica_revision=$( cd $1/.. ; python -c "from __future__ import print_functi
 atomistica_date=$( cd $1/.. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_versions()['date'])")
 atomistica_url=$( cd $1 ; git config --get remote.origin.url )
 if [ -z "$atomistica_url" ]; then
-  atomistica_url = "N/A"
+  atomistica_url="N/A"
 fi
 h=`hostname`
 m=`uname -m`
