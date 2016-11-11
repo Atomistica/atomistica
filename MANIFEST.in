@@ -1,5 +1,11 @@
 include versioneer.py
+include build_lammps/Makefile.*
+include build_standalone/Makefile.*
+include build_unittests/Makefile.*
+graft examples
+graft images
 graft src
+graft tests
 graft tools
 global-exclude *.pyc __pycache__ potentials_nonfree
 include src/python/atomistica/_version.py
