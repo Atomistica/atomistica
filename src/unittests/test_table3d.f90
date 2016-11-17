@@ -8,7 +8,7 @@ module test_table3d
 contains
 
   subroutine test_table3d_f_and_df
-    reaL(DP), parameter :: tol = 1e-6_DP
+    real(DP), parameter :: tol = 1e-6_DP
     type(table3d_t)     :: tab
     real(DP)            :: vals(0:1, 0:2, 0:3) = &
         reshape([1.0_DP, 2.0_DP, 3.0_DP, 4.0_DP, 5.0_DP, 6.0_DP, &
@@ -25,10 +25,10 @@ contains
           do k = 0, 3
              call eval(tab, 1.0_DP*i, 1.0_DP*j, 1.0_DP*k, val, dvaldi, dvaldj, &
                        dvaldk)
-             call assert_equals(vals(i, j, k), val, tol, "table3d|val")
-             call assert_equals(0.0_DP, dvaldi, tol, "table3d|dvaldi")
-             call assert_equals(0.0_DP, dvaldj, tol, "table3d|dvaldj")
-             call assert_equals(0.0_DP, dvaldk, tol, "table3d|dvaldk")
+             call assert_equals(vals(i, j, k), val, tol, "table3d|val|1")
+             call assert_equals(0.0_DP, dvaldi, tol, "table3d|dvaldi|1")
+             call assert_equals(0.0_DP, dvaldj, tol, "table3d|dvaldj|1")
+             call assert_equals(0.0_DP, dvaldk, tol, "table3d|dvaldk|1")
           enddo
        enddo
     enddo
@@ -40,10 +40,10 @@ contains
           do k = 0, 3
              call eval(tab, 1.0_DP*i, 1.0_DP*j, 1.0_DP*k, val, dvaldi, dvaldj, &
                        dvaldk)
-             call assert_equals(vals(i, j, k), val, tol, "table3d|val")
-             call assert_equals(2*vals(i, j, k), dvaldi, tol, "table3d|dvaldi")
-             call assert_equals(3*vals(i, j, k), dvaldj, tol, "table3d|dvaldj")
-             call assert_equals(4*vals(i, j, k), dvaldk, tol, "table3d|dvaldk")
+             call assert_equals(vals(i, j, k), val, tol, "table3d|val|2")
+             call assert_equals(2*vals(i, j, k), dvaldi, tol, "table3d|dvaldi|2")
+             call assert_equals(3*vals(i, j, k), dvaldj, tol, "table3d|dvaldj|2")
+             call assert_equals(4*vals(i, j, k), dvaldk, tol, "table3d|dvaldk|2")
           enddo
        enddo
     enddo
@@ -55,13 +55,19 @@ contains
                        dvaldk)
              call eval(tab, 0.1_DP*i-tol, 0.1_DP*j, 0.1_DP*k, val1, ti, tj, tk)
              call eval(tab, 0.1_DP*i+tol, 0.1_DP*j, 0.1_DP*k, val2, ti, tj, tk)
-             call assert_equals((val2-val1)/(2*tol), dvaldi, tol*1000, "table3d|dvaldi")
+             if (abs(dvaldi) > tol) then
+                call assert_equals((val2-val1)/(2*tol)/dvaldi, 1.0_DP, 10*tol, "table3d|dvaldi|3")
+             endif
              call eval(tab, 0.1_DP*i, 0.1_DP*j-tol, 0.1_DP*k, val1, ti, tj, tk)
              call eval(tab, 0.1_DP*i, 0.1_DP*j+tol, 0.1_DP*k, val2, ti, tj, tk)
-             call assert_equals((val2-val1)/(2*tol), dvaldj, tol*1000, "table3d|dvaldj")
+             if (abs(dvaldj) > tol) then
+                call assert_equals((val2-val1)/(2*tol)/dvaldj, 1.0_DP, 10*tol, "table3d|dvaldj|3")
+             endif
              call eval(tab, 0.1_DP*i, 0.1_DP*j, 0.1_DP*k-tol, val1, ti, tj, tk)
              call eval(tab, 0.1_DP*i, 0.1_DP*j, 0.1_DP*k+tol, val2, ti, tj, tk)
-             call assert_equals((val2-val1)/(2*tol), dvaldk, tol*1000, "table3d|dvaldk")
+             if (abs(dvaldk) > tol) then
+                call assert_equals((val2-val1)/(2*tol)/dvaldk, 1.0_DP, 10*tol, "table3d|dvaldk|3")
+             endif
           enddo
        enddo
     enddo
