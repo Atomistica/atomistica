@@ -40,6 +40,7 @@ VPATH = \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2x \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2sich \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2coh \
+	$(SRCDIR)/potentials_nonfree/bop/rebo2chx \
 	$(SRCDIR)/potentials/coulomb \
 	$(SRCDIR)/potentials_nonfree/coulomb \
 	$(SRCDIR)/potentials/eam \
@@ -272,7 +273,7 @@ atomistica: versioninfo $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
 
 mdcore: versioninfo $(STANDALONE_ALL_O) $(MAIN_O)
-	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-`cat $(SRCDIR)/REV | sed s/' '/''/ `_`cat $(SRCDIR)/REV_DATE` $(LIBS)
+	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-$(shell cd .. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_version())")_$(shell cd .. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_versions()['date'])") $(LIBS)
 
 unittests: versioninfo $(UNITTESTS_O)
 	$(F90C) -o unittests $(UNITTESTS_O) $(LIBS)
