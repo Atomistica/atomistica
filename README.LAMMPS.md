@@ -86,14 +86,15 @@ To compile the LAMMPS-Atomistica interface do the following:
      ```
      
    to the link flags of LAMMPS. Finally, it will be necessary to link with the 
-   Fortran MPI bindings. The name of the library depends on the MPI implementation
-   that is used for compiling LAMMPS. Try adding
+   Fortran MPI bindings. Try adding
    
      ```
-     -lmpi_f77
+     -l<f77_mpi_library>
      ```
      
-   to the link line of LAMMPS.
+   to the link line of LAMMPS. Common names for `<f77_mpi_library>` are
+   `mpi_f77` or `mpi_mpifh`; this depends on the MPI implementation that you
+   are using.
 
    The `atomistica/src/lammps/MAKE` subdirectory of the atomistica source
    packages contains a sample makefile, but it is likely outdated. It is
