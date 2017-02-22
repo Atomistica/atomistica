@@ -152,7 +152,7 @@ subroutine bo(this, ktypi, ijpot, zij, fcij, faij, bij, dfbij)
 
   else
 
-     bij   = 0.0_DP
+     bij   = 1.0_DP
      dfbij = 0.0_DP
 
   endif

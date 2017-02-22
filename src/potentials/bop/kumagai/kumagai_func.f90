@@ -164,7 +164,7 @@ subroutine bo(this, ktypi, ijpot, zij, fcij, faij, bij, dfbij)
           eta*zij**(eta-1.0_DP)* &
           delta*arg**(delta-1.0_DP)
   else
-     bij   = 0.0_DP
+     bij   = 1.0_DP
      dfbij = 0.0_DP
   endif
 

@@ -138,7 +138,7 @@ subroutine bo(this, ktypi, ijpot, zij, fcij, faij, bij, dfbij)
              * zij ** ( this%db%n(ijpot) - 1.0_DP ) &
              * arg ** this%bo_exp1(ijpot)
      else
-        bij   = 0.0_DP
+        bij   = 1.0_DP
         dfbij = 0.0_DP
      endif
 
