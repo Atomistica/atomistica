@@ -638,7 +638,7 @@ contains
                       db%e(i1)%exists = .true.
 
                       ! self energies, spin polarization energy(?), Hubbard U's, number of electrons
-                      read (un, *) eself(:), espin, u(:), q(:)
+                      read (un, *) eself(1:3), espin, u(1:3), q(1:3)
 
                       eself  = eself * econv
 
@@ -652,6 +652,7 @@ contains
                               /)
 
                          db%e(i1)%U  = u(3) * econv
+                         db%e(i1)%q0 = sum(q)
                       endif
 
                       db%e(i1)%exists = .true.
