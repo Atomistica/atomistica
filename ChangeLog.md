@@ -5,9 +5,6 @@ TODO
   to FuncflEAM and TabulatedAlloyEAM to SetflEAM to distinguish by file
   format.
 
-- Remove need for (undocumented) elements.dat file for Slater-Koster
-  databases.
-
 Change log
 ==========
 
