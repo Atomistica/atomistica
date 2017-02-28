@@ -150,7 +150,7 @@ v0.2.1
 ------
 
 - Added proper handling of PBCs to ASE interface. (All systems were periodic
-  so far independent of ASEs PBS setting.)
+  so far independent of ASEs PBC setting.)
 
 v0.2.0
 ------
