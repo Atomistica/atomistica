@@ -11,6 +11,19 @@ TODO
 Change log
 ==========
 
+v0.5.1
+------
+
+- Bug fix: Set element charge from skf file. Only affects tight-binding runs
+  with Slater-Koster tables from dftb.org
+
+v0.5.0
+------
+
+- Particle mesh Ewald Coulomb solver
+- Regression fix in empirical bond-order potentials (dimers were handle
+  incorrectly) - regression introduced in 0.4.4
+
 v0.4.6
 ------
 
