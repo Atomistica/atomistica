@@ -15,7 +15,7 @@ install:
 script:
   # Fetch MIO database file.
   - "cd .. ; wget http://www.dftb.org/fileadmin/DFTB/public/slako/mio/mio-1-1.tar.xz ; tar -Jxf mio-1-1.tar.xz ; cd -"
-  - "cd tests ; MIO='../../mio-1-1' ; python run_tests.py"
+  - "cd tests ; MIO='../../mio-1-1' python run_tests.py"
 addons:
   apt:
     packages:
