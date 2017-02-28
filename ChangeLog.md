@@ -25,7 +25,8 @@ v0.4.6
 ------
 
 - More robust EAM (low and high density configurations)
-- More robust version extraction for LAMMPD and standalone code (uses versioneer)
+- More robust version extraction for LAMMPS and standalone code (uses
+  versioneer)
 
 v0.4.5
 ------
