@@ -514,9 +514,9 @@ contains
     enddo
 
     this%cell_is_orthorhombic = &
-         abs(dot_product(this%Abox(1, :), this%Abox(2, :))) < 1d-12 .and. &
-         abs(dot_product(this%Abox(2, :), this%Abox(3, :))) < 1d-12 .and. &
-         abs(dot_product(this%Abox(3, :), this%Abox(1, :))) < 1d-12
+         abs(this%Abox(2, 1)) < TOL .and. abs(this%Abox(3, 1)) < TOL .and. &
+         abs(this%Abox(1, 2)) < TOL .and. abs(this%Abox(3, 2)) < TOL .and. &
+         abs(this%Abox(1, 3)) < TOL .and. abs(this%Abox(2, 3)) < TOL
 
 !    if (.not. this%cell_is_orthorhombic) then
 !       call info("     Cell is not orthorhombic.")

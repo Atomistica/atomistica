@@ -349,9 +349,9 @@ contains
     enddo
 
     this%cell_is_orthorhombic = &
-         abs(dot_product(this%Abox(1, :), this%Abox(2, :))) < TOL .and. &
-         abs(dot_product(this%Abox(2, :), this%Abox(3, :))) < TOL .and. &
-         abs(dot_product(this%Abox(3, :), this%Abox(1, :))) < TOL
+         abs(this%Abox(2, 1)) < TOL .and. abs(this%Abox(3, 1)) < TOL .and. &
+         abs(this%Abox(1, 2)) < TOL .and. abs(this%Abox(3, 2)) < TOL .and. &
+         abs(this%Abox(1, 3)) < TOL .and. abs(this%Abox(2, 3)) < TOL
 
     if (.not. all(this%pbc /= 0)) then
        call require_orthorhombic_cell(this, error)
@@ -788,7 +788,7 @@ contains
        if (any(this%shear_dx /= 0.0_DP)) then
 
           do k = 1, this%natloc
-             
+
              do while (PNC(this, k, 3) < 0.0_DP)
                 PNC3(this, k)    = PNC3(this, k)   + this%shear_dx
                 PNC(this, k, 3)  = PNC(this, k, 3) + this%Abox(3, 3)
@@ -802,7 +802,7 @@ contains
           enddo
 
        endif
-       
+
        if (any(this%shear_dv /= 0.0_DP) .and. exists(this%data, V_STR)) then
 
           call ptr_by_name(this%data, V_STR, v)
