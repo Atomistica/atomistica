@@ -47,14 +47,13 @@ module particles
   integer, parameter :: MAX_Z = ubound(ElementName, 1)
 
   public :: Z_STR, EL_STR, R_NON_CYC_STR
-  public :: SHEAR_DX_STR, CELL_STR, MAX_Z
+  public :: CELL_STR, MAX_Z
 
   character(MAX_NAME_STR), parameter  :: Z_STR            = "Z"
   character(MAX_NAME_STR), parameter  :: Z_ALIAS_STR      = "atom_types"
   character(MAX_NAME_STR), parameter  :: EL_STR           = "internal_element_number"
   character(MAX_NAME_STR), parameter  :: R_NON_CYC_STR    = "coordinates"                  ! ... are allowed to leave the cell between neighbor list updates
 
-  character(MAX_NAME_STR), parameter  :: SHEAR_DX_STR     = "shear_dx"
   character(MAX_NAME_STR), parameter  :: CELL_STR         = "cell"
   character(MAX_NAME_STR), parameter  :: PBC_STR          = "pbc"
 
@@ -98,9 +97,6 @@ module particles
      ! Simulation box
      !
 
-     logical                :: orthorhombic_cell_is_required = .false.
-     logical                :: cell_is_orthorhombic
-
      real(DP), pointer      :: Abox(:, :)
      real(DP)               :: Bbox(3, 3)
 
@@ -124,13 +120,6 @@ module particles
      !
 
      integer, pointer       :: pbc(:)
-
-     !
-     ! Lees-Edwards boundary conditions
-     !
-
-     real(DP), pointer      :: shear_dx(:)
-     real(DP)               :: shear_dv(3)
 
      !
      ! Accumulated distance moved (not actually used in the Python interface)
@@ -250,11 +239,6 @@ module particles
      module procedure particles_update_elements
   endinterface
 
-  public :: require_orthorhombic_cell
-  interface require_orthorhombic_cell
-     module procedure particles_require_orthorhombic_cell
-  endinterface
-
   public :: set_cell
   interface set_cell
      module procedure particles_set_cell, particles_set_cell_orthorhombic
@@ -263,11 +247,6 @@ module particles
   public :: get_true_cell
   interface get_true_cell
     module procedure particles_get_true_cell
-  endinterface
-
-  public :: set_lees_edwards
-  interface set_lees_edwards
-     module procedure particles_set_lees_edwards
   endinterface
 
   public :: volume
@@ -348,28 +327,6 @@ contains
        this%Bbox(i, i)  = 1.0_DP
     enddo
 
-    this%cell_is_orthorhombic = &
-         abs(this%Abox(2, 1)) < TOL .and. abs(this%Abox(3, 1)) < TOL .and. &
-         abs(this%Abox(1, 2)) < TOL .and. abs(this%Abox(3, 2)) < TOL .and. &
-         abs(this%Abox(1, 3)) < TOL .and. abs(this%Abox(2, 3)) < TOL
-
-    if (.not. all(this%pbc /= 0)) then
-       call require_orthorhombic_cell(this, error)
-       PASS_ERROR(error)
-    endif
-
-    if (.not. this%cell_is_orthorhombic .and. this%orthorhombic_cell_is_required) then
-       RAISE_ERROR("This cell is non-orthorhombic, however, an orthorhombic cell was required. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
-    endif
-
-    if (this%cell_is_orthorhombic) then
-       A = 0.0_DP
-       A(1,1) = this%Abox(1,1)
-       A(2,2) = this%Abox(2,2)
-       A(3,3) = this%Abox(3,3)
-       this%Abox = A
-    endif
-
     A  = this%Abox
     call dgesv(3, 3, A, 3, ipiv, this%Bbox, 3, in)
 
@@ -439,73 +396,12 @@ contains
 
     INIT_ERROR(error)
 
-    if (any(this%shear_dx /= 0.0_DP)) then
-       cell = this%Abox
-       cell(3,1) = this%shear_dx(1)
-       cell(3,2) = this%shear_dx(2)
-
-       if (present(rec_cell)) then
-          A  = cell
-          call dgesv(3, 3, A, 3, ipiv, rec_cell, 3, info)
-
-          if (info /= 0) then
-             RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // cell(:, 1) // ", " // cell(:, 2) // ", " // cell(:, 3), error)
-          endif
-       endif
-    else
-       cell = this%Abox
-       if (present(rec_cell)) then
-          rec_cell = this%Bbox
-       endif
+    cell = this%Abox
+    if (present(rec_cell)) then
+       rec_cell = this%Bbox
     endif
 
   endsubroutine particles_get_true_cell
-
-
-  !**********************************************************************
-  ! Set Lees-Edwards boundary conditions
-  !**********************************************************************
-  subroutine particles_set_lees_edwards(this, dx, dv, error)
-    implicit none
-
-    type(particles_t), intent(inout)  :: this
-    real(DP), intent(in)              :: dx(3)
-    real(DP), intent(in), optional    :: dv(3)
-    integer, intent(inout), optional  :: error
-
-    ! ---
-
-    integer   :: i
-
-    real(DP)  :: old_dx(3)
-
-    ! ---
-
-    call require_orthorhombic_cell(this, error)
-    PASS_ERROR(error)
-
-    old_dx         = this%shear_dx
-
-    this%shear_dx  = dx
-
-    if (present(dv)) then
-       this%shear_dv  = dv
-    endif
-
-    do i = 1, 2
-       do while (this%shear_dx(i) >= this%Abox(i, i)/2)
-          this%shear_dx(i)  = this%shear_dx(i) - this%Abox(i, i)
-       enddo
-       do while (this%shear_dx(i) < -this%Abox(i, i)/2)
-          this%shear_dx(i)  = this%shear_dx(i) + this%Abox(i, i)
-       enddo
-    enddo
-
-    this%accum_max_dr  = this%accum_max_dr + norm( in_bounds(this, this%shear_dx - old_dx) )
-
-    call I_changed_positions(this)
-          
-  endsubroutine particles_set_lees_edwards
 
 
   !**********************************************************************
@@ -541,8 +437,6 @@ contains
     ! ---
 
     this%initialized                    = .true.
-    this%orthorhombic_cell_is_required  = .false.
-    this%cell_is_orthorhombic           = .true.
 
     this%accum_max_dr      = 0.0_DP
 
@@ -557,9 +451,6 @@ contains
     call add_integer3_attr( &
          this%data, &
          PBC_STR)
-    call add_real3_attr( &
-         this%data, &
-         SHEAR_DX_STR)
 
     call add_integer( &
          this%data, &
@@ -592,7 +483,6 @@ contains
     ! ---
 
     this%initialized                    = .true.
-    this%orthorhombic_cell_is_required  = from%orthorhombic_cell_is_required
     
     this%pbc = (/ 1, 1, 1 /)
 
@@ -712,7 +602,6 @@ contains
 
     call attr_by_name(this%data, CELL_STR, this%Abox)
     call attr_by_name(this%data, PBC_STR, this%pbc)
-    call attr_by_name(this%data, SHEAR_DX_STR, this%shear_dx)
 
     call ptr_by_name(this%data, Z_STR, this%Z)
     call ptr_by_name(this%data, EL_STR, this%el)
@@ -784,68 +673,9 @@ contains
 
     ! ---
 
-    if (this%cell_is_orthorhombic) then
-       if (any(this%shear_dx /= 0.0_DP)) then
-
-          do k = 1, this%natloc
-
-             do while (PNC(this, k, 3) < 0.0_DP)
-                PNC3(this, k)    = PNC3(this, k)   + this%shear_dx
-                PNC(this, k, 3)  = PNC(this, k, 3) + this%Abox(3, 3)
-             enddo
-
-             do while (PNC(this, k, 3) >= this%Abox(3, 3))
-                PNC3(this, k)    = PNC3(this, k)   - this%shear_dx
-                PNC(this, k, 3)  = PNC(this, k, 3) - this%Abox(3, 3)
-             enddo
-
-          enddo
-
-       endif
-
-       if (any(this%shear_dv /= 0.0_DP) .and. exists(this%data, V_STR)) then
-
-          call ptr_by_name(this%data, V_STR, v)
-
-          do k = 1, this%natloc
-
-             do while (PNC(this, k, 3) < 0.0_DP)
-                VEC3(v, k)       = VEC3(v, k) + this%shear_dv
-             enddo
-
-             do while (PNC(this, k, 3) >= this%Abox(3, 3))
-                VEC3(v, k)       = VEC3(v, k) - this%shear_dv
-             enddo
-
-          enddo
-
-       endif
-
-       do j = 1, 3
-          
-          if (this%pbc(j) /= 0) then
-             do k = 1, this%natloc
-
-                do while (PNC(this, k, j) < 0.0_DP)
-                   PNC(this, k, j) = PNC(this, k, j) + this%Abox(j, j)
-                enddo
-
-                do while (PNC(this, k, j) >= this%Abox(j, j))
-                   PNC(this, k, j) = PNC(this, k, j) - this%Abox(j, j)
-                enddo
-             
-             enddo
-          endif
-
-       enddo
-
-    else
-
-       do j = 1, this%nat
-          PNC3(this, j)  = cyclic_in_cell(this, PNC3(this, j))
-       enddo
-
-    endif
+    do j = 1, this%nat
+       PNC3(this, j)  = cyclic_in_cell(this, PNC3(this, j))
+    enddo
 
   endsubroutine particles_inbox
 
@@ -923,26 +753,6 @@ contains
     write (ilog, '(A)')          "---"
 
   endsubroutine particles_dump_info
-
-
-  !**********************************************************************
-  ! Call to require an orthorhombic cell
-  !**********************************************************************
-  subroutine particles_require_orthorhombic_cell(this, error)
-    implicit none
-
-    type(particles_t), intent(inout)  :: this
-    integer, intent(inout), optional  :: error
-
-    ! ---
-
-    this%orthorhombic_cell_is_required  = .true.
-
-    if (.not. this%cell_is_orthorhombic) then
-       RAISE_ERROR("Orthorhombic cell is requested, however cell is already non-orthorhombic. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
-    endif
-
-  endsubroutine particles_require_orthorhombic_cell
 
 
   !>
@@ -1101,12 +911,11 @@ contains
 
     ! ---
 
-    real(DP)  :: d(3), s(3)
+    real(DP)  :: s(3)
 
     ! ---
 
-    d    = this%shear_dx*floor(dot_product(this%Bbox(3, 1:3), r))
-    s    = matmul(this%Bbox, r-d)
+    s    = matmul(this%Bbox, r)
     s    = s - floor(s)
     cyc  = matmul(this%Abox, s)
     
@@ -1121,21 +930,16 @@ contains
 
     type(particles_t), intent(in)  :: this
     real(DP), intent(in)           :: r(:, :)
-    
+
     real(DP)                       :: cyc(3, size(r, 2))
 
     ! ---
 
-    integer   :: i
-    real(DP)  :: h(size(r,2)), d(3, size(r,2)), s(3, size(r, 2))
+    real(DP)  :: s(3, size(r, 2))
 
     ! ---
 
-    h         = floor(matmul(this%Bbox(3, 1:3), r))
-    forall(i=1:3)
-      d(i,:)  = this%shear_dx(i)*h
-    endforall
-    s         = matmul(this%Bbox, r-d)
+    s         = matmul(this%Bbox, r)
     s         = s - floor(s)
     cyc       = matmul(this%Abox, s)
 
@@ -1153,15 +957,14 @@ contains
     integer, intent(in)            :: c
 
     real(DP)                       :: p
-    
-    ! ---
-
-    real(DP)  :: d(3), s(3)
 
     ! ---
 
-    d    = this%shear_dx*floor(dot_product(this%Bbox(3, 1:3), r))
-    s    = matmul(this%Bbox, r-d)
+    real(DP)  :: s(3)
+
+    ! ---
+
+    s    = matmul(this%Bbox, r)
     s    = s - floor(s)
     p    = dot_product(this%Abox(c, 1:3), s)
 
@@ -1179,19 +982,14 @@ contains
     integer, intent(in)            :: c
 
     real(DP)                       :: p(size(r, 2))
-    
-    ! ---
-
-    integer   :: i
-    real(DP)  :: h(size(r, 2)), d(3, size(r, 2)), s(3, size(r, 2)), cyc(3, size(r, 2))
 
     ! ---
 
-    h           = floor(matmul(this%Bbox(3, 1:3), r))
-    forall(i=1:3)
-       d(i, :)  = this%shear_dx(i)*h
-    endforall
-    s           = matmul(this%Bbox, r-d)
+    real(DP)  :: s(3, size(r, 2)), cyc(3, size(r, 2))
+
+    ! ---
+
+    s           = matmul(this%Bbox, r)
     s           = s - floor(s)
     cyc         = matmul(this%Abox, s)
     p           = cyc(c, 1:size(r, 2))

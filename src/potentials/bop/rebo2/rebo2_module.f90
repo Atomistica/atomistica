@@ -208,7 +208,10 @@
          this, p%Abox, &
          p%maxnatloc, p%natloc, p%nat, p%r_non_cyc, this%internal_el, &
          nebmax, nebavg, nl%seed, nl%last, nl%neighbors, nl%neighbors_size, &
-         nl%dc, p%shear_dx, &
+         nl%dc, &
+#ifndef PYTHON
+         p%shear_dx, &
+#endif
          epot, f, wpot, &
          epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
          ierror)

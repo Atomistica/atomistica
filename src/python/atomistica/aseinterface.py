@@ -56,7 +56,7 @@ def convpar(p):
 
     q = { }
     for name, values in p.items():
-        
+
         if isinstance(values, dict):
             # This is a dictionary. We need to first understand what it is and
             # then convert to the appropriate list
@@ -136,7 +136,6 @@ def convpar(p):
 
 ###
 
-_warned_about_lees_edwards = False
 class Atomistica(Calculator):
     """
     Atomistica ASE calculator.
@@ -151,8 +150,6 @@ class Atomistica(Calculator):
     name = 'Atomistica'
     potential_class = None
     avgn = 100
-    
-    _lees_edwards_info_str = 'shear_dx'
 
     def __init__(self, potentials=None, avgn=None, **kwargs):
         """
@@ -204,9 +201,6 @@ class Atomistica(Calculator):
 
         self.kwargs = kwargs
 
-        self.lees_edwards_dx = None
-        self.lees_edwards_dv = None
-
         self.compute_epot_per_bond = False
         self.compute_f_per_bond = False
         self.compute_wpot_per_at = False
@@ -224,7 +218,7 @@ class Atomistica(Calculator):
     def check_state(self, atoms):
         # This is a hack to indicate ase.db that state has changed
         return [1]
-        
+
 
     def initialize(self, atoms):
         if self.mask is not None:
@@ -240,14 +234,6 @@ class Atomistica(Calculator):
             pot.register_data(self.particles)
         self.particles.allocate(len(atoms))
         self.particles.set_cell(atoms.get_cell(), pbc)
-        
-        if self._lees_edwards_info_str in atoms.info:
-            self._warn_lees_edwards()
-            self.lees_edwards_dx = atoms.info[self._lees_edwards_info_str]
-            assert self.lees_edwards_dx.shape == (3,)
-
-        if self.lees_edwards_dx is not None:
-            self.particles.set_lees_edwards(self.lees_edwards_dx, self.lees_edwards_dv)
 
         Z  = self.particles.Z
 
@@ -343,19 +329,6 @@ class Atomistica(Calculator):
             self.charges = atoms.get_array('charges')
             self.initial_charges = self.charges.copy()
 
-        if self._lees_edwards_info_str in atoms.info:
-            if self.lees_edwards_dx is None or \
-                np.any(atoms.info[self._lees_edwards_info_str] != \
-                       self.lees_edwards_dx):
-
-                self._warn_lees_edwards()
-                self.lees_edwards_dx = atoms.info[self._lees_edwards_info_str]
-                assert self.lees_edwards_dx.shape == (3,)
-
-        if self.lees_edwards_dx is not None:
-            self.particles.set_lees_edwards(self.lees_edwards_dx,
-                                            self.lees_edwards_dv)
-
 
     def get_potential_energies(self, atoms):
         self.calculate(atoms, ['energies'], [])
@@ -448,7 +421,7 @@ class Atomistica(Calculator):
             forces += forces_coul
 
             self.results['charges'] = self.charges
-        
+
         self.results['energy'] = epot
         # Convert to Voigt
         volume = self.atoms.get_volume()
@@ -469,32 +442,6 @@ class Atomistica(Calculator):
                               (wpot_per_at[:,1,2]+wpot_per_at[:,2,1])/2,
                               (wpot_per_at[:,0,2]+wpot_per_at[:,2,0])/2,
                               (wpot_per_at[:,0,1]+wpot_per_at[:,1,0])/2])
-
-
-    ### Convenience
-    def _warn_lees_edwards(self):
-        global _warned_about_lees_edwards
-        if not _warned_about_lees_edwards:
-            print("Warning: Setting Lees-Edwards boundary conditions from " \
-                  "information found in the %s entry of the Atoms.info " \
-                  "dictionary. Is this really what you intended?" % \
-                  self._lees_edwards_info_str)
-            _warned_about_lees_edwards = True
-
-
-    ### Atomistica features
-    def set_lees_edwards(self, dx, dv=None):
-        self.lees_edwards_dx  = dx
-        if dv is None:
-            self.lees_edwards_dv  = [ 0.0, 0.0, 0.0 ]
-        else:
-            self.lees_edwards_dv  = dv
-
-        if self.particles is not None and self.lees_edwards_dx is not None:
-            self.particles.set_lees_edwards(self.lees_edwards_dx,
-                                            self.lees_edwards_dv)
-            self.force_update = True
-
 
 
     def get_atomic_stress(self):
@@ -531,7 +478,7 @@ class Atomistica(Calculator):
         for coul in self.couls:
             coul.potential(p, nl, q, _phi)
         phi += _phi * Hartree * Bohr
-    
+
 
 ### Construct ASE interface wrappers for all potentials in _atomistica
 
@@ -563,7 +510,7 @@ if hasattr(_atomistica, 'TightBinding'):
         potential_class = _atomistica.TightBinding
 
         def __init__(self, width=0.1, database_folder=None):
-            
+
             # Translate from a human friendly format
             d = {
                 "SolverLAPACK" : {

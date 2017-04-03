@@ -166,7 +166,7 @@ inc_dirs += [ np.get_include(),
               ]
 
 lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
-               ( 'MDCORE_PYTHON', None ),
+               ( 'PYTHON', None ),
                ]
 
 ###

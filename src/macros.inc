@@ -24,7 +24,7 @@
 #define PNC3(p, i)      p%r_non_cyc(1:3, i)
 #define PNC(p, i, d)    p%r_non_cyc(d, i)
 
-#if defined(LAMMPS) || defined(MDCORE_PYTHON)
+#if defined(LAMMPS) || defined(PYTHON)
 #define PCN3(p, i)      p%r_non_cyc(1:3, i)
 #define PCN(p, i, d)    p%r_non_cyc(d, i)
 #else
@@ -71,7 +71,15 @@
 ! Just return the neighbor index
 #define GET_NEIGHBOR(nl, ni)  nl%neighbors(ni)
 
+#ifdef PYTHON
+
+#define GET_DRJ(p, nl, i, j, ni)  ( PNC3(p, i) - PNC3(p, j) + matmul(p%Abox, VEC3(nl%dc, ni)) )
+
+#else
+
 #define GET_DRJ(p, nl, i, j, ni)  ( PNC3(p, i) - PNC3(p, j) + matmul(p%Abox, VEC3(nl%dc, ni)) + p%shear_dx*VEC(nl%dc, ni, 3) )
+
+#endif
 
 #endif
 

@@ -51,7 +51,6 @@ void f_particles_del(void *);
 void f_particles_update_elements(void *);
 
 void f_particles_set_cell(void *, double *, BOOL *, int *);
-void f_particles_set_lees_edwards(void *, double *, double *, int *);
 
 void f_particles_inbox(void *);
 

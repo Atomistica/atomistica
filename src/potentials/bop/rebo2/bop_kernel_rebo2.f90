@@ -60,7 +60,10 @@
        this, cell, &
        maxnat, natloc, nat, r, &
        ktyp, &
-       nebmax, nebavg, aptr, a2ptr, bptr, ptrmax, dc, shear_dx, &
+       nebmax, nebavg, aptr, a2ptr, bptr, ptrmax, dc, &
+#ifndef PYTHON
+       shear_dx, &
+#endif
        epot, f_inout, wpot_inout, &
        epot_per_at, epot_per_bond, f_per_bond, wpot_per_at, wpot_per_bond, &
        ierror)
@@ -152,7 +155,9 @@
 
 #ifndef LAMMPS
     integer,             intent(in)    :: dc(3, ptrmax)
+#ifndef PYTHON
     real(DP),            intent(in)    :: shear_dx(3)
+#endif
 #endif
 
 
@@ -538,7 +543,10 @@
     !$omp& shared(tag) &
 #else
     !$omp& firstprivate(maxdc) &
-    !$omp& shared(cell, dc, shear_dx) &
+    !$omp& shared(cell, dc) &
+#ifndef PYTHON
+    !$omp& shared(shear_dx) &
+#endif
 #endif
     !$omp& firstprivate(nat, natloc, nebmax, nebavg, nebsize) &
     !$omp& shared(epot_per_at, epot_per_bond) &
@@ -717,10 +725,12 @@
              j_known_el1: if (ktypj > 0) then
 
 #ifdef LAMMPS
-                rij  = VEC3(r, j) - VEC3(r, i)
+                rij = VEC3(r, j) - VEC3(r, i)
 #else
-                rij  = VEC3(r, j) - VEC3(r, i) - matmul(cell, VEC3(dc, jn)) - &
-                     shear_dx*VEC(dc, jn, 3)
+                rij = VEC3(r, j) - VEC3(r, i) - matmul(cell, VEC3(dc, jn))
+#ifndef PYTHON
+                rij = rij - shear_dx*VEC(dc, jn, 3)
+#endif
 #endif
 
                 rlij = dot_product(rij, rij)
@@ -836,12 +846,14 @@
 
 #ifdef LAMMPS
                          k = bptr(kn)+1
-                         rik  = VEC3(r, k) - VEC3(r, i)
+                         rik = VEC3(r, k) - VEC3(r, i)
 #else
                          k = bptr(kn)
-                         rik  = VEC3(r, k) - VEC3(r, i) - &
-                              matmul(cell, VEC3(dc, kn)) - &
-                              shear_dx*VEC(dc, kn, 3)
+                         rik = VEC3(r, k) - VEC3(r, i) - &
+                              matmul(cell, VEC3(dc, kn))
+#ifndef PYTHON
+                         rik = rik - shear_dx*VEC(dc, kn, 3)
+#endif
 #endif
 
                          if (dot_product(rik, rik) < this%C_dr_cut*rlij) then
@@ -2716,11 +2728,13 @@
                       k = this%sneb(nijc)
 
 #ifdef LAMMPS
-                      rik  = VEC3(r, k) - VEC3(r, i)
+                      rik = VEC3(r, k) - VEC3(r, i)
 #else
-                      rik  = VEC3(r, k) - VEC3(r, i) - &
-                           matmul(cell, VEC3(dc, this%sbnd(nijc))) - &
-                           shear_dx*VEC(dc, this%sbnd(nijc), 3)
+                      rik = VEC3(r, k) - VEC3(r, i) - &
+                           matmul(cell, VEC3(dc, this%sbnd(nijc)))
+#ifndef PYTHON
+                      rik = rik - shear_dx*VEC(dc, this%sbnd(nijc), 3)
+#endif
 #endif
                       rjk  = -rij + rik
 
@@ -2811,11 +2825,13 @@
                 k = this%sneb(nijc)
 
 #ifdef LAMMPS
-                rik  = VEC3(r, k) - VEC3(r, i)
+                rik = VEC3(r, k) - VEC3(r, i)
 #else
-                rik  = VEC3(r, k) - VEC3(r, i) - &
-                     matmul(cell, VEC3(dc, this%sbnd(nijc))) - &
-                     shear_dx*VEC(dc, this%sbnd(nijc), 3)
+                rik = VEC3(r, k) - VEC3(r, i) - &
+                     matmul(cell, VEC3(dc, this%sbnd(nijc)))
+#ifndef PYTHON
+                rik = rik - shear_dx*VEC(dc, this%sbnd(nijc), 3)
+#endif
 #endif
                 rjk  = -rij + rik
 

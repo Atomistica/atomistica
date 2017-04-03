@@ -112,7 +112,7 @@ contains
 
     if (present(msg)) then
        if (ilog /= -1) then
-#if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
+#if !defined(PYTHON) && !defined(LAMMPS)
        ! Do not print to screen if we're using the Python or LAMMPS module
          write (*, '(A)')  msg
 #endif
@@ -120,7 +120,7 @@ contains
        endif
     else
        if (ilog /= -1) then
-#if !defined(MDCORE_PYTHON) && !defined(LAMMPS)
+#if !defined(PYTHON) && !defined(LAMMPS)
          write (*, *)
 #endif
          write (ilog, *)

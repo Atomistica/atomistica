@@ -134,68 +134,6 @@ particles_allocate(particles_t *self, PyObject *args)
 }
 
 
-static PyObject*
-particles_set_lees_edwards(particles_t *self, PyObject *value)
-{
-  PyObject *dx_arr, *dv_arr = NULL;
-  double *dx, dv[3];
-
-  int ierror = ERROR_NONE;
-
-  if (!PyArg_ParseTuple(value, "O|O", &dx_arr, &dv_arr))
-    return NULL;
-    
-  if (dv_arr == Py_None)
-    dv_arr = NULL;
-    
-  dx_arr = PyArray_FROMANY(dx_arr, NPY_DOUBLE, 1, 1, 0);
-    
-  if (dv_arr) {
-    dv_arr = PyArray_FROMANY(dv_arr, NPY_DOUBLE, 1, 1, 0);
-    if (!dv_arr) {
-      Py_DECREF(dx_arr);
-      return NULL;
-    }
-  }
-
-  if (PyArray_DIM(dx_arr, 0) != 3) {
-    PyErr_SetString(PyExc_TypeError, "dx needs to be 3 vector.");
-    Py_DECREF(dx_arr);
-    if (dv_arr) {
-      Py_DECREF(dv_arr);
-    }
-    return NULL;
-  }
-  dx = (double *)  PyArray_DATA(dx_arr);
-
-  dv[0] = 0.0;
-  dv[1] = 0.0;
-  dv[2] = 0.0;
-  if (dv_arr) {
-    if (PyArray_DIM(dv_arr, 0) != 3) {
-      PyErr_SetString(PyExc_TypeError, "dv needs to be 3 vector.");
-      Py_DECREF(dx_arr);
-      Py_DECREF(dv_arr);
-      return NULL;
-    }
-    dv[0] = ((double *)  PyArray_DATA(dv_arr))[0];
-    dv[1] = ((double *)  PyArray_DATA(dv_arr))[1];
-    dv[2] = ((double *)  PyArray_DATA(dv_arr))[2];
-  }
-  
-  f_particles_set_lees_edwards(self->f90obj, dx, dv, &ierror);
-  if (error_to_py(ierror))
-      return NULL;
-
-  Py_DECREF(dx_arr);
-  if (dv_arr) {
-    Py_DECREF(dv_arr);
-  }
-
-  Py_RETURN_NONE;
-}
-
-
 static PyObject *
 data_array_by_name(particles_t *self, char *key)
 {
@@ -539,9 +477,6 @@ static PyMethodDef particles_methods[] = {
   { "set_cell",
     (PyCFunction) particles_set_cell, METH_VARARGS,
     "Set the simulation cell." },
-  { "set_lees_edwards",
-    (PyCFunction) particles_set_lees_edwards, METH_VARARGS,
-    "Enable Lees-Edwards boundary conditions." },
   { "update_elements",
     (PyCFunction) particles_update_elements, METH_NOARGS,
     "Update internal list of elements." },

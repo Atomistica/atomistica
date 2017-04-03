@@ -166,28 +166,6 @@ contains
   endsubroutine f_particles_set_cell
 
 
-  subroutine f_particles_set_lees_edwards(this_cptr, dx, dv, error) bind(C)
-    use, intrinsic :: iso_c_binding
-
-    implicit none
-
-    type(c_ptr),     value          :: this_cptr
-    real(c_double)                  :: dx(3)
-    real(c_double)                  :: dv(3)
-    integer(c_int),  intent(inout)  :: error
-
-    ! ---
-
-    type(particles_t), pointer  :: this
-
-    ! ---
-
-    call c_f_pointer(this_cptr, this)
-    call set_lees_edwards(this, dx, dv, error=error)
-
-  endsubroutine f_particles_set_lees_edwards
-
-
   subroutine f_particles_inbox(this_cptr) bind(C)
     use, intrinsic :: iso_c_binding
 

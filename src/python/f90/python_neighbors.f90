@@ -578,7 +578,7 @@ contains
 
     ! ---
 
-    real(DP)  :: Abox(3, 3), shear_dx(3)
+    real(DP)  :: Abox(3, 3)
     logical   :: pbc(3)
 
     integer   :: i, j, k, x, nn
@@ -609,7 +609,6 @@ contains
 
     Abox      = p%Abox
     pbc       = p%pbc /= 0
-    shear_dx  = p%shear_dx
 
 #ifdef _OPENMP
     chunk_len  = size(this%neighbors)/omp_get_max_threads()
@@ -619,18 +618,13 @@ contains
 
     cutoff_sq  = this%cutoff**2
 
-    lebc  = .false.
-    if (any(shear_dx /= 0.0_DP)) then
-       lebc  = .true.
-    endif
-
     error_loc = ERROR_NONE
     nn = 0
 
 #ifdef _OPENMP
     !$omp  parallel default(none) &
     !$omp& private(abs_delta_r_sq, cell, chunk_start, c, cell2, cur, cur_cell, delta_r, i, j, off, x, any_c_not_zero) &
-    !$omp& firstprivate(chunk_len, cutoff_sq, ilog, lebc, Abox, shear_dx, pbc) &
+    !$omp& firstprivate(chunk_len, cutoff_sq, ilog, Abox, pbc) &
     !$omp& shared(this, p) &
     !$omp& reduction(+:error_loc) reduction(+:nn)
 
@@ -678,7 +672,7 @@ contains
           ! re-evaluate the cell index considering the boundary conditions
           if (lebc .and. c(3) /= 0) then
              ! Compute 3-index of the cell for the (Lees-Edwards) shifted grid:
-             cell2     = floor( matmul(this%rec_cell_size, PNC3(p, i) - c(3)*shear_dx - p%lower_with_border) + 1 )
+             cell2     = floor( matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border) + 1 )
              cur_cell  = cell2 + this%d(1:3, x)
 
              c         = 0
@@ -699,7 +693,7 @@ contains
 
           cell_exists: if (.not. (any(cur_cell < 1) .or. any(cur_cell > this%n_cells)) .and. error_loc == ERROR_NONE) then
              any_c_not_zero  = any(c /= 0)
-             off             = matmul(Abox, c) + c(3)*shear_dx
+             off             = matmul(Abox, c)
              j               = this%binning_seed(cur_cell(1), cur_cell(2), cur_cell(3))
 
              do while (j /= -1)
@@ -779,13 +773,9 @@ contains
 
     this%Abox         = p%Abox
 
-    if (p%cell_is_orthorhombic) then
-       this%box_size  = p%upper_with_border - p%lower_with_border
-    else
-       forall(x=1:3)
-          this%box_size(x)  = sqrt(dot_product(this%Abox(:, x), this%Abox(:, x)))
-       endforall
-    endif
+    forall(x=1:3)
+       this%box_size(x)  = sqrt(dot_product(this%Abox(:, x), this%Abox(:, x)))
+    endforall
 
     this%n_cells  = int(this%box_size / this%bin_size)
 
@@ -801,15 +791,10 @@ contains
     ! Otherwise, enable cell subdivision
     !
 
-    if (p%cell_is_orthorhombic) then
-       this%cell_size      = diagonal_3x3_matrix(this%box_size / this%n_cells)
-       this%rec_cell_size  = diagonal_3x3_matrix(this%n_cells / this%box_size)
-    else
-       forall(x=1:3)
-          this%cell_size(:, x)      = this%Abox(:, x) / this%n_cells(x)
-          this%rec_cell_size(x, :)  = p%Bbox(x, :) * this%n_cells(x)
-       endforall
-    endif
+    forall(x=1:3)
+       this%cell_size(:, x)      = this%Abox(:, x) / this%n_cells(x)
+       this%rec_cell_size(x, :)  = p%Bbox(x, :) * this%n_cells(x)
+    endforall
 
     if (allocated(this%binning_seed)) then
        ! Number of cells changed?
@@ -867,56 +852,14 @@ contains
 
     this%n_d  = 0
 
-    if (p%cell_is_orthorhombic) then
-
-       x_loop2: do x = -dx, dx
-          if (x == 0) then
-             dy2  = int(this%cutoff*this%rec_cell_size(2, 2))+1
-          else
-             dy2  = int(sqrt(cutoff_sq - ((abs(x)-1)*this%cell_size(1, 1))**2)*this%rec_cell_size(2, 2))+1
-          endif
-          dy2 = min(dy, dy2)
-
-          y_loop2: do y = -dy2, dy2
-             if (x == 0) then
-                if (y == 0) then
-                   dz2  = int(this%cutoff*this%rec_cell_size(3, 3))+1
-                else
-                   dz2  = int(sqrt(cutoff_sq - ((abs(y)-1)*this%cell_size(2, 2))**2)*this%rec_cell_size(3, 3))+1
-                endif
-             else
-                if (y == 0) then
-                   dz2  = int(sqrt(cutoff_sq - ((abs(x)-1)*this%cell_size(1, 1))**2)*this%rec_cell_size(3, 3))+1
-                else
-                   dz2  = int(sqrt(cutoff_sq - ((abs(x)-1)*this%cell_size(1, 1))**2 - ((abs(y)-1)*this%cell_size(2, 2))**2)*this%rec_cell_size(3, 3))+1
-                endif
-             endif
-             dz2 = min(dz, dz2)
-
-             z_loop2: do z = -dz2, dz2
-
-                this%n_d = this%n_d+1
-                this%d(1:3, this%n_d) = (/ x, y, z /)
-
-             enddo z_loop2
-
-          enddo y_loop2
-       enddo x_loop2
-
-    else
-
-       x2_loop2: do x = -dx, dx
-          y2_loop2: do y = -dy, dy
-             z2_loop2: do z = -dz, dz
-
-                this%n_d = this%n_d+1
-                this%d(1:3, this%n_d) = (/ x, y, z /)
-
-             enddo z2_loop2
-          enddo y2_loop2
-       enddo x2_loop2
-          
-    endif
+    x2_loop2: do x = -dx, dx
+       y2_loop2: do y = -dy, dy
+          z2_loop2: do z = -dz, dz
+             this%n_d = this%n_d+1
+             this%d(1:3, this%n_d) = (/ x, y, z /)
+          enddo z2_loop2
+       enddo y2_loop2
+    enddo x2_loop2
 
   endsubroutine neighbors_binning_init
 
