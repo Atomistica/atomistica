@@ -28,7 +28,7 @@ import sys
 
 import unittest
 
-from numpy.random import random_integers
+from numpy.random import randint
 
 import ase
 import ase.io as io
@@ -259,8 +259,8 @@ def run_forces_and_virial_test(test=None):
 
             masks = [None]
             if mask:
-                masks += [random_integers(0, len(a)-1, size=len(a)) < len(a)/2,
-                          random_integers(0, len(a)-1, size=len(a)) < len(a)/4]
+                masks += [randint(0, len(a), size=len(a)) < len(a)/2,
+                          randint(0, len(a), size=len(a)) < len(a)/4]
 
             for dummy in range(2):
                 if dummy == 0:

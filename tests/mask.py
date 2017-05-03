@@ -41,7 +41,7 @@ class MaskTest(unittest.TestCase):
         f = a.get_forces()
         w = a.get_stress()
 
-        mask = np.random.random_integers(0, len(a)-1, size=len(a)) < \
+        mask = np.random.randint(0, len(a), size=len(a)) < \
             len(a)/2
         imask = np.logical_not(mask)
 
