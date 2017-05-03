@@ -1,6 +1,3 @@
-# This requires gfortran from homebrew
-# brew install numpy --with-python3
-
 # Configuration file for the GNU Compiler Collection (gcc/gfortran).
 # Rename to setup.cfg.
 
@@ -8,6 +5,10 @@
 fcompiler=gfortran
 f90flags=-cpp -fPIC -ffree-form -ffree-line-length-none -x f95-cpp-input
 f77flags=-cpp -fPIC -x f77-cpp-input
+
+[build_ext]
+library-dirs=/usr/local/opt/gcc/lib/gcc/6
+libraries=gfortran
 
 # See the docstring in versioneer.py for instructions. Note that you must
 # re-run 'versioneer.py setup' after changing this section, and commit the
