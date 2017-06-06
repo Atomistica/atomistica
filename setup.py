@@ -55,6 +55,8 @@ lib_dirs = [ ]
 # atomisticalib is a dependency, build below by the setup command
 libs = [ 'atomisticalib' ]
 extra_link_args = [ ]
+if sys.platform == 'darwin':
+	extra_link_args += ['-framework Accelerate']
 
 ###
 
