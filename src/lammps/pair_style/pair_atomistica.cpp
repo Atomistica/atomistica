@@ -389,7 +389,7 @@ void PairAtomistica::Atomistica_neigh()
   int nlocal = atom->nlocal;
   int nall = nlocal + atom->nghost;
 
-  if (!list->ghostflag) {
+  if (!list->ghost) {
     error->all(FLERR,"Atomistica needs neighbor list with ghost atoms.");
   }
 
