@@ -55,8 +55,6 @@ lib_dirs = [ ]
 # atomisticalib is a dependency, build below by the setup command
 libs = [ 'atomisticalib' ]
 extra_link_args = [ ]
-if sys.platform == 'darwin':
-	extra_link_args += ['-framework Accelerate']
 
 ###
 
@@ -66,14 +64,26 @@ if sys.platform == 'darwin':
 
 for k, v in np.__config__.__dict__.items():
     if re.match('lapack_.*_info', k):
-        if 'library_dirs' in v:
+        if v:
             print("* Using LAPACK information from '%s' dictionary in " \
                 "numpy.__config__" % k)
-            print("    library_dirs = '%s'" % v['library_dirs'])
-            print("    libraries = '%s'" % v['libraries'])
-            lib_dirs += v['library_dirs']
-            libs += v['libraries']
-            # We use whichever lapack_*_info comes first
+            try:
+                print("    library_dirs = '%s'" % v['library_dirs'])
+                lib_dirs += v['library_dirs']
+            except:
+                print("    No 'library_dirs' entry found.")
+            try:
+                print("    libraries = '%s'" % v['libraries'])
+                libs += v['libraries']
+            except:
+                print("    No 'libraries' entry found.")
+            try:
+                print("    extra_link_args = '%s'" % v['extra_link_args'])
+                extra_link_args += v['extra_link_args']
+            except:
+                print("    No 'extra_link_args' entry found.")
+            # We use whichever lapack_*_info comes first, hopefully there is
+            # just one.
             break
 
 ###
