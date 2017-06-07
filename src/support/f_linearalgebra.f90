@@ -120,7 +120,7 @@ module linearalgebra
      endsubroutine iterative_matrix_inverse
   endinterface
 
-  public :: cross_product, diagonal_matrix
+  public :: cross_product, diagonal_matrix, gauss
 
 contains
 
@@ -500,5 +500,50 @@ contains
     call dgemm('N', 'T', N, N, N, alpha, work2, N, evecs, N, beta, B, N)
 
   endfunction dsqrtm
+
+
+  !>
+  !! Gauss elimination
+  !<
+  subroutine gauss(n, A, x, error)
+    implicit none
+
+    integer,           intent(in)    :: n
+    real(DP),          intent(inout) :: A(n, n+1)
+    real(DP),          intent(out)   :: x(n)
+    integer, optional, intent(out)   :: error
+
+    ! ---
+
+    integer :: i, j, k, max_indx
+    integer :: indx(n), itmp(n)
+
+    real(DP) :: fac(n), row(n+1)
+
+    ! ---
+
+    ! Algorithm adopted from http://www.mcs.anl.gov/~itf/dbpp/text/node90.html
+    indx = 0
+    do i = 1, n
+       itmp = maxloc(abs(A(:, i)), mask=indx==0)
+       max_indx = itmp(1)
+       indx(max_indx) = i
+       fac = A(:, i)/A(max_indx, i)
+       row = A(max_indx, :)
+       forall(j=1:n, k=i:n+1, indx(j)==0)
+          A(j, k) = A(j, k) - fac(j)*row(k)
+       endforall
+    enddo
+
+    forall(j=1:n)
+       A(indx(j), :) = A(j, :)
+    endforall
+
+    do j = n, 1, -1
+       x(j) = A(j, n+1)/A(j, j)
+       A(1:j-1, n+1) = A(1:j-1, n+1) - A(1:j-1, j)*x(j)
+    enddo
+
+  endsubroutine gauss
 
 endmodule linearalgebra

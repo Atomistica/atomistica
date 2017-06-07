@@ -18,6 +18,7 @@ program run_tests
   ! test_linearalgebra
   call test_det
   call test_sqrtm
+  call test_gauss
 
   ! test_table2d
   call test_table2d_f_and_df

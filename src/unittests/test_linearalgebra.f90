@@ -35,4 +35,25 @@ contains
     call assert_equals(a, matmul(b, b), 3, 3, tol, "sqrtm")
   endsubroutine
 
+  subroutine test_gauss
+    real(DP), parameter :: tol = 1e-6
+    real(DP) :: A(3, 4), B(3, 4), x(3), y(3)
+    A = 0.0_DP
+    A(1, 1) = 1.0_DP
+    A(2, 2) = 1.0_DP
+    A(1, 2) = 2.0_DP
+    A(2, 1) = 0.0_DP
+    A(3, 2) = 1.5_DP
+    A(3, 3) = 4.0_DP
+    A(1, 4) = 1.0_DP
+    A(2, 4) = 1.0_DP
+    A(3, 4) = 2.0_DP
+    B = A
+    call gauss(3, A, x)
+    y = matmul(B(:, :3), x)-B(:, 4)
+    call assert_equals(y(1), 0.0_DP, tol, "gauss")
+    call assert_equals(y(2), 0.0_DP, tol, "gauss")
+    call assert_equals(y(3), 0.0_DP, tol, "gauss")
+  endsubroutine test_gauss
+
 endmodule test_linearalgebra
