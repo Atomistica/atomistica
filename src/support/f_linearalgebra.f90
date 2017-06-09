@@ -120,7 +120,7 @@ module linearalgebra
      endsubroutine iterative_matrix_inverse
   endinterface
 
-  public :: cross_product, diagonal_matrix, gauss
+  public :: cross_product, diagonal_matrix, gauss, gaussn
 
 contains
 
@@ -462,7 +462,7 @@ contains
 
     !---
 
-    integer :: N, i, info, lwork, liwork
+    integer :: N, info, lwork, liwork
     integer :: iwork(3+5*size(mat, 1))
 
     real(DP) :: alpha, beta
@@ -505,13 +505,12 @@ contains
   !>
   !! Gauss elimination
   !<
-  subroutine gauss(n, A, x, error)
+  subroutine gauss(n, A, x)
     implicit none
 
-    integer,           intent(in)    :: n
-    real(DP),          intent(inout) :: A(n, n+1)
-    real(DP),          intent(out)   :: x(n)
-    integer, optional, intent(out)   :: error
+    integer,  intent(in)    :: n
+    real(DP), intent(inout) :: A(n, n+1)
+    real(DP), intent(out)   :: x(n)
 
     ! ---
 
@@ -545,5 +544,33 @@ contains
     enddo
 
   endsubroutine gauss
+
+
+  !>
+  !! Solve multiple systems of linear equation by Gauss elimination
+  !<
+  subroutine gaussn(n, A, m, x)
+    implicit none
+
+    integer,  intent(in)    :: n
+    real(DP), intent(in)    :: A(n, n)
+    integer,  intent(in)    :: m
+    real(DP), intent(inout) :: x(n, m)
+
+    ! ---
+
+    integer  :: i
+    real(DP) :: tmpA(n, n+1)
+
+    ! ---
+
+    do i = 1, m
+       tmpA(1:n, 1:n) = A
+       tmpA(1:n, n+1) = x(1:n, i)
+       call gauss(n, tmpA, x(1:n, i))
+    enddo
+
+  endsubroutine gaussn
+
 
 endmodule linearalgebra

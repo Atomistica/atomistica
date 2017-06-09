@@ -37,20 +37,28 @@ contains
 
   subroutine test_gauss
     real(DP), parameter :: tol = 1e-6
-    real(DP) :: A(3, 4), B(3, 4), x(3), y(3)
+    real(DP) :: A(3, 4), B(3, 4), x(3), y(3), C(3, 3), z(3, 1)
     A = 0.0_DP
     A(1, 1) = 1.0_DP
     A(2, 2) = 1.0_DP
     A(1, 2) = 2.0_DP
-    A(2, 1) = 0.0_DP
+    A(2, 1) = 0.3_DP
     A(3, 2) = 1.5_DP
     A(3, 3) = 4.0_DP
+    A(2, 3) = 3.5_DP
     A(1, 4) = 1.0_DP
     A(2, 4) = 1.0_DP
     A(3, 4) = 2.0_DP
     B = A
     call gauss(3, A, x)
     y = matmul(B(:, :3), x)-B(:, 4)
+    call assert_equals(y(1), 0.0_DP, tol, "gauss")
+    call assert_equals(y(2), 0.0_DP, tol, "gauss")
+    call assert_equals(y(3), 0.0_DP, tol, "gauss")
+    C = B(1:3, 1:3)
+    z(1:3, 1) = B(1:3, 4)
+    call gaussn(3, C, 1, z)
+    y = matmul(B(:, :3), Z(1:3, 1))-B(:, 4)    
     call assert_equals(y(1), 0.0_DP, tol, "gauss")
     call assert_equals(y(2), 0.0_DP, tol, "gauss")
     call assert_equals(y(3), 0.0_DP, tol, "gauss")
