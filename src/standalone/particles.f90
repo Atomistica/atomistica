@@ -472,6 +472,10 @@ contains
     
     ! ---
 
+    real(DP), parameter :: TOL = 1e-9
+
+    ! ---
+
     real(DP) :: A(3,3), fac(3, 3)
     integer  :: i
 
