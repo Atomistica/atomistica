@@ -633,7 +633,8 @@ contains
        call filter_pack(filter, p, q, f_q_new)
 
        ! mix, new charges to f_q_prev
-       call mix(mixer, it, nf, f_q_prev, f_q_new, this%beta, this%dq_crit, done, 0.05d0)
+       call mix(mixer, it, nf, f_q_prev, f_q_new, this%beta, this%dq_crit, done, 0.05d0, error=error)
+       PASS_ERROR(error)
 
        ! unpack new charges from f_q_prev to q
        call filter_unpack(filter, p, f_q_prev, q)
