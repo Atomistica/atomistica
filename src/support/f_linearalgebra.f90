@@ -440,7 +440,8 @@ contains
        B(i, i) = 1.0_DP
     enddo
     A = mat
-    call gaussn(N, A, N, B)
+    call gaussn(N, A, N, B, error=error)
+    PASS_ERROR(error)
   endfunction dinverse
 
 
