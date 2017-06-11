@@ -19,6 +19,7 @@ program run_tests
   call test_det
   call test_sqrtm
   call test_gauss
+  call test_gauss_inverse
 
   ! test_table2d
   call test_table2d_f_and_df

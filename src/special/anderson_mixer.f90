@@ -175,7 +175,7 @@ contains
 
     ! ---
 
-    integer   :: i, j, M, ipiv(this%M), info
+    integer   :: i, j, M
     real(DP)  :: A(this%M, this%M), b(this%M), hlp
 
     ! ---
@@ -197,7 +197,6 @@ contains
     ! solve A*z=b -> z-->b
     ! (eq.(4.3) in Eyert)
     !----------------------------
-    info = 0
     do i = 1, M
        b(i)  = dot_product( this%F_hist(0, 1:n)-this%F_hist(i, 1:n), this%F_hist(0, 1:n) ) 
        do j = 1, M
@@ -216,9 +215,8 @@ contains
 !    if (mod_parallel_3d%mpi%my_proc == ROOT) then
 !#endif
 
-    if (M > 0) then
-       call dgesv(M, 1, A(1:M, 1:M), M, ipiv(1:M), b(1:M), M, info)
-    endif
+    call gaussn(M, A(1:M, 1:M), M, b(1:M), error=error)
+    PASS_ERROR(error)
 
 !#ifdef _MP
 !    endif
@@ -227,7 +225,8 @@ contains
 !    PASS_ERROR(error)
 !#endif
 
-    if (info == 0 .and. M > 0) then
+    if (M > 0) then
+!    if (info == 0 .and. M > 0) then
 !#ifdef _MP
 !       call bcast(mod_parallel_3d%mpi, b, ROOT, error=error)
 !       PASS_ERROR(error)

@@ -108,11 +108,10 @@ contains
 
     real(DP)               :: A(npara, npara)
     real(DP), allocatable  :: B(:, :)
-    integer                :: ipiv(npara)
 
     integer                :: icorn, irow, icol, ibox, nx1, nx2, nx3, nx4
     integer                :: npow1, npow2, npow3, npow4, npow1m, npow2m, npow3m, npow4m
-    integer                :: i, j, k, l, nibox, njbox, ncbox, ndbox, info
+    integer                :: i, j, k, l, nibox, njbox, ncbox, ndbox
 
     ! ---
 
@@ -365,12 +364,8 @@ contains
     ! solve by gauss-jordan elimination with full pivoting.
     !
 
-!    call gaussjhc(a,n,np,b,m,mp)
-    call dgesv(npara, t%nboxs, A, npara, ipiv, B, npara, info)
-
-    if (info /= 0) then
-       RAISE_ERROR("dgesv failed.", error)
-    endif
+    call gaussn(npara, A, t%nboxs, B, error=error)
+    PASS_ERROR(error)
 
     !
     ! get the coefficient values.

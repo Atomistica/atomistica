@@ -1,3 +1,4 @@
+
 !! ======================================================================
 !! Atomistica - Interatomic potential library and molecular dynamics code
 !! https://github.com/Atomistica/atomistica
@@ -159,7 +160,6 @@ contains
     real(DP)  :: r(p%nat, 3), sym_r(p%nat, 3)
 
     real(DP)  :: help(3, 3)
-    integer   :: ipiv(3), info
 
     ! ---
 
@@ -206,11 +206,7 @@ contains
           do k = 1, 3
              s%u(k, k, s%n) = 1
           enddo
-          call dgesv(3, 3, help, 3, ipiv, s%u(:, :, s%n), 3, info)
-
-          if (info /= 0) then
-             stop '[symmetry_analysis] Error inverting symmetry operation.'
-          endif
+          call gaussn(3, help, 3, s%u(:, :, s%n))
        endif
     enddo
 

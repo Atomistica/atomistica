@@ -473,7 +473,7 @@ contains
     ! ---
 
     real(DP) :: A(3,3), fac(3, 3)
-    integer  :: i, in, ipiv(3)
+    integer  :: i
 
     ! --
 
@@ -526,12 +526,9 @@ contains
 !    call info("     " // this%Abox(2, :))
 !    call info("     " // this%Abox(3, :))
 
-    A  = this%Abox
-    call dgesv(3, 3, A, 3, ipiv, this%Bbox, 3, in)
-
-    if (in /= 0) then
-       RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
-    endif
+    A = this%Abox
+    call gaussn(3, A, 3, this%Bbox, error=error)
+    PASS_ERROR(error)
 
     if (.not. all(this%pbc /= 0)) then
        call require_orthorhombic_cell(this, error)
@@ -2103,7 +2100,7 @@ contains
     ! ---
 
     real(DP) :: A(3,3)
-    integer  :: i, ipiv(3), info
+    integer  :: i
 
     ! ---
 
@@ -2120,11 +2117,8 @@ contains
              rec_cell(i, i) = 1.0_DP
           enddo
           A  = cell
-          call dgesv(3, 3, A, 3, ipiv, rec_cell, 3, info)
-
-          if (info /= 0) then
-             RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // cell(:, 1) // ", " // cell(:, 2) // ", " // cell(:, 3), error)
-          endif
+          call gaussn(3, A, 3, rec_cell, error=error)
+          PASS_ERROR(error)
        endif
     else
        cell = this%Abox

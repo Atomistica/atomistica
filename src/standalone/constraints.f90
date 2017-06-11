@@ -88,7 +88,7 @@ contains
 
     ! ---
 
-    integer   :: i, j, k, n, info, ipiv(3)
+    integer   :: i, j, k, n
     real(DP)  :: mass, momentum(3), force(3), Iij(3, 3), Ltot(3), Mtot(3)
 
     ! ---
@@ -181,15 +181,11 @@ contains
           ! Solve the equation I*omega = Ltot and I*alpha = Mtot
           !
 
-          call dgesv(3, 1, Iij, 3, ipiv, Ltot, 3, info)
-          if (info /= 0) then
-             RAISE_ERROR("dgesv failed.", ierror)
-          endif
-          
-          call dgesv(3, 1, Iij, 3, ipiv, Mtot, 3, info)
-          if (info /= 0) then
-             RAISE_ERROR("dgesv failed.", ierror)
-          endif
+          call gauss1(Iij, Ltot, error=ierror)
+          PASS_ERROR(ierror)
+
+          call gauss1(Iij, Mtot, error=ierror)          
+          PASS_ERROR(ierror)
 
           do i = 1, dyn%p%natloc
              if (this%group < 0 .or. dyn%p%g(i) == this%group) then

@@ -398,10 +398,11 @@
   ! Compute the coefficients for the g(cos(theta)) spline
   ! for C-C interaction
   !********************************************************************** 
-  subroutine rebo2_db_make_cc_g_spline(this)
+  subroutine rebo2_db_make_cc_g_spline(this, error)
     implicit none
 
-    type(BOP_TYPE), intent(inout)  :: this
+    type(BOP_TYPE),    intent(inout) :: this
+    integer, optional, intent(out)   :: error
 
     ! ---
 
@@ -412,11 +413,9 @@
 
     integer   :: i, j, k
 
-    integer   :: ipiv(6)
-
-!    real(DP)  :: h, dh
-
     ! ---
+
+    INIT_ERROR(error)
 
     !
     ! Third interval
@@ -448,12 +447,13 @@
 !    write (*, *)  1
 
     Asave = A
-    call dgesv(6, 1, A, 6, ipiv, B, 6, i)
+    call gauss1(6, A, B, error=error)
+    PASS_ERROR(error)
 
-    if (i /= 0) then
-       write (*, '(A,I5)')  "[rebo2_make_cc_g_spline] dgesv failed. info = ", i
-       stop
-    endif
+    !if (i /= 0) then
+    !   write (*, '(A,I5)')  "[rebo2_make_cc_g_spline] dgesv failed. info = ", i
+    !   stop
+    !endif
 
     this%cc_g1_coeff%c(:, 3) = B(:)
 
@@ -464,15 +464,15 @@
 !    write (*, *)  2
 
     A = Asave
-    call dgesv(6, 1, A, 6, ipiv, B, 6, i)
+    call gauss1(6, A, B, error=error)
+    PASS_ERROR(error)
 
-    if (i /= 0) then
-       write (*, '(A,I5)')  "[rebo2_make_cc_g_spline] dgesv failed. info = ", i
-       stop
-    endif
+    !if (i /= 0) then
+    !   write (*, '(A,I5)')  "[rebo2_make_cc_g_spline] dgesv failed. info = ", i
+    !   stop
+    !endif
 
     this%cc_g2_coeff%c(:, 3) = B(:)
-
 
     !
     ! First interval and second interval
@@ -504,12 +504,13 @@
 
 !       write (*, *)  3
 
-       call dgesv(6, 1, A, 6, ipiv, B, 6, i)
+       call gauss1(6, A, B, error=error)
+       PASS_ERROR(error)
 
-       if (i /= 0) then
-          write (*, '(A,I5)')  "[rebo2_make_cc_g_spline] dgesv failed. info = ", i
-          stop
-       endif
+       !if (i /= 0) then
+       !   write (*, '(A,I5)')  "[rebo2_make_cc_g_spline] dgesv failed. info = ", i
+       !   stop
+       !endif
 
        this%cc_g1_coeff%c(:, 1+k) = B(:)
        this%cc_g2_coeff%c(:, 1+k) = B(:)

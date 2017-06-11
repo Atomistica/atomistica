@@ -299,7 +299,7 @@ contains
     ! ---
 
     real(DP) :: A(3,3), fac(3, 3)
-    integer  :: i, in, ipiv(3)
+    integer  :: i
 
     ! --
 
@@ -327,12 +327,13 @@ contains
        this%Bbox(i, i)  = 1.0_DP
     enddo
 
-    A  = this%Abox
-    call dgesv(3, 3, A, 3, ipiv, this%Bbox, 3, in)
+    A = this%Abox
+    call gaussn(3, A, 3, this%Bbox, error=error)
+    PASS_ERROR(error)
 
-    if (in /= 0) then
-       RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
-    endif
+    !if (in /= 0) then
+    !   RAISE_ERROR("Failed to determine the reciprocal lattice. Cell = " // this%Abox(:, 1) // ", " // this%Abox(:, 2) // ", " // this%Abox(:, 3), error)
+    !endif
 
     this%lower  = (/ 0.0, 0.0, 0.0 /)
     this%upper  = (/ this%Abox(1, 1), this%Abox(2, 2), this%Abox(3, 3) /)
