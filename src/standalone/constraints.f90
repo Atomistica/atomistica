@@ -181,10 +181,10 @@ contains
           ! Solve the equation I*omega = Ltot and I*alpha = Mtot
           !
 
-          call gauss1(Iij, Ltot, error=ierror)
+          call gauss1(3, Iij, Ltot, error=ierror)
           PASS_ERROR(ierror)
 
-          call gauss1(Iij, Mtot, error=ierror)          
+          call gauss1(3, Iij, Mtot, error=ierror)          
           PASS_ERROR(ierror)
 
           do i = 1, dyn%p%natloc
