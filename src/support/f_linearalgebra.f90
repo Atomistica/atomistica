@@ -120,7 +120,7 @@ module linearalgebra
      endsubroutine iterative_matrix_inverse
   endinterface
 
-  public :: cross_product, diagonal_matrix, gauss, gaussn
+  public :: cross_product, diagonal_matrix, gauss, gauss1, gaussn
 
 contains
 
@@ -421,8 +421,7 @@ contains
 
     !---
 
-    integer :: N, i, info
-    integer :: ipiv(size(mat, 1))
+    integer :: N, i
 
     real(DP) :: A(size(mat, 1), size(mat, 2))
 
@@ -441,11 +440,7 @@ contains
        B(i, i) = 1.0_DP
     enddo
     A = mat
-    call dgesv(N, N, A, N, ipiv, B, N, info)
-
-    if (info /= 0) then
-       RAISE_ERROR("Failed to compute inverse of "//N//"x"//N//" matrix.", error)
-    endif
+    call gaussn(N, A, N, B)
   endfunction dinverse
 
 
@@ -503,14 +498,15 @@ contains
 
 
   !>
-  !! Gauss elimination
+  !! Gauss elimination kernel
   !<
-  subroutine gauss(n, A, x)
+  subroutine gauss(n, A, x, error)
     implicit none
 
-    integer,  intent(in)    :: n
-    real(DP), intent(inout) :: A(n, n+1)
-    real(DP), intent(out)   :: x(n)
+    integer,           intent(in)    :: n
+    real(DP),          intent(inout) :: A(n, n+1)
+    real(DP),          intent(out)   :: x(n)
+    integer, optional, intent(out)   :: error
 
     ! ---
 
@@ -521,12 +517,17 @@ contains
 
     ! ---
 
+    INIT_ERROR(error)
+
     ! Algorithm adopted from http://www.mcs.anl.gov/~itf/dbpp/text/node90.html
     indx = 0
     do i = 1, n
        itmp = maxloc(abs(A(:, i)), mask=indx==0)
        max_indx = itmp(1)
        indx(max_indx) = i
+       if (A(max_indx, i) == 0.0_DP) then
+          RAISE_ERROR("Gauss elimination failed.", error)
+       endif
        fac = A(:, i)/A(max_indx, i)
        row = A(max_indx, :)
        forall(j=1:n, k=i:n+1, indx(j)==0)
@@ -540,6 +541,9 @@ contains
 
     do j = n, 1, -1
        x(j) = A(j, n+1)/A(j, j)
+       if (A(j, j) == 0.0_DP) then
+          RAISE_ERROR("Gauss elimination failed.", error)
+       endif
        A(1:j-1, n+1) = A(1:j-1, n+1) - A(1:j-1, j)*x(j)
     enddo
 
@@ -549,13 +553,41 @@ contains
   !>
   !! Solve multiple systems of linear equation by Gauss elimination
   !<
-  subroutine gaussn(n, A, m, x)
+  subroutine gauss1(n, A, x, error)
     implicit none
 
-    integer,  intent(in)    :: n
-    real(DP), intent(in)    :: A(n, n)
-    integer,  intent(in)    :: m
-    real(DP), intent(inout) :: x(n, m)
+    integer,           intent(in)    :: n
+    real(DP),          intent(in)    :: A(n, n)
+    real(DP),          intent(inout) :: x(n)
+    integer, optional, intent(out)   :: error
+
+    ! ---
+
+    real(DP) :: tmpA(n, n+1)
+
+    ! ---
+
+    INIT_ERROR(error)
+
+    tmpA(1:n, 1:n) = A
+    tmpA(1:n, n+1) = x
+    call gauss(n, tmpA, x, error=error)
+    PASS_ERROR(error)
+
+  endsubroutine gauss1
+
+
+  !>
+  !! Solve multiple systems of linear equation by Gauss elimination
+  !<
+  subroutine gaussn(n, A, m, x, error)
+    implicit none
+
+    integer,           intent(in)    :: n
+    real(DP),          intent(in)    :: A(n, n)
+    integer,           intent(in)    :: m
+    real(DP),          intent(inout) :: x(n, m)
+    integer, optional, intent(out)   :: error
 
     ! ---
 
@@ -564,13 +596,15 @@ contains
 
     ! ---
 
+    INIT_ERROR(error)
+
     do i = 1, m
        tmpA(1:n, 1:n) = A
        tmpA(1:n, n+1) = x(1:n, i)
-       call gauss(n, tmpA, x(1:n, i))
+       call gauss(n, tmpA, x(1:n, i), error=error)
+       PASS_ERROR_WITH_INFO("i = " // i, error)
     enddo
 
   endsubroutine gaussn
-
 
 endmodule linearalgebra

@@ -64,4 +64,44 @@ contains
     call assert_equals(y(3), 0.0_DP, tol, "gauss")
   endsubroutine test_gauss
 
+  subroutine test_gauss_inverse
+    real(DP), parameter :: tol = 1e-6
+    real(DP) :: A(3, 3), B(3, 3), C(3, 3)
+    integer :: error
+    write (*, *) "test_gauss_inverse"
+    A = 0.0_DP
+    A(1, 1) = 3
+    A(2, 1) = 2
+    A(1, 3) = 2
+    A(2, 3) = -2
+    A(3, 2) = 1
+    A(3, 3) = 1
+    call identity(3, B)
+    call gaussn(3, A, 3, B)
+    C = matmul(A, B)
+    call assert_equals(C(1, 1), 1.0_DP, tol, "gauss_inverse")
+    call assert_equals(C(2, 2), 1.0_DP, tol, "gauss_inverse")
+    call assert_equals(C(3, 3), 1.0_DP, tol, "gauss_inverse")
+    call assert_equals(C(1, 2), 0.0_DP, tol, "gauss_inverse")
+    call assert_equals(C(1, 3), 0.0_DP, tol, "gauss_inverse")
+    call assert_equals(C(2, 3), 0.0_DP, tol, "gauss_inverse")
+    call assert_equals(C(2, 1), 0.0_DP, tol, "gauss_inverse")
+    call assert_equals(C(3, 1), 0.0_DP, tol, "gauss_inverse")
+    call assert_equals(C(3, 2), 0.0_DP, tol, "gauss_inverse")
+    ! The following matrix does not have an inverse. Gauss should fail.
+    A = 0.0_DP
+    A(1, 1) = 1
+    A(1, 2) = 6
+    A(1, 3) = 4
+    A(2, 1) = 2
+    A(2, 2) = 4
+    A(2, 3) = -1
+    A(3, 1) = -1
+    A(3, 2) = 2
+    A(3, 3) = 5
+    call identity(3, B)
+    call gaussn(3, A, 3, B, error=error)
+    call assert_true(error /= 0)
+  endsubroutine test_gauss_inverse
+
 endmodule test_linearalgebra
