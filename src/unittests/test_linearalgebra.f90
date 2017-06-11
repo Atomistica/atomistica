@@ -68,7 +68,6 @@ contains
     real(DP), parameter :: tol = 1e-6
     real(DP) :: A(3, 3), B(3, 3), C(3, 3)
     integer :: error
-    write (*, *) "test_gauss_inverse"
     A = 0.0_DP
     A(1, 1) = 3
     A(2, 1) = 2
