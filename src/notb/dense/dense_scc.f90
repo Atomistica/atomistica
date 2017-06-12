@@ -1,4 +1,4 @@
-!! ======================================================================
+!es! ======================================================================
 !! Atomistica - Interatomic potential library and molecular dynamics code
 !! https://github.com/Atomistica/atomistica
 !!
@@ -634,7 +634,7 @@ contains
 
        ! mix, new charges to f_q_prev
        call mix(mixer, it, nf, f_q_prev, f_q_new, this%beta, this%dq_crit, done, 0.05d0, error=error)
-       PASS_ERROR(error)
+       PASS_ERROR_AND_STOP_TIMER("scc_establish_self_consistency", error)
 
        ! unpack new charges from f_q_prev to q
        call filter_unpack(filter, p, f_q_prev, q)
