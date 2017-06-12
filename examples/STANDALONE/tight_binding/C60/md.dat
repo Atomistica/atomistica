@@ -1,0 +1,44 @@
+Simulation {
+
+  system_of_units = "eV/A";
+
+  #
+  # Screen/File output
+  #
+
+  scr_freq   = "10";
+  file_freq  = "100";
+
+  OutputNC { freq = "10.0"; };
+
+  #
+  # Simulation control
+  #
+
+  dt            = "0.1";
+  n_iterations  = "1000";
+
+  #
+  # Force model
+  #
+
+  avgn = "1000";
+
+  TightBinding {
+#    SolverLAPACK {
+#      electronic_T = "0.260";
+#    };
+#    SolverCP { };
+  };
+
+  #
+  # Optimizer
+  #
+
+  FIRE {
+#    fcrit   = "1e-6";
+   
+    max_dt  = "0.1";
+  };
+
+};

@@ -1,0 +1,39 @@
+Simulation {
+
+  system_of_units = "eV/A/fs";
+
+  #
+  # Screen/File output
+  #
+
+  scr_freq   = "100";
+  file_freq  = "10000";
+
+  OutputEnergy { };
+
+  #
+  # Simulation control
+  #
+
+  dt        = "0.1";
+  max_time  = "1e4";
+
+  #
+  # Force model
+  #
+
+  avgn = "100";
+  cutoff_add = "0.1";
+
+  Tersoff { };
+
+  #
+  # Andersen pressure control (NPH ensemble)
+  #
+
+  AndersenP {
+    P = "0.06241506363094028, 0.06241506363094028, 0.06241506363094028"; # 10 GPa
+    W = "1e4";
+  };
+
+};

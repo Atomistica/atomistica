@@ -1,0 +1,107 @@
+Simulation {
+
+  #
+  # eV/A/fs units
+  #
+
+  system_of_units  = "eV/A/fs";
+
+
+  #
+  # 100 ps run, 0.2 fs time step
+  #
+ 
+  dt        = "0.2";
+  max_time  = "1000.";
+
+
+  #
+  # Print every 100 time steps on screen and every ten thousand to a file
+  #
+
+  scr_freq         = "10";
+  file_freq        = "1000";
+
+
+  #
+  # Average number of neighbors (for neighbor list)
+  #
+
+  avgn             = "1000";
+
+
+  #
+  # Output energies to 'ener.out'
+  #
+
+  OutputEnergy { };
+
+
+  #
+  # Trajectory output (every ps) to .NC file
+  #
+
+  OutputNC {
+    freq = "100.0";
+  };
+
+
+  #
+  # Temperature control
+  #
+
+#  Langevin {
+#    T    = "300";
+#    tau  = "100.";
+#  };
+
+
+  #
+  # Tight-binding forces
+  #
+
+  TightBinding {
+
+    #
+    # LAPACK solver
+    #
+
+    SolverLAPACK {
+      electronic_T  = "0.01";
+    };
+#    SolverCP { };
+
+    #
+    # Enable charge self-consistency
+    #
+
+    SCC {
+      dq_crit             = "1e-4";
+      mixing              = "0.2";
+      andersen_memory     = "3";
+      maximum_iterations  = "100";
+      log                 = "yes";
+    };
+
+  };
+
+
+  #
+  # Coulomb interaction
+  #
+
+  PME {
+    cutoff = "10.0";
+    grid = "8, 8, 8";
+  };
+
+
+  #
+  # Slater-type charges
+  #
+
+  SlaterCharges {
+    cutoff = "10.0";
+  };
+
+};
