@@ -175,7 +175,7 @@ contains
 
     ! ---
 
-    integer   :: i, j, M
+    integer   :: i, j, M, error_loc
     real(DP)  :: A(this%M, this%M), b(this%M), hlp
 
     ! ---
@@ -215,7 +215,8 @@ contains
 !    if (mod_parallel_3d%mpi%my_proc == ROOT) then
 !#endif
 
-    call gaussn(M, A(1:M, 1:M), M, b(1:M), error=error)
+    error_loc = ERROR_NONE
+    call gaussn(M, A(1:M, 1:M), M, b(1:M), error=error_loc)
 
 !#ifdef _MP
 !    endif
@@ -224,7 +225,7 @@ contains
 !    PASS_ERROR(error)
 !#endif
 
-    if (error == ERROR_NONE .and. M > 0) then
+    if (error_loc == ERROR_NONE .and. M > 0) then
 !    if (info == 0 .and. M > 0) then
 !#ifdef _MP
 !       call bcast(mod_parallel_3d%mpi, b, ROOT, error=error)
