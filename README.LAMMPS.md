@@ -1,3 +1,6 @@
+_NOTE_: If you are using LAMMPS < 07Sep16, you will need to replace `list->ghost`
+by `list->ghostflag` in `pair_atomistica.cpp`.
+
 To compile the LAMMPS-Atomistica interface do the following:
 
 1. Extract the current version of Atomistica to a directory _outside_ of your
