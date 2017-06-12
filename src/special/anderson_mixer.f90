@@ -244,6 +244,7 @@ contains
        end do
        this%xb(1:n)  = this%xb(1:n) + beta * this%Fb(1:n)       !next input
     else 
+       CLEAR_ERROR(error_loc)
        !----------------------------
        ! The matrix A was singular:
        ! use simple mixing 
