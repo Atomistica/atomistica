@@ -159,24 +159,25 @@ contains
   !!
   !! Mixing iteration.
   !<
-  subroutine anderson_mixer_mix(this, it, n, xi, yi, beta, limit, done, mx, error)
+  subroutine anderson_mixer_mix_kernel(this, it, n, xi, yi, M, beta, limit, done, mx, error)
     implicit none
-    
+
     type(anderson_mixer_t), intent(inout)  :: this   !< Mixer object
-    integer, intent(in)                    :: it     !< Iteration
-    integer, intent(in)                    :: n      !< Dimension of xi and yi
-    real(DP), intent(inout)                :: xi(n)  !< out: Output vector, in: Previous iteration
-    real(DP), intent(in)                   :: yi(n)  !< Input vector
-    real(DP), intent(in)                   :: beta   !< beta-parameter
-    real(DP), optional, intent(in)         :: limit  !< Convergence criterium
-    logical,  optional, intent(out)        :: done   !< Is conv. achieved?
-    real(DP), optional, intent(in)         :: mx     !< Maximum change for vector elements
-    integer,  optional, intent(out)        :: error
+    integer,                intent(in)     :: it     !< Iteration
+    integer,                intent(in)     :: n      !< Dimension of xi and yi
+    real(DP),               intent(inout)  :: xi(n)  !< out: Output vector, in: Previous iteration
+    real(DP),               intent(in)     :: yi(n)  !< Input vector
+    integer,                intent(in)     :: M      !< Size of history
+    real(DP),               intent(in)     :: beta   !< beta-parameter
+    real(DP),     optional, intent(in)     :: limit  !< Convergence criterium
+    logical,      optional, intent(out)    :: done   !< Is conv. achieved?
+    real(DP),     optional, intent(in)     :: mx     !< Maximum change for vector elements
+    integer,      optional, intent(out)    :: error
 
     ! ---
 
-    integer   :: i, j, M, error_loc
-    real(DP)  :: A(this%M, this%M), b(this%M), hlp
+    integer   :: i, j, M_new, error_loc
+    real(DP)  :: A(M, M), b(M), hlp
 
     ! ---
 
@@ -186,7 +187,6 @@ contains
        call set_dimension(this, n)
     endif
 
-    M                    = min(it-1, this%M)
     this%F_hist(0, 1:n)  = yi(1:n) - xi(1:n)   !current residual
     this%x_hist(0, 1:n)  = xi(1:n)             !current input
 
@@ -216,7 +216,7 @@ contains
 !#endif
 
     error_loc = ERROR_NONE
-    call gaussn(M, A(1:M, 1:M), M, b(1:M), error=error_loc)
+    call gauss1(M, A, b, error=error_loc)
 
 !#ifdef _MP
 !    endif
@@ -241,7 +241,7 @@ contains
        do j = 1, M
           this%xb(1:n)  = this%xb(1:n) + b(j) * ( this%x_hist(j, 1:n) - xi(1:n)             )
           this%Fb(1:n)  = this%Fb(1:n) + b(j) * ( this%F_hist(j, 1:n) - this%F_hist(0, 1:n) )
-       end do
+       enddo
        this%xb(1:n)  = this%xb(1:n) + beta * this%Fb(1:n)       !next input
     else 
        CLEAR_ERROR(error_loc)
@@ -268,12 +268,9 @@ contains
     endif
 
     ! shift history
-    M                     = min(it, this%M)
-    this%F_hist(1:M, 1:n) = this%F_hist(0:M-1, 1:n)
-    this%x_hist(1:M, 1:n) = this%x_hist(0:M-1, 1:n)
-!    this%F_hist(1:this%M, 1:n) = this%F_hist(0:this%M-1, 1:n)
-!    this%x_hist(1:this%M, 1:n) = this%x_hist(0:this%M-1, 1:n)
-
+    M_new                     = min(it, this%M)
+    this%F_hist(1:M_new, 1:n) = this%F_hist(0:M_new-1, 1:n)
+    this%x_hist(1:M_new, 1:n) = this%x_hist(0:M_new-1, 1:n)
 
     !---------------------------------------
     ! convergence: all components of
@@ -286,6 +283,34 @@ contains
 !       PASS_ERROR(error)
 !#endif
     endif
+
+  endsubroutine anderson_mixer_mix_kernel
+
+
+  !>
+  !! Mixing iteration
+  !!
+  !! Mixing iteration.
+  !<
+  subroutine anderson_mixer_mix(this, it, n, xi, yi, beta, limit, done, mx, error)
+    implicit none
+    
+    type(anderson_mixer_t), intent(inout)  :: this   !< Mixer object
+    integer,                intent(in)     :: it     !< Iteration
+    integer,                intent(in)     :: n      !< Dimension of xi and yi
+    real(DP),               intent(inout)  :: xi(n)  !< out: Output vector, in: Previous iteration
+    real(DP),               intent(in)     :: yi(n)  !< Input vector
+    real(DP),               intent(in)     :: beta   !< beta-parameter
+    real(DP),     optional, intent(in)     :: limit  !< Convergence criterium
+    logical,      optional, intent(out)    :: done   !< Is conv. achieved?
+    real(DP),     optional, intent(in)     :: mx     !< Maximum change for vector elements
+    integer,      optional, intent(out)    :: error
+
+    ! ---
+
+    call anderson_mixer_mix_kernel(this, it, n, xi, yi, min(it-1, this%M), &
+                                   beta, limit, done, mx, error)
+    PASS_ERROR(error)
 
   endsubroutine anderson_mixer_mix
 

@@ -33,7 +33,7 @@ import unittest
 
 import numpy as np
 
-from ase.structure import molecule
+from ase.build import molecule
 from ase.optimize import FIRE
 
 import atomistica.native as native

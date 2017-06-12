@@ -1,6 +1,6 @@
 import os
 
-from ase.structure import molecule
+from ase.build import molecule
 
 import atomistica.native as native
 from atomistica import Atomistica
