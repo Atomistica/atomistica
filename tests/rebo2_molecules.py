@@ -31,9 +31,9 @@ import sys
 import unittest
 
 import ase
+import ase.build
 import ase.io
 import ase.optimize
-import ase.structure
 
 import atomistica
 
@@ -106,7 +106,7 @@ def molecule(mol):
     if os.path.exists('molecule_database/{0}.xyz'.format(mol)):
         a = ase.io.read('molecule_database/{0}.xyz'.format(mol))
     else:
-        a = ase.structure.molecule(mol)
+        a = ase.build.molecule(mol)
     return a
 
 ###
