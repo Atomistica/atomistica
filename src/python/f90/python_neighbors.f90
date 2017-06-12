@@ -593,7 +593,7 @@ contains
     
     integer   :: chunk_len
 
-    logical   :: lebc, any_c_not_zero
+    logical   :: any_c_not_zero
 
     integer   :: error_loc
 
@@ -666,30 +666,6 @@ contains
                 enddo
              endif
           enddo
-
-          ! Do we have Lees-Edwards boundary conditions and a jump across the
-          ! simulation domain boundaries in z-direction? Then we need to
-          ! re-evaluate the cell index considering the boundary conditions
-          if (lebc .and. c(3) /= 0) then
-             ! Compute 3-index of the cell for the (Lees-Edwards) shifted grid:
-             cell2     = floor( matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border) + 1 )
-             cur_cell  = cell2 + this%d(1:3, x)
-
-             c         = 0
-
-             do k = 1, 3
-                if (pbc(k)) then
-                   do while (cur_cell(k) < 1)
-                      cur_cell(k) = cur_cell(k)+this%n_cells(k)
-                      c(k)        = c(k)-1
-                   enddo
-                   do while (cur_cell(k) > this%n_cells(k))
-                      cur_cell(k) = cur_cell(k)-this%n_cells(k)
-                      c(k)        = c(k)+1
-                   enddo
-                endif
-             enddo
-          endif
 
           cell_exists: if (.not. (any(cur_cell < 1) .or. any(cur_cell > this%n_cells)) .and. error_loc == ERROR_NONE) then
              any_c_not_zero  = any(c /= 0)
