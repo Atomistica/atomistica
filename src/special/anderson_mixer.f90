@@ -216,7 +216,6 @@ contains
 !#endif
 
     call gaussn(M, A(1:M, 1:M), M, b(1:M), error=error)
-    PASS_ERROR(error)
 
 !#ifdef _MP
 !    endif
@@ -225,7 +224,7 @@ contains
 !    PASS_ERROR(error)
 !#endif
 
-    if (M > 0) then
+    if (error == ERROR_NONE .and. M > 0) then
 !    if (info == 0 .and. M > 0) then
 !#ifdef _MP
 !       call bcast(mod_parallel_3d%mpi, b, ROOT, error=error)
