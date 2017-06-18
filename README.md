@@ -46,9 +46,9 @@ You need the following packages:
 Contact
 -------
 
-This software is developed at
-[Karlsruhe Institute of Technology](http://www.yin.kit.edu/english/1103_1692.php)
+This software is developed at the
+[University of Freiburg](http://www.imtek.uni-freiburg.de/laboratories/simulation)
 and
 [Fraunhofer IWM](http://www.en.iwm.fraunhofer.de/business-units/tribology/multiscale-modeling-and-tribosimulation/).
-Please write to Lars Pastewka (lars.pastewka@kit.edu) for questions and suggestions.
+Please write to Lars Pastewka (lars.pastewka@imtek.uni-freiburg.de) for questions and suggestions.
 A complete list of contributors can be found [here](AUTHORS.md).

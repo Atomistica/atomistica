@@ -8,6 +8,15 @@ TODO
 Change log
 ==========
 
+v0.5.2
+------
+
+- Removed LAPACK dependency for everything that does not use tight-binding
+  (in particular the LAMMPS moduls)
+- Updated LAMMPS pair_style for LAMMPS >= 07Sep16
+- Bug fix: Proper inclusion of numpy extra_link_args in setup.py
+- Bug fix: Fixed problem with tilted orthorhombic cells
+
 v0.5.1
 ------
 
