@@ -580,18 +580,16 @@ contains
     logical   :: pbc(3)
 
     integer   :: i, j, k, x, nn
-    integer   :: cell(3), cell2(3), cur_cell(3)
+    integer   :: celli(3), cellj(3), cur_cell(3)
     integer   :: cur
 
-    real(DP)  :: delta_r(3), abs_delta_r_sq, offset(3)
+    real(DP)  :: delta_r(3), abs_delta_r_sq
     
     real(DP)  :: cutoff_sq
 
-    integer   :: shift(3), delta_shift(3)
+    integer   :: shift(3), shift1(3), shift2(3)
     
     integer   :: chunk_len
-
-    logical   :: any_c_not_zero
 
     integer   :: error_loc
 
@@ -621,7 +619,7 @@ contains
 
 #ifdef _OPENMP
     !$omp  parallel default(none) &
-    !$omp& private(abs_delta_r_sq, cell, chunk_start, c, cell2, cur, cur_cell, delta_r, i, j, off, x, any_c_not_zero) &
+    !$omp& private(abs_delta_r_sq, cell, chunk_start, c, cur, cur_cell, delta_r, i, j, off, x, any_c_not_zero) &
     !$omp& firstprivate(chunk_len, cutoff_sq, ilog, Abox, pbc) &
     !$omp& shared(this, p) &
     !$omp& reduction(+:error_loc) reduction(+:nn)
@@ -638,24 +636,24 @@ contains
 
     !$omp do
     i_loop: do i = 1, p%nat
-       ! Compute the 3-index of the current cell
-       cell = floor( matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border) + 1 )
+       ! Compute the 3-index of the cell of atom i
+       celli = floor(matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border) + 1)
        shift = 0
 
-       ! Map current cell back to box and keep track of offset
+       ! Map current cell back to box and keep track of cell shift
        do k = 1, 3
           if (pbc(k)) then
-             do while (cell(k) < 1)
-                cell(k)  = cell(k) + this%n_cells(k)
-                shift(k) = shift(k)-1
+             do while (celli(k) < 1)
+                celli(k) = celli(k) + this%n_cells(k)
+                shift(k) = shift(k) + 1
              enddo
-             do while (cell(k) > this%n_cells(k))
-                cell(k)  = cell(k) - this%n_cells(k)
-                shift(k) = shift(k)+1
+             do while (celli(k) > this%n_cells(k))
+                celli(k) = celli(k) - this%n_cells(k)
+                shift(k) = shift(k) - 1
              enddo
           else
-             if (cell(k) < 1)  cell(k) = 1
-             if (cell(k) > this%n_cells(k))  cell(k) = this%n_cells(k)
+             if (celli(k) < 1)  celli(k) = 1
+             if (celli(k) > this%n_cells(k))  celli(k) = this%n_cells(k)
           endif
        enddo
 
@@ -663,41 +661,50 @@ contains
 
        ! Loop over all (precomputed) cell distances in x-, y- and z-direction
        xyz_loop: do x = 1, this%n_d
-          cur_cell    = cell + this%d(1:3, x)
-          delta_shift = -shift
+          cur_cell    = celli + this%d(1:3, x)
 
-          ! Determine whether the neighboring cell is outside of the simulation
-          ! domain and needs to be remapped into it. The variable c counts the
-          ! distance to that cell in number of simulation cells. This allows
-          ! the use of very small boxes, e.g. one atom simulations.
+          ! Map cell back to box and keep track of cell shift
+          shift1 = shift
           do k = 1, 3
              if (pbc(k)) then
                 do while (cur_cell(k) < 1)
-                   cur_cell(k)    = cur_cell(k)+this%n_cells(k)
-                   delta_shift(k) = delta_shift(k)-1
+                   cur_cell(k) = cur_cell(k) + this%n_cells(k)
+                   shift1(k)   = shift1(k)   + 1
                 enddo
                 do while (cur_cell(k) > this%n_cells(k))
-                   cur_cell(k)    = cur_cell(k)-this%n_cells(k)
-                   delta_shift(k) = delta_shift(k)+1
+                   cur_cell(k) = cur_cell(k) - this%n_cells(k)
+                   shift1(k)   = shift1(k)   - 1
                 enddo
              endif
-             ! Note: If the direction is not periodic, then we don't need to
-             ! do anything. The cell_exists look will then skip over
-             ! non-existing cells. Neighbors are still found properly
-             ! even if an atoms sits outside the cell because those are mapped
-             ! back to the closest cell in the simulation box.
           enddo
 
           no_error: if (error_loc == ERROR_NONE) then
              cell_exists: if (.not. (any(cur_cell < 1) .or. any(cur_cell > this%n_cells))) then
-                any_c_not_zero = any(delta_shift /= 0)
-                offset         = matmul(Abox, delta_shift)
-                j              = this%binning_seed(cur_cell(1), cur_cell(2), cur_cell(3))
+                j = this%binning_seed(cur_cell(1), cur_cell(2), cur_cell(3))
 
                 do while (j /= -1)
-                   if (i /= j .or. any_c_not_zero) then
-                      delta_r = PNC3(p, i) - PNC3(p, j) - offset
+                   ! Compute the 3-index of the cell of atom j
+                   cellj = floor(matmul(this%rec_cell_size, PNC3(p, j) - p%lower_with_border) + 1)
 
+                   ! Map current cell back to box and keep track of cell shift
+                   shift2 = shift1
+                   do k = 1, 3
+                      if (pbc(k)) then
+                         do while (cellj(k) < 1)
+                            cellj(k)  = cellj(k)  + this%n_cells(k)
+                            shift2(k) = shift2(k) - 1
+                         enddo
+                         do while (cellj(k) > this%n_cells(k))
+                            cellj(k)  = cellj(k)  - this%n_cells(k)
+                            shift2(k) = shift2(k) + 1
+                         enddo
+                      endif
+                   enddo
+
+                   ! Check if this is the atom interacting with itself
+                   if (i /= j .or. any(shift2 /= 0)) then
+
+                      delta_r = PNC3(p, i) - PNC3(p, j) + matmul(Abox, shift2)
                       abs_delta_r_sq = dot_product(delta_r, delta_r)
 
                       if (abs_delta_r_sq < cutoff_sq) then
@@ -710,7 +717,7 @@ contains
 #endif
                          else
                             this%neighbors(cur)  = j
-                            VEC3(this%dc, cur)   = -delta_shift
+                            VEC3(this%dc, cur)   = shift2
 
                             cur                  = cur + 1
                             nn                   = nn + 1

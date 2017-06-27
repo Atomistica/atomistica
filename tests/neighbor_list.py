@@ -103,6 +103,24 @@ class NeighborListTest(unittest.TestCase):
         i, j, abs_dr = nl.get_neighbors(an)
         self.assertEqual(len(i), 2)
 
+    def test_pbc_shift_by_multiple_cells(self):
+        a = io.read('aC.cfg')
+        a.set_calculator(Tersoff())
+        e1 = a.get_potential_energy()
+        i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)
+        a[100].position += 3*a.cell[0]
+        e2 = a.get_potential_energy()
+        i2, j2, r2 = a.calc.nl.get_neighbors(a.calc.particles)
+        for i in range(len(a)):
+            n1 = np.array(sorted(j1[i1==i]))
+            n2 = np.array(sorted(j2[i2==i]))
+            if np.any(n1 != n2):
+                print(i, n1, n2)
+        a[100].position += a.cell.T.dot([1,3,-4])
+        e3 = a.get_potential_energy()
+        self.assertAlmostEqual(e1, e2)
+        self.assertAlmostEqual(e1, e3)
+
     def test_no_pbc_small_cell(self):
         a = io.read('aC.cfg')
         a.set_calculator(Tersoff())
