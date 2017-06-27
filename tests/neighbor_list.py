@@ -29,6 +29,7 @@ import ase
 
 import atomistica.io as io
 import atomistica.native as native
+from atomistica import Tersoff
 from atomistica.snippets import mic
 
 ###
@@ -101,6 +102,37 @@ class NeighborListTest(unittest.TestCase):
 
         i, j, abs_dr = nl.get_neighbors(an)
         self.assertEqual(len(i), 2)
+
+    def test_no_pbc_small_cell(self):
+        a = io.read('aC.cfg')
+        a.set_calculator(Tersoff())
+        a.set_pbc(False)
+        e1 = a.get_potential_energy()
+        i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)
+        a.set_cell(a.cell*0.9, scale_atoms=False)
+        e2 = a.get_potential_energy()
+        self.assertAlmostEqual(e1, e2)
+        i2, j2, r2 = a.calc.nl.get_neighbors(a.calc.particles)
+        for k in range(len(a)):
+            neigh1 = np.array(sorted(j1[i1==k]))
+            neigh2 = np.array(sorted(j2[i2==k]))
+            self.assertTrue(np.all(neigh1 == neigh2))
+
+    def test_partial_pbc_small_cell(self):
+        a = io.read('aC.cfg')
+        a.set_cell(a.cell.diagonal(), scale_atoms=True)
+        a.set_calculator(Tersoff())
+        a.set_pbc([True, False, False])
+        e1 = a.get_potential_energy()
+        i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)
+        a.set_cell(a.cell.diagonal()*np.array([1.0, 0.8, 0.9]), scale_atoms=False)
+        e2 = a.get_potential_energy()
+        self.assertAlmostEqual(e1, e2)
+        i2, j2, r2 = a.calc.nl.get_neighbors(a.calc.particles)
+        for k in range(len(a)):
+            neigh1 = np.array(sorted(j1[i1==k]))
+            neigh2 = np.array(sorted(j2[i2==k]))
+            self.assertTrue(np.all(neigh1 == neigh2))
 
 ###
 

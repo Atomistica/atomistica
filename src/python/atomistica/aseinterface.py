@@ -240,7 +240,7 @@ class Atomistica(Calculator):
         for i, at in enumerate(atoms):
             Z[i]   = atomic_numbers[at.symbol]
 
-        self.particles.coordinates[:, :]  = atoms.get_positions()[:, :]
+        self.particles.coordinates[:, :]  = atoms.positions[:, :]
         # Notify the Particles object of a change
         self.particles.I_changed_positions()
 
@@ -302,25 +302,17 @@ class Atomistica(Calculator):
         elif np.any(self.particles.Z != atoms.get_atomic_numbers()):
             self.initialize(atoms)
 
-        # Cell changed? FIXME! Add PBC,LEBC changed
-        cell       = self.particles.cell
-        pbc        = self.particles.pbc
+        # Cell or pbc changed?
+        cell = self.particles.cell
+        pbc = self.particles.pbc
         #if np.any(np.abs(cell - atoms.get_cell()) > self.CELL_TOL):
         if np.any(cell != atoms.get_cell()) or np.any(pbc != atoms.get_pbc()):
             self.particles.set_cell(atoms.get_cell(), atoms.get_pbc())
 
-        positions  = self.particles.coordinates
-        scaled     = np.linalg.solve(cell.T, positions.T).T
-        for i in range(3):
-            if pbc[i]:
-                # Yes, we need to do it twice.
-                # See the scaled_positions.py test
-                scaled[:, i] %= 1.0
-                scaled[:, i] %= 1.0
-
-        #if np.any(np.abs(scaled - atoms.get_scaled_positions()) > self.POSITIONS_TOL):
-        if np.any(scaled != atoms.get_scaled_positions()):
-            positions[:, :]  = atoms.get_positions()[:, :]
+        # Positions changed?
+        positions = self.particles.coordinates
+        if np.any(positions != atoms.positions):
+            positions[:, :] = atoms.positions[:, :]
             # Notify the Particles object of a change
             self.particles.I_changed_positions()
 

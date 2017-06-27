@@ -547,8 +547,6 @@ contains
 
     if (update_now) then
 
-       call inbox(p)
-
        this%it         = 0
        p%accum_max_dr  = 1d-6
 
@@ -562,7 +560,7 @@ contains
        this%it  = this%it + 1
 
     endif
-    
+
   endsubroutine refresh_neighbor_list
 
 
@@ -585,11 +583,11 @@ contains
     integer   :: cell(3), cell2(3), cur_cell(3)
     integer   :: cur
 
-    real(DP)  :: delta_r(3), abs_delta_r_sq, off(3)
+    real(DP)  :: delta_r(3), abs_delta_r_sq, offset(3)
     
     real(DP)  :: cutoff_sq
 
-    integer   :: c(3)
+    integer   :: shift(3), delta_shift(3)
     
     integer   :: chunk_len
 
@@ -642,13 +640,31 @@ contains
     i_loop: do i = 1, p%nat
        ! Compute the 3-index of the current cell
        cell = floor( matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border) + 1 )
+       shift = 0
+
+       ! Map current cell back to box and keep track of offset
+       do k = 1, 3
+          if (pbc(k)) then
+             do while (cell(k) < 1)
+                cell(k)  = cell(k) + this%n_cells(k)
+                shift(k) = shift(k)-1
+             enddo
+             do while (cell(k) > this%n_cells(k))
+                cell(k)  = cell(k) - this%n_cells(k)
+                shift(k) = shift(k)+1
+             enddo
+          else
+             if (cell(k) < 1)  cell(k) = 1
+             if (cell(k) > this%n_cells(k))  cell(k) = this%n_cells(k)
+          endif
+       enddo
 
        this%seed(i) = cur
 
        ! Loop over all (precomputed) cell distances in x-, y- and z-direction
        xyz_loop: do x = 1, this%n_d
-          cur_cell  = cell + this%d(1:3, x)
-          c         = 0
+          cur_cell    = cell + this%d(1:3, x)
+          delta_shift = -shift
 
           ! Determine whether the neighboring cell is outside of the simulation
           ! domain and needs to be remapped into it. The variable c counts the
@@ -657,49 +673,56 @@ contains
           do k = 1, 3
              if (pbc(k)) then
                 do while (cur_cell(k) < 1)
-                   cur_cell(k) = cur_cell(k)+this%n_cells(k)
-                   c(k)        = c(k)-1
+                   cur_cell(k)    = cur_cell(k)+this%n_cells(k)
+                   delta_shift(k) = delta_shift(k)-1
                 enddo
                 do while (cur_cell(k) > this%n_cells(k))
-                   cur_cell(k) = cur_cell(k)-this%n_cells(k)
-                   c(k)        = c(k)+1
+                   cur_cell(k)    = cur_cell(k)-this%n_cells(k)
+                   delta_shift(k) = delta_shift(k)+1
                 enddo
              endif
+             ! Note: If the direction is not periodic, then we don't need to
+             ! do anything. The cell_exists look will then skip over
+             ! non-existing cells. Neighbors are still found properly
+             ! even if an atoms sits outside the cell because those are mapped
+             ! back to the closest cell in the simulation box.
           enddo
 
-          cell_exists: if (.not. (any(cur_cell < 1) .or. any(cur_cell > this%n_cells)) .and. error_loc == ERROR_NONE) then
-             any_c_not_zero  = any(c /= 0)
-             off             = matmul(Abox, c)
-             j               = this%binning_seed(cur_cell(1), cur_cell(2), cur_cell(3))
+          no_error: if (error_loc == ERROR_NONE) then
+             cell_exists: if (.not. (any(cur_cell < 1) .or. any(cur_cell > this%n_cells))) then
+                any_c_not_zero = any(delta_shift /= 0)
+                offset         = matmul(Abox, delta_shift)
+                j              = this%binning_seed(cur_cell(1), cur_cell(2), cur_cell(3))
 
-             do while (j /= -1)
-                if (i /= j .or. any_c_not_zero) then
-                   delta_r = PNC3(p, i) - PNC3(p, j) - off
+                do while (j /= -1)
+                   if (i /= j .or. any_c_not_zero) then
+                      delta_r = PNC3(p, i) - PNC3(p, j) - offset
 
-                   abs_delta_r_sq = dot_product(delta_r, delta_r)
+                      abs_delta_r_sq = dot_product(delta_r, delta_r)
 
-                   if (abs_delta_r_sq < cutoff_sq) then
+                      if (abs_delta_r_sq < cutoff_sq) then
 #ifdef _OPENMP
-                      if (cur - chunk_start >= chunk_len) then
-                         RAISE_DELAYED_ERROR("Neighbor list overflow. Current neighbor list position is " // cur // " while the size of this chunk runs from " // chunk_start // " to " // chunk_len // ".", error_loc)
+                         if (cur - chunk_start >= chunk_len) then
+                            RAISE_DELAYED_ERROR("Neighbor list overflow. Current neighbor list position is " // cur // " while the size of this chunk runs from " // chunk_start // " to " // chunk_len // ".", error_loc)
 #else
-                      if (cur >= chunk_len) then
-                         RAISE_ERROR("Neighbor list overflow. Current neighbor list position is " // cur // " while the size of this chunk runs from 1 to " // chunk_len // ".", error)
+                         if (cur >= chunk_len) then
+                            RAISE_ERROR("Neighbor list overflow. Current neighbor list position is " // cur // " while the size of this chunk runs from 1 to " // chunk_len // ".", error)
 #endif
-                      else
-                         this%neighbors(cur)  = j
-                         VEC3(this%dc, cur)   = -c
+                         else
+                            this%neighbors(cur)  = j
+                            VEC3(this%dc, cur)   = -delta_shift
 
-                         cur                  = cur + 1
-                         nn                   = nn + 1
+                            cur                  = cur + 1
+                            nn                   = nn + 1
+                         endif
                       endif
                    endif
-                endif
 
-                j  = this%next_particle(j)
-             enddo
+                   j  = this%next_particle(j)
+                enddo
 
-          endif cell_exists
+             endif cell_exists
+          endif no_error
 
        enddo xyz_loop
 
@@ -879,7 +902,7 @@ contains
 
     ! ---
 
-    integer :: i, j, cell(3)
+    integer :: i, k, cell(3)
     logical :: pbc(3)
 
     ! ---
@@ -894,27 +917,24 @@ contains
     this%binning_last   = -1
 
     do i = 1, p%nat
-       cell  = floor(matmul(this%rec_cell_size, PNC3(p, i)-p%lower_with_border))+1
+       cell = floor(matmul(this%rec_cell_size, PNC3(p, i)-p%lower_with_border))+1
 
-       do j = 1, 3
-          if (pbc(j)) then
-             if (cell(j) < 1) then
-                cell(j) = cell(j) + this%n_cells(j)
-                PNC3(p, i) = PNC3(p, i) + p%Abox(:, j)
-             else if (cell(j) > this%n_cells(j)) then
-                cell(j) = cell(j) - this%n_cells(j)
-                PNC3(p, i) = PNC3(p, i) - p%Abox(:, j)
-             endif
+       do k = 1, 3
+          if (pbc(k)) then
+             do while (cell(k) < 1)
+                cell(k) = cell(k) + this%n_cells(k)
+             enddo
+             do while (cell(k) > this%n_cells(k))
+                cell(k) = cell(k) - this%n_cells(k)
+             enddo
           else
-             if (cell(j) < 1) then
-                cell(j) = 1
-             else if (cell(j) > this%n_cells(j)) then
-                cell(j) = this%n_cells(j)
-             endif
+             if (cell(k) < 1)  cell(k) = 1
+             if (cell(k) > this%n_cells(k))  cell(k) = this%n_cells(k)
           endif
        enddo
 
        if (any(cell < 1) .or. any(cell > this%n_cells)) then
+          ! Code should never get here
           call particles_dump_info(p, i, cell)
           RAISE_ERROR("Particle outside simulation domain.", error)
        endif

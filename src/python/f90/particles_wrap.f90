@@ -161,7 +161,7 @@ contains
     ! ---
 
     call c_f_pointer(this_cptr, this)
-    call set_cell(this, cell, logical(pbc), error=error)
+    call set_cell(this, cell, pbc=logical(pbc), error=error)
 
   endsubroutine f_particles_set_cell
 
