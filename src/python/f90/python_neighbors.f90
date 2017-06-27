@@ -619,7 +619,8 @@ contains
 
 #ifdef _OPENMP
     !$omp  parallel default(none) &
-    !$omp& private(abs_delta_r_sq, cell, chunk_start, c, cur, cur_cell, delta_r, i, j, off, x, any_c_not_zero) &
+    !$omp& private(abs_delta_r_sq, chunk_start, celli, cellj, cur, cur_cell) &
+    !$omp& private(shift, shift1, shift2, delta_r, i, j, x) &
     !$omp& firstprivate(chunk_len, cutoff_sq, ilog, Abox, pbc) &
     !$omp& shared(this, p) &
     !$omp& reduction(+:error_loc) reduction(+:nn)
