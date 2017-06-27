@@ -9,7 +9,7 @@ install:
   # Compile standalone code
   - "cd build_standalone ; cp Makefile.gnu Makefile ; make factories ; make mdcore ; cd .."
   # Fetch and install ASE
-  - "pip install -r requirements.txt"
+  - "pip install ase==3.13.0"
   # Compile Python interface
   - "cp setup.cfg.travis setup.cfg ; python setup.py install"
 script:
