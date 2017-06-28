@@ -235,12 +235,13 @@ class Atomistica(Calculator):
         self.particles.allocate(len(atoms))
         self.particles.set_cell(atoms.get_cell(), pbc)
 
-        Z  = self.particles.Z
+        Z = self.particles.Z
 
         for i, at in enumerate(atoms):
-            Z[i]   = atomic_numbers[at.symbol]
+            Z[i] = atomic_numbers[at.symbol]
 
-        self.particles.coordinates[:, :]  = atoms.positions[:, :]
+        self.particles.coordinates[:, :] = \
+            atoms.positions - atoms.get_celldisp().ravel()
         # Notify the Particles object of a change
         self.particles.I_changed_positions()
 
@@ -311,8 +312,8 @@ class Atomistica(Calculator):
 
         # Positions changed?
         positions = self.particles.coordinates
-        if np.any(positions != atoms.positions):
-            positions[:, :] = atoms.positions[:, :]
+        if np.any(positions != atoms.positions - atoms.get_celldisp().ravel()):
+            positions[:, :] = atoms.positions - atoms.get_celldisp().ravel()
             # Notify the Particles object of a change
             self.particles.I_changed_positions()
 
