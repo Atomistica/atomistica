@@ -8,6 +8,13 @@ TODO
 Change log
 ==========
 
+v0.5.3
+------
+
+- Support for ASE's Atoms.celldisp parameter
+- Bug fix: Atoms outside the simulation cell are now treated correctly in
+  periodic and nonperiodic cells.
+
 v0.5.2
 ------
 
