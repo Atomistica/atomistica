@@ -121,7 +121,9 @@ def read_atoms(fn, cycfn=None, pos_only=False, conv=1.0):
                 l2 = f.readline()
                 l3 = f.readline()
 
-                this.set_cell( [ map(float, l1.split()), map(float, l2.split()), map(float, l3.split()) ] )
+                this.set_cell( [ [float(x) for x in l1.split()],
+                                 [float(x) for x in l2.split()],
+                                 [float(x) for x in l3.split()] ] )
 
                 l = None
 
@@ -131,7 +133,7 @@ def read_atoms(fn, cycfn=None, pos_only=False, conv=1.0):
                 while l and l[0] not in [ '<', '#' ]:
                     s = l.split()
 
-                    aux += [ map(float, s) ]
+                    aux += [ [float(x) for x in s] ]
 
                     l = f.readline().strip()
 
