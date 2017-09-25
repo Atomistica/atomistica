@@ -188,7 +188,7 @@ lib_macros = [ ( 'NO_BIND_C_OPTIONAL', None ),
 #
 
 #print 'Scanning f90 metadata in directory {0}...'.format(srcdir)
-metadata = scanallmeta(['{0}/{1}'.format(srcdir, x) for x in 
+metadata = scanallmeta(['{0}/{1}'.format(srcdir, x) for x in
                         ['notb', 'potentials', 'potentials_nonfree']])
 
 #print 'Writing factories...'
@@ -233,7 +233,7 @@ for f90name, f90type, name, features, methods in mods2:
     print('    {0}'.format(name))
 
 write_factory_f90(mods2, 'potential', 'build/potentials_factory_f90.f90')
-write_factory_c(mods2, 'potential', 
+write_factory_c(mods2, 'potential',
                 '%s/python/c/factory.template.c' % srcdir,
                 'build/potentials_factory_c.c',
                 '%s/python/c/factory.template.h' % srcdir,
@@ -279,7 +279,7 @@ setup(
                 sources = lib_srcs,
                 include_dirs = inc_dirs,
                 macros = lib_macros,
-                extra_compiler_args = [ '-fPIC' ],
+                extra_compiler_args = [ '-fPIC', '-DHAVE_LAPACK' ],
                 )
           )
         ],
@@ -290,7 +290,7 @@ setup(
             include_dirs = inc_dirs,
             library_dirs = lib_dirs,
             libraries = libs,
-            extra_compile_args = [ '-fPIC' ],
+            extra_compile_args = [ '-fPIC', '-DHAVE_LAPACK' ],
             extra_link_args = extra_link_args,
             )
         ],
