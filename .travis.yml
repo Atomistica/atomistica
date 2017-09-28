@@ -20,5 +20,6 @@ addons:
   apt:
     packages:
     - gfortran
+    - libopenblas-dev
     - liblapack-dev
     - python-numpy
