@@ -120,7 +120,7 @@ module linearalgebra
      endsubroutine iterative_matrix_inverse
   endinterface
 
-  public :: cross_product, diagonal_matrix, gauss, gauss1, gaussn
+  public :: cross_product, diagonal_matrix, gauss1, gaussn
 
 contains
 
@@ -308,11 +308,11 @@ contains
 
   ! normsq()
   ! returns (X.dot.X)
-  pure function dnormsq(vector) result(normsq) 
+  pure function dnormsq(vector) result(normsq)
 
     real(dp), intent(in), dimension(:) :: vector
     real(dp)             :: normsq
-   
+
     normsq = dot_product(vector,vector)
 
   end function dnormsq
@@ -404,7 +404,7 @@ contains
        endif
     enddo
 
-    ddet = sgn*ddet   
+    ddet = sgn*ddet
   endfunction ddet
 
 
@@ -498,6 +498,7 @@ contains
   endfunction dsqrtm
 
 
+#ifndef HAVE_LAPACK
   !>
   !! Gauss elimination kernel
   !<
@@ -549,6 +550,7 @@ contains
     enddo
 
   endsubroutine gauss
+#endif
 
 
   !>
@@ -564,16 +566,27 @@ contains
 
     ! ---
 
+#ifdef HAVE_LAPACK
+    integer :: i, ipiv(n)
+#else
     real(DP) :: tmpA(n, n+1)
+#endif
 
     ! ---
 
     INIT_ERROR(error)
 
+#ifdef HAVE_LAPACK
+    call dgesv(n, 1, A, n, ipiv, x, n, i)
+    if (i /= 0) then
+       RAISE_ERROR("dgesv failed. info = "//i, error)
+    endif
+#else
     tmpA(1:n, 1:n) = A
     tmpA(1:n, n+1) = x
     call gauss(n, tmpA, x, error=error)
     PASS_ERROR(error)
+#endif
 
   endsubroutine gauss1
 
@@ -592,19 +605,30 @@ contains
 
     ! ---
 
-    integer  :: i
+    integer :: i
+#ifdef HAVE_LAPACK
+    integer :: ipiv(n)
+#else
     real(DP) :: tmpA(n, n+1)
+#endif
 
     ! ---
 
     INIT_ERROR(error)
 
+#ifdef HAVE_LAPACK
+    call dgesv(n, m, A, n, ipiv, x, n, i)
+    if (i /= 0) then
+       RAISE_ERROR("dgesv failed. info = "//i, error)
+    endif
+#else
     do i = 1, m
        tmpA(1:n, 1:n) = A
        tmpA(1:n, n+1) = x(1:n, i)
        call gauss(n, tmpA, x(1:n, i), error=error)
        PASS_ERROR_WITH_INFO("i = " // i, error)
     enddo
+#endif
 
   endsubroutine gaussn
 
