@@ -513,7 +513,7 @@ contains
     ! ---
 
     integer :: i, j, k, max_indx
-    integer :: indx(n), itmp(n)
+    integer :: indx(n), itmp(1)
 
     real(DP) :: fac(n), row(n+1)
 
