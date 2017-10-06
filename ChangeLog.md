@@ -8,6 +8,11 @@ TODO
 Change log
 ==========
 
+v0.5.4
+------
+
+- Fixed segfault in tight-binding materials database on Mac OS X.
+
 v0.5.3
 ------
 
@@ -54,7 +59,7 @@ v0.4.4
 ------
 
 - Bug fix: Occasional NaNs in bond-order potentials
-- Maintenance: Fixed segfault on BlueGene 
+- Maintenance: Fixed segfault on BlueGene
 
 v0.4.3
 ------
@@ -123,7 +128,7 @@ v0.3.1
 v0.3.0
 ------
 
-- Added standalone molecular dynamics code. Source is in src/standalone and 
+- Added standalone molecular dynamics code. Source is in src/standalone and
   Makefiles are in build_standalone.
 
 - Dipatch generator now parses the additional 'features' key in the @meta
@@ -180,4 +185,3 @@ v0.1.3
 ------
 
 - Compatibility with IBM XL compiler suite on the BlueGene architecture.
-
