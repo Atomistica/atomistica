@@ -98,7 +98,7 @@ module dense_notb
      !>
      !! Number of orbitals to populate
      !!
-     !! Set this before bind_to is run to 
+     !! Set this before bind_to is run to
      !! set the number of orbitals to populate.
      !! If this is specified on input, qtot should not be,
      !! and vice versa.
@@ -108,7 +108,7 @@ module dense_notb
      !>
      !! Total charge of TB subsystem
      !!
-     !! Set this before bind_to is run to 
+     !! Set this before bind_to is run to
      !! set the total charge of the tight-binding subsystem.
      !! If this is specified on input, noc should not be,
      !! and vice versa.
@@ -256,7 +256,7 @@ contains
           deallocate(this%scc)
           this%scc => NULL()
        endif
-    endif    
+    endif
 
     ! Init dependent
     if (associated(this%scc)) then
@@ -307,7 +307,7 @@ contains
        call del(this%scc)
        this%scc  => NULL()
     endif
-    
+
   endsubroutine dense_notb_del
 
 
@@ -352,7 +352,7 @@ contains
     type(particles_t),            intent(inout)  :: p
     type(neighbors_t),            intent(inout)  :: nl
     integer,            optional, intent(out)    :: ierror
-    
+
     ! ---
 
     integer          :: i
@@ -733,7 +733,7 @@ contains
   !>
   !! Total charge
   !!
-  !! Calculates the total charge from the elements in the system  
+  !! Calculates the total charge from the elements in the system
   !<
   function get_total_charge(p, f, at, noc) result(q)
     implicit none
@@ -784,9 +784,9 @@ contains
          CSTR("elements"), &
          CSTR("Elements for which to activate this module."))
 
-    call ptrdict_register_real_property(m, c_loc(this%noc), &
-         CSTR("occupied_orbitals"), &
-         CSTR("Number of occupied orbitals (automatically determined if set to zero)."))
+    call ptrdict_register_real_property(m, c_loc(this%qtot), &
+         CSTR("total_charge"), &
+         CSTR("Total charge of system."))
 
     call ptrdict_register_boolean_property(m, c_loc(this%output_tables), &
          CSTR("output_tables"), &
