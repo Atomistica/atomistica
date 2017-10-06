@@ -80,7 +80,7 @@ module materials
 
      logical(C_BOOL)         :: exists    = .false.
 
-     character(kind=C_CHAR)  :: name(2)   = ["X","X"]  ! name of element
+     character(kind=C_CHAR)  :: name(3)   = ["X","X"]  ! name of element
      character(kind=C_CHAR)  :: cname(10) = ["n","o","n","a","m","e"," "," "," "," "]  ! common name of element
      integer(C_INT)          :: elem      = 10000      ! number of element (official)
      integer(C_INT)          :: no        = 10000      ! number of orbitals
@@ -90,7 +90,7 @@ module materials
      real(C_DOUBLE)          :: el_max    = 0          ! max number of valence electrons on an atom
      real(C_DOUBLE)          :: U         = 1E30       ! Hubbard U
      real(C_DOUBLE)          :: q0        = 1E30       ! charge (nr of electrons in neutral)
-  
+
      ! variables for HOTBIT
      integer(C_INT)          :: o1        = 1E5        ! index of the first orbital
      integer(C_INT)          :: enr       = 1E5        ! element number in the internal book-keeping
@@ -176,7 +176,7 @@ contains
     integer             :: a
 
     ! ---
-    
+
     a = a0
     ! if no == 1, no == 4 or no == 9 we are all set
     !     ^s       ^sp        ^spd
@@ -291,7 +291,7 @@ contains
     character(*), optional, intent(inout) :: ch
     character(*), optional, intent(inout) :: str
     logical,      optional, intent(out)   :: test
-    logical,      optional, intent(in)    :: ignore 
+    logical,      optional, intent(in)    :: ignore
     integer,      optional, intent(out)   :: error
 
     ! ---
@@ -374,12 +374,12 @@ contains
   !<
   logical function materials_element_by_symbol(this, sym, el, enr) result(r)
     implicit none
-    
+
     type(materials_t), intent(in)                :: this
     character(2), intent(in)                     :: sym
     type(notb_element_t), intent(out), optional  :: el
     integer, intent(out), optional               :: enr
-    
+
 
     ! ---
 
@@ -410,7 +410,7 @@ contains
   !<
   logical function materials_element_by_Z(this, Z, el, enr) result(r)
     implicit none
-    
+
     type(materials_t), intent(in)                :: this
     integer, intent(in)                          :: Z
     type(notb_element_t), intent(out), optional  :: el
@@ -494,10 +494,10 @@ contains
                    cycle
                 end if
 
-                ! 
+                !
                 ! Read repulsive potentials.
                 !
-                call find_value(un,'repulsion',test=vex,error=error) 
+                call find_value(un,'repulsion',test=vex,error=error)
                 PASS_ERROR(error)
                 call read2(db%R(i1, i2), un, 2, lconv, (/ econv /), error)
                 PASS_ERROR(error)
@@ -512,7 +512,7 @@ contains
                 !
                 ! read matrix elements for pairs of atom species, first
                 ! <1|...|2> and then <2|...|1>
-                ! ordering: dds ddp ddd pds pdp pps ppp sds sps sss 
+                ! ordering: dds ddp ddd pds pdp pps ppp sds sps sss
                 ! (first for H, then for S)
                 !
                 call find_value(un,trim(e1)//'_'//trim(e2)//'_table')
@@ -812,7 +812,7 @@ contains
     character(2)          :: symi, symj
     character(3)          :: vali, valj
     logical               :: ex
- 
+
     type(bopfox_table_t)  :: tab(db%nel, db%nel)
 
     ! ---
@@ -824,7 +824,7 @@ contains
 
     if (ex) then
        un = fopen(trim(fn))
-   
+
        eli = -1
        elj = -1
        do
@@ -839,7 +839,7 @@ contains
              ! Skip all lines that are different from "key = values"
              cycle
           endif
-      
+
           select case(trim(key))
           case("bond")   ! starts the set for new element
              read (values, *)  symi, symj
@@ -1055,19 +1055,19 @@ contains
     if (ex) then
        un = fopen(trim(fn))
        call filestart(un)
-   
+
        j=0
        do
-          read(un,'(200a)',iostat=io) line  
+          read(un,'(200a)',iostat=io) line
           if( io/=0 ) exit !EOF
           k = scan(line,'=')
           if( k/=0 ) then
              key = adjustl(line(1:k-1))
              dat = line(k+1:)
           else
-             cycle 
+             cycle
           end if
-      
+
           select case(trim(key))
           case("element")   ! starts the set for new element
              j=j+1
@@ -1090,12 +1090,12 @@ contains
              cycle
           end select
        end do
-   
+
        call fclose(un)
-   
+
        ! set dependent variables and sort according to Z
        do i=1,j
-   
+
           if (hlp(i)%elem > 0 .and. hlp(i)%elem <= MAX_Z) then
              if (trim(a2s(hlp(i)%name)) /= trim(ElementName(hlp(i)%elem))) then
                 call prlog("WARNING: Name '"//a2s(hlp(i)%name)//"' in 'elements.dat' not equal common element name '"//ElementName(hlp(i)%elem)//"'.")
@@ -1111,9 +1111,9 @@ contains
        else
           call prlog("WARNING: Unknown element found in 'elements.dat' (Z = "//hlp(i)%elem//").")
        endif
-   
+
        end do
-   
+
        call prlog(""//j//" elements found in 'elements.dat'.")
     else
        call prlog("No 'elements.dat' found in database directory. Skipping.")
@@ -1169,7 +1169,7 @@ contains
     if (ex) then
        un = fopen(trim(fn))
        call filestart(un)
-   
+
        j = 0
        do
           read(un, '(1024a)', iostat=io)  line
@@ -1208,11 +1208,11 @@ contains
              cycle
           end select
        end do
-   
+
        call fclose(un)
-   
+
        ! set dependent variables and sort according to Z
-       do i = 1, j  
+       do i = 1, j
           e(i)%el_max = 0d0
           do k = 1, e(j)%no
              e(i)%el_max = e(i)%el_max + (2d0*e(i)%l(k)+1d0)
@@ -1221,7 +1221,7 @@ contains
           db%e(e(i)%elem)%exists = .true.
           db%e(e(i)%elem)%enr = e(i)%elem
        enddo
-   
+
        call prlog(""//j//" elements found in 'atoms.bx'.")
     else
        call prlog("No 'atoms.bx' found in database directory. Skipping.")
@@ -1484,5 +1484,5 @@ contains
     enddo
 
   endsubroutine materials_write_tables
-  
+
 endmodule materials
