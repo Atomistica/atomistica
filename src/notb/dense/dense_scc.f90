@@ -433,7 +433,7 @@ contains
        ! Report
        call prlog("- dense_scc_internal_init -")
        call prlog("dq_crit              = "//this%dq_crit)
-       call prlog("miximg               = "//this%beta)
+       call prlog("mixing               = "//this%beta)
        call prlog("andersen_memory      = "//this%andersen_memory)
        call prlog("max_nit              = "//this%max_nit)
        call prlog("extrapolation_memory = "//this%extrapolation_memory)
