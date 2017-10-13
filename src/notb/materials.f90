@@ -80,7 +80,7 @@ module materials
 
      logical(C_BOOL)         :: exists    = .false.
 
-     character(kind=C_CHAR)  :: name(3)   = ["X","X"]  ! name of element
+     character(kind=C_CHAR)  :: name(3)   = ["X","X","X"]  ! name of element
      character(kind=C_CHAR)  :: cname(10) = ["n","o","n","a","m","e"," "," "," "," "]  ! common name of element
      integer(C_INT)          :: elem      = 10000      ! number of element (official)
      integer(C_INT)          :: no        = 10000      ! number of orbitals

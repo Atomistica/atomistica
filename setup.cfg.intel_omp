@@ -4,8 +4,8 @@
 
 [config_fc]
 fcompiler=intelem
-f90flags=-fpp -fPIC -openmp -DHAVE_IFPORT -DHAVE_MKL
-f77flags=-fpp -fPIC -openmp -DHAVE_IFPORT -DHAVE_MKL
+f90flags=-fpp -fPIC -qopenmp -DHAVE_IFPORT -DHAVE_MKL
+f77flags=-fpp -fPIC -qopenmp -DHAVE_IFPORT -DHAVE_MKL
  
 [config_cc]
 compiler=intel
