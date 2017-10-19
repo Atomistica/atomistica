@@ -110,10 +110,11 @@ GFFLAGS  = \
 #
 # GNU
 #
+GFFLAGS += -fPIC
 FFLAGS   = $(GFFLAGS) -x f77-cpp-input
 F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE) \
 	-ffree-form -ffree-line-length-none -x f95-cpp-input
-CFLAGS   = -O0
+CFLAGS   = -O0 -fPIC
 
 #
 # Use LDFLAGS = -static if you want a static binary
