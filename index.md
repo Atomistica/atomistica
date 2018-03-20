@@ -1,5 +1,4 @@
-Atomistica
-----------
+![Atomistica](https://github.com/Atomistica/atomistica/blob/master/images/logo.png)
 
 Atomistica is a library of interatomic potentials. It is designed to be plugged
 into different simulation environments. We currently support the
@@ -23,20 +22,20 @@ Currently supported simulation environments are...
 
 1.  ...the Atomistic Simulation Environment   
     (ASE - see https://wiki.fysik.dtu.dk/ase/)
-    * Build instructions are in [README.PYTHON.md](https://github.com/Atomistica/atomistica/blob/master/README.PYTHON.md)
-    * Examples are in [examples/ASE](https://github.com/Atomistica/atomistica/blob/master/examples/ASE)
+    * Build instructions are in [README.PYTHON.md](README.PYTHON.md)
+    * Examples are in [examples/ASE](examples/ASE)
     * Tests are in tests
     * Atomistica supports Python 2 and Python 3
 
 2.  ...the Large-scale Atomic/Molecular Massively Parallel Simulator   
     (LAMMPS - see https://lammps.sandia.gov/)
-    * Build instructions are in [README.LAMMPS.md](https://github.com/Atomistica/atomistica/blob/master/README.LAMMPS.md)
-    * Examples are in [examples/LAMMPS](https://github.com/Atomistica/atomistica/blob/master/examples/LAMMPS)
+    * Build instructions are in [README.LAMMPS.md](README.LAMMPS.md)
+    * Examples are in [examples/LAMMPS](examples/LAMMPS)
 
 3.  ...MDCORE, the standalone molecular dynamics code of Atomistica.
     Note that there is _no documentation_ for the standalone version.
-    * Build instruction are in [README.STANDALONE.md](https://github.com/Atomistica/atomistica/blob/master/README.STANDALONE.md)
-    * Examples are in [examples/STANDALONE](https://github.com/Atomistica/atomistica/blob/master/examples/STANDALONE)
+    * Build instruction are in [README.STANDALONE.md](README.STANDALONE.md)
+    * Examples are in [examples/STANDALONE](examples/STANDALONE)
 
 You need the following packages:
 
@@ -47,9 +46,9 @@ You need the following packages:
 Contact
 -------
 
-This software is developed at
-[Karlsruhe Institute of Technology](http://www.yin.kit.edu/english/1103_1692.php)
+This software is developed at the
+[University of Freiburg](http://www.imtek.uni-freiburg.de/laboratories/simulation)
 and
 [Fraunhofer IWM](http://www.en.iwm.fraunhofer.de/business-units/tribology/multiscale-modeling-and-tribosimulation/).
-Please write to Lars Pastewka (lars.pastewka@kit.edu) for questions and suggestions.
-A complete list of contributors can be found [here](https://github.com/Atomistica/atomistica/blob/master/AUTHORS.md).
+Please write to Lars Pastewka (lars.pastewka@imtek.uni-freiburg.de) for questions and suggestions.
+A complete list of contributors can be found [here](AUTHORS.md).
