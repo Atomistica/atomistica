@@ -1,0 +1,8 @@
+title: Atomistica
+description: Atomistica is a library of interatomic potentials that is compatible with ASE and LAMMPS
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-cayman
+
+gems:
+  - jekyll-mentions
