@@ -1,4 +1,4 @@
-![Atomistica](https://github.com/Atomistica/atomistica/blob/master/images/logo.png)
+![Atomistica](images/logo.png)
 
 Atomistica is a library of interatomic potentials. It is designed to be plugged
 into different simulation environments. We currently support the
