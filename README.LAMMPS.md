@@ -113,7 +113,7 @@ LAMMPS script looks like
   units metal  
   ...  
   pair_style atomistica Tersoff   # Tersoff potential  
-  pair_coeff * * Si           # LAMMPS atom id 1 is Silicon  
+  pair_coeff * * Si               # LAMMPS atom id 1 is Silicon  
   ...
   ```
 
@@ -130,6 +130,6 @@ In the LAMMPS control file use:
   ```
   pair_style atomistica Tersoff params.dat  
   pair_coeff * * Si
-  
+  ```  
 
 where "params.dat" is the above file.
