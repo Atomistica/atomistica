@@ -35,6 +35,12 @@ calc = Atomistica(
 a.set_calculator(calc)
 print('potential energy =', a.get_potential_energy())
 
-print('eigenvalues:')
+print('eigenvalue, occupation')
 for ev, occ in zip(tb.eigenvalues, tb.occupation):
     print(ev, occ)
+
+print('Hamiltonian matrix')
+print(tb.Hamiltonian_matrix)
+
+print('overlap matrix')
+print(tb.overlap_matrix)
