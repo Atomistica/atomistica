@@ -44,3 +44,6 @@ print(tb.Hamiltonian_matrix)
 
 print('overlap matrix')
 print(tb.overlap_matrix)
+
+print('density matrix')
+print(tb.density_matrix)
