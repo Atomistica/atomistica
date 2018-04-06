@@ -108,22 +108,28 @@ To compile the LAMMPS-Atomistica interface do the following:
 Atomistica potentials are available via the "atomistica" pair style. A typical
 LAMMPS script looks like
 
+  ```
+  ...  
+  units metal  
+  ...  
+  pair_style atomistica Tersoff   # Tersoff potential  
+  pair_coeff * * Si               # LAMMPS atom id 1 is Silicon  
   ...
-  units metal
-  ...
-  pair_style atomistica Tersoff   # Tersoff potential
-  pair_coeff * * Si           # LAMMPS atom id 1 is Silicon
-  ...
+  ```
 
 If you need to modify the potential parameters create an Atomistica parameter file.
 
-  Tersoff {
-    A = "1000, 1000, 1000";
+  ```
+  Tersoff {  
+    A = "1000, 1000, 1000";  
   };
+  ```
 
 In the LAMMPS control file use:
 
-  pair_style atomistica Tersoff params.dat
+  ```
+  pair_style atomistica Tersoff params.dat  
   pair_coeff * * Si
+  ```  
 
 where "params.dat" is the above file.
