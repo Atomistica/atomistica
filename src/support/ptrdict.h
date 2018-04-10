@@ -69,6 +69,7 @@
 #define PK_STRING_LIST 12
 #define PK_FORTRAN_STRING_LIST 13
 #define PK_INT_LIST 14
+#define PK_INT_ARRAY1D 15
 
 
 typedef struct __property_t {
@@ -137,49 +138,55 @@ extern "C" {
 
 /* Create a new group */
 section_t *ptrdict_register_group(section_t *self, int kind, char *name,
-				 char *description, char *alias);
+                                  char *description, char *alias);
 
 /* Create a new section */
 section_t *ptrdict_register_section(section_t *self, char *name,
-				   char *description);
+                                    char *description);
 
 /* Create a new module */
 section_t *ptrdict_register_module(section_t *self, BOOL *notification,
-				  char *name, char *description);
+                                   char *name, char *description);
 
 /* Create a new properties */
 void ptrdict_register_integer_property(section_t *self, int *ptr, char *name,
-				      char *description);
+                                       char *description);
 void ptrdict_register_real_property(section_t *self, double *ptr, char *name,
-				   char *description);
+                                    char *description);
 void ptrdict_register_boolean_property(section_t *self, BOOL *ptr, char *name,
-				      char *description);
+                                       char *description);
 void ptrdict_register_string_property(section_t *self, char *ptr, int maxlen,
-				     char *name, char *description);
+                                      char *name, char *description);
 
 void ptrdict_register_point_property(section_t *self, double *ptr, char *name,
-				    char *description);
+                                     char *description);
 void ptrdict_register_intpoint_property(section_t *self, int *ptr, char *name,
-				       char *description);
+                                        char *description);
 
 void ptrdict_register_enum_property(section_t *self, int *ptr, int nchoices,
-				   int lenchoice, char *choices, char *name,
-				   char *description);
+                                    int lenchoice, char *choices, char *name,
+                                    char *description);
 
 void ptrdict_register_list_property(section_t *self, double *ptr, int maxlen,
-				   int *len, char *name, char *description);
+                                    int *len, char *name, char *description);
 void ptrdict_register_string_list_property(section_t *self, char *ptr,
-					  int strlen, int maxlen, int *len,
-					  char *name, char *description);
+                                           int strlen, int maxlen, int *len,
+                                           char *name, char *description);
 void ptrdict_register_integer_list_property(section_t *self, double *ptr,
-					   int maxlen, int *len, char *name,
-					   char *description);
+                                           int maxlen, int *len, char *name,
+                                           char *description);
 
+void ptrdict_register_array1d_property(section_t *self, double *ptr, int nx,
+                                       char *name, char *description);
 void ptrdict_register_array2d_property(section_t *self, double *ptr, int nx,
-				      int ny, char *name, char *description);
+                                       int ny, char *name, char *description);
 void ptrdict_register_array3d_property(section_t *self, double *ptr, int nx,
-				      int ny, int nz, char *name,
-				      char *description);
+                                       int ny, int nz, char *name,
+                                       char *description);
+
+void ptrdict_register_integer_array1d_property(section_t *self, int *ptr,
+                                               int nx, char *name,
+                                               char *description);
 
 /* Clean up, remove everything from memory */
 void ptrdict_cleanup(section_t *root);

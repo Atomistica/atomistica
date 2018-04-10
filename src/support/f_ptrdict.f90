@@ -247,6 +247,20 @@ module ptrdict
      endsubroutine ptrdict_register_array3d_property
 
 
+     subroutine ptrdict_register_integer_array1d_property(this, ptr, nx, name, &
+          description) bind(C)
+       use, intrinsic :: iso_c_binding
+
+       implicit none
+
+       type(c_ptr),                   value   :: this
+       type(c_ptr),                   value   :: ptr
+       integer(c_int),                value   :: nx
+       character(kind=c_char, len=1)          :: name(*)
+       character(kind=c_char, len=1)          :: description(*)
+     endsubroutine ptrdict_register_integer_array1d_property
+
+
      subroutine ptrdict_cleanup(root) bind(C)
        use, intrinsic :: iso_c_binding
 

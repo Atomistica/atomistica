@@ -582,6 +582,47 @@ pyobject_to_property(PyObject *value, property_t *p)
     }
     //      memcpy(p->ptr, data, p->tag*p->tag2*p->tag3*sizeof(double));
     break;
+  case PK_INT_ARRAY1D:
+    if (!PyArray_Check(value)) {
+      sprintf(errstr,
+              "Property '%s' of section '%s' should be a 1d array "
+              "of floats.\n",
+              p->name, p->parent->name);
+      PyErr_SetString(PyExc_TypeError, errstr);
+      return -1;
+    }
+    arr = (PyArrayObject *) value;
+    if (!PyArray_ISINTEGER(arr)) {
+      sprintf(errstr,
+              "Property '%s' of section '%s' should be a 1d array "
+              "of integers.\n",
+              p->name, p->parent->name);
+      PyErr_SetString(PyExc_TypeError, errstr);
+      return -1;
+    }
+    if (arr->nd != 1) {
+      PyErr_SetString(PyExc_TypeError, "Array needs to be 1-dimensional.");
+      return -1;
+    }
+    if (PyArray_DIM(arr, 0) != p->tag) {
+      sprintf(errstr, "Wrong dimensions: Array needs to be of length %i.", 
+              p->tag);
+      PyErr_SetString(PyExc_TypeError, errstr);
+      return -1;
+    }
+    /* Type conversion madness */
+    switch (arr->descr->type_num) {
+    case NPY_INT:
+      for (i = 0; i < p->tag; i++) {
+        ((int*) p->ptr)[i] = ((npy_int *) PyArray_DATA(arr))[i];
+      }
+      break;
+    default:
+      PyErr_SetString(PyExc_TypeError, "Don't know how to convert from "
+                      "numpy int type.");
+      return -1;
+    }
+    break;
   default:
     sprintf(errstr, "Internal error: Unknown type with id %i encountered in section.", p->kind);
     PyErr_SetString(PyExc_TypeError, errstr);
@@ -713,7 +754,8 @@ property_to_pyobject(property_t *p)
   if (!p->ptr) Py_RETURN_NONE;
 
   int i, j, k;
-  double *data;
+  npy_double *data;
+  npy_int *int_data;
 
   npy_intp dims[3];
 
@@ -767,24 +809,22 @@ property_to_pyobject(property_t *p)
   case PK_ARRAY1D:
     dims[0] = p->tag;
     arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims, NPY_DOUBLE);
-    data = (double *) PyArray_DATA(arr);
+    data = (npy_double *) PyArray_DATA(arr);
     for (i = 0; i < p->tag; i++) {
       data[i] = ((double*) p->ptr)[i];
     }
-    //        memcpy(data, p->ptr, p->tag*p->tag2*sizeof(double));
     r = (PyObject*) arr;
     break;
   case PK_ARRAY2D:
     dims[0] = p->tag;
     dims[1] = p->tag2;
     arr = (PyArrayObject*) PyArray_SimpleNew(2, (npy_intp*) dims, NPY_DOUBLE);
-    data = (double *) PyArray_DATA(arr);
+    data = (npy_double *) PyArray_DATA(arr);
     for (i = 0; i < p->tag; i++) {
       for (j = 0; j < p->tag2; j++) {
         data[j + i*p->tag2] = ((double*) p->ptr)[i + j*p->tag];
       }
     }
-    //        memcpy(data, p->ptr, p->tag*p->tag2*sizeof(double));
     r = (PyObject*) arr;
     break;
   case PK_ARRAY3D:
@@ -792,7 +832,7 @@ property_to_pyobject(property_t *p)
     dims[1] = p->tag2;
     dims[2] = p->tag3;
     arr = (PyArrayObject*) PyArray_SimpleNew(3, (npy_intp*) dims, NPY_DOUBLE);
-    data = (double *) PyArray_DATA(arr);
+    data = (npy_double *) PyArray_DATA(arr);
     for (i = 0; i < p->tag; i++) {
       for (j = 0; j < p->tag2; j++) {
         for (k = 0; k < p->tag3; k++) {
@@ -801,7 +841,15 @@ property_to_pyobject(property_t *p)
         }
       }
     }
-    //        memcpy(data, p->ptr, p->tag*p->tag2*p->tag3*sizeof(double));
+    r = (PyObject*) arr;
+    break;
+  case PK_INT_ARRAY1D:
+    dims[0] = p->tag;
+    arr = (PyArrayObject*) PyArray_SimpleNew(1, (npy_intp*) dims, NPY_INT);
+    int_data = (npy_int *) PyArray_DATA(arr);
+    for (i = 0; i < p->tag; i++) {
+      int_data[i] = ((int*) p->ptr)[i];
+    }
     r = (PyObject*) arr;
     break;
   default:

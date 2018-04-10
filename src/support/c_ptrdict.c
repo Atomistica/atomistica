@@ -43,7 +43,7 @@
 
 /* Create a new group */
 section_t *ptrdict_register_group(section_t *self, int kind, char *name,
-				                          char *description, char *alias)
+                                  char *description, char *alias)
 {
   section_t *new_section;
   section_t *i;
@@ -110,7 +110,7 @@ section_t *ptrdict_register_group(section_t *self, int kind, char *name,
     } else {
 
       /* If the current section does not have a child,
-	 this is the first one. */
+         this is the first one. */
 
       self->first_child = new_section;
 
@@ -127,7 +127,7 @@ section_t *ptrdict_register_group(section_t *self, int kind, char *name,
 
 /* Create a new section */
 section_t *ptrdict_register_section(section_t *self, char *name,
-				                            char *description)
+                                    char *description)
 {
   return ptrdict_register_group(self, SK_SECTION, name, description, NULL);
 }
@@ -135,7 +135,7 @@ section_t *ptrdict_register_section(section_t *self, char *name,
 
 /* Create a new module */
 section_t *ptrdict_register_module(section_t *self, BOOL *notification,
-				                           char *name, char *description)
+                                   char *name, char *description)
 {
   section_t *s;
   
@@ -153,7 +153,7 @@ section_t *ptrdict_register_module(section_t *self, BOOL *notification,
 
 /* General property */
 property_t *ptrdict_register_property(section_t *self, int kind, void *ptr,
-				     char *name, char *description)
+                                      char *name, char *description)
 {
   property_t *new_property, *last;
 
@@ -192,7 +192,7 @@ property_t *ptrdict_register_property(section_t *self, int kind, void *ptr,
 
 /* Integer property */
 void ptrdict_register_integer_property(section_t *self, int *ptr, char *name,
-				      char *description)
+                                      char *description)
 {
 #ifdef DEBUG
   printf("ptrdict_register_integer_property: %p %p\n", self, *self);
@@ -204,7 +204,7 @@ void ptrdict_register_integer_property(section_t *self, int *ptr, char *name,
 
 /* Double property */
 void ptrdict_register_real_property(section_t *self, double *ptr, char *name,
-				   char *description)
+                                    char *description)
 {
 #ifdef DEBUG
   printf("ptrdict_register_real_property: %p %p\n", self, *self);
@@ -216,7 +216,7 @@ void ptrdict_register_real_property(section_t *self, double *ptr, char *name,
 
 /* Boolean property */
 void ptrdict_register_boolean_property(section_t *self, BOOL *ptr, char *name,
-				      char *description)
+                                       char *description)
 {
   ptrdict_register_property(self, PK_BOOL, ptr, name, description);
 }
@@ -224,16 +224,16 @@ void ptrdict_register_boolean_property(section_t *self, BOOL *ptr, char *name,
 
 /* String property */
 void ptrdict_register_string_property(section_t *self, char *ptr, int maxlen,
-				     char *name, char *description)
+                                      char *name, char *description)
 {
   ptrdict_register_property(self, PK_FORTRAN_STRING, ptr, name,
-			   description)->tag = maxlen;
+                           description)->tag = maxlen;
 }
 
 
 /* Point property */
 void ptrdict_register_point_property(section_t *self, double *ptr, char *name,
-				    char *description)
+                                     char *description)
 {
   ptrdict_register_property(self, PK_POINT, ptr, name, description);
 }
@@ -241,7 +241,7 @@ void ptrdict_register_point_property(section_t *self, double *ptr, char *name,
 
 /* Integer point property */
 void ptrdict_register_intpoint_property(section_t *self, int *ptr, char *name,
-				       char *description)
+                                        char *description)
 {
   ptrdict_register_property(self, PK_INTPOINT, ptr, name, description);
 }
@@ -249,8 +249,8 @@ void ptrdict_register_intpoint_property(section_t *self, int *ptr, char *name,
 
 /* Enum property */
 void ptrdict_register_enum_property(section_t *self, int *ptr, int nchoices,
-				   int lenchoice, char *choices, char *name,
-				   char *description)
+                                    int lenchoice, char *choices, char *name,
+                                    char *description)
 {
   property_t *p;
 
@@ -264,7 +264,7 @@ void ptrdict_register_enum_property(section_t *self, int *ptr, int nchoices,
 
 /* Variable size list of doubles property */
 void ptrdict_register_list_property(section_t *self, double *ptr, int maxlen,
-				   int *len, char *name, char *description)
+                                    int *len, char *name, char *description)
 {
   property_t *p;
 
@@ -281,8 +281,8 @@ void ptrdict_register_list_property(section_t *self, double *ptr, int maxlen,
 
 /* Variable size list of doubles property */
 void ptrdict_register_string_list_property(section_t *self, char *ptr,
-					  int strlen, int maxlen, int *len,
-					  char *name, char *description)
+                                           int strlen, int maxlen, int *len,
+                                           char *name, char *description)
 {
   property_t *p;
 
@@ -300,8 +300,8 @@ void ptrdict_register_string_list_property(section_t *self, char *ptr,
 
 /* Variable size list of integers property */
 void ptrdict_register_integer_list_property(section_t *self, double *ptr,
-					   int maxlen, int *len, char *name,
-					   char *description)
+                                            int maxlen, int *len, char *name,
+                                            char *description)
 {
   property_t *p;
 
@@ -330,7 +330,7 @@ void ptrdict_register_array1d_property(section_t *self, double *ptr, int nx,
 
 /* 2D array property */
 void ptrdict_register_array2d_property(section_t *self, double *ptr, int nx,
-				                               int ny, char *name, char *description)
+                                       int ny, char *name, char *description)
 {
   property_t *p;
 
@@ -343,8 +343,8 @@ void ptrdict_register_array2d_property(section_t *self, double *ptr, int nx,
 
 /* 3D array property */
 void ptrdict_register_array3d_property(section_t *self, double *ptr, int nx,
-				                               int ny, int nz, char *name,
-				                               char *description)
+                                       int ny, int nz, char *name,
+                                       char *description)
 {
   property_t *p;
 
@@ -353,6 +353,19 @@ void ptrdict_register_array3d_property(section_t *self, double *ptr, int nx,
   p->tag = nx;
   p->tag2 = ny;
   p->tag3 = nz;
+}
+
+
+/* 1D array property */
+void ptrdict_register_integer_array1d_property(section_t *self, int *ptr,
+                                               int nx, char *name,
+                                               char *description)
+{
+  property_t *p;
+
+  p = ptrdict_register_property(self, PK_INT_ARRAY1D, ptr, name, description);
+
+  p->tag = nx;
 }
 
 
@@ -461,7 +474,7 @@ void ptrdict_set_property(property_t *p, char *value)
 
     if (endptr != value+strlen(value)) {
       printf("[ptrdict_set_property] Error: Cannot convert '%s' to double for property '%s' of section '%s'.\n",
-	     value, p->name, p->parent->name);
+             value, p->name, p->parent->name);
       exit(1);
     }
 
@@ -474,8 +487,8 @@ void ptrdict_set_property(property_t *p, char *value)
       *((BOOL*) p->ptr) = FALSE;
     } else {
       printf("[ptrdict_set_property] Error: Cannot convert '%s' to logical value for property '%s' of section '%s'. "
-	     "Valid logical values are 'yes', 'true', '1', 'no', 'false' or '0'.\n",
-	     value, p->name, p->parent->name);
+             "Valid logical values are 'yes', 'true', '1', 'no', 'false' or '0'.\n",
+             value, p->name, p->parent->name);
       exit(1);
     }
     break;
@@ -585,7 +598,7 @@ void ptrdict_set_property(property_t *p, char *value)
     }
     if (i >= p->tag2) {
       printf("[ptrdict_set_property] Too many values for property '%s' of "
-	     "section '%s'.\n",
+             "section '%s'.\n",
              p->name, p->parent->name);
     }
     point[i] = strtod(c2, &endptr);
@@ -612,7 +625,7 @@ void ptrdict_set_property(property_t *p, char *value)
     }
     if (i >= p->tag2) {
       printf("[ptrdict_set_property] Too many values for property '%s' of "
-	     "section '%s'.\n",
+             "section '%s'.\n",
              p->name, p->parent->name);
     }
     intpoint[i] = strtod(c2, &endptr);
@@ -669,7 +682,7 @@ void ptrdict_set_property(property_t *p, char *value)
     }
     if (i >= j) {
       printf("[ptrdict_set_property] Too many values for property '%s' of "
-	     "section '%s'.\n",
+             "section '%s'.\n",
              p->name, p->parent->name);
     }
     else if (i == 0) {
@@ -728,7 +741,7 @@ void ptrdict_set_property(property_t *p, char *value)
     break;
   default:
     printf("[ptrdict_set_property] Internal error: Unknown kind %i of property '%s' of section '%s'.\n",
-	   p->kind, p->name, p->parent->name);
+           p->kind, p->name, p->parent->name);
     exit(1);
   }
 
@@ -821,7 +834,7 @@ void ptrdict_get_property(property_t *p, char *value, int n)
     break;
   default:
     printf("[ptrdict_get_property] Internal error: Unknown kind %i of property '%s' of section '%s'.\n",
-	   p->kind, p->name, p->parent->name);
+           p->kind, p->name, p->parent->name);
     exit(1);
   }
 }
@@ -888,9 +901,9 @@ char read_char(parser_t *p)
     while (c == '#' || c == '!') {
       skipline(p);
       if (feof(p->f)) {
-	c = '0';
+        c = '0';
       } else {
-	c = fgetc(p->f);
+        c = fgetc(p->f);
       };
     }
   }
@@ -941,8 +954,8 @@ void read_next_keyword(parser_t *p, char *s, size_t n, BOOL *is_token)
     p->column++;
 
   if (iskeywordchar(c)) {
-  	/* This is really a keyword */
-  	while (iskeywordchar(c)) {
+        /* This is really a keyword */
+        while (iskeywordchar(c)) {
       s[i] = c;
       i++;
 
@@ -958,12 +971,12 @@ void read_next_keyword(parser_t *p, char *s, size_t n, BOOL *is_token)
 
     ungetc(c, p->f);
   } else {
-  	/* This might be a token */
-  	*is_token = TRUE;
-  	ungetc(c, p->f);
-  	p->column--;
-  	
-  	read_next_token(p, s, n);
+        /* This might be a token */
+        *is_token = TRUE;
+        ungetc(c, p->f);
+        p->column--;
+        
+        read_next_token(p, s, n);
   }
 }
 
@@ -1081,15 +1094,15 @@ void ptrdict_lf_read_section(section_t *self, parser_t *parser)
       read_next_value(parser, value, MAX_VALUE);
 
       if (strcmp(value, self->name)) {
-	printf("[ptrdict_lf_read_section] Current open section is '%s', cannot close section '%s' in line %i.\n",
-	       self->name, value, parser->row);
-	exit(1);
+        printf("[ptrdict_lf_read_section] Current open section is '%s', cannot close section '%s' in line %i.\n",
+               self->name, value, parser->row);
+        exit(1);
       }
 
       if (self->kind != SK_SECTION) {
-	printf("[ptrdict_lf_read_section] Current open object '%s' is not a section (line %i).\n",
-	       self->name, parser->row);
-	exit(1);
+        printf("[ptrdict_lf_read_section] Current open object '%s' is not a section (line %i).\n",
+               self->name, parser->row);
+        exit(1);
       }
 
       finish_line(parser);
@@ -1098,15 +1111,15 @@ void ptrdict_lf_read_section(section_t *self, parser_t *parser)
       read_next_value(parser, value, MAX_VALUE);
 
       if (strcmp(value, self->name)) {
-	printf("[ptrdict_lf_read_section] Current open module is '%s', cannot close module '%s' in line %i.\n",
-	       self->name, value, parser->row);
-	exit(1);
+        printf("[ptrdict_lf_read_section] Current open module is '%s', cannot close module '%s' in line %i.\n",
+               self->name, value, parser->row);
+        exit(1);
       }
 
       if (self->kind != SK_MODULE) {
-	printf("[ptrdict_lf_read_section] Current open object '%s' is not a section (line %i).\n",
-	       self->name, parser->row);
-	exit(1);
+        printf("[ptrdict_lf_read_section] Current open object '%s' is not a section (line %i).\n",
+               self->name, parser->row);
+        exit(1);
       }
 
       finish_line(parser);
@@ -1117,14 +1130,14 @@ void ptrdict_lf_read_section(section_t *self, parser_t *parser)
 
       s = ptrdict_find_section(self, value);
       if (!s) {
-	printf("[ptrdict_lf_read_section] Unknown section '%s' in line %i.\n", value, parser->row);
-	
-	ptrdict_enum_subsections(self, stdout);
+        printf("[ptrdict_lf_read_section] Unknown section '%s' in line %i.\n", value, parser->row);
+        
+        ptrdict_enum_subsections(self, stdout);
 
-	exit(1);
+        exit(1);
       } else if (s->kind == SK_MODULE) {
-	printf("[ptrdict_lf_read_section] '%s' is a module identifier (line %i).\n", value, parser->row);
-	exit(1);
+        printf("[ptrdict_lf_read_section] '%s' is a module identifier (line %i).\n", value, parser->row);
+        exit(1);
       }
 
       ptrdict_lf_read_section(s, parser);
@@ -1134,14 +1147,14 @@ void ptrdict_lf_read_section(section_t *self, parser_t *parser)
 
       s = ptrdict_find_section(self, value);
       if (!s) {
-	printf("[ptrdict_lf_read_section] Unknown section '%s' in line %i.\n", value, parser->row);
-	
-	ptrdict_enum_subsections(self, stdout);
+        printf("[ptrdict_lf_read_section] Unknown section '%s' in line %i.\n", value, parser->row);
+        
+        ptrdict_enum_subsections(self, stdout);
 
-	exit(1);
+        exit(1);
       } else if (s->kind == SK_SECTION) {
-	printf("[ptrdict_lf_read_section] '%s' is a section identifier (line %i).\n", value, parser->row);
-	exit(1);
+        printf("[ptrdict_lf_read_section] '%s' is a section identifier (line %i).\n", value, parser->row);
+        exit(1);
       }
 
       ptrdict_lf_read_section(s, parser);
@@ -1149,20 +1162,20 @@ void ptrdict_lf_read_section(section_t *self, parser_t *parser)
       p = ptrdict_find_property(self, keyword);
 
       if (!p) {
-	printf("[ptrdict_lf_read_section] Unknown keyword '%s' in line %i.\n"
-	       "Possibilities are 'section', 'module' or one of the properties of section '%s', which are:\n",
-	       keyword, parser->row, self->name);
+        printf("[ptrdict_lf_read_section] Unknown keyword '%s' in line %i.\n"
+               "Possibilities are 'section', 'module' or one of the properties of section '%s', which are:\n",
+               keyword, parser->row, self->name);
 
-	ptrdict_enum_properties(self, stdout);
+        ptrdict_enum_properties(self, stdout);
 
-	exit(1);
+        exit(1);
       }
 
       read_next_token(parser, token, MAX_TOKEN);
 
       if (strcmp(token, "=")) {
-	printf("[ptrdict_lf_read_section] '=' expected for assignment of property '%s' in line %i.\n", keyword, parser->row);
-	exit(1);
+        printf("[ptrdict_lf_read_section] '=' expected for assignment of property '%s' in line %i.\n", keyword, parser->row);
+        exit(1);
       }
 
       read_next_value(parser, value, MAX_VALUE);
@@ -1220,10 +1233,10 @@ void ptrdict_write_section(section_t *self, FILE *f, int indent)
     p = self->first_property;
     while (p) {
       if (p->kind != PK_ARRAY2D && p->kind != PK_ARRAY3D) {
-	ptrdict_get_property(p, value, MAX_VALUE);
+        ptrdict_get_property(p, value, MAX_VALUE);
 
-	fprintf(f, "\n%s  # %s\n", space2, p->description);
-	fprintf(f, "%s  %s = \"%s\";\n", space2, p->name, value);
+        fprintf(f, "\n%s  # %s\n", space2, p->description);
+        fprintf(f, "%s  %s = \"%s\";\n", space2, p->name, value);
       }
 
       p = p->next;
@@ -1286,38 +1299,38 @@ void ptrdict_sf_read_section(section_t *self, parser_t *parser)
     } else if (!strcmp(token, "}")) {
       read_next_token(parser, token, MAX_TOKEN);
       if (strcmp(token, ";")) {
-      	printf("[ptrdict_sf_read_section] ';' expected in line %i.\n", parser->row);
-      	exit(1);
+        printf("[ptrdict_sf_read_section] ';' expected in line %i.\n", parser->row);
+        exit(1);
       }
       section_done = TRUE;
     } else if (!strcmp(token, "{};")) {
       /* This is an empty module. */
       s = ptrdict_find_section(self, keyword);
       if (!s) {
-	printf("[ptrdict_sf_read_section] Unknown section '%s' in line %i.\n", keyword, parser->row);
-	
-	ptrdict_enum_subsections(self, stdout);
+        printf("[ptrdict_sf_read_section] Unknown section '%s' in line %i.\n", keyword, parser->row);
+        
+        ptrdict_enum_subsections(self, stdout);
 
-	exit(1);
+        exit(1);
       }
       
       if (s->kind != SK_MODULE) {
-      	printf("[ptrdict_sf_read_section] Module expected, but section encountered in line %i.", parser->row);
-      	exit(1);
+        printf("[ptrdict_sf_read_section] Module expected, but section encountered in line %i.", parser->row);
+        exit(1);
       }
       
       s->provided = TRUE;
-  	  if (s->provided_notification)
-    	*s->provided_notification = TRUE;
+          if (s->provided_notification)
+        *s->provided_notification = TRUE;
     } else if (!strcmp(token, "{")) {
       /* We have a section or module */
       s = ptrdict_find_section(self, keyword);
       if (!s) {
-	printf("[ptrdict_sf_read_section] Unknown section '%s' in line %i.\n", keyword, parser->row);
-	
-	ptrdict_enum_subsections(self, stdout);
+        printf("[ptrdict_sf_read_section] Unknown section '%s' in line %i.\n", keyword, parser->row);
+        
+        ptrdict_enum_subsections(self, stdout);
 
-	exit(1);
+        exit(1);
       }
 
       ptrdict_sf_read_section(s, parser);
@@ -1325,13 +1338,13 @@ void ptrdict_sf_read_section(section_t *self, parser_t *parser)
       p = ptrdict_find_property(self, keyword);
 
       if (!p) {
-	printf("[ptrdict_sf_read_section] Unknown property '%s' of section '%s' in line %i.\n"
-	       "Possibilities are:\n",
-	       keyword, self->name, parser->row);
+        printf("[ptrdict_sf_read_section] Unknown property '%s' of section '%s' in line %i.\n"
+               "Possibilities are:\n",
+               keyword, self->name, parser->row);
       
-	ptrdict_enum_properties(self, stdout);
+        ptrdict_enum_properties(self, stdout);
 
-	exit(1);
+        exit(1);
       }
 
       read_next_value(parser, value, MAX_VALUE);
@@ -1341,9 +1354,9 @@ void ptrdict_sf_read_section(section_t *self, parser_t *parser)
       read_next_token(parser, token, MAX_TOKEN);
       
       if (strcmp(token, ";")) {
-      	printf("[ptrdict_sf_read_section] ';' expected in line %i.\n", parser->row);
-      	
-      	exit(1);
+        printf("[ptrdict_sf_read_section] ';' expected in line %i.\n", parser->row);
+        
+        exit(1);
       }
     } else {
       printf("[ptrdict_sf_read_section] Syntax error in line %i. Token = '%s'\n", parser->row, token);
@@ -1378,28 +1391,28 @@ void ptrdict_from_stream(section_t *root, FILE *f)
   /* First line needs to be section with the name of the root section. */
   read_next_keyword(&p, keyword, MAX_KEYWORD, &is_token);
   if (!strcmp(keyword, "section")) {
-  	/* Okay, it's the long format. */
-  	
-  	read_next_value(&p, value, MAX_VALUE);
-  	if (strcmp(value, root->name)) {
+        /* Okay, it's the long format. */
+        
+        read_next_value(&p, value, MAX_VALUE);
+        if (strcmp(value, root->name)) {
       printf("[ptrdict_read] Error: Expected '%s' as the name of the first section in line %i.\n", root->name, p.row);
       exit(1);
-  	}
+        }
 
-    ptrdict_lf_read_section(root, &p);  	
-  	
+    ptrdict_lf_read_section(root, &p);          
+        
   } else if (!strcmp(keyword, root->name)) {
-  	/* Okay, it's the short format. */
-  	
-  	read_next_token(&p, token, MAX_TOKEN);
-  	
-  	if (strcmp(token, "{")) {
-  	  printf("[ptrdict_read] '{' expected in line %i.\n", p.row);
-  	  exit(1);
-  	}
-  	
-	ptrdict_sf_read_section(root, &p);
-	  
+        /* Okay, it's the short format. */
+        
+        read_next_token(&p, token, MAX_TOKEN);
+        
+        if (strcmp(token, "{")) {
+          printf("[ptrdict_read] '{' expected in line %i.\n", p.row);
+          exit(1);
+        }
+        
+        ptrdict_sf_read_section(root, &p);
+          
   } else {
     printf("[ptrdict_read] Error: Keyword 'section' or '%s' expected in line %i.\n", root->name, p.row);
     exit(1);
@@ -1431,7 +1444,7 @@ void ptrdict_from_string(section_t *root, char *s)
 
   if (f) {
     printf("[ptrdict_read] Something went wrong during fmemopen.\n%s\n",
-	   strerror(errno));
+           strerror(errno));
     exit(1);
   }
 
