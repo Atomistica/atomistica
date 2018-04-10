@@ -95,7 +95,9 @@ struct dense_hamiltonian_t {
    * type(notb_element_t)  :: at(:)
    */
 
-  double *n; /* Number of electrons, charges */
+  double *n; /* Mulliken charges */
+  double *q0; /* Charge of nucleus */
+  int *no; /* Number of orbitals */
   struct notb_element_t *at;
 };
 

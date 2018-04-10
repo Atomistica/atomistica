@@ -49,6 +49,10 @@ dense_hamiltonian_allocate(struct dense_hamiltonian_t *self, int nat, int norb)
 
   if (!self->n)
     self->n = (double *) malloc(nat*sizeof(double));
+  if (!self->q0)
+    self->q0 = (double *) malloc(nat*sizeof(double));
+  if (!self->no)
+    self->no = (int *) malloc(nat*sizeof(int));
   if (!self->at)
     self->at = (struct notb_element_t *)
       malloc(nat*sizeof(struct notb_element_t));
@@ -64,6 +68,8 @@ dense_hamiltonian_deallocate(struct dense_hamiltonian_t *self)
   if (self->e)  free(self->e);
 
   if (self->n)  free(self->n);
+  if (self->q0)  free(self->q0);
+  if (self->no)  free(self->no);
   if (self->at)  free(self->at);
 
   self->H = NULL;
@@ -71,6 +77,8 @@ dense_hamiltonian_deallocate(struct dense_hamiltonian_t *self)
   self->rho = NULL;
   self->e = NULL;
   self->n = NULL;
+  self->q0 = NULL;
+  self->no = NULL;
   self->at = NULL;
 }
 

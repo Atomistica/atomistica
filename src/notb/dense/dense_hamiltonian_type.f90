@@ -34,7 +34,7 @@ module dense_hamiltonian_type
 
   !
   ! This type contains all the information about the tight-binding
-  ! part of the simulation, i.e., Hamiltionians, ...
+  ! part of the simulation, i.e., Hamiltonians, ...
   !
   ! This datastructure is fully C interoperable. See accompanying
   ! header file dense_hamiltonian.h
@@ -103,7 +103,9 @@ module dense_hamiltonian_type
      ! type(notb_element_t)  :: at(:)
      !
 
-     type(C_PTR)        :: n = C_NULL_PTR    ! Number of electrons, charges
+     type(C_PTR)        :: n = C_NULL_PTR     ! Mulliken charges
+     type(C_PTR)        :: q0 = C_NULL_PTR    ! Charge of nucleus
+     type(C_PTR)        :: no = C_NULL_PTR    ! Number of orbitals
      type(C_PTR)        :: at = C_NULL_PTR
 
   endtype dense_hamiltonian_t

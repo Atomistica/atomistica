@@ -136,6 +136,8 @@ contains
 
     type(materials_t),    pointer :: this_mat
     type(notb_element_t), pointer :: this_at(:)
+    real(C_DOUBLE),       pointer :: this_q0(:)
+    integer(C_INT),       pointer :: this_no(:)
 
     ! ---
 
@@ -192,6 +194,8 @@ contains
     this%cutoff = c
 
     call dense_hamiltonian_allocate(c_loc(this), p%nat, this%norb)
+    call c_f_pointer(this%q0, this_q0, [this%nat])
+    call c_f_pointer(this%no, this_no, [this%nat])
     call c_f_pointer(this%at, this_at, [this%nat])
 
     ia   = 1
@@ -209,6 +213,9 @@ contains
              this_at(i)     = this_mat%e(enr)
              this_at(i)%o1  = ia
              ia             = ia + this_at(i)%no
+
+             this_q0(i) = -this_at(i)%q0
+             this_no(i) = this_at(i)%no
 
 !             write (*, *) i//" is "//this_at(i)%enr
 
@@ -296,43 +303,64 @@ contains
 
     INIT_ERROR(error)
 
+    if (c_associated(this%n)) then
+       call ptrdict_register_array1d_property(dict%ptrdict, this%n, &
+                                              this%nat, &
+                                              CSTR("Mulliken_charges"), &
+                                              CSTR("Charge per atom, i.e. the result of the Mulliken population analysis"))
+    endif
+
+    if (c_associated(this%q0)) then
+       call ptrdict_register_array1d_property(dict%ptrdict, this%q0, &
+                                              this%nat, &
+                                              CSTR("neutral_charges"), &
+                                              CSTR("Number of electrons of the charge neutral atom"))
+    endif
+
+    if (c_associated(this%no)) then
+       call ptrdict_register_integer_array1d_property(dict%ptrdict, this%no, &
+                                                      this%nat, &
+                                                      CSTR("number_of_orbitals"), &
+                                                      CSTR("Number of orbitals per atom, i.e. the block size of Hamiltonian and overlap matrix"))
+    endif
+
     if (this%nk == 1) then
        if (c_associated(this%H)) then
           call ptrdict_register_array2d_property(dict%ptrdict, this%H, &
                                                  this%norb, this%norb, &
                                                  CSTR("Hamiltonian_matrix"), &
-                                                 CSTR("N/A"))
+                                                 CSTR("Bare contravariant Hamiltonian without the electrostatic contribution"))
        endif 
        if (c_associated(this%S)) then
           call ptrdict_register_array2d_property(dict%ptrdict, this%S, &
                                                  this%norb, this%norb, &
                                                  CSTR("overlap_matrix"), &
-                                                 CSTR("N/A"))
+                                                 CSTR("Contravariant overlap matrix"))
        endif
        if (c_associated(this%rho)) then
           call ptrdict_register_array2d_property(dict%ptrdict, this%rho, &
                                                  this%norb, this%norb, &
                                                  CSTR("density_matrix"), &
-                                                 CSTR("N/A"))
+                                                 CSTR("Covariant density matrix"))
        endif
     else
        if (c_associated(this%H)) then
           call ptrdict_register_array3d_property(dict%ptrdict, this%H, &
                                                  this%norb, this%norb, this%nk, &
                                                  CSTR("Hamiltonian_matrix"), &
-                                                 CSTR("N/A"))
+                                                 CSTR("Bare contravariant Hamiltonian without the electrostatic contribution"))
        endif
        if (c_associated(this%S)) then
           call ptrdict_register_array3d_property(dict%ptrdict, this%S, &
                                                  this%norb, this%norb, this%nk, &
                                                  CSTR("overlap_matrix"), &
-                                                 CSTR("N/A"))
+                                                 CSTR("Contravariant overlap matrix"))
        endif
        if (c_associated(this%rho)) then
           call ptrdict_register_array3d_property(dict%ptrdict, this%rho, &
                                                  this%norb, this%norb, this%nk, &
                                                  CSTR("density_matrix"), &
-                                                 CSTR("N/A"))
+                                                 CSTR("Covariant density matrix"))
        endif
     endif
 
