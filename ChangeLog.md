@@ -8,6 +8,12 @@ TODO
 Change log
 ==========
 
+v0.5.5
+------
+
+- Improved introspection of the electronic structure obtained in tight-binding
+  calculations.
+
 v0.5.4
 ------
 
