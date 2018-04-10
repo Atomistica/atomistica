@@ -171,7 +171,7 @@ potential_getattro(potential_t *self, PyObject *pyname)
     Py_DECREF(pybname);
 #endif
     return property_to_pyobject(p);
-}
+  }
 
   /* Not in parameter data? Search in state data */
   if (self->f90class->get_dict) {
