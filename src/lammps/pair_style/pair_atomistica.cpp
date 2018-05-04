@@ -136,6 +136,8 @@ PairAtomistica::~PairAtomistica()
   if (name_)  free(name_);
   if (fn_)  free(fn_);
 
+  if (members_)  ptrdict_cleanup(members_);
+
   if (potential_) {
     class_->del(potential_);
     class_->free_instance(potential_);
@@ -298,6 +300,11 @@ void PairAtomistica::init_style()
                        "not.");
     class_->del(potential_);
     class_->free_instance(potential_);
+  }
+
+  if (members_) {
+    ptrdict_cleanup(members_);
+    members_ = NULL;
   }
 
   // need a full neighbor list
