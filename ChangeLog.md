@@ -8,6 +8,11 @@ TODO
 Change log
 ==========
 
+v0.5.6
+------
+
+- Fixed memory leak.
+
 v0.5.5
 ------
 
