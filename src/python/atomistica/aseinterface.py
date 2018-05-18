@@ -256,13 +256,13 @@ class Atomistica(Calculator):
 
         if len(self.couls) > 0:
             if atoms.has('charges'):
-                if self.charges is None or \
+                if self.charges is None or len(self.charges) != len(atoms) or \
                     (self.initial_charges is not None and \
                      np.any(atoms.get_array('charges') != self.initial_charges)\
                     ):
                     self.charges = atoms.get_array('charges')
                     self.initial_charges = self.charges.copy()
-            if self.charges is None:
+            if self.charges is None or len(self.charges) != len(atoms):
                 self.charges = np.zeros(len(atoms))
             self.E = np.zeros([3, len(atoms)])
             # Coulomb callback should be directed to this wrapper object
@@ -297,7 +297,8 @@ class Atomistica(Calculator):
             return
 
         # Number of particles changed? -> Reinitialize potential
-        if self.particles is None or len(self.particles.Z) != len(atoms):
+        if self.particles is None or len(self.particles.Z) != len(atoms) or \
+            (self.charges is not None and len(self.charges) != len(atoms)):
             self.initialize(atoms)
         # Type of particles changed? -> Reinitialize potential
         elif np.any(self.particles.Z != atoms.get_atomic_numbers()):
