@@ -255,12 +255,12 @@ class Atomistica(Calculator):
             pot.bind_to(self.particles, self.nl)
 
         if len(self.couls) > 0:
-            if atoms.has('charges'):
+            if atoms.has('initial_charges'):
                 if self.charges is None or len(self.charges) != len(atoms) or \
                     (self.initial_charges is not None and \
-                     np.any(atoms.get_array('charges') != self.initial_charges)\
+                     np.any(atoms.get_array('initial_charges') != self.initial_charges)\
                     ):
-                    self.charges = atoms.get_array('charges')
+                    self.charges = atoms.get_array('initial_charges')
                     self.initial_charges = self.charges.copy()
             if self.charges is None or len(self.charges) != len(atoms):
                 self.charges = np.zeros(len(atoms))
@@ -318,9 +318,9 @@ class Atomistica(Calculator):
             # Notify the Particles object of a change
             self.particles.I_changed_positions()
 
-        if atoms.has('charges') and self.initial_charges is not None and \
-            np.any(atoms.get_array('charges') != self.initial_charges):
-            self.charges = atoms.get_array('charges')
+        if atoms.has('initial_charges') and self.initial_charges is not None and \
+            np.any(atoms.get_array('initial_charges') != self.initial_charges):
+            self.charges = atoms.get_array('initial_charges')
             self.initial_charges = self.charges.copy()
 
 
