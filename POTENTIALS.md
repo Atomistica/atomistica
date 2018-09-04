@@ -20,6 +20,13 @@ the following publications:
     “Self-consistent-charge density-functional tight-binding method for simulations of complex materials properties.”  
     Phys. Rev. B 58, 7260 (1998) - http://dx.doi.org/10.1103/PhysRevB.58.7260 
 
+        from atomistica import TightBinding  
+        calc = TightBinding(database_folder='/path/to/notb/database')
+
+    Note: This code snippet runs calculations without charge self-consistency. See
+    the [examples](https://github.com/Atomistica/atomistica/tree/master/examples) folder
+    for example how to run self-consistent calculations. 
+
 Empirical bond-order potentials
 -------------------------------
 
