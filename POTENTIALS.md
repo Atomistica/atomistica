@@ -8,6 +8,17 @@ potential/parameterization. Note that for all potentials listed below there is
 a default parameter set that is used if instantiated without an explicit
 database dictionary. This default is the first potential listed below.
 
+Non-orthogonal tight-binding
+----------------------------
+
+Atomistica can carry out non-orthogonal tight-binding calculations with
+charge self-consistency. Parameter sets can be found for example at
+[dftb.org](http://dftb.org). For more details, see the following publications
+
+*   Marcus Elstner, Dirk Porezag, G. Jungnickel, J. Elsner, M. Haugk, Thomas Frauenheim, Sándor Suhai, Gotthard Seifert  
+    “Self-Consistent-Charge Density-Functional Tight-Binding Method for Simulations of Complex Materials Properties.”  
+    Phys. Rev. B 58, 7260 (1998) - http://dx.doi.org/10.1103/PhysRevB.58.7260 
+
 Empirical bond-order potentials
 -------------------------------
 
