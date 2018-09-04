@@ -1,7 +1,7 @@
 ![Atomistica](https://github.com/Atomistica/atomistica/blob/master/images/logo.png)
 
-Atomistica is a library of interatomic potentials. It is designed to be plugged
-into different simulation environments. We currently support the
+Atomistica is a library of interatomic potentials, including empirical potentials and non-orthogonal tight-binding.
+It is designed to be plugged into different simulation environments. We currently support the
 [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/) and
 the [Large-scale Atomic/Molecular Massively Parallel Simulator (LAMMPS)](http://lammps.sandia.gov/).
 A list of interatomic potentials can be found [here](POTENTIALS.md).
