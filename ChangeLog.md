@@ -8,6 +8,14 @@ TODO
 Change log
 ==========
 
+v0.5.7
+------
+
+- Updated to support latest ASE.
+- Fixed random hangs when running with LAMMPS.
+- Bug fix in C-H interaction of screened REBO2 potential when running
+  within LAMMPS.
+
 v0.5.6
 ------
 
