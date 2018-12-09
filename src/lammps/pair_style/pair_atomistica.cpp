@@ -436,18 +436,21 @@ void PairAtomistica::Atomistica_neigh()
   // Map seed and last arrays to point to the appropriate position in the
   // native LAMMPS neighbor list. This avoids copying the full list.
 
+  Atomistica_neighb_ = NULL;
+
   // Seed is reported relative to the lowest neighbor pointer value. What is
   // passed to Atomistica is a Fortran array that encloses all neighbors, from
   // the lowest to the highest pointer value. This is necessary because the
   // neigbor list in LAMMPS is not necessarily consecutive in memory.
-  Atomistica_neighb_ = firstneigh[ilist[0]];
-  Atomistica_neighb_endptr_ = NULL;
-  for (ii = 0; ii < inum; ii++) {
-    i = ilist[ii];
-    Atomistica_neighb_ = std::min(Atomistica_neighb_, firstneigh[i]);
-    Atomistica_neighb_endptr_ = std::max(Atomistica_neighb_endptr_,
-                                         firstneigh[i]+numneigh[i]);
-  }
+
+  // Atomistica_neighb_ = firstneigh[ilist[0]];
+  // Atomistica_neighb_endptr_ = NULL;
+  // for (ii = 0; ii < inum; ii++) {
+  //   i = ilist[ii];
+  //   Atomistica_neighb_ = std::min(Atomistica_neighb_, firstneigh[i]);
+  //   Atomistica_neighb_endptr_ = std::max(Atomistica_neighb_endptr_,
+  //                                        firstneigh[i]+numneigh[i]);
+  // }
 
   // Fill seed and last arrays.
   Atomistica_nneighb_ = 0;
@@ -539,8 +542,9 @@ void PairAtomistica::FAtomistica(int eflag, int vflag)
 
   // set pointers in neighbor list object
   neighbors_set_pointers(neighbors_,nall,Atomistica_seed_,Atomistica_last_,
-                         Atomistica_neighb_endptr_-Atomistica_neighb_+1,Atomistica_neighb_);
-
+                         // Atomistica_neighb_endptr_-Atomistica_neighb_+1,Atomistica_neighb_);
+			 Atomistica_nneighb_,Atomistica_neighb_);
+			 
   int ierror;
   epot = 0.0;
   class_->energy_and_forces(potential_,particles_,neighbors_,&epot,&f[0][0],
