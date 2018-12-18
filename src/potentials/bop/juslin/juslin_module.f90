@@ -390,7 +390,7 @@
 #ifdef SCREENING
           call request_interaction_range( &
                nl, &
-               x(nel)*sqrt(this%max_cut_sq(nel)), &
+               x(nel)*sqrt(maxval(this%max_cut_sq)), &
                i, j &
                )
 #else
