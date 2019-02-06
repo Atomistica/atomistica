@@ -63,6 +63,10 @@ module rebo2_scr
 
 #define NUM_NEIGHBORS
 
+!#define SPLINE_CUTOFF
+
+#define CUTOFF_T             trig_off_t
+
 #define BOP_NAME             rebo2_scr
 #define BOP_NAME_STR         "rebo2_scr"
 #define BOP_STR              "Rebo2Scr"

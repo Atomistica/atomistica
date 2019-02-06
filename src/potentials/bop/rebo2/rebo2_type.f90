@@ -278,11 +278,33 @@
      real(DP)               :: spl_x0 = 0.1
      type(simple_spline_t)  :: spl_VA(10)
      type(simple_spline_t)  :: spl_VR(10)
+
+#ifdef SPLINE_CUTOFF
+
+     !
+     ! Splines for cutoff functions
+     !
+
      type(simple_spline_t)  :: spl_fCin(10)
 #ifdef SCREENING
      type(simple_spline_t)  :: spl_fCar(10)
      type(simple_spline_t)  :: spl_fCbo(10)
      type(simple_spline_t)  :: spl_fCnc(10)
+#endif
+
+#else
+
+     !
+     ! Cutoff functions
+     !
+
+     type(CUTOFF_T)  :: spl_fCin(10)
+#ifdef SCREENING
+     type(CUTOFF_T)  :: spl_fCar(10)
+     type(CUTOFF_T)  :: spl_fCbo(10)
+     type(CUTOFF_T)  :: spl_fCnc(10)
+#endif
+
 #endif
 
      !
