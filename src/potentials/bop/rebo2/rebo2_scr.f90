@@ -64,6 +64,7 @@ module rebo2_scr
 #define NUM_NEIGHBORS
 
 !#define SPLINE_CUTOFF
+!#define SPLINE_POTENTIAL
 
 #define CUTOFF_T             trig_off_t
 

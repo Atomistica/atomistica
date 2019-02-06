@@ -185,11 +185,13 @@ subroutine VA(this, ijpot, dr, val, dval)
 
   ! --- 
 
+#ifdef SPLINE_POTENTIAL
   if (dr > this%spl_VA(ijpot)%x0 .and. dr < this%spl_VA(ijpot)%cut) then
 
      call f_and_df(this%spl_VA(ijpot), dr, val, dval)
 
   else
+#endif
 
      if (ijpot == C_C) then
 
@@ -215,7 +217,9 @@ subroutine VA(this, ijpot, dr, val, dval)
 
      endif
 
+#ifdef SPLINE_POTENTIAL
   endif
+#endif
 
 endsubroutine VA
 
@@ -238,11 +242,13 @@ subroutine VR(this, ijpot, dr, val, dval)
 
   ! ---
 
+#ifdef SPLINE_POTENTIAL
   if (dr > this%spl_VR(ijpot)%x0 .and. dr < this%spl_VR(ijpot)%cut) then
 
      call f_and_df(this%spl_VR(ijpot), dr, val, dval)
 
   else
+#endif
 
      if (ijpot == C_C) then
 
@@ -270,7 +276,9 @@ subroutine VR(this, ijpot, dr, val, dval)
 
      endif
 
+#ifdef SPLINE_POTENTIAL
   endif
+#endif
 
 endsubroutine VR
 

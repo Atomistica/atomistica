@@ -270,14 +270,23 @@
 
      type(table3d_t)  :: Tcc
 
+#if defined(SPLINE_POTENTIAL) || defined(SPLINE_CUTOFF)
+
      !
      ! Splines
      !
 
      integer                :: spl_n = 1000
      real(DP)               :: spl_x0 = 0.1
+
+#endif
+
+#ifdef SPLINE_POTENTIAL
+
      type(simple_spline_t)  :: spl_VA(10)
      type(simple_spline_t)  :: spl_VR(10)
+
+#endif
 
 #ifdef SPLINE_CUTOFF
 

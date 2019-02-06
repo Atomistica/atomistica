@@ -524,6 +524,8 @@
 
 ! --- Functions ---
 
+#ifdef SPLINE_POTENTIAL
+
   function cc_VA(dr, cc_B1, cc_B2, cc_B3, cc_beta1, cc_beta2, cc_beta3) result(val)
     implicit none
 
@@ -661,6 +663,7 @@
 
   endfunction hh_VR
 
+#endif
 
 #ifdef SPLINE_CUTOFF
 
@@ -729,6 +732,8 @@
 
     ! ---
 
+#ifdef SPLINE_POTENTIAL
+
     !
     ! Attractive potential
     !
@@ -768,6 +773,8 @@
          this%spl_VR(H_H), &
          this%spl_n, this%spl_x0, this%hh_r2, &
          hh_VR, this%hh_A, this%hh_Q, this%hh_alpha)
+
+#endif
 
     !
     ! Inner cut-off
