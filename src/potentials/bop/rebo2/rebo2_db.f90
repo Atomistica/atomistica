@@ -794,9 +794,9 @@
          this%spl_n, this%hh_r1, this%hh_r2, &
          cutoff_f, this%cut_in_l(H_H), this%cut_in_h(H_H), this%cut_in_m(H_H))
 #else
-    call init(this%spl_fCin(C_C), this%cc_in_r1, this%cc_in_r2)
-    call init(this%spl_fCin(C_H), this%ch_r1, this%ch_r2)
-    call init(this%spl_fCin(H_H), this%hh_r1, this%hh_r2)
+    call init(this%spl_fCin(C_C), this%cut_in_l(C_C), this%cut_in_h(C_C))
+    call init(this%spl_fCin(C_H), this%cut_in_l(C_H), this%cut_in_h(C_H))
+    call init(this%spl_fCin(H_H), this%cut_in_l(H_H), this%cut_in_h(H_H))
 #endif
 
 #ifdef SCREENING
@@ -819,9 +819,9 @@
          this%spl_n, this%hh_r1, this%hh_r2, &
          cutoff_f, this%cut_ar_l(H_H), this%cut_ar_h(H_H), this%cut_ar_m(H_H))
 #else
-    call init(this%spl_fCar(C_C), this%cc_in_r1, this%cc_in_r2)
-    call init(this%spl_fCar(C_H), this%ch_r1, this%ch_r2)
-    call init(this%spl_fCar(H_H), this%hh_r1, this%hh_r2)
+    call init(this%spl_fCar(C_C), this%cut_ar_l(C_C), this%cut_ar_h(C_C))
+    call init(this%spl_fCar(C_H), this%cut_ar_l(C_H), this%cut_ar_h(C_H))
+    call init(this%spl_fCar(H_H), this%cut_ar_l(H_H), this%cut_ar_h(H_H))
 #endif
 
     !
@@ -842,9 +842,9 @@
          this%spl_n, this%hh_r1, this%hh_r2, &
          cutoff_f, this%cut_bo_l(H_H), this%cut_bo_h(H_H), this%cut_bo_m(H_H))
 #else
-    call init(this%spl_fCbo(C_C), this%cc_in_r1, this%cc_in_r2)
-    call init(this%spl_fCbo(C_H), this%ch_r1, this%ch_r2)
-    call init(this%spl_fCbo(H_H), this%hh_r1, this%hh_r2)
+    call init(this%spl_fCbo(C_C), this%cut_bo_l(C_C), this%cut_bo_h(C_C))
+    call init(this%spl_fCbo(C_H), this%cut_bo_l(C_H), this%cut_bo_h(C_H))
+    call init(this%spl_fCbo(H_H), this%cut_bo_l(H_H), this%cut_bo_h(H_H))
 #endif
 
     !
@@ -865,9 +865,9 @@
          this%spl_n, this%hh_r1, this%hh_r2, &
          cutoff_f, this%cut_nc_l(H_H), this%cut_nc_h(H_H), this%cut_nc_m(H_H))
 #else
-    call init(this%spl_fCnc(C_C), this%cc_in_r1, this%cc_in_r2)
-    call init(this%spl_fCnc(C_H), this%ch_r1, this%ch_r2)
-    call init(this%spl_fCnc(H_H), this%hh_r1, this%hh_r2)
+    call init(this%spl_fCnc(C_C), this%cut_nc_l(C_C), this%cut_nc_h(C_C))
+    call init(this%spl_fCnc(C_H), this%cut_nc_l(C_H), this%cut_nc_h(C_H))
+    call init(this%spl_fCnc(H_H), this%cut_nc_l(H_H), this%cut_nc_h(H_H))
 #endif
 
 #endif
