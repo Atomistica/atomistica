@@ -11,7 +11,7 @@ module damp_short_gamma
 
   private
   
-  public :: hij                                   !> hij         = h(rij,Ui,Uj)            
+  public :: hij                                   !> hij         = h(rij,Ui,Uj)  
   public :: part_deriv_hij_wrt_Ui                 !> dhij/dUi    = dh(rij,Ui,Uj)/dUi   
   public :: part_deriv_hij_wrt_r                  !> dhij/dr     = dh(rij,Ui,Uj)/dr 
   public :: second_part_deriv_hij_wrt_Ui_and_r    !> d2hij/dUidr = d2h(rij,Ui,Uj)/dUidr
@@ -25,9 +25,8 @@ contains
   real(DP)             :: res
   real(DP)             :: efact
   
-
-  efact = - (0.50_DP*(Ua + Ub))**zeta
-  res = dexp(efact*abs_rij**2)
+  efact = - (0.50_DP*(U_i + U_j))**zeta
+  res = exp(efact*abs_rij**2)
 
   endfunction hij
 

@@ -708,6 +708,31 @@ contains
                            + (33*avg + 18*fac*avg + 3*fac2*avg)*efac &
                            )
 
+                      ! 
+                      ! DFTB3 term
+                      !
+                        
+                      if (dftb3) then
+
+                         if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+ 
+                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta) &
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)
+                           
+                         else
+           
+                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i)
+                        
+                         endif
+
+
+                      else
+ 
+                         fdftb3 = 0.0_DP
+                           
+                      endif
+                          
                    else
 
                       fi1 = 1.0_DP/(2*(U_i**2-U_j**2)**2)
@@ -805,6 +830,12 @@ contains
 
           epot   = epot + 5*q_i*q_i*U_i/32
 
+          !
+          ! DFTB3 on-site correction
+          !          
+   
+          if (dftb3) tls_sca1(i) = tls_sca1(i) + 1.0_DP/3.0_DP*dq_i**3*dU_i
+                  
        endif
 
     enddo
