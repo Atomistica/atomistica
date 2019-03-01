@@ -456,8 +456,6 @@ contains
        else if (any(p%shear_dv /= 0.0_DP)) then
           call set_lees_edwards(p, p%shear_dx + p%shear_dv*dyn%dt, dv=p%shear_dv)
        endif
-
-
        !
        ! Compute potential energy and forces
        !

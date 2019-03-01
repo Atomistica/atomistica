@@ -76,6 +76,9 @@ module slater_charges
      real(DP)  :: U(SLATER_CHARGES_MAX_EL)       !< Hubbard U
      real(DP)  :: Z(SLATER_CHARGES_MAX_EL)       !< Nuclear charge
 
+     ! for DFTB3
+     real(DP)  :: dU(SLATER_CHARGES_MAX_EL)      !< Hubbard derivative with respect to atomic charge
+ 
   endtype slater_charges_db_t
 
   public :: slater_charges_t
@@ -106,6 +109,13 @@ module slater_charges
      !
 
      real(DP), allocatable :: Z(:)
+
+     !
+     ! for DFTB3
+     ! Hubbard derivative with respect to atomic charge
+     !
+
+     real(DP), allocatable :: dU(:)
 
      !
      ! Database
@@ -376,6 +386,14 @@ contains
     real(DP) :: abs_rij, hlp, expi, expj, src, fac, fac2, efac
     real(DP) :: avg, fi1, fj1, fi2, fj2, U_i, U_j, q_i, q_j, Z_i, Z_j
 
+    !
+    ! DFTB3 
+    !
+
+    real(DP)     :: dU_i, dU_j, dq_i, dq_j
+    real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
+    character(4) :: name_i, name_j
+
     integer             :: i, j
     integer(NEIGHPTR_T) :: ni
 
@@ -407,13 +425,17 @@ contains
           U_i = this%U(p%el(i))
           Z_i = this%Z(p%el(i))
 
+          name_i = p%sym(i)
+          dU_i = this%dU(p%el(i))
+          dq_i = q_i - Z_i 
+
           !
           ! Atom i has a Gaussian charge cloud
           !
 
           Slater_ni_loop: do ni = nl%seed(i), nl%last(i)
              j = GET_NEIGHBOR(nl, ni)
-
+            
              if (i <= j .and. IS_EL(this%els, p, j)) then
                 abs_rij = GET_ABS_DRJ(p, nl, i, j, ni)
                 if (abs_rij < this%cutoff) then
@@ -421,6 +443,10 @@ contains
                    q_j = q(j)
                    U_j = this%U(p%el(j))
                    Z_j = this%Z(p%el(j))
+
+                   name_j = p%sym(j)
+                   dU_j = this%dU(p%el(j))
+                   dq_j = q_j - Z_j 
 
                    !
                    ! Nuclear repulsion integrals
@@ -445,8 +471,38 @@ contains
                       efac = exp(-fac)/(48*abs_rij)
 
                       hlp = -(48 + 33*fac + fac2*(9+fac))*efac
-                      tls_sca1(i) = tls_sca1(i) + (q_j-Z_j)*hlp
-                      tls_sca1(j) = tls_sca1(j) + (q_i-Z_i)*hlp
+                      tls_sca1(i) = tls_sca1(i) + dq_j*hlp
+                      tls_sca1(j) = tls_sca1(j) + dq_i*hlp
+
+                      !
+                      ! DFTB3 Hamiltonian
+                      !
+
+                      if (dftb3) then
+                        if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+
+                          cgma_ac = csgamma(abs_rij, dU_i, U_i, U_j, zeta)
+                          cgma_ca = csgamma(abs_rij, dU_j, U_j, U_i, zeta)    
+
+                        else
+
+                          cgma_ac = csgamma(abs_rij, dU_i, U_i, U_j)
+                          cgma_ca = csgamma(abs_rij, dU_j, U_j, U_i)    
+                     
+                        endif
+
+                        cgma_bc = cgma_ca
+                        cgma_cb = cgma_ac 
+                 
+                        tls_sca1(i) = tls_sca1(i) &
+                                    + dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
+                                    + dq_j**2*cgma_ca/3.0_DP
+                        tls_sca1(j) = tls_sca1(j) &
+                                    + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
+                                    + dq_i**2*cgma_cb/3.0_DP
+
+                        endif
+                      endif
 
                    else
 
@@ -469,6 +525,36 @@ contains
                       tls_sca1(i) = tls_sca1(i) + (q_j-Z_j)*hlp
                       tls_sca1(j) = tls_sca1(j) + (q_i-Z_i)*hlp
 
+                      !
+                      ! DFTB3 Hamiltonian
+                      !
+
+                      if (dftb3) then
+                        if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+
+                          cgma_ac = csgamma(abs_rij, dU_i, U_i, U_j, zeta)
+                          cgma_ca = csgamma(abs_rij, dU_j, U_j, U_i, zeta)    
+
+                        else
+
+                          cgma_ac = csgamma(abs_rij, dU_i, U_i, U_j)
+                          cgma_ca = csgamma(abs_rij, dU_j, U_j, U_i)    
+                     
+                        endif
+
+                        cgma_bc = cgma_ca
+                        cgma_cb = cgma_ac 
+                 
+                        tls_sca1(i) = tls_sca1(i) &
+                                    + dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
+                                    + dq_j**2*cgma_ca/3.0_DP
+                        tls_sca1(j) = tls_sca1(j) &
+                                    + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
+                                    + dq_i**2*cgma_cb/3.0_DP
+
+                        endif
+                      endif
+
                    endif
                       
                 endif
@@ -477,7 +563,13 @@ contains
           enddo Slater_ni_loop
 
           tls_sca1(i) = tls_sca1(i) + 5*q_i*U_i/16
-             
+          
+          !
+          ! DFTB3 on-site correction
+          !          
+   
+          if (dftb3) tls_sca1(i) = tls_sca1(i) + 0.50_DP*dU_i
+                  
        endif
 
     enddo
@@ -514,6 +606,14 @@ contains
     real(DP) :: df(3), hlp, src, fac, fac2, efac, expi, expj
     real(DP) :: avg, e, ffac, fi1, fj1, fi2, fj2, U_i, U_j, Z_i, Z_j
 
+    !
+    ! DFTB3
+    !
+
+    real(DP)     :: dU_i, dU_j, dq_i, dq_j
+    real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
+    character(4) :: name_i, name_j
+
     integer             :: i, j
     integer(NEIGHPTR_T) :: ni
 
@@ -536,6 +636,10 @@ contains
           U_i = this%U(p%el(i))
           Z_i = this%Z(p%el(i))
 
+          name_i = p%sym(i)
+          dU_i = this%dU(p%el(i))
+          dq_i = q_i - Z_i
+
           !
           ! Atom i has a Gaussian charge cloud
           !
@@ -552,6 +656,10 @@ contains
                    q_j = q(j)
                    U_j = this%U(p%el(j))
                    Z_j = this%Z(p%el(j))
+
+                   name_j = p%sym(j)
+                   dU_j = this%dU(p%el(j))
+                   dq_j = q_j - Z_j
 
                    !
                    ! Nuclear repulsion integrals

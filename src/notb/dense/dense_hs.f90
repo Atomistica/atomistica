@@ -365,7 +365,7 @@ contains
 #define tls_mat1 H
 #define tls_mat2 S
 #endif
-    
+
     !$omp do
     i_loop: do i = 1, p%nat
 
@@ -384,6 +384,7 @@ contains
 
           eli = this_at(i)%enr   ! internal element number
 
+          !write(*,*) i, nl%seed(i), nl%last(i) - nl%seed(i), noi, ia0
           ni_loop: do ni = nl%seed(i), nl%last(i)
 
              j = GET_NEIGHBOR(nl, ni)

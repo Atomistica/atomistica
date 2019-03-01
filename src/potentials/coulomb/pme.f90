@@ -312,7 +312,7 @@ contains
 
     call get_true_cell(p, Abox, Bbox, error=ierror)
     PASS_ERROR(ierror)
-
+  
     call potential_and_field( &
          this%pme_grid, x, y, z, q, Bbox, volume(p), this%sqrt_alpha, &
          epot_rec, virial, phi)

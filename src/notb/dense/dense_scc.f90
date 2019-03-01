@@ -92,6 +92,12 @@ module dense_scc
 
      real(DP), allocatable  :: phi(:)
 
+     ! Variables for DFTB3
+     logical       :: dftb3           = .false.     !< enables DFTB3
+     logical       :: damp_gamma      = .false.     !< enables damped Coulomb potentials in full DFTB3
+     real(DP)      :: zeta            = 0.0_DP      !< damping parameter for X-H interactions in full DFTB3
+     !real(DP)      :: Hubderiv
+
      !
      ! Position and charge history
      !
@@ -840,6 +846,12 @@ contains
 
     this%extrapolation_memory = 3
 
+    ! for DFTB3
+    this%dftb3                = .false.
+    this%damp_gamma           = .false.
+    this%zeta                 = 0.0_DP
+
+
     m = ptrdict_register_module(cfg, c_loc(this%enabled), CSTR("SCC"), &
          CSTR("Use charge self-consistency in the tight-binding calculation."))
 
@@ -859,6 +871,21 @@ contains
     call ptrdict_register_integer_property(m, c_loc(this%extrapolation_memory), &
          CSTR("extrapolation_memory"), &
          CSTR("Number of past time steps to consider for charge extrapolation (min 2, extrapolation disabled if less)."))
+
+    ! for DFTB3
+    call ptrdict_register_integer_property(m, c_loc(this%dftb3), &
+         CSTR("dftb3"), &
+         CSTR("Use DFTB3."))
+
+    call ptrdict_register_integer_property(m, c_loc(this%damp_gamma), &
+         CSTR("damp_gamma"), &
+         CSTR("Use damped Coulomb potentials for X-H interactions."))
+
+    call ptrdict_register_integer_property(m, c_loc(this%zeta), &
+         CSTR("zeta"), &
+         CSTR("Damping parameter for damped Coulomb potentials."))
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!
 
     call ptrdict_register_integer_property(m, c_loc(this%warn), CSTR("warn"), &
          CSTR("Warn after a number of iterations without self-consistency."))

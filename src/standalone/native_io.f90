@@ -578,7 +578,7 @@ contains
        PASS_ERROR(error)
        call prlog("     shear_dx   = "//p%shear_dx)
     endif
-
+  
     call prlog
 
     DEBUG_WRITE("<=== read_atoms")
