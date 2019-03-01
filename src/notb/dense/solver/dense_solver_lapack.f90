@@ -367,7 +367,7 @@ contains
                          jb = tb_at(j)%o1 + b - 1
        
                          evecs(ia, jb) = H(ia, jb) &
-                              - 0.5_DP*S(ia, jb)*(phi(i) + phi(j)) &
+                              - 0.5_DP*S(ia, jb)*(phi(i) + phi(j))  
                       enddo
                    endif
                 enddo

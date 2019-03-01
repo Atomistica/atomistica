@@ -56,6 +56,11 @@ module slater_charges
   use neighbors
   use filter
 
+  !
+  ! DFTB3
+  !
+  use coulomb_short_gamma
+ 
   implicit none
 
   private
@@ -479,29 +484,31 @@ contains
                       !
 
                       if (dftb3) then
-                        if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
 
-                          cgma_ac = csgamma(abs_rij, dU_i, U_i, U_j, zeta)
-                          cgma_ca = csgamma(abs_rij, dU_j, U_j, U_i, zeta)    
+                         if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
 
-                        else
+                            cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta)
+                            cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)    
 
-                          cgma_ac = csgamma(abs_rij, dU_i, U_i, U_j)
-                          cgma_ca = csgamma(abs_rij, dU_j, U_j, U_i)    
+                         else
+ 
+                            cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j)
+                            cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i)    
                      
-                        endif
+                         endif
 
-                        cgma_bc = cgma_ca
-                        cgma_cb = cgma_ac 
+                         cgma_bc = cgma_ca
+                         cgma_cb = cgma_ac 
                  
-                        tls_sca1(i) = tls_sca1(i) &
-                                    + dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
-                                    + dq_j**2*cgma_ca/3.0_DP
-                        tls_sca1(j) = tls_sca1(j) &
-                                    + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
-                                    + dq_i**2*cgma_cb/3.0_DP
+                         tls_sca1(i) = tls_sca1(i) &
+                                     + dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
+                                     + dq_j**2*cgma_ca/3.0_DP
+                         tls_sca1(j) = tls_sca1(j) &
+                                     + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
+                                     + dq_i**2*cgma_cb/3.0_DP
 
-                        endif
+                         endif
+
                       endif
 
                    else
@@ -530,29 +537,31 @@ contains
                       !
 
                       if (dftb3) then
-                        if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
 
-                          cgma_ac = csgamma(abs_rij, dU_i, U_i, U_j, zeta)
-                          cgma_ca = csgamma(abs_rij, dU_j, U_j, U_i, zeta)    
+                         if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
 
-                        else
+                            cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta)
+                            cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)    
+  
+                         else
 
-                          cgma_ac = csgamma(abs_rij, dU_i, U_i, U_j)
-                          cgma_ca = csgamma(abs_rij, dU_j, U_j, U_i)    
+                            cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j)
+                            cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i)    
                      
-                        endif
+                         endif
 
-                        cgma_bc = cgma_ca
-                        cgma_cb = cgma_ac 
+                         cgma_bc = cgma_ca
+                         cgma_cb = cgma_ac 
                  
-                        tls_sca1(i) = tls_sca1(i) &
-                                    + dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
-                                    + dq_j**2*cgma_ca/3.0_DP
-                        tls_sca1(j) = tls_sca1(j) &
-                                    + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
-                                    + dq_i**2*cgma_cb/3.0_DP
+                         tls_sca1(i) = tls_sca1(i) &
+                                     + dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
+                                     + dq_j**2*cgma_ca/3.0_DP
+                         tls_sca1(j) = tls_sca1(j) &
+                                     + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
+                                     + dq_i**2*cgma_cb/3.0_DP
 
-                        endif
+                         endif
+                     
                       endif
 
                    endif
@@ -612,6 +621,7 @@ contains
 
     real(DP)     :: dU_i, dU_j, dq_i, dq_j
     real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
+    real(DP)     :: edftb3, fdftb3
     character(4) :: name_i, name_j
 
     integer             :: i, j
@@ -722,12 +732,60 @@ contains
                            ) &
                            )
 
+                      ! 
+                      ! DFTB3 term
+                      !
+                        
+                      if (dftb3) then
+
+                         if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+ 
+                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta) &
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)
+                           
+                         else
+           
+                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i)
+                        
+                         endif
+
+
+                      else
+ 
+                         fdftb3 = 0.0_DP
+                           
+                      endif
+                          
+                   endif
+
+                   !
+                   ! DFTB3 
+                   !
+ 
+                   if (dftb3) then
+                      
+                      if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+                      
+                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta)
+                      
+                      else
+                      
+                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j)
+                                         
+                      endif
+
+                   else
+ 
+                      edftb3 = 0.0_DP
+
                    endif
 
                    fac = q_i*q_j-q_i*Z_j-Z_i*q_j
-                   ffac = ffac + fac*fac2
+                   !ffac = ffac + fac*fac2
+                   ffac = ffac + fac*fac2 + fdftb3
                    df = ffac * rij/abs_rij
-                   e = e + fac*hlp
+                   e = e + fac*hlp + edftb3
 
                    VEC3(f, i) = VEC3(f, i) + df
                    VEC3(f, j) = VEC3(f, j) - df
