@@ -97,7 +97,7 @@
 #ifdef SCREENING
     c_cc = sqrt(this%C_dr_cut)*maxval( [ this%cc_in_r2, this%cc_ar_r2, &
          this%cc_bo_r2, this%cc_nc_r2 ] )
-    c_ch = this%ch_r2
+    c_ch = c_cc
     c_hh = this%hh_r2
 #else
     c_cc = this%cc_in_r2

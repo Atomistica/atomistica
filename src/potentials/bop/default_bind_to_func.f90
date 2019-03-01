@@ -129,7 +129,7 @@
                 if (ii > 0 .and. jj > 0) then
                    nel = Z2pair(this, ii, jj)
 #ifdef SCREENING
-                   cutoff = x(nel)*sqrt(this%max_cut_sq(nel))
+                   cutoff = x(nel)*sqrt(maxval(this%max_cut_sq))
 #else
                    cutoff = this%cut_in_h(nel)
 #endif

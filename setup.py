@@ -264,7 +264,7 @@ setup(
     cmdclass = versioneer.get_cmdclass(),
     description = 'Atomistica is a library of interatomic potentials that is compatible with ASE and LAMMPS',
     maintainer = 'Lars Pastewka',
-    maintainer_email = 'lars.pastewka@kit.edu',
+    maintainer_email = 'lars.pastewka@imtek.uni-freiburg.de',
     url = 'https://github.com/Atomistica/atomistica',
     download_url = 'https://github.com/Atomistica/atomistica/tarball/'+versioneer.get_version(),
     license = 'GPLv3',

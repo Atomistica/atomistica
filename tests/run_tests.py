@@ -33,6 +33,7 @@ from forces_and_virial import *
 from rebo2_molecules import *
 from mask import *
 from mio import *
+from dimers import *
 
 ###
 

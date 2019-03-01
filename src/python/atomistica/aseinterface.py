@@ -32,8 +32,12 @@ from math import sqrt, log
 import _atomistica
 
 import numpy as np
-
-from ase.atoms import string2symbols
+try:
+   # ase 3.1.6 and earlier 
+   from ase.atoms import string2symbols
+except ImportError:
+   # Current ase master
+   from ase.symbols import string2symbols
 from ase.calculators.calculator import Calculator
 from ase.data import atomic_numbers
 from ase.units import Hartree, Bohr

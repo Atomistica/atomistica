@@ -8,6 +8,25 @@ potential/parameterization. Note that for all potentials listed below there is
 a default parameter set that is used if instantiated without an explicit
 database dictionary. This default is the first potential listed below.
 
+Non-orthogonal tight-binding
+----------------------------
+
+Atomistica can carry out non-orthogonal tight-binding calculations with
+charge self-consistency. Parameter sets are not distributed with Atomistica but
+can be found for example at [dftb.org](http://dftb.org). For more details, see
+the following publications:
+
+*   Marcus Elstner, Dirk Porezag, G. Jungnickel, J. Elsner, M. Haugk, Thomas Frauenheim, Sándor Suhai, Gotthard Seifert  
+    “Self-consistent-charge density-functional tight-binding method for simulations of complex materials properties.”  
+    Phys. Rev. B 58, 7260 (1998) - http://dx.doi.org/10.1103/PhysRevB.58.7260 
+
+        from atomistica import TightBinding  
+        calc = TightBinding(database_folder='/path/to/notb/database')
+
+    Note: This code snippet runs calculations without charge self-consistency. See
+    the [examples](https://github.com/Atomistica/atomistica/tree/master/examples) folder
+    for example how to run self-consistent calculations. 
+
 Empirical bond-order potentials
 -------------------------------
 
@@ -160,7 +179,8 @@ Screened empirical bond-order potentials
     "Bond order potentials for fracture, wear, and plasticity"   
     MRS Bulletin 37, 493 (2012) - http://dx.doi.org/10.1557/mrs.2012.94
 
-Embedded-atom method potentials:
+Embedded-atom method potentials
+-------------------------------
 
 *   General EAM potentials tabulated in the DYNAMO 'setfl' format.  
     See http://www.ctcms.nist.gov/~cbecker/ for a database of potential

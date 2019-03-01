@@ -362,6 +362,7 @@
        call del(this%Pch)
        call del(this%Tcc)
 
+#ifdef SPLINE_CUTOFF
        call del(this%spl_VA(C_C))
        call del(this%spl_VA(C_H))
        call del(this%spl_VA(H_H))
@@ -386,6 +387,7 @@
        call del(this%spl_fCnc(C_C))
        call del(this%spl_fCnc(C_H))
        call del(this%spl_fCnc(H_H))
+#endif
 #endif
 
        this%tables_allocated = .false.
@@ -521,6 +523,8 @@
 
 
 ! --- Functions ---
+
+#ifdef SPLINE_POTENTIAL
 
   function cc_VA(dr, cc_B1, cc_B2, cc_B3, cc_beta1, cc_beta2, cc_beta3) result(val)
     implicit none
@@ -659,6 +663,9 @@
 
   endfunction hh_VR
 
+#endif
+
+#ifdef SPLINE_CUTOFF
 
 #ifdef EXP_CUT
 
@@ -708,6 +715,8 @@
 
 #endif
 
+#endif
+
 
   !**********************************************************************
   ! Make splines for attractive, repulsive functions
@@ -722,6 +731,8 @@
     real(DP)  :: cc_r2
 
     ! ---
+
+#ifdef SPLINE_POTENTIAL
 
     !
     ! Attractive potential
@@ -763,10 +774,13 @@
          this%spl_n, this%spl_x0, this%hh_r2, &
          hh_VR, this%hh_A, this%hh_Q, this%hh_alpha)
 
+#endif
+
     !
     ! Inner cut-off
     !
 
+#ifdef SPLINE_CUTOFF
     call init( &
          this%spl_fCin(C_C), &
          this%spl_n, this%cc_in_r1, this%cc_in_r2, &
@@ -779,6 +793,11 @@
          this%spl_fCin(H_H), &
          this%spl_n, this%hh_r1, this%hh_r2, &
          cutoff_f, this%cut_in_l(H_H), this%cut_in_h(H_H), this%cut_in_m(H_H))
+#else
+    call init(this%spl_fCin(C_C), this%cut_in_l(C_C), this%cut_in_h(C_C))
+    call init(this%spl_fCin(C_H), this%cut_in_l(C_H), this%cut_in_h(C_H))
+    call init(this%spl_fCin(H_H), this%cut_in_l(H_H), this%cut_in_h(H_H))
+#endif
 
 #ifdef SCREENING
 
@@ -786,6 +805,7 @@
     ! Attractive-repulsive cut-off
     !
 
+#ifdef SPLINE_CUTOFF
     call init( &
          this%spl_fCar(C_C), &
          this%spl_n, this%cc_ar_r1, this%cc_ar_r2, &
@@ -798,11 +818,17 @@
          this%spl_fCar(H_H), &
          this%spl_n, this%hh_r1, this%hh_r2, &
          cutoff_f, this%cut_ar_l(H_H), this%cut_ar_h(H_H), this%cut_ar_m(H_H))
+#else
+    call init(this%spl_fCar(C_C), this%cut_ar_l(C_C), this%cut_ar_h(C_C))
+    call init(this%spl_fCar(C_H), this%cut_ar_l(C_H), this%cut_ar_h(C_H))
+    call init(this%spl_fCar(H_H), this%cut_ar_l(H_H), this%cut_ar_h(H_H))
+#endif
 
     !
     ! Bond-order cut-off
     !
 
+#ifdef SPLINE_CUTOFF
     call init( &
          this%spl_fCbo(C_C), &
          this%spl_n, this%cc_bo_r1, this%cc_bo_r2, &
@@ -815,11 +841,17 @@
          this%spl_fCbo(H_H), &
          this%spl_n, this%hh_r1, this%hh_r2, &
          cutoff_f, this%cut_bo_l(H_H), this%cut_bo_h(H_H), this%cut_bo_m(H_H))
+#else
+    call init(this%spl_fCbo(C_C), this%cut_bo_l(C_C), this%cut_bo_h(C_C))
+    call init(this%spl_fCbo(C_H), this%cut_bo_l(C_H), this%cut_bo_h(C_H))
+    call init(this%spl_fCbo(H_H), this%cut_bo_l(H_H), this%cut_bo_h(H_H))
+#endif
 
     !
     ! Neighbor and conjugation cut-off
     !
 
+#ifdef SPLINE_CUTOFF
     call init( &
          this%spl_fCnc(C_C), &
          this%spl_n, this%cc_nc_r1, this%cc_nc_r2, &
@@ -832,6 +864,11 @@
          this%spl_fCnc(H_H), &
          this%spl_n, this%hh_r1, this%hh_r2, &
          cutoff_f, this%cut_nc_l(H_H), this%cut_nc_h(H_H), this%cut_nc_m(H_H))
+#else
+    call init(this%spl_fCnc(C_C), this%cut_nc_l(C_C), this%cut_nc_h(C_C))
+    call init(this%spl_fCnc(C_H), this%cut_nc_l(C_H), this%cut_nc_h(C_H))
+    call init(this%spl_fCnc(H_H), this%cut_nc_l(H_H), this%cut_nc_h(H_H))
+#endif
 
 #endif
 

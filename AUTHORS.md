@@ -37,6 +37,15 @@ Authors and contributors
   Karlsruhe Institute of Technology, Fraunhofer IWM  
   Maintainer
 
+Bug fixes from
+--------------
+
+* Tom Daff
+
+* Thomas Reichenbach
+
+* Harry Turstall
+
 Parts of this code have been adopted from libAtoms.
 See http://www.libatoms.org/ for more information on contributors to
 libAtoms.

@@ -53,10 +53,16 @@ module cutoff
      module procedure trig_on_init, trig_off_init, exp_cutoff_init
   endinterface
 
+  ! FIXME: fc interface should become deprecated
   public :: fc
   interface fc
      module procedure trig_on_f, trig_off_f, exp_cutoff_f
   endinterface fc
+
+  public :: f_and_df
+  interface f_and_df
+     module procedure trig_on_f, trig_off_f, exp_cutoff_f
+  endinterface f_and_df
 
 contains
 
