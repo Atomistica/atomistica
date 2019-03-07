@@ -6,6 +6,7 @@
 !!
 !! ==========================================================
 module damp_short_gamma
+  use supplib
 
   implicit none
 
@@ -38,7 +39,7 @@ contains
   real(DP)             :: res
 
   fact = - (0.50_DP*(U_i + U_j))**(zeta - 1.0_DP)
-  res = - 0.50_DP*zeta*abs_rij**2*fact*hij(abs_rij, U_i, U_j)
+  res = - 0.50_DP*zeta*abs_rij**2*fact*hij(abs_rij, U_i, U_j, zeta)
 
   endfunction part_deriv_hij_wrt_Ui
 
@@ -50,7 +51,7 @@ contains
   real(DP)             :: res
 
   fact = - (0.50_DP*(U_i + U_j))**zeta
-  res = - 2.0_DP*abs_rij*fact*hij(abs_rij, U_i, U_j)
+  res = - 2.0_DP*abs_rij*fact*hij(abs_rij, U_i, U_j, zeta)
 
   endfunction part_deriv_hij_wrt_r
 
@@ -64,9 +65,8 @@ contains
   fact1 = - (0.50_DP*(U_i + U_j))**(zeta - 1.0_DP)
   fact2 = - (0.50_DP*(U_i + U_j))**zeta
 
-  res = zeta*abs_rij*fact1*(abs_rih**2*fact2 - 1.0_DP)*hij(abs_rij, U_i, U_j)
+  res = zeta*abs_rij*fact1*(abs_rij**2*fact2 - 1.0_DP)*hij(abs_rij, U_i, U_j, zeta)
 
   endfunction second_part_deriv_hij_wrt_Ui_and_r
 
-endmodule damp_short_gama
-
+endmodule damp_short_gamma

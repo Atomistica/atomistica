@@ -5,6 +5,7 @@
 !! Gaus et al. J. Chem. Theory Comput 7, 931 (2001).
 !!
 module coulomb_short_gamma
+  use supplib
 
   use damp_short_gamma
 

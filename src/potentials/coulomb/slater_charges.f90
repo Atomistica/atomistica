@@ -21,6 +21,7 @@
 
 ! @meta
 !   shared
+!   dependencies:damp_short_gamma.f90,coulomb_short_gamma.f90
 !   classtype:slater_charges_t classname:SlaterCharges interface:coulomb
 ! @endmeta
 
