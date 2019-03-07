@@ -400,6 +400,10 @@ contains
     real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
     character(4) :: name_i, name_j
 
+    real(DP)     :: zeta = 0.0_DP
+    logical      :: damp_gamma = .true.
+    logical      :: dftb3      = .true.
+
     integer             :: i, j
     integer(NEIGHPTR_T) :: ni
 
@@ -418,8 +422,10 @@ contains
     !$omp& shared(nl, this, phi, p, q) &
     !$omp& private(i, j, q_i, q_j, U_i, U_j, Z_i, Z_j) &
     !$omp& private(ni, abs_rij, hlp, src, fac, avg) &
-    !$omp& private(fac2, efac, fi1, fi2, fj1, fj2, expi, expj)
-
+    !$omp& private(fac2, efac, fi1, fi2, fj1, fj2, expi, expj) &
+    !$omp& private(name_i, dU_i, dq_i, name_j, dU_j, dq_j) &
+    !$omp& private(dftb3, damp_gamma, cgma_ac, cgma_bc, cgma_ca, cgma_cb, zeta) 
+     
     call tls_init(size(phi), sca=1)  ! is called tls_sca1 (=phi)
 
     !$omp do 
@@ -486,11 +492,11 @@ contains
 
                       if (dftb3) then
 
-                         if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+                         if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
 
                             cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta)
                             cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)    
-
+                 
                          else
  
                             cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j)
@@ -507,8 +513,6 @@ contains
                          tls_sca1(j) = tls_sca1(j) &
                                      + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
                                      + dq_i**2*cgma_cb/3.0_DP
-
-                         endif
 
                       endif
 
@@ -539,7 +543,7 @@ contains
 
                       if (dftb3) then
 
-                         if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+                         if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
 
                             cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta)
                             cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)    
@@ -561,8 +565,6 @@ contains
                                      + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
                                      + dq_i**2*cgma_cb/3.0_DP
 
-                         endif
-                     
                       endif
 
                    endif
@@ -621,9 +623,13 @@ contains
     !
 
     real(DP)     :: dU_i, dU_j, dq_i, dq_j
-    real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
+    !real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
     real(DP)     :: edftb3, fdftb3
     character(4) :: name_i, name_j
+
+    real(DP)     :: zeta = 0.0_DP
+    logical      :: damp_gamma = .true.
+    logical      :: dftb3      = .true.
 
     integer             :: i, j
     integer(NEIGHPTR_T) :: ni
@@ -715,15 +721,15 @@ contains
                         
                       if (dftb3) then
 
-                         if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+                         if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
  
                            fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta) &
-                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta))
                            
                          else
            
                            fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
-                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i)
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i))
                         
                          endif
 
@@ -764,15 +770,15 @@ contains
                         
                       if (dftb3) then
 
-                         if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+                         if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
  
                            fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta) &
-                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta))
                            
                          else
            
                            fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
-                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i)
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i))
                         
                          endif
 
@@ -791,13 +797,13 @@ contains
  
                    if (dftb3) then
                       
-                      if ((damp_gamma)&&((name_i=='H')||(name_j=='H'))) then
+                      if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
                       
-                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta)
+                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta))
                       
                       else
                       
-                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j)
+                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j))
                                          
                       endif
 

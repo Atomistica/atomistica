@@ -23,6 +23,7 @@ contains
   real(DP), intent(in)           :: dU_i
   real(DP), intent(in)           :: U_i, U_j
   real(DP), intent(in), optional :: zeta
+  real(DP)                       :: res
   
   if (present(zeta)) then
 
@@ -41,6 +42,7 @@ contains
   real(DP), intent(in)           :: dU_i
   real(DP), intent(in)           :: U_i, U_j
   real(DP), intent(in), optional :: zeta
+  real(DP)                       :: res
   
   if (present(zeta)) then
 
@@ -56,7 +58,7 @@ contains
 
   function short_gamma(abs_rij, U_i, U_j, zeta) result(res)
   real(DP), intent(in)           :: abs_rij
-  real(DP), intent(in)           :: U_ia, U_j
+  real(DP), intent(in)           :: U_i, U_j
   real(DP), intent(in), optional :: zeta
   real(DP)                       :: res
 
@@ -64,11 +66,11 @@ contains
     
      if (abs(U_i - U_j) < 1.0d-06) then
     
-        res = - Sgij(abs_rij, U_i)*hij(abs_rij, U_i, U_j) 
+        res = - Sgij(abs_rij, U_i)*hij(abs_rij, U_i, U_j, zeta) 
    
      else
      
-        res = - Sfij(abs_rij, U_i)*hij(abs_rij, U_i, U_j) 
+        res = - Sfij(abs_rij, U_i, U_j)*hij(abs_rij, U_i, U_j, zeta) 
      
      endif
 
@@ -80,7 +82,7 @@ contains
      
      else
      
-        res = - Sfij(abs_rij, U_i)
+        res = - Sfij(abs_rij, U_i, U_j)
      
      endif
      
@@ -92,7 +94,6 @@ contains
   real(DP), intent(in)           :: abs_rij
   real(DP), intent(in)           :: U_i, U_j
   real(DP), intent(in), optional :: zeta
-  real(DP)                       :: expi, expj
   real(DP)                       :: res
  
   if (present(zeta)) then
@@ -133,7 +134,6 @@ contains
   real(DP), intent(in)           :: abs_rij
   real(DP), intent(in)           :: U_i, U_j
   real(DP), intent(in), optional :: zeta
-  real(DP)                       :: expi, expj
   real(DP)                       :: res
 
   if (present(zeta)) then
@@ -176,13 +176,13 @@ contains
     
      if (abs(U_i - U_j) < 1.0d-06) then
    
-        res = - part_deriv_Sgij_wrt_r(abs_rij, U_i)*hij(abs_rij, U_i, U_j) &
-              - Sgij(abs_rij, U_i)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j)
+        res = - part_deriv_Sgij_wrt_r(abs_rij, U_i)*hij(abs_rij, U_i, U_j, zeta) &
+              - Sgij(abs_rij, U_i)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j, zeta)
     
      else 
     
-        res = - part_deriv_Sfij_wrt_r(abs_rij, U_i, U_j)*hij(abs_rij, U_i, U_j) &
-              - Sfij(abs_rij, U_i, U_j)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j)
+        res = - part_deriv_Sfij_wrt_r(abs_rij, U_i, U_j)*hij(abs_rij, U_i, U_j, zeta) &
+              - Sfij(abs_rij, U_i, U_j)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j, zeta)
     
      endif
 
@@ -202,10 +202,10 @@ contains
 
   endfunction part_deriv_sgamma_wrt_r
 
-  function second_part_deriv_Sfij_wrt_Ui_and_r(abs_rij, U_i) result(res)
+  function second_part_deriv_Sfij_wrt_Ui_and_r(abs_rij, U_i, U_j) result(res)
   real(DP), intent(in) :: abs_rij
   real(DP), intent(in) :: U_i, U_j
-  real(DP)             :: expi
+  real(DP)             :: expi, expj
   real(DP)             :: res
 
   expi =exp(-U_i*abs_rij)
@@ -244,13 +244,13 @@ contains
   expi = exp(-U_i*abs_rij)
   expj = exp(-U_j*abs_rij)
   
-  res = expi*part_deriv_fij_wrt_Ui(abs_rij, U_i, U_j) - abs_rij*expi*fij + expj*part_deriv_fij_wrt_Uj(abs_rij, U_j, U_i)
+  res = expi*part_deriv_fij_wrt_Ui(abs_rij, U_i, U_j) - abs_rij*expi*fij(abs_rij, U_i, U_j) + expj*part_deriv_fij_wrt_Uj(abs_rij, U_j, U_i)
 
   endfunction part_deriv_Sfij_wrt_Ui
 
   function part_deriv_Sgij_wrt_Ui(abs_rij, U_i) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia
+  real(DP), intent(in) :: U_i
   real(DP)             :: expi
   real(DP)             :: res
 
@@ -258,7 +258,7 @@ contains
    
   res = expi*part_deriv_gij_wrt_Ui(abs_rij, U_i) - abs_rij*expi*gij(abs_rij, U_i)
 
-  function part_deriv_Sgij_wrt_Ui
+  endfunction part_deriv_Sgij_wrt_Ui
 
   function part_deriv_Sfij_wrt_r(abs_rij, U_i, U_j) result(res)
   real(DP), intent(in) :: abs_rij
@@ -270,7 +270,7 @@ contains
   expj = exp(-U_j*abs_rij)
   
   res = expi*(part_deriv_fij_wrt_r(abs_rij, U_i, U_j) - U_i**fij(abs_rij, U_i, U_j)) &
-    & + expj*(part_deriv_fji_wrt_r(abs_rij, U_j, U_i) - U_j*fij(abs_rij, U_j, U_i))
+      + expj*(part_deriv_fij_wrt_r(abs_rij, U_j, U_i) - U_j**fij(abs_rij, U_j, U_i))
 
   endfunction part_deriv_Sfij_wrt_r
 
@@ -281,7 +281,7 @@ contains
   real(DP)             :: res
   
   expi = exp(-U_i*abs_rij)
-  res = expi*(part_deriv_gij_wrt_r(abs_rij) - U_i*gij(abs_rij, U_i))
+  res = expi*(part_deriv_gij_wrt_r(abs_rij, U_i) - U_i*gij(abs_rij, U_i))
 
   endfunction part_deriv_Sgij_wrt_r
 
@@ -298,11 +298,10 @@ contains
 
   endfunction  part_deriv_fij_wrt_r
 
-  function part_deriv_gij_wrt_r(abs_rij, U_i, U_j) result(res)
+  function part_deriv_gij_wrt_r(abs_rij, U_i) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_i, U_j
+  real(DP), intent(in) :: U_i
   real(DP)             :: res
-  real(DP)             :: term1, term2
 
   res = - 1.0_DP/abs_rij**2 + 3.0_DP/16.0_DP*U_i**2 + 1.0_DP/24.0_DP*U_i**3*abs_rij
 
@@ -310,7 +309,7 @@ contains
 
   function Sfij(abs_rij, U_i, U_j) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia, U_j
+  real(DP), intent(in) :: U_i, U_j
   real(DP)             :: expi, expj
   real(DP)             :: res
   
@@ -325,7 +324,7 @@ contains
 
   function Sgij(abs_rij, U_i) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia
+  real(DP), intent(in) :: U_i
   real(DP)             :: expi
   real(DP)             :: res
   
@@ -336,8 +335,7 @@ contains
 
   function fij(abs_rij, U_i, U_j) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia, U_j
-  real(DP)             :: expi, expj
+  real(DP), intent(in) :: U_i, U_j
   real(DP)             :: res
 
   real(DP)             :: term1, term2, term3, term4
@@ -354,7 +352,7 @@ contains
 
   function gij(abs_rij, U_i) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia
+  real(DP), intent(in) :: U_i
   real(DP)             :: res
   real(DP)             :: uir
    
@@ -366,8 +364,7 @@ contains
 
   function part_deriv_fij_wrt_Ui(abs_rij, U_i, U_j) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia, U_j
-  real(DP)             :: expi, expj
+  real(DP), intent(in) :: U_i, U_j
   real(DP)             :: res
   real(DP)             :: term1, term2, term3, term4  
 
@@ -385,8 +382,7 @@ contains
 
   function part_deriv_fij_wrt_Uj(abs_rij, U_i, U_j) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia, U_j
-  real(DP)             :: expi, expj
+  real(DP), intent(in) :: U_i, U_j
   real(DP)             :: res
   real(DP)             :: term1, term2, term3, term4
 
@@ -404,8 +400,9 @@ contains
 
   function part_deriv_gij_wrt_Ui(abs_rij, U_i) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia
+  real(DP), intent(in) :: U_i 
   real(DP)             :: res
+  real(DP)             :: uir
 
   uir = U_i*abs_rij
   res = 33.0_DP + (18.0_DP + 3.0_DP*uir)*uir
@@ -415,7 +412,7 @@ contains
 
   function second_part_deriv_gij_wrt_Ui_and_r(abs_rij, U_i) result(res)
   real(DP), intent(in) :: abs_rij
-  real(DP), intent(in) :: U_ia
+  real(DP), intent(in) :: U_i 
   real(DP)             :: res
 
   res = (3.0_DP + U_i*abs_rij)*U_i/8.0_DP
