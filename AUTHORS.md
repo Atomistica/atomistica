@@ -21,6 +21,10 @@ Authors and contributors
   University of Jyvaskyla  
   Non-orthogonal tight-binding code
 
+* Takuya Kuwahara
+  Fraunhofer IWM
+  DFTB3
+
 * Tim Kunze  
   Technische Universitaet Dresden, Helmholtz-Zentrum Dresden Rossendorf  
   LAMMPS interface
@@ -33,8 +37,8 @@ Authors and contributors
   Fraunhofer IWM  
   Initial serial MD code
 
-* Lars Pastewka (lars.pastewka@kit.edu)  
-  Karlsruhe Institute of Technology, Fraunhofer IWM  
+* Lars Pastewka (lars.pastewka@imtek.uni-freiburg.de)  
+  University of Freiburg  
   Maintainer
 
 Bug fixes from
