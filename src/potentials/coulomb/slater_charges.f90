@@ -894,11 +894,11 @@ contains
          c_loc11(this%db%el), 2, SLATER_CHARGES_MAX_EL, c_loc(this%db%nel), &
          CSTR("el"), CSTR("List of element symbols."))
 
-    call prtdict_register_boolean_property(m, c_loc(this%dftb3), &
+    call ptrdict_register_boolean_property(m, c_loc(this%dftb3), &
          CSTR("dftb3"), &
          CSTR("Enable DFTB3's nonlinear Hubbard U."))
 
-    call prtdict_register_boolean_property(m, c_loc(this%damp_gamma), &
+    call ptrdict_register_boolean_property(m, c_loc(this%damp_gamma), &
          CSTR("damp_gamma"), &
          CSTR("Enable DFTB3's damping of interaction with Hydrogen atoms."))
     call ptrdict_register_real_property(m, c_loc(this%zeta), &
