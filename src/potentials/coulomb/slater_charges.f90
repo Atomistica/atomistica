@@ -83,7 +83,7 @@ module slater_charges
      real(DP)  :: Z(SLATER_CHARGES_MAX_EL)       !< Nuclear charge
 
      ! for DFTB3
-     real(DP)  :: dU(SLATER_CHARGES_MAX_EL)      !< Hubbard derivative with respect to atomic charge
+     real(DP)  :: dU(0:116) = 0.0_DP             !< Hubbard derivative with respect to atomic charge
  
   endtype slater_charges_db_t
 
@@ -103,6 +103,16 @@ module slater_charges
 
      real(DP) :: cutoff = 5.0_DP
      real(DP) :: cutoff_sq
+
+     !
+     ! DFTB3
+     !
+
+     logical   :: dftb3 = .false.
+
+     logical   :: damp_gamma = .false.
+     real(DP)  :: zeta = 4.0
+
 
      !
      ! Hubbard-U
@@ -324,6 +334,7 @@ contains
     !
 
     call resize(this%U, p%nel)
+    call resize(this%dU, p%nel)
     call resize(this%Z, p%nel)
 
     this%U = 0.0_DP
@@ -339,8 +350,13 @@ contains
              if (Z == p%el2Z(j)) then
                 call prlog("     " // ElementName(Z) // " - " // j)
                 this%U(j)  = this%db%U(i) / (Hartree*Bohr)
+                this%dU(j) = this%db%dU(Z) / (Hartree*Bohr)
                 this%Z(j)  = this%db%Z(i)
-                call prlog("     - U = " // this%db%U(i) // ", (U = " // this%U(j) // "), Z = " // this%db%Z(i))
+                if (this%dftb3) then
+                   call prlog("     - U = " // this%db%U(i) // ", dU = " // this%db%dU(Z) // " (U = " // this%U(j) // ", dU = " // this%dU(j) // "), Z = " // this%db%Z(i))
+                else
+                   call prlog("     - U = " // this%db%U(i) // ", (U = " // this%U(j) // "), Z = " // this%db%Z(i))
+                endif
              endif
           enddo
        enddo
@@ -398,13 +414,8 @@ contains
 
     real(DP)     :: dU_i, dU_j, dq_i, dq_j
     real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
-    character(4) :: name_i, name_j
 
-    real(DP)     :: zeta = 0.0_DP
-    logical      :: damp_gamma = .true.
-    logical      :: dftb3      = .true.
-
-    integer             :: i, j
+    integer             :: i, j, atomic_number_i, atomic_number_j
     integer(NEIGHPTR_T) :: ni
 
     !---
@@ -423,8 +434,8 @@ contains
     !$omp& private(i, j, q_i, q_j, U_i, U_j, Z_i, Z_j) &
     !$omp& private(ni, abs_rij, hlp, src, fac, avg) &
     !$omp& private(fac2, efac, fi1, fi2, fj1, fj2, expi, expj) &
-    !$omp& private(name_i, dU_i, dq_i, name_j, dU_j, dq_j) &
-    !$omp& private(dftb3, damp_gamma, cgma_ac, cgma_bc, cgma_ca, cgma_cb, zeta) 
+    !$omp& private(atomic_number_i, atomic_number_j, dU_i, dq_i, dU_j, dq_j) &
+    !$omp& private(cgma_ac, cgma_bc, cgma_ca, cgma_cb) 
      
     call tls_init(size(phi), sca=1)  ! is called tls_sca1 (=phi)
 
@@ -437,7 +448,7 @@ contains
           U_i = this%U(p%el(i))
           Z_i = this%Z(p%el(i))
 
-          name_i = p%sym(i)
+          atomic_number_i = p%Z(i)
           dU_i = this%dU(p%el(i))
           dq_i = q_i - Z_i 
 
@@ -456,7 +467,7 @@ contains
                    U_j = this%U(p%el(j))
                    Z_j = this%Z(p%el(j))
 
-                   name_j = p%sym(j)
+                   atomic_number_j = p%Z(j)
                    dU_j = this%dU(p%el(j))
                    dq_j = q_j - Z_j 
 
@@ -490,12 +501,12 @@ contains
                       ! DFTB3 Hamiltonian
                       !
 
-                      if (dftb3) then
+                      if (this%dftb3) then
 
-                         if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
+                         if (this%damp_gamma .and. (Z_i == 1 .or. Z_j == 1)) then
 
-                            cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta)
-                            cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)    
+                            cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta)
+                            cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta)    
                  
                          else
  
@@ -541,12 +552,12 @@ contains
                       ! DFTB3 Hamiltonian
                       !
 
-                      if (dftb3) then
+                      if (this%dftb3) then
 
-                         if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
+                         if (this%damp_gamma .and. (Z_i == 1 .or. Z_j == 1)) then
 
-                            cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta)
-                            cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta)    
+                            cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta)
+                            cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta)    
   
                          else
 
@@ -580,7 +591,7 @@ contains
           ! DFTB3 on-site correction
           !          
    
-          if (dftb3) tls_sca1(i) = tls_sca1(i) + 0.50_DP*dU_i
+          if (this%dftb3) tls_sca1(i) = tls_sca1(i) + 0.50_DP*dU_i
                   
        endif
 
@@ -625,13 +636,8 @@ contains
     real(DP)     :: dU_i, dU_j, dq_i, dq_j
     !real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
     real(DP)     :: edftb3, fdftb3
-    character(4) :: name_i, name_j
 
-    real(DP)     :: zeta = 0.0_DP
-    logical      :: damp_gamma = .true.
-    logical      :: dftb3      = .true.
-
-    integer             :: i, j
+    integer             :: i, j, atomic_number_i, atomic_number_j
     integer(NEIGHPTR_T) :: ni
 
     !---
@@ -653,7 +659,7 @@ contains
           U_i = this%U(p%el(i))
           Z_i = this%Z(p%el(i))
 
-          name_i = p%sym(i)
+          atomic_number_i = p%Z(i)
           dU_i = this%dU(p%el(i))
           dq_i = q_i - Z_i
 
@@ -674,7 +680,7 @@ contains
                    U_j = this%U(p%el(j))
                    Z_j = this%Z(p%el(j))
 
-                   name_j = p%sym(j)
+                   atomic_number_j = p%Z(j)
                    dU_j = this%dU(p%el(j))
                    dq_j = q_j - Z_j
 
@@ -719,12 +725,12 @@ contains
                       ! DFTB3 term
                       !
                         
-                      if (dftb3) then
+                      if (this%dftb3) then
 
-                         if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
+                         if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
  
-                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta) &
-                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta))
+                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta) &
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta))
                            
                          else
            
@@ -768,12 +774,12 @@ contains
                       ! DFTB3 term
                       !
                         
-                      if (dftb3) then
+                      if (this%dftb3) then
 
-                         if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
+                         if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
  
-                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta) &
-                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, zeta))
+                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta) &
+                                                 + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta))
                            
                          else
            
@@ -795,11 +801,11 @@ contains
                    ! DFTB3 
                    !
  
-                   if (dftb3) then
+                   if (this%dftb3) then
                       
-                      if ((damp_gamma).and.((name_i=='H').or.(name_j=='H'))) then
+                      if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
                       
-                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, zeta))
+                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta))
                       
                       else
                       
@@ -841,7 +847,7 @@ contains
           ! DFTB3 on-site correction
           !          
    
-          if (dftb3) tls_sca1(i) = tls_sca1(i) + 1.0_DP/3.0_DP*dq_i**3*dU_i
+          if (this%dftb3) tls_sca1(i) = tls_sca1(i) + 1.0_DP/3.0_DP*dq_i**3*dU_i
                   
        endif
 
@@ -866,6 +872,12 @@ contains
 
     ! ---
 
+    type(c_ptr) :: subm
+
+    integer :: i
+
+    ! ---
+
     m = ptrdict_register_section(cfg, CSTR("SlaterCharges"), &
          CSTR("This module assigns a Slater (exponential) shape to each charge and compute coulomb and nuclear repulsion integrals."))
 
@@ -882,12 +894,32 @@ contains
          c_loc11(this%db%el), 2, SLATER_CHARGES_MAX_EL, c_loc(this%db%nel), &
          CSTR("el"), CSTR("List of element symbols."))
 
+    call prtdict_register_boolean_property(m, c_loc(this%dftb3), &
+         CSTR("dftb3"), &
+         CSTR("Enable DFTB3's nonlinear Hubbard U."))
+
+    call prtdict_register_boolean_property(m, c_loc(this%damp_gamma), &
+         CSTR("damp_gamma"), &
+         CSTR("Enable DFTB3's damping of interaction with Hydrogen atoms."))
+    call ptrdict_register_real_property(m, c_loc(this%zeta), &
+         CSTR("zeta"), &
+         CSTR("Exponent of damping function."))
+
     call ptrdict_register_list_property(m, &
          c_loc1(this%db%U), SLATER_CHARGES_MAX_EL, c_loc(this%db%nU), &
          CSTR("U"), CSTR("Hubbard U."))
     call ptrdict_register_list_property(m, &
          c_loc1(this%db%Z), SLATER_CHARGES_MAX_EL, c_loc(this%db%nZ), &
          CSTR("Z"), CSTR("Nuclear charge."))
+
+    subm = ptrdict_register_section(m, CSTR("HubbardDerivatives"), &
+         CSTR("Derivative of Hubbard-U for DFTB3."))
+
+    do i = 1, 116
+       call ptrdict_register_real_property(subm, c_loc(this%db%dU(i)), &
+            CSTR(trim(ElementName(i))), &
+            CSTR("Derivative of Hubbard-U for element "//trim(ElementName(i))//"."))
+    enddo
 
   endsubroutine slater_charges_register
 
