@@ -362,7 +362,7 @@
        call del(this%Pch)
        call del(this%Tcc)
 
-#ifdef SPLINE_CUTOFF
+#ifdef SPLINE_POTENTIAL
        call del(this%spl_VA(C_C))
        call del(this%spl_VA(C_H))
        call del(this%spl_VA(H_H))
@@ -370,7 +370,9 @@
        call del(this%spl_VR(C_C))
        call del(this%spl_VR(C_H))
        call del(this%spl_VR(H_H))
+#endif
 
+#ifdef SPLINE_CUTOFF
        call del(this%spl_fCin(C_C))
        call del(this%spl_fCin(C_H))
        call del(this%spl_fCin(H_H))
