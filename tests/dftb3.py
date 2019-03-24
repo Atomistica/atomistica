@@ -81,6 +81,12 @@ def run_dftb3_test(test=None):
     mio_database_folder = os.getenv('MIO')
     if mio_database_folder is None:
         raise RuntimeError('Please use environment variable MIO to specify path to mio Slater-Koster tables.')
+    dftb3_database_folder = os.getenv('DFTB3')
+    if dftb3_database_folder is None:
+        raise RuntimeError('Please use environment variable DFTB3 to specify path to 3ob Slater-Koster tables.')
+
+    print('mio (DFTB2) folder: {}'.format(mio_database_folder))
+    print('3ob (DFTB3) folder: {}'.format(dftb3_database_folder))
 
     mio_calc = Atomistica(
         [ native.TightBinding(
@@ -94,6 +100,22 @@ def run_dftb3_test(test=None):
         ),
           native.DirectCoulomb(),
           native.SlaterCharges(cutoff=10.0) ],
+        avgn = 1000
+        )
+
+    dftb3_calc = Atomistica(
+        [ native.TightBinding(
+        database_folder = dftb3_database_folder,
+        SolverLAPACK = dict(electronic_T=0.001),
+        SCC = dict(dq_crit = 1e-4,
+                   mixing = 0.2, # 0.2
+                   andersen_memory = 3, # 3
+                   maximum_iterations = 100,
+                   log = True)
+        ),
+          native.DirectCoulomb(),
+          native.SlaterCharges(cutoff=10.0, dftb3=True, damp_gamma=True,
+                               HubbardDerivatives=dict(H=-0.1857, O=-0.1575)) ],
         avgn = 1000
         )
 
@@ -117,12 +139,18 @@ def run_dftb3_test(test=None):
         a.center(vacuum=10.0)
         a.set_calculator(mio_calc)
         FIRE(a).run(fmax=0.001)
-        e = a.get_potential_energy()
+        e_DFTB2 = a.get_potential_energy()
 
-        e = (e - e0)/(ase.units.kcal/ase.units.mol)
+        e_DFTB2 = (e_DFTB2 - e0)/(ase.units.kcal/ase.units.mol)
+
+        a.set_calculator(dftb3_calc)
+        FIRE(a).run(fmax=0.001)
+        e_DFTB3 = a.get_potential_energy()
+
+        e_DFTB3 = (e_DFTB3 - e0)/(ase.units.kcal/ase.units.mol)
 
         if test is None:
-            print('{0:>20} {1:>20.10f} {2:>20.10f} {3:>20.10f}'.format(name, eref_G3B3, e - eref_G3B3, eref_DFTB2))
+            print('{0:>20} {1:>20.10f} {2:>20.10f} {3:>20.10f} {4:>20.10f} {5:>20.10f}'.format(name, eref_G3B3, e_DFTB2 - eref_G3B3, eref_DFTB2, e_DFTB3 - eref_G3B3, eref_DFTB3))
         else:
             test.assertAlmostEqual(e - eref_G3B3, eref_DFTB2)
 
