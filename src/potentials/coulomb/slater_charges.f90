@@ -309,7 +309,12 @@ contains
     ! ---
 
     call prlog("- slater_charges_bind_to -")
-    call prlog("elements = " // trim(this%elements))
+    call prlog("elements   = " // trim(this%elements))
+    call prlog("dftb3      = " // this%dftb3)
+    if (this%dftb3) then
+       call prlog("damp_gamma = " // this%damp_gamma)
+       call prlog("zeta       = " // this%zeta)
+    endif
 
     this%els  = filter_from_string(this%elements, p, ierror=ierror)
     PASS_ERROR(ierror)
@@ -337,6 +342,14 @@ contains
     call resize(this%dU, p%nel)
     call resize(this%Z, p%nel)
 
+    if (this%dftb3) then
+       call prlog("element Hubbard-U (in Hartree) (in eV) derivative (in Hartree) (in eV) nuclear charge")
+       call prlog("=======           ============ =======            ============ ======= ==============")
+    else
+       call prlog("element Hubbard-U (in Hartree) (in eV) nuclear charge")
+       call prlog("=======           ============ ======= ==============")
+    endif
+
     this%U = 0.0_DP
     this%Z = 0.0_DP
     if (this%db%nel > 0) then
@@ -348,25 +361,32 @@ contains
              endif
 
              if (Z == p%el2Z(j)) then
-                call prlog("     " // ElementName(Z) // " - " // j)
                 this%U(j)  = this%db%U(i) / (Hartree*Bohr)
                 this%dU(j) = this%db%dU(Z) / (Hartree*Bohr)
                 this%Z(j)  = this%db%Z(i)
                 if (this%dftb3) then
-                   call prlog("     - U = " // this%db%U(i) // ", dU = " // this%db%dU(Z) // " (U = " // this%U(j) // ", dU = " // this%dU(j) // "), Z = " // this%db%Z(i))
+                   write (ilog, '(5X,A7,11X,F12.3,F8.3,12X,F12.3,F8.3,F15.3)') ElementName(Z), this%db%U(i), this%U(j), this%db%dU(Z), this%dU(j), this%db%Z(i)
                 else
-                   call prlog("     - U = " // this%db%U(i) // ", (U = " // this%U(j) // "), Z = " // this%db%Z(i))
+                   write (ilog, '(5X,A7,11X,F12.3,F8.3,F15.3)') ElementName(Z), this%db%U(i), this%U(j), this%db%Z(i)
                 endif
              endif
           enddo
        enddo
     else
-       if (this%db%nU > 0) then
-          this%U(1:this%db%nU) = this%db%U(1:this%db%nU) / (Hartree*Bohr)
-       endif          
-       if (this%db%nZ > 0) then
-          this%Z(1:this%db%nZ) = this%db%Z(1:this%db%nZ)
+       if (this%db%nU /= p%nel .or. this%db%nZ /= p%nel) then
+          RAISE_ERROR("this%db%nU /= p%nel .or. this%db%nZ /= p%nel", ierror)
        endif
+       do i = 1, p%nel
+          Z = p%el2Z(i)
+          this%U(i)  = this%db%U(i) / (Hartree*Bohr)
+          this%dU(i) = this%db%dU(Z) / (Hartree*Bohr)
+          this%Z(i)  = this%db%Z(i)
+          if (this%dftb3) then
+             write (ilog, '(5X,A7,11X,F12.3,F8.3,12X,F12.3,F8.3,F15.3)') ElementName(Z), this%db%U(i), this%U(i), this%db%dU(Z), this%dU(i), this%db%Z(i)
+          else
+             write (ilog, '(5X,A7,11X,F12.3,F8.3,F15.3)') ElementName(Z), this%db%U(i), this%U(i), this%db%Z(i)
+          endif
+       enddo
     endif
 
     ! U_i is converted such that the charge is f_i(r) ~ exp(-U_i r), i.e.
