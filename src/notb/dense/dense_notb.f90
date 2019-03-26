@@ -630,7 +630,10 @@ contains
     call forces(p, nl, this%tb, this%mat, f, wpot, wpot_per_bond, error=ierror)
     PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
     epot  = epot + e_bs(this%solver, this%tb) + &
-         e_rep(this%tb, this%mat, p, nl) - e_atomic(this%tb, p)
+         e_rep(this%tb, this%mat, p, nl) - e_atomic(this%tb, p) 
+
+    !! TEST tkuwa
+    write(*,*) "totene", e_bs(this%solver, this%tb), e_rep(this%tb, this%mat, p, nl)
 
     call timer_stop("dense_notb_energy_and_forces")
 

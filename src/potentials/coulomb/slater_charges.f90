@@ -61,6 +61,7 @@ module slater_charges
   ! DFTB3
   !
   use coulomb_short_gamma
+  use damp_short_gamma
  
   implicit none
 
@@ -379,7 +380,8 @@ contains
        do i = 1, p%nel
           Z = p%el2Z(i)
           this%U(i)  = this%db%U(i) / (Hartree*Bohr)
-          this%dU(i) = this%db%dU(Z) / (Hartree*Bohr)
+         !this%dU(i) = this%db%dU(Z) / (Hartree*Bohr)
+          this%dU(i) = this%db%dU(Z) / (Bohr)
           this%Z(i)  = this%db%Z(i)
           if (this%dftb3) then
              write (ilog, '(5X,A7,11X,F12.3,F8.3,12X,F12.3,F8.3,F15.3)') ElementName(Z), this%db%U(i), this%U(i), this%db%dU(Z), this%dU(i), this%db%Z(i)
@@ -434,6 +436,7 @@ contains
 
     real(DP)     :: dU_i, dU_j, dq_i, dq_j
     real(DP)     :: cgma_ac, cgma_bc, cgma_ca, cgma_cb
+    real(DP)     :: arg1, arg2, arg3, arg4
 
     integer             :: i, j, atomic_number_i, atomic_number_j
     integer(NEIGHPTR_T) :: ni
@@ -455,7 +458,8 @@ contains
     !$omp& private(ni, abs_rij, hlp, src, fac, avg) &
     !$omp& private(fac2, efac, fi1, fi2, fj1, fj2, expi, expj) &
     !$omp& private(atomic_number_i, atomic_number_j, dU_i, dq_i, dU_j, dq_j) &
-    !$omp& private(cgma_ac, cgma_bc, cgma_ca, cgma_cb) 
+    !$omp& private(cgma_ac, cgma_bc, cgma_ca, cgma_cb) &
+    !$omp& private(arg1, arg2, arg3, arg4) 
      
     call tls_init(size(phi), sca=1)  ! is called tls_sca1 (=phi)
 
@@ -514,6 +518,15 @@ contains
                       efac = exp(-fac)/(48*abs_rij)
 
                       hlp = -(48 + 33*fac + fac2*(9+fac))*efac
+
+                      !
+                      ! XH correction
+                      !
+
+                      if (this%damp_gamma) then
+                         hlp = hlp*hij(abs_rij, U_i, U_j, this%zeta)
+                      endif
+
                       tls_sca1(i) = tls_sca1(i) + dq_j*hlp
                       tls_sca1(j) = tls_sca1(j) + dq_i*hlp
 
@@ -523,7 +536,7 @@ contains
 
                       if (this%dftb3) then
 
-                         if (this%damp_gamma .and. (Z_i == 1 .or. Z_j == 1)) then
+                         if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
 
                             cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta)
                             cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta)    
@@ -537,13 +550,13 @@ contains
 
                          cgma_bc = cgma_ca
                          cgma_cb = cgma_ac 
-                 
+ 
                          tls_sca1(i) = tls_sca1(i) &
-                                     + dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
-                                     + dq_j**2*cgma_ca/3.0_DP
+                                     - dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
+                                     - dq_j**2*cgma_ca/3.0_DP
                          tls_sca1(j) = tls_sca1(j) &
-                                     + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
-                                     + dq_i**2*cgma_cb/3.0_DP
+                                     - dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
+                                     - dq_i**2*cgma_cb/3.0_DP
 
                       endif
 
@@ -565,6 +578,15 @@ contains
                       expj = exp(-U_j*abs_rij)
 
                       hlp = expi*(fi1+fi2/abs_rij) + expj*(fj1+fj2/abs_rij)
+
+                      !
+                      ! XH correction
+                      !
+
+                      if (this%damp_gamma) then
+                        hlp = hlp*hij(abs_rij, U_i, U_j, this%zeta)
+                      endif
+
                       tls_sca1(i) = tls_sca1(i) + (q_j-Z_j)*hlp
                       tls_sca1(j) = tls_sca1(j) + (q_i-Z_i)*hlp
 
@@ -574,7 +596,7 @@ contains
 
                       if (this%dftb3) then
 
-                         if (this%damp_gamma .and. (Z_i == 1 .or. Z_j == 1)) then
+                         if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
 
                             cgma_ac = capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta)
                             cgma_ca = capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta)    
@@ -588,13 +610,13 @@ contains
 
                          cgma_bc = cgma_ca
                          cgma_cb = cgma_ac 
-                 
+                      
                          tls_sca1(i) = tls_sca1(i) &
-                                     + dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
-                                     + dq_j**2*cgma_ca/3.0_DP
+                                     - dq_i*dq_j*cgma_ac*2.0_DP/3.0_DP &
+                                     - dq_j**2*cgma_ca/3.0_DP
                          tls_sca1(j) = tls_sca1(j) &
-                                     + dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
-                                     + dq_i**2*cgma_cb/3.0_DP
+                                     - dq_j*dq_i*cgma_bc*2.0_DP/3.0_DP &
+                                     - dq_i**2*cgma_cb/3.0_DP
 
                       endif
 
@@ -606,12 +628,13 @@ contains
           enddo Slater_ni_loop
 
           tls_sca1(i) = tls_sca1(i) + 5*q_i*U_i/16
-          
+   
           !
           ! DFTB3 on-site correction
-          !          
-   
-          if (this%dftb3) tls_sca1(i) = tls_sca1(i) + 0.50_DP*dU_i
+          ! 
+          ! The minus sign is necessary since H_ij = H0_ij - 0.5*S_ij*(phi_a + phi_b) 
+          ! in dense_solver_lapack.f90
+          if (this%dftb3) tls_sca1(i) = tls_sca1(i) - 0.50_DP*q_i**2*dU_i
                   
        endif
 
@@ -798,12 +821,12 @@ contains
 
                          if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
  
-                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta) &
+                           fdftb3 = - 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta) &
                                                  + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta))
                            
                          else
            
-                           fdftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
+                           fdftb3 = - 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
                                                  + dq_i*dq_j*dq_j*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i))
                         
                          endif
@@ -825,11 +848,11 @@ contains
                       
                       if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
                       
-                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta))
+                         edftb3 = - 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta))
                       
                       else
                       
-                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j))
+                         edftb3 = - 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j))
                                          
                       endif
 
@@ -866,8 +889,8 @@ contains
           !
           ! DFTB3 on-site correction
           !          
-   
-          if (this%dftb3) tls_sca1(i) = tls_sca1(i) + 1.0_DP/3.0_DP*dq_i**3*dU_i
+ 
+          if (this%dftb3) epot = epot - q_i**3*dU_i/6.0_DP
                   
        endif
 

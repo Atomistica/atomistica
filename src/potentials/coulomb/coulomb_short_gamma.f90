@@ -157,7 +157,7 @@ contains
         res =  - 3.20_DP*part_deriv_Sgij_wrt_Ui(abs_rij, U_i)
    
      else
-    
+ 
         res =  - 3.20_DP*part_deriv_Sfij_wrt_Ui(abs_rij, U_i, U_j)
 
      endif
@@ -244,7 +244,9 @@ contains
   expi = exp(-U_i*abs_rij)
   expj = exp(-U_j*abs_rij)
   
-  res = expi*part_deriv_fij_wrt_Ui(abs_rij, U_i, U_j) - abs_rij*expi*fij(abs_rij, U_i, U_j) + expj*part_deriv_fij_wrt_Uj(abs_rij, U_j, U_i)
+  res = expi*part_deriv_fij_wrt_Ui(abs_rij, U_i, U_j) &
+      - abs_rij*expi*fij(abs_rij, U_i, U_j) &
+      + expj*part_deriv_fij_wrt_Uj(abs_rij, U_j, U_i)
 
   endfunction part_deriv_Sfij_wrt_Ui
 
@@ -387,7 +389,7 @@ contains
   real(DP)             :: term1, term2, term3, term4
 
   term1 = 2.0_DP*U_i**3*U_j**3
-  term2 = 2.0_DP*(U_i**2 - U_j**2)**3
+  term2 = (U_i**2 - U_j**2)**3
 
   term3 = 12.0_DP*U_i**4*U_j**3
   term4 = (U_i**2 - U_j**2)**4*abs_rij
