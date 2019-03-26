@@ -15,6 +15,7 @@ module coulomb_short_gamma
   
   public :: capital_short_gamma
   public :: derivative_capital_short_gamma
+  public :: Sfij, Sgij 
 
 contains
  
@@ -217,7 +218,7 @@ contains
                     - abs_rij*part_deriv_fij_wrt_r(abs_rij, U_i, U_j)) &
               + expj*(second_part_deriv_fij_wrt_Uj_and_r(abs_rij, U_j, U_i) &
                     - U_j*part_deriv_fij_wrt_Uj(abs_rij, U_j, U_i)))
-
+ 
   endfunction second_part_deriv_Sfij_wrt_Ui_and_r
 
   function second_part_deriv_Sgij_wrt_Ui_and_r(abs_rij, U_i) result(res)
@@ -271,8 +272,8 @@ contains
   expi = exp(-U_i*abs_rij)
   expj = exp(-U_j*abs_rij)
   
-  res = expi*(part_deriv_fij_wrt_r(abs_rij, U_i, U_j) - U_i**fij(abs_rij, U_i, U_j)) &
-      + expj*(part_deriv_fij_wrt_r(abs_rij, U_j, U_i) - U_j**fij(abs_rij, U_j, U_i))
+  res = expi*(part_deriv_fij_wrt_r(abs_rij, U_i, U_j) - U_i*fij(abs_rij, U_i, U_j)) &
+      + expj*(part_deriv_fij_wrt_r(abs_rij, U_j, U_i) - U_j*fij(abs_rij, U_j, U_i))
 
   endfunction part_deriv_Sfij_wrt_r
 

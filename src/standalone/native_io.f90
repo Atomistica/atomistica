@@ -1887,6 +1887,7 @@ contains
        i  = p%global2local(g)
        if (associated(f)) then
           write(un, '(1X,3ES20.10)')  VEC(f, i, 1), VEC(f, i, 2), VEC(f, i, 3)
+          write(*,*) VEC(f, i, 1)/Hartree*Bohr, VEC(f, i, 2)/Hartree*Bohr, VEC(f, i, 3)/Hartree*Bohr
        else
           write(un, '(1X,3ES20.10)')  0.0_DP, 0.0_DP, 0.0_DP
        endif

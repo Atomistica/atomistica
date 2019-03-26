@@ -27,15 +27,15 @@ contains
   real(DP)             :: res
   real(DP)             :: efact
  
-  U_i = (5.0_DP/16.0_DP)*tau_i
-  U_j = (5.0_DP/16.0_DP)*tau_j
+  U_i     = (5.0_DP/16.0_DP)*tau_i
+  U_j     = (5.0_DP/16.0_DP)*tau_j
   
   abs_rij = rij/Bohr
-  U_i = U_i*Bohr
-  U_j = U_j*Bohr
+  U_i     = U_i*Bohr
+  U_j     = U_j*Bohr
 
-  efact = - (0.50_DP*(U_i + U_j))**zeta
-  res = exp(efact*abs_rij**2)
+  efact   = - (0.50_DP*(U_i + U_j))**zeta
+  res     = exp(efact*abs_rij**2)
 
   endfunction hij
 
@@ -47,15 +47,15 @@ contains
   real(DP)             :: fact
   real(DP)             :: res
 
-  U_i = (5.0_DP/16.0_DP)*tau_i
-  U_j = (5.0_DP/16.0_DP)*tau_j
+  U_i     = (5.0_DP/16.0_DP)*tau_i
+  U_j     = (5.0_DP/16.0_DP)*tau_j
 
   abs_rij = rij/Bohr
-  U_i = U_i*Bohr
-  U_j = U_j*Bohr
+  U_i     = U_i*Bohr
+  U_j     = U_j*Bohr
 
-  fact = (0.50_DP*(U_i + U_j))**(zeta - 1.0_DP)
-  res = - 0.50_DP*zeta*abs_rij**2*fact*hij(rij, tau_i, tau_j, zeta)
+  fact    = (0.50_DP*(U_i + U_j))**(zeta - 1.0_DP)
+  res     = - 0.50_DP*zeta*abs_rij**2*fact*hij(rij, tau_i, tau_j, zeta)
 
   endfunction part_deriv_hij_wrt_Ui
 
@@ -67,15 +67,15 @@ contains
   real(DP)             :: fact
   real(DP)             :: res
 
-  U_i = (5.0_DP/16.0_DP)*tau_i
-  U_j = (5.0_DP/16.0_DP)*tau_j
+  U_i     = (5.0_DP/16.0_DP)*tau_i
+  U_j     = (5.0_DP/16.0_DP)*tau_j
 
   abs_rij = rij/Bohr
-  U_i = U_i*Bohr
-  U_j = U_j*Bohr
+  U_i     = U_i*Bohr
+  U_j     = U_j*Bohr
 
-  fact = - (0.50_DP*(U_i + U_j))**zeta
-  res = - 2.0_DP*abs_rij*fact*hij(rij, tau_i, tau_j, zeta)
+  fact    = (0.50_DP*(U_i + U_j))**zeta
+  res     = - 2.0_DP*abs_rij*fact*hij(rij, tau_i, tau_j, zeta)
 
   endfunction part_deriv_hij_wrt_r
 
@@ -87,17 +87,17 @@ contains
   real(DP)             :: fact1, fact2
   real(DP)             :: res
 
-  U_i = (5.0_DP/16.0_DP)*tau_i
-  U_j = (5.0_DP/16.0_DP)*tau_j
+  U_i     = (5.0_DP/16.0_DP)*tau_i
+  U_j     = (5.0_DP/16.0_DP)*tau_j
 
   abs_rij = rij/Bohr
-  U_i = U_i*Bohr
-  U_j = U_j*Bohr
+  U_i     = U_i*Bohr
+  U_j     = U_j*Bohr
 
-  fact1 = - (0.50_DP*(U_i + U_j))**(zeta - 1.0_DP)
-  fact2 = - (0.50_DP*(U_i + U_j))**zeta
+  fact1   = (0.50_DP*(U_i + U_j))**(zeta - 1.0_DP)
+  fact2   = (0.50_DP*(U_i + U_j))**zeta
 
-  res = zeta*abs_rij*fact1*(abs_rij**2*fact2 - 1.0_DP)*hij(rij, tau_i, tau_j, zeta)
+  res     = zeta*abs_rij*fact1*(abs_rij**2*fact2 - 1.0_DP)*hij(rij, tau_i, tau_j, zeta)
 
   endfunction second_part_deriv_hij_wrt_Ui_and_r
 
