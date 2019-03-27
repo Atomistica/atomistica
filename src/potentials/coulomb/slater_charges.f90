@@ -857,11 +857,12 @@ contains
                       
                       if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
                       
-                         edftb3 = 1.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta))
+                         edftb3 = 1.0_DP/3.0_DP*(dq_i**2*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta))
                       
                       else
                       
-                         edftb3 = - 2.0_DP/3.0_DP*(dq_i*dq_i*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j))
+                         edftb3 = - 1.0_DP/3.0_DP*(dq_i**2*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
+                                               + dq_j**2*dq_i*capital_short_gamma(abs_rij, dU_j, U_j, U_i))
                                          
                       endif
 
