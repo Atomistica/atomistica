@@ -112,7 +112,8 @@ module slater_charges
      logical   :: dftb3 = .false.
 
      logical   :: damp_gamma = .false.
-     real(DP)  :: zeta = 4.0
+     real(DP)  :: zeta = 4.05000_DP
+    !real(DP)  :: zeta = 3.70000_DP
 
 
      !
@@ -581,7 +582,7 @@ contains
                       !
 
                       if (this%damp_gamma) then
-                        hlp = hlp*hij(abs_rij, U_i, U_j, this%zeta)
+                         hlp = hlp*hij(abs_rij, U_i, U_j, this%zeta)
                       endif
 
                       tls_sca1(i) = tls_sca1(i) + (q_j-Z_j)*hlp
@@ -689,8 +690,6 @@ contains
     ! i.e. U_i = tau_i from Elstner's paper or U_i = 2 zeta_i from
     ! Streitz-Mintmire's paper.
 
-    write(*,*) "DFTB3_XH", this%dftb3, this%damp_gamma
-
     do i = 1, p%natloc
 
        if (IS_EL(this%els, p, i)) then
@@ -766,12 +765,12 @@ contains
                       !
 
                       if (this%damp_gamma) then
-                        fac2 = fac2*hij(abs_rij, U_i, U_j, this%zeta) &
-                             + Sgij(abs_rij, U_i)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j, this%zeta)
+                         fac2 = fac2*hij(abs_rij, U_i, U_j, this%zeta) &
+                              + Sgij(abs_rij, U_i)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j, this%zeta)
                       endif
 
                       ! 
-                      ! DFTB3 term
+                      ! DFTB3 forces
                       !
 
                       fdftb3 = 0.0_DP                      
@@ -780,13 +779,13 @@ contains
 
                          if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
  
-                           fdftb3 = - 1.0_DP/3.0_DP*(dq_i**2*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta) &
-                                                 + dq_i*dq_j**2*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta))
+                            fdftb3 = 1.0_DP/3.0_DP*(dq_i**2*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta) &
+                                                  + dq_i*dq_j**2*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta))
                            
                          else
            
-                           fdftb3 = - 1.0_DP/3.0_DP*(dq_i**2*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
-                                                 + dq_i*dq_j**2*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i))
+                            fdftb3 = 1.0_DP/3.0_DP*(dq_i**2*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
+                                                  + dq_i*dq_j**2*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i))
                         
                          endif
                            
@@ -821,12 +820,12 @@ contains
                       !
 
                       if (this%damp_gamma) then
-                        fac2 = fac2*hij(abs_rij, U_i, U_j, this%zeta) &
-                             + Sfij(abs_rij, U_i, U_j)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j, this%zeta)
+                         fac2 = fac2*hij(abs_rij, U_i, U_j, this%zeta) &
+                              + Sfij(abs_rij, U_i, U_j)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j, this%zeta)
                       endif
 
                       ! 
-                      ! DFTB3 term
+                      ! DFTB3 forces
                       !
 
                       fdftb3 = 0.0_DP                      
@@ -835,13 +834,13 @@ contains
 
                          if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
  
-                           fdftb3 = - 1.0_DP/3.0_DP*(dq_i**2*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta) &
-                                                 + dq_i*dq_j**2*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta))
+                            fdftb3 = 1.0_DP/3.0_DP*(dq_i**2*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j, this%zeta) &
+                                                  + dq_i*dq_j**2*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i, this%zeta))
                            
                          else
            
-                           fdftb3 = - 1.0_DP/3.0_DP*(dq_i**2*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
-                                                 + dq_i*dq_j**2*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i))
+                            fdftb3 = 1.0_DP/3.0_DP*(dq_i**2*dq_j*derivative_capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
+                                                  + dq_i*dq_j**2*derivative_capital_short_gamma(abs_rij, dU_j, U_j, U_i))
                         
                          endif
                            
@@ -850,7 +849,7 @@ contains
                    endif
 
                    !
-                   ! DFTB3 
+                   ! DFTB3 energy 
                    !
                 
                    edftb3 = 0.0_DP
@@ -865,10 +864,18 @@ contains
                       else
                       
                          edftb3 = - 1.0_DP/3.0_DP*(dq_i**2*dq_j*capital_short_gamma(abs_rij, dU_i, U_i, U_j) &
-                                               + dq_j**2*dq_i*capital_short_gamma(abs_rij, dU_j, U_j, U_i))
+                                                 + dq_i*dq_j**2*capital_short_gamma(abs_rij, dU_j, U_j, U_i))
                                          
                       endif
 
+                   endif
+
+                   !
+                   ! XH correction
+                   !
+
+                   if (this%damp_gamma) then
+                      hlp = hlp*hij(abs_rij, U_i, U_j, this%zeta)
                    endif
 
                    fac = q_i*q_j-q_i*Z_j-Z_i*q_j
@@ -895,7 +902,7 @@ contains
           epot   = epot + 5*q_i*q_i*U_i/32
 
           !
-          ! DFTB3 on-site correction
+          ! DFTB3 on-site energy 
           !          
  
           if (this%dftb3) epot = epot - q_i**3*dU_i/6.0_DP
