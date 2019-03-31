@@ -112,9 +112,7 @@ module slater_charges
      logical   :: dftb3 = .false.
 
      logical   :: damp_gamma = .false.
-     real(DP)  :: zeta = 4.05000_DP
-    !real(DP)  :: zeta = 3.70000_DP
-
+     real(DP)  :: zeta = 4.00000_DP
 
      !
      ! Hubbard-U
@@ -313,10 +311,8 @@ contains
     call prlog("- slater_charges_bind_to -")
     call prlog("elements   = " // trim(this%elements))
     call prlog("dftb3      = " // this%dftb3)
-    if (this%dftb3) then
-       call prlog("damp_gamma = " // this%damp_gamma)
-       call prlog("zeta       = " // this%zeta)
-    endif
+    call prlog("damp_gamma = " // this%damp_gamma)
+    call prlog("zeta       = " // this%zeta)
 
     this%els  = filter_from_string(this%elements, p, ierror=ierror)
     PASS_ERROR(ierror)
@@ -518,10 +514,10 @@ contains
                       hlp = -(48 + 33*fac + fac2*(9+fac))*efac
 
                       !
-                      ! XH correction
+                      ! XH correction for DFTB2
                       !
 
-                      if (this%damp_gamma) then
+                      if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
                          hlp = hlp*hij(abs_rij, U_i, U_j, this%zeta)
                       endif
 
@@ -578,10 +574,10 @@ contains
                       hlp = expi*(fi1+fi2/abs_rij) + expj*(fj1+fj2/abs_rij)
 
                       !
-                      ! XH correction
+                      ! XH correction for DFTB2 
                       !
 
-                      if (this%damp_gamma) then
+                      if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
                          hlp = hlp*hij(abs_rij, U_i, U_j, this%zeta)
                       endif
 
@@ -626,7 +622,7 @@ contains
           enddo Slater_ni_loop
 
           tls_sca1(i) = tls_sca1(i) + 5*q_i*U_i/16
-   
+ 
           !
           ! DFTB3 on-site correction
           ! 
@@ -761,10 +757,10 @@ contains
                            )
 
                       !
-                      ! XH correction 
+                      ! XH correction for DFTB2  
                       !
 
-                      if (this%damp_gamma) then
+                      if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
                          fac2 = fac2*hij(abs_rij, U_i, U_j, this%zeta) &
                               + Sgij(abs_rij, U_i)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j, this%zeta)
                       endif
@@ -816,10 +812,10 @@ contains
                            )
 
                       !
-                      ! XH correction 
+                      ! XH correction for DFTB2
                       !
 
-                      if (this%damp_gamma) then
+                      if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
                          fac2 = fac2*hij(abs_rij, U_i, U_j, this%zeta) &
                               + Sfij(abs_rij, U_i, U_j)*part_deriv_hij_wrt_r(abs_rij, U_i, U_j, this%zeta)
                       endif
@@ -871,10 +867,10 @@ contains
                    endif
 
                    !
-                   ! XH correction
+                   ! XH correction for DFTB2
                    !
 
-                   if (this%damp_gamma) then
+                   if (this%damp_gamma .and. (atomic_number_i == 1 .or. atomic_number_j == 1)) then
                       hlp = hlp*hij(abs_rij, U_i, U_j, this%zeta)
                    endif
 
