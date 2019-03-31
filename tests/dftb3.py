@@ -102,7 +102,7 @@ def run_dftb3_test(test=None):
         raise RuntimeError('Please use environment variable MIO to specify path to mio Slater-Koster tables.')
     dftb3_database_folder = os.getenv('DFTB3')
     if dftb3_database_folder is None:
-        raise RuntimeError('Please use environment variable 3OB to specify path to 3ob Slater-Koster tables.')
+        raise RuntimeError('Please use environment variable DFTB3 to specify path to 3ob Slater-Koster tables.')
 
     print('mio folder: {}'.format(mio_database_folder))
     print('3ob folder: {}'.format(dftb3_database_folder))
