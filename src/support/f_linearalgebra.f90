@@ -576,6 +576,8 @@ contains
 
     INIT_ERROR(error)
 
+    if (n == 0) return
+
 #ifdef HAVE_LAPACK
     call dgesv(n, 1, A, n, ipiv, x, n, i)
     if (i /= 0) then
@@ -615,6 +617,8 @@ contains
     ! ---
 
     INIT_ERROR(error)
+
+    if (n == 0) return
 
 #ifdef HAVE_LAPACK
     call dgesv(n, m, A, n, ipiv, x, n, i)
