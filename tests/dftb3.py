@@ -35,7 +35,7 @@ import numpy as np
 
 import ase.units
 from ase.build import molecule
-from ase.io import read
+from ase.io import read, write
 from ase.optimize import FIRE
 
 import atomistica.native as native
@@ -96,7 +96,7 @@ table5_data = {
 
 ###
 
-def run_dftb3_test(test=None):
+def run_dftb3_test(test=None, tol=0.05):
     mio_database_folder = os.getenv('MIO')
     if mio_database_folder is None:
         raise RuntimeError('Please use environment variable MIO to specify path to mio Slater-Koster tables.')
@@ -185,7 +185,9 @@ def run_dftb3_test(test=None):
         avgn = 1000
         )
 
-    print('    nH2O       G3B3|          DFTB2 (MIO)|       DFTB2+XH (MIO)|          DFTB3 (MIO)|       DFTB3+XH (MIO)|       DFTB3+XH (3OB)|')
+    print('    nH2O|    G3B3|    DFTB2 (MIO)  | DFTB2+XH (MIO)  |    DFTB3 (MIO)  | DFTB3+XH (MIO)  | DFTB3+XH (3OB)  |')
+    print('        |        |     me    ref.  |     me    ref.  |     me    ref.  |     me    ref.  |     me    ref.  |')
+    print('        |        |-----------------|-----------------|-----------------|-----------------|-----------------|')
 
     for name, data in table5_data.items():
         e0_DFTB2        = 0.0
@@ -201,23 +203,23 @@ def run_dftb3_test(test=None):
 
             a.center(vacuum=10.0)
             a.set_calculator(dftb2_calc)
-            FIRE(a).run(fmax=0.001)
+            FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB2 += a.get_potential_energy()
 
             a.set_calculator(dftb2_XH_calc)
-            FIRE(a).run(fmax=0.001)
+            FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB2_XH += a.get_potential_energy()
 
             a.set_calculator(dftb3_calc)
-            FIRE(a).run(fmax=0.001)
+            FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB3 += a.get_potential_energy()
 
             a.set_calculator(dftb3_XH_calc)
-            FIRE(a).run(fmax=0.001)
+            FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB3_XH += a.get_potential_energy()
 
             a.set_calculator(dftb3_XH_3ob_calc)
-            FIRE(a).run(fmax=0.001)
+            FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB3_3ob_XH += a.get_potential_energy()
 
         eref_G3B3 = data['G3B3']
@@ -225,42 +227,57 @@ def run_dftb3_test(test=None):
         eref_DFTB2_XH = data['DFTB2+XH']
         eref_DFTB3 = data['DFTB3']
         eref_DFTB3_XH = data['DFTB3+XH']
-        eref_DFTB3_XH_3ob = data['DFTB3+XH_3ob']
+        eref_DFTB3_3ob_XH = data['DFTB3+XH_3ob']
 
         a = read(data['structure'])
         a.center(vacuum=10.0)
         a.set_calculator(dftb2_calc)
-        FIRE(a).run(fmax=0.001)
+        FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB2 = a.get_potential_energy()
+
+        write(data['structure']+'.opt.xyz', a)
 
         e_DFTB2 = (e_DFTB2 - e0_DFTB2)/(ase.units.kcal/ase.units.mol)
 
         a.set_calculator(dftb2_XH_calc)
-        FIRE(a).run(fmax=0.001)
+        FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB2_XH = a.get_potential_energy()
 
         e_DFTB2_XH = (e_DFTB2_XH - e0_DFTB2_XH)/(ase.units.kcal/ase.units.mol)
 
         a.set_calculator(dftb3_calc)
-        FIRE(a).run(fmax=0.001)
+        FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB3 = a.get_potential_energy()
 
         e_DFTB3 = (e_DFTB3 - e0_DFTB3)/(ase.units.kcal/ase.units.mol)
 
         a.set_calculator(dftb3_XH_calc)
-        FIRE(a).run(fmax=0.001)
+        FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB3_XH = a.get_potential_energy()
 
         e_DFTB3_XH = (e_DFTB3_XH - e0_DFTB3_XH)/(ase.units.kcal/ase.units.mol)
 
         a.set_calculator(dftb3_XH_3ob_calc)
-        FIRE(a).run(fmax=0.001)
+        FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB3_3ob_XH = a.get_potential_energy()
 
         e_DFTB3_3ob_XH = (e_DFTB3_3ob_XH - e0_DFTB3_3ob_XH)/(ase.units.kcal/ase.units.mol)
 
+        success_DFTB2 = abs(e_DFTB2 - eref_G3B3 - eref_DFTB2) < tol
+        success_DFTB2_XH = abs(e_DFTB2_XH - eref_G3B3 - eref_DFTB2_XH) < tol
+        success_DFTB3 = abs(e_DFTB3 - eref_G3B3 - eref_DFTB3) < tol
+        success_DFTB3_XH = abs(e_DFTB3_XH - eref_G3B3 - eref_DFTB3_XH) < tol
+        success_DFTB3_3ob_XH = abs(e_DFTB3_3ob_XH - eref_G3B3 - eref_DFTB3_3ob_XH) < tol
+
+        success_str = {True: ' ', False: 'X'}
+
         if test is None:
-            print('{0:>8} {1:>10.5f} {2:>10.5f} {3:>10.5f} {4:>10.5f} {5:>10.5f} {6:>10.5f} {7:>10.5f} {8:>10.5f} {9:>10.5f} {10:>10.5f} {11:>10.5f}'.format(name, eref_G3B3, e_DFTB2 - eref_G3B3, eref_DFTB2, e_DFTB2_XH - eref_G3B3, eref_DFTB2_XH, e_DFTB3 - eref_G3B3, eref_DFTB3, e_DFTB3_XH - eref_G3B3, eref_DFTB3_XH, e_DFTB3_3ob_XH - eref_G3B3, eref_DFTB3_XH_3ob))
+            print('{0:>8}| {1:>7.3f}|{2:>7.3f} {3:>7.3f} {4}|{5:>7.3f} {6:>7.3f} {7}|{8:>7.3f} {9:>7.3f} {10}|{11:>7.3f} {12:>7.3f} {13}|{14:>7.3f} {15:>7.3f} {16}|'
+                .format(name, eref_G3B3, e_DFTB2 - eref_G3B3, eref_DFTB2, success_str[success_DFTB2],
+                                         e_DFTB2_XH - eref_G3B3, eref_DFTB2_XH, success_str[success_DFTB2_XH],
+                                         e_DFTB3 - eref_G3B3, eref_DFTB3, success_str[success_DFTB3],
+                                         e_DFTB3_XH - eref_G3B3, eref_DFTB3_XH, success_str[success_DFTB3_XH],
+                                         e_DFTB3_3ob_XH - eref_G3B3, eref_DFTB3_3ob_XH, success_str[success_DFTB3_3ob_XH]))
         else:
             test.assertAlmostEqual(e - eref_G3B3, eref_DFTB2)
 
