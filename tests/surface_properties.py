@@ -35,7 +35,10 @@ import numpy as np
 
 import ase
 import ase.io
-from ase.atoms import string2symbols
+try:
+    from ase.symbols import string2symbols
+except:
+    from ase.atoms import string2symbols
 
 from atomistica import *
 from atomistica.tests import test_surface_energies
