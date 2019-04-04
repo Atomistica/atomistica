@@ -165,6 +165,10 @@ contains
               RAISE_ERROR_AND_STOP_TIMER("Could not find Slater-Koster tables for element '"//trim(ElementName(p%el2Z(p%el(i))))//"'.", "dense_hamiltonian_update_orbitals", error)
           endif
 
+          if (this_mat%e(enr)%no < 0) then
+              RAISE_ERROR_AND_STOP_TIMER("Number of valence orbitals not specified for element'"//trim(ElementName(p%el2Z(p%el(i))))//"' and no default available.", "dense_hamiltonian_update_orbitals", error)
+          endif
+
           this%norb = this%norb + this_mat%e(enr)%no
           if (i <= p%natloc) then
              this%norbloc = this%norbloc + this_mat%e(enr)%no
