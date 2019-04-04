@@ -115,6 +115,8 @@ module materials
      type(spline_t), pointer       :: HS(:, :)        ! the Hamiltonian and overlap matrix
      type(spline_t), pointer       :: R(:, :)         ! repulsive potential
 
+     integer                       :: valence_orbitals(116) = -1    ! number if valence orbitals per element, used to override default
+
   endtype materials_t
 
 
@@ -143,18 +145,6 @@ module materials
      module procedure materials_get_orbital
   endinterface
 
-  integer, parameter :: valence_orbitals(116) =  &
-     [ 1, 1, &                                                 !>  H, He
-       4, 4, 4, 4, 4, 4, 4, 4, &                               !> Li, Be,  B,  C,  N,  O,  F, Ne  
-       4, 4, 4, 4, 4, 4, 4, 4, &                               !> Na, Mg, Al, Si,  P,  S, Cl, Ar 
-       4, 4, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,     &         !>  K, Ca, Sc, Ti,  V, Cr, Mn, Fe, Co, Ni, Cu, Zn, Ga, Ge
-       9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,     &   !> As, Se, Br, Kr, Rb, Sr,  Y, Zr, Nb, Mo, Tc, Ru, Rh, Pd, Ag, Cd
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
-      -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,     &
-      -1,-1,-1,-1]
-
   !>
   !! Temporary storage for data read from bonds.bx file
   !<
@@ -163,6 +153,18 @@ module materials
      real(DP), allocatable :: x(:)
      real(DP), allocatable :: HS(:, :)
   endtype bopfox_table_t
+
+  integer, parameter :: default_valence_orbitals(116) = &       ! number if valence orbitals per element
+      [ 1, 1, &                                                 !>  H, He
+        4, 4, 4, 4, 4, 4, 4, 4, &                               !> Li, Be,  B,  C,  N,  O,  F, Ne  
+        4, 4, 4, 4, 4, 4, 4, 4, &                               !> Na, Mg, Al, Si,  P,  S, Cl, Ar 
+        4, 4, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, &             !>  K, Ca, Sc, Ti,  V, Cr, Mn, Fe, Co, Ni, Cu, Zn, Ga, Ge
+        9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, &       !> As, Se, Br, Kr, Rb, Sr,  Y, Zr, Nb, Mo, Tc, Ru, Rh, Pd, Ag, Cd
+       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, &
+       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, &
+       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, &
+       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, &
+       -1,-1,-1,-1]
 
 contains
 
@@ -1258,8 +1260,8 @@ contains
        db%e(i)%name = s2a(ElementName(i))
        db%e(i)%elem = i
        db%e(i)%enr  = i
-       db%e(i)%q0   = valence_orbitals(i)
-       db%e(i)%no   = valence_orbitals(i)
+       db%e(i)%q0   = default_valence_orbitals(i)
+       db%e(i)%no   = default_valence_orbitals(i)
     enddo
 
     call materials_read_elements_hotbit(db, econv, lconv, error)
@@ -1432,6 +1434,15 @@ contains
     enddo
 
     call materials_read_spin_params(db, econv, error)
+
+    ! Override data read from file if the user decides to specify it in the
+    ! input script
+    do i = 1, MAX_Z
+       if (db%valence_orbitals(i) > 0) then
+          db%e(i)%q0 = db%valence_orbitals(i)
+          db%e(i)%no = db%valence_orbitals(i)
+       endif 
+    enddo
 
     call prlog("element number charge orbitals Hubbard-U on-site levels")
     call prlog("======= ====== ====== ======== ========= ==============")

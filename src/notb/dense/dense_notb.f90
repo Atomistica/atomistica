@@ -771,9 +771,15 @@ contains
 
     implicit none
 
-    type(dense_notb_t), target, intent(inout)  :: this
-    type(c_ptr), intent(in)               :: cfg
-    type(c_ptr), intent(out)              :: m
+    type(dense_notb_t), target, intent(inout) :: this
+    type(c_ptr),                intent(in)    :: cfg
+    type(c_ptr),                intent(out)   :: m
+
+    ! ---
+
+    type(c_ptr) :: subm
+
+    integer :: i
 
     ! ---
 
@@ -802,6 +808,14 @@ contains
          CSTR("Cutoff (width) of the divide-and-conquer buffer zone. Default: Same as Hamiltonian cutoff"))
 #endif
 
+    subm = ptrdict_register_section(m, CSTR("ValenceOrbitals"), &
+         CSTR("Number of valence orbitals per element."))
+
+    do i = 1, 116
+       call ptrdict_register_integer_property(subm, c_loc(this%mat%valence_orbitals(i)), &
+            CSTR(trim(ElementName(i))), &
+            CSTR("Number of valence orbitals for element "//trim(ElementName(i))//"."))
+    enddo
 
     allocate(this%solver)
     call register(this%solver, m)
