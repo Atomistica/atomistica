@@ -1439,7 +1439,6 @@ contains
     ! input script
     do i = 1, MAX_Z
        if (db%valence_orbitals(i) > 0) then
-          db%e(i)%q0 = db%valence_orbitals(i)
           db%e(i)%no = db%valence_orbitals(i)
        endif 
     enddo
