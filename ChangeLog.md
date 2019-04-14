@@ -8,6 +8,11 @@ TODO
 Change log
 ==========
 
+v0.8.0
+------
+
+- Support for DFTB3.
+
 v0.7.0
 ------
 
