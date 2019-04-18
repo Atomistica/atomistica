@@ -9,7 +9,7 @@ A list of interatomic potentials can be found [here](POTENTIALS.md).
 Build status
 ------------
 
-[![Build Status](https://travis-ci.org/Atomistica/atomistica.svg?branch=master)](https://travis-ci.org/Atomistica/atomistica)
+[![Build Status](https://www.travis-ci.org/IMTEK-Simulation/NuMPI.svg?branch=master)](https://www.travis-ci.org/IMTEK-Simulation/NuMPI)
 
 Usage
 -----
