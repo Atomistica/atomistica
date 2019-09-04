@@ -20,7 +20,7 @@
 !! ======================================================================
 ! @meta
 !   private
-!   classtype:ffm_tip_t classname:FFMTip interface:potentials
+!   classtype:ffm_tip_t classname:FFMTip interface:potentials sortorder:10
 ! @endmeta
 
 #include "macros.inc"

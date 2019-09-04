@@ -94,38 +94,46 @@ def write_interface_info(metadata, interface, finterface_list, exclude_list,
 
     print(u'%s_MODS += \\' % interface.upper(), file=mkf)
 
-    depalready = []
+    flattenedmeta = {}
     for path, metapath in metadata.items():
         for fn, meta in metapath.items():
-            if 'interface' in meta:
-                if meta['interface'] == interface:
-                    classtype = meta['classtype']
-                    classname = meta['classname']
-                    try:
-                        features = meta['features']
-                    except:
-                        features = ''
-                    if not classname in exclude_list:
-                        s = ''
-                        finterfaces_present = get_finterfaces(path+'/'+fn,
-                                                              include_list)
-                        if len(finterfaces_present) > 0:
-                            s = reduce(lambda x,y: x+','+y, finterfaces_present[1:],
-                                       finterfaces_present[0])
-                        print('%s:%s:%s:%s:%s' % (classtype[:-2],
-                                                          classtype, classname,
-                                                          features, s), file=deff)
-                        if 'dependencies' in meta:
-                            dependencies = meta['dependencies'].split(',')
-                            for depfn in dependencies:
-                                depfn = os.path.basename(depfn)
-                                if not depfn in depalready:
-                                    print('\t%s \\' % depfn, file=mkf)
-                                    depalready += [ depfn ]
-                        print(u'\t%s \\' % fn, file=mkf)
+            meta['path'] = path
+            flattenedmeta[fn] = meta
 
-                        print('#define HAVE_%s' % \
-                            (classtype[:-2].upper()), file=cfgf)
+    depalready = []
+    for fn, meta in sorted(flattenedmeta.items(),
+                           key=lambda x: float(x[1]['sortorder'])
+                               if 'sortorder' in x[1] else 1):
+        if 'interface' in meta:
+            path = meta['path']
+            if meta['interface'] == interface:
+                classtype = meta['classtype']
+                classname = meta['classname']
+                try:
+                    features = meta['features']
+                except:
+                    features = ''
+                if not classname in exclude_list:
+                    s = ''
+                    finterfaces_present = get_finterfaces(path+'/'+fn,
+                                                          include_list)
+                    if len(finterfaces_present) > 0:
+                        s = reduce(lambda x,y: x+','+y, finterfaces_present[1:],
+                                   finterfaces_present[0])
+                    print('%s:%s:%s:%s:%s' % (classtype[:-2],
+                                                      classtype, classname,
+                                                      features, s), file=deff)
+                    if 'dependencies' in meta:
+                        dependencies = meta['dependencies'].split(',')
+                        for depfn in dependencies:
+                            depfn = os.path.basename(depfn)
+                            if not depfn in depalready:
+                                print('\t%s \\' % depfn, file=mkf)
+                                depalready += [ depfn ]
+                    print(u'\t%s \\' % fn, file=mkf)
+
+                    print('#define HAVE_%s' % \
+                        (classtype[:-2].upper()), file=cfgf)
 
     deff.close()
     print(u'', file=mkf)

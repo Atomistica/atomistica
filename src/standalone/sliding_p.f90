@@ -20,7 +20,7 @@
 !! ======================================================================
 ! @meta
 !   shared
-!   classtype:sliding_p_t classname:SlidingP interface:potentials
+!   classtype:sliding_p_t classname:SlidingP interface:potentials sortorder:10
 ! @endmeta
 
 !>
