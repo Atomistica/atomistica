@@ -1,14 +1,9 @@
-#define ATOMISTICA_PAIR_STYLE_GIT_IDENT "$Id$"
-
-#ifndef DEFINE_GIT_IDENT
-
 /* ======================================================================
-   Atomistica - Interatomic potential library
-   https://github.com/pastewka/atomistica
-   Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others
-   See the AUTHORS file in the top-level Atomistica directory.
+   Atomistica - Interatomic potential library and molecular dynamics code
+   https://github.com/Atomistica/atomistica
 
-   Copyright (2005-2013) Fraunhofer IWM
+   Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+   and others. See the AUTHORS file in the top-level Atomistica directory.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -23,6 +18,10 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ====================================================================== */
+#define ATOMISTICA_PAIR_STYLE_GIT_IDENT "$Id$"
+
+#ifndef DEFINE_GIT_IDENT
+
 
 /* ----------------------------------------------------------------------
    LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator

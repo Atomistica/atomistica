@@ -1,10 +1,8 @@
-#! /usr/bin/env python
-
 # ======================================================================
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
 #
-# Copyright (2005-2019) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+# Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
 # and others. See the AUTHORS file in the top-level Atomistica directory.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,6 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
+#! /usr/bin/env python
+
 
 """
 Test the DFTB3 parametrizations.

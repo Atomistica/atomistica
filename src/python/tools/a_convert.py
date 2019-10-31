@@ -1,11 +1,9 @@
-#! /usr/bin/env python
-
 # ======================================================================
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
 #
-# Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
-# See the AUTHORS file in the top-level Atomistica directory.
+# Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+# and others. See the AUTHORS file in the top-level Atomistica directory.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
+#! /usr/bin/env python
+
 
 """
 Convenience command line tool for conversion between file formats. Similar to
