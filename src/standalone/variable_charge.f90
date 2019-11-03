@@ -34,7 +34,7 @@
 !!
 !!   A. K. Rappe and W. A. Goddard III, J. Phys. Chem. 95, 3358 (1991)
 !!   F. H. Streitz and J. W. Mintmire, Phys. Rev. B 50, 11996 (1994)
-!!   Pastewka, Järvi, Mayrhofer, Moseler, Phys. Rev. B 83, 165418 (2011)
+!!   Pastewka, Jaervi, Mayrhofer, Moseler, Phys. Rev. B 83, 165418 (2011)
 !!
 !! The charges are optimized by minimizing the energy
 !!
