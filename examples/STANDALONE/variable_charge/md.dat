@@ -60,9 +60,9 @@ Simulation {
   VariableCharge {
     elements              = "C";
 
-    solver_type           = "car-parrinello";
-    #solver_type           = "anderson";
-    #solver_type          = "conjugate-gradients";
+    #solver_type           = "car-parrinello";
+    solver_type           = "anderson";
+    #solver_type           = "conjugate-gradients";
 
     mq                    = "10.0";
     dE_max                = "0.01";
