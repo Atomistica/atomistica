@@ -538,10 +538,10 @@ contains
        endif
 
        if (this%at(i)%Z <= 0 .or. this%at(i)%Z > MAX_Z) then
+          call prlog("     Could not find atom with atomic number " // this%at(i)%Z // ".")
+       else
           call prlog("     " // ElementName(this%at(i)%Z) // "(" // this%at(i)%group // ")")
           call prlog("     - X = " // this%at(i)%X // ", U = " // this%at(i)%U // ", V = " // this%at(i)%V // ", p = " // this%at(i)%Vp)
-       else
-          call prlog("     Could not find atom with atomic number " // this%at(i)%Z // ".")
        endif
 
        if (this%at(i)%group < min_group .or. this%at(i)%group > max_group) then
@@ -572,8 +572,10 @@ contains
     call init(this%mixer, this%anderson_memory)
 
     if (this%solver_type == ST_CAR_PARRINELLO) then
-       call ptr_by_name(p%data, QV_STR, this%qv)
-       call ptr_by_name(p%data, QA_STR, this%qa)
+       call ptr_by_name(p%data, QV_STR, this%qv, ierror=ierror)
+       PASS_ERROR(ierror)
+       call ptr_by_name(p%data, QA_STR, this%qa, ierror=ierror)
+       PASS_ERROR(ierror)
 
        if (this%trace) then
           this%dE_un  = fopen("variable_charge_max_dE.out", F_WRITE)
@@ -1664,7 +1666,8 @@ contains
 
     if (.not. associated(this%qa)) then
        ! XXX FIXME!! This does not work if *p* changes
-       call ptr_by_name(p%data, QA_STR, this%qa)
+       call ptr_by_name(p%data, QA_STR, this%qa, ierror=ierror)
+       PASS_ERROR(ierror)
     endif
 
     call coulomb_potential(coul, p, nl, q, this%qa, ierror=ierror)
