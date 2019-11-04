@@ -233,11 +233,11 @@ contains
     cut_sq = this%cutoff**2
 
     !$omp  parallel default(none) &
-    !$omp& firstprivate(cut_sq, els) &
+    !$omp& firstprivate(cut_sq) &
     !$omp& private(dr, df, dw, abs_dr, for, en, fac12, fac6) &
-    !$omp& private(i, j, weighti, weight, jn) &
-    !$omp& shared(nl, f, p) &
-    !$omp& shared(epot_per_at, this) &
+    !$omp& private(i, j, weighti, weight, jn, maskj) &
+    !$omp& shared(nl, f, p, mask) &
+    !$omp& shared(epot_per_at, wpot_per_at, this) &
     !$omp& reduction(+:e) reduction(+:w)
 
     call tls_init(p%nat, sca=1, vec=1)
@@ -282,18 +282,17 @@ contains
                    en  = 0.5_DP*weight*(4*this%epsilon*(fac12-fac6)-this%offset)
                    for = 0.5_DP*weight*24*this%epsilon*(2*fac12-fac6)/abs_dr
 
-                   df   = for * dr/abs_dr
+                   df = for * dr/abs_dr
 
                    VEC3(tls_vec1, i) = VEC3(tls_vec1, i) + df
                    VEC3(tls_vec1, j) = VEC3(tls_vec1, j) - df
-
-                   dw    = -outer_product(dr, df)
-                   wpot  = wpot + dw
 
                    en = en/2
                    tls_sca1(i) = tls_sca1(i) + en
                    tls_sca1(j) = tls_sca1(j) + en
 
+                   dw = -outer_product(dr, df)
+                   w = w + dw
                    if (present(wpot_per_at)) then
                       dw = dw/2
                       SUM_VIRIAL(wpot_per_at, i, dw)
