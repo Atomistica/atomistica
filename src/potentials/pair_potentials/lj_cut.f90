@@ -217,7 +217,8 @@ contains
     integer             :: i, j, weighti, weight
     integer(NEIGHPTR_T) :: jn
     real(DP)            :: dr(3), df(3), dw(3, 3)
-    real(DP)            :: cut_sq, abs_dr, for, en, fac12, fac6
+    real(DP)            :: e, w(3, 3), cut_sq, abs_dr, for, en, fac12, fac6
+    logical             :: maskj
 
     ! ---
 
@@ -226,19 +227,41 @@ contains
     call update(nl, p, ierror)
     PASS_ERROR(ierror)
 
+    e  = 0.0_DP
+    w  = 0.0_DP
+
     cut_sq = this%cutoff**2
 
+    !$omp  parallel default(none) &
+    !$omp& firstprivate(cut_sq, els) &
+    !$omp& private(dr, df, dw, abs_dr, for, en, fac12, fac6) &
+    !$omp& private(i, j, weighti, weight, jn) &
+    !$omp& shared(nl, f, p) &
+    !$omp& shared(epot_per_at, this) &
+    !$omp& reduction(+:e) reduction(+:w)
+
+    call tls_init(p%nat, sca=1, vec=1)
+
+    !$omp do
     do i = 1, p%natloc
        weighti = 1
-       if (present(mask) .and. mask(i) == 0) then
-          weighti = 0
+       if (present(mask)) then
+          if (mask(i) == 0) then
+             weighti = 0
+          endif
        endif
 
        do jn = nl%seed(i), nl%last(i)
           j = GET_NEIGHBOR(nl, jn)
 
           if (i <= j) then
-             if (i == j .or. j > p%natloc .or. (present(mask) .and. mask(j) == 0)) then
+             maskj = .false.
+             if (present(mask)) then
+                if (mask(j) == 0) then
+                   maskj = .true.
+                endif
+             endif
+             if (i == j .or. j > p%natloc .or. maskj) then
                 weight = weighti
              else
                 weight = weighti + 1
@@ -259,20 +282,17 @@ contains
                    en  = 0.5_DP*weight*(4*this%epsilon*(fac12-fac6)-this%offset)
                    for = 0.5_DP*weight*24*this%epsilon*(2*fac12-fac6)/abs_dr
 
-                   epot = epot + en
                    df   = for * dr/abs_dr
 
-                   VEC3(f, i) = VEC3(f, i) + df
-                   VEC3(f, j) = VEC3(f, j) - df
+                   VEC3(tls_vec1, i) = VEC3(tls_vec1, i) + df
+                   VEC3(tls_vec1, j) = VEC3(tls_vec1, j) - df
 
                    dw    = -outer_product(dr, df)
                    wpot  = wpot + dw
 
-                   if (present(epot_per_at)) then
-                      en = en/2
-                      epot_per_at(i) = epot_per_at(i) + en
-                      epot_per_at(j) = epot_per_at(j) + en
-                   endif
+                   en = en/2
+                   tls_sca1(i) = tls_sca1(i) + en
+                   tls_sca1(j) = tls_sca1(j) + en
 
                    if (present(wpot_per_at)) then
                       dw = dw/2
@@ -285,6 +305,19 @@ contains
           endif
        enddo
     enddo
+
+    e  = e + sum(tls_sca1(1:p%natloc))
+
+    if (present(epot_per_at)) then
+       call tls_reduce(p%nat, sca1=epot_per_at, vec1=f)
+    else
+       call tls_reduce(p%nat, vec1=f)
+    endif
+
+    !$omp end parallel
+
+    epot  = epot + e
+    wpot  = wpot + w
 
     call timer_stop("lj_cut_energy_and_forces")
 
