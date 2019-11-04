@@ -496,17 +496,19 @@ contains
        PASS_ERROR(error)
     endif
 
-    if (present(scale_atoms) .and. scale_atoms) then
-       fac = matmul(Abox, this%Bbox)
-       !$omp  parallel do default(none) &
-       !$omp& shared(this) firstprivate(fac)
-       do i = 1, this%natloc
+    if (present(scale_atoms)) then
+       if (scale_atoms) then
+          fac = matmul(Abox, this%Bbox)
+          !$omp  parallel do default(none) &
+          !$omp& shared(this) firstprivate(fac)
+          do i = 1, this%natloc
 #ifndef IMPLICIT_R
-          POS3(this, i) = matmul(fac, POS3(this, i))
+             POS3(this, i) = matmul(fac, POS3(this, i))
 #endif
-          PNC3(this, i) = matmul(fac, PNC3(this, i))
-          PCN3(this, i) = matmul(fac, PCN3(this, i))
-       enddo
+             PNC3(this, i) = matmul(fac, PNC3(this, i))
+             PCN3(this, i) = matmul(fac, PCN3(this, i))
+          enddo
+       endif
     endif
 
 !    this%Abox  = ( Abox + transpose(Abox) )/2
