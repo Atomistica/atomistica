@@ -135,11 +135,13 @@ contains
 
     l_max_dr_sq  = 0.0_DP
 
+#ifndef __GFORTRAN__
     !$omp  parallel do default(none) &
     !$omp& shared(f, p, this, v) &
     !$omp& firstprivate(dt) &
     !$omp& private(dr) &
     !$omp& reduction(max:l_max_dr_sq)
+#endif
     do i = 1, p%natloc
 
        if (p%g(i) > 0 .and. IS_EL(this%els, p, i)) then

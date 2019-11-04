@@ -179,11 +179,13 @@ contains
 
     l_max_dr_sq  = 0.0_DP
 
+#ifndef __GFORTRAN__
     !$omp  parallel do default(none) &
     !$omp& shared(f, p, this, v) &
     !$omp& firstprivate(dt, d2t, K_to_energy) &
     !$omp& private(c0, c1, c2, covrv, cur_T, dr, etar, etav, gamdt, hlp, i, sigmar, sigmav) &
     !$omp& reduction(max:l_max_dr_sq)
+#endif
     do i = 1, p%natloc
 
        if (p%g(i) > 0) then
