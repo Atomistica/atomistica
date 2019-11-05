@@ -8,6 +8,11 @@ TODO
 Change log
 ==========
 
+v0.9.2
+------
+
+- OpenMP parallelization of the grid portion of PME
+
 v0.9.1
 ------
 
