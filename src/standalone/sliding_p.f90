@@ -279,7 +279,8 @@ contains
     implicit none
 
     type(sliding_p_t), intent(inout)  :: this
-    type(particles_t), intent(in)     :: p
+   !type(particles_t), intent(in)     :: p
+    type(particles_t), intent(inout)  :: p
     type(neighbors_t), intent(in)     :: nl
     integer, intent(inout), optional  :: ierror
 
@@ -313,6 +314,8 @@ contains
     end select
     call prlog("     bot      = " // this%bot)
     call prlog("     top      = " // this%top)
+
+    p%top = this%top
 
     this%n_bot  = count(p%g(1:p%natloc) == this%bot)
     this%n_top  = count(p%g(1:p%natloc) == this%top)
