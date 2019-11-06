@@ -161,6 +161,8 @@ module particles
      integer                :: maxnatloc            ! maximum number of particles on this processor
      integer                :: totnat               ! total number of particles on all processors
 
+     integer                :: top                  ! Group of rigidly moving atoms
+
      !
      ! All particel data is managed by the *data* field. The other fields are pointers to the
      ! entries of data.

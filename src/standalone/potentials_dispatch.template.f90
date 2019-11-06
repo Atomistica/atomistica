@@ -401,18 +401,19 @@ contains
 
 #undef ENERGY_AND_FORCES_WITH_CHARGES_AND_COUL
 
-#define ENERGY_AND_FORCES_WITH_DYN(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call energy_and_forces_with_dyn(this%x(i), dyn, nl, ierror=ierror) ; PASS_ERROR(ierror) ; enddo ; endif
-
-    ENERGY_AND_FORCES_WITH_DYN({classname})
-
-#undef ENERGY_AND_FORCES_WITH_DYN
-
     if (present(coul) .and. (present(q))) then
        if (coulomb_is_enabled(coul)) then
           call coulomb_energy_and_forces(coul, dyn%p, nl, q, dyn%epot, dyn%f, dyn%wpot, error=ierror)
           PASS_ERROR(ierror)
        endif
     endif
+
+#define ENERGY_AND_FORCES_WITH_DYN(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call energy_and_forces_with_dyn(this%x(i), dyn, nl, ierror=ierror) ; PASS_ERROR(ierror) ; enddo ; endif
+
+    ! This is SlidingP, FFMTip, etc. and *must* come after Coulomb evaluation
+    ENERGY_AND_FORCES_WITH_DYN({classname})
+
+#undef ENERGY_AND_FORCES_WITH_DYN
 
   endsubroutine potentials_energy_and_forces
 
