@@ -2,8 +2,8 @@
 !! Atomistica - Interatomic potential library and molecular dynamics code
 !! https://github.com/Atomistica/atomistica
 !!
-!! Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
-!! See the AUTHORS file in the top-level Atomistica directory.
+!! Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+!! and others. See the AUTHORS file in the top-level Atomistica directory.
 !!
 !! This program is free software: you can redistribute it and/or modify
 !! it under the terms of the GNU General Public License as published by
@@ -84,9 +84,11 @@ contains
           d2t = max_dt**2
     
           max_dr_sq = 0.0
+#ifndef __GFORTRAN__
           !$omp  parallel do default(none) &
           !$omp& shared(d2t, f, max_dt, p, v) &
           !$omp& private(dr, dr_sq) reduction(max:max_dr_sq)
+#endif
           do i = 1, p%natloc
              if (p%g(i) > 0) then
                 dr         = VEC3(v, i)*max_dt + sqrt(dot_product(VEC3(f, i), VEC3(f, i)))*VEC3(f, i)/p%m(i)*d2t
@@ -173,11 +175,13 @@ contains
        vfac = fac
     endif
 
+#ifndef __GFORTRAN__
     !$omp  parallel do default(none) &
     !$omp& shared(f, p, v) &
     !$omp& firstprivate(dt, els, vfac) &
     !$omp& private(dr) &
     !$omp& reduction(max:l_max_dr_sq)
+#endif
     do i = 1, p%natloc
 
        if (p%g(i) > 0 .and. IS_EL(els, p, i)) then

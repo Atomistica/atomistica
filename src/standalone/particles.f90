@@ -2,8 +2,8 @@
 !! Atomistica - Interatomic potential library and molecular dynamics code
 !! https://github.com/Atomistica/atomistica
 !!
-!! Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
-!! See the AUTHORS file in the top-level Atomistica directory.
+!! Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+!! and others. See the AUTHORS file in the top-level Atomistica directory.
 !!
 !! This program is free software: you can redistribute it and/or modify
 !! it under the terms of the GNU General Public License as published by
@@ -498,17 +498,19 @@ contains
        PASS_ERROR(error)
     endif
 
-    if (present(scale_atoms) .and. scale_atoms) then
-       fac = matmul(Abox, this%Bbox)
-       !$omp  parallel do default(none) &
-       !$omp& shared(this) firstprivate(fac)
-       do i = 1, this%natloc
+    if (present(scale_atoms)) then
+       if (scale_atoms) then
+          fac = matmul(Abox, this%Bbox)
+          !$omp  parallel do default(none) &
+          !$omp& shared(this) firstprivate(fac)
+          do i = 1, this%natloc
 #ifndef IMPLICIT_R
-          POS3(this, i) = matmul(fac, POS3(this, i))
+             POS3(this, i) = matmul(fac, POS3(this, i))
 #endif
-          PNC3(this, i) = matmul(fac, PNC3(this, i))
-          PCN3(this, i) = matmul(fac, PCN3(this, i))
-       enddo
+             PNC3(this, i) = matmul(fac, PNC3(this, i))
+             PCN3(this, i) = matmul(fac, PCN3(this, i))
+          enddo
+       endif
     endif
 
 !    this%Abox  = ( Abox + transpose(Abox) )/2

@@ -1,0 +1,120 @@
+Simulation {
+
+  system_of_units = "eV/A/fs";
+
+  #
+  # Screen/File output
+  #
+
+  scr_freq   = "1";
+  file_freq  = "10000";
+
+  OutputEnergy { };
+  OutputNC { freq = "10."; };
+
+
+  #
+  # Simulation control
+  #
+
+  dt              = "0.1";
+  max_time        = "1000.";
+  avgn            = "500";
+
+  cutoff_add      = "1.0";
+
+  pbc             = "0, 0, 0";
+
+
+#  ScalarVerlet {
+#    elements  = "C";
+#  };
+
+
+  #
+  # Force model
+  #
+
+  # C-Na
+  LJCut {
+    el1     = "C";
+    el2     = "Na";
+  
+    epsilon = "0.0021466";
+    sigma   = "2.92133";
+  
+    cutoff  = "10.";
+  };
+
+  # C-C
+  Rebo2 {
+    elements = "C";
+  };
+
+
+  #
+  # Charge transfer on the CNT electrode
+  # -> Hubbard U is in charge_transfer.dat
+  #
+
+  VariableCharge {
+    elements              = "C";
+
+    #solver_type           = "car-parrinello";
+    solver_type           = "anderson";
+    #solver_type           = "conjugate-gradients";
+
+    mq                    = "10.0";
+    dE_max                = "0.01";
+ 
+    dE_crit               = "0.001";
+
+    total_charge          = "0.0";
+
+    beta                  = "0.2";
+    anderson_memory       = "5";
+
+    #extrapolation_memory  = "5";
+
+    #freq                  = "10";
+ 
+    log                   = "yes";
+    trace                 = "yes";
+  };
+
+
+  #
+  # Coulomb interaction
+  #
+
+#  BTFastMultipole {
+#    leaf_size = "200";
+#    n_level   = "4";
+#    l_max     = "5";
+#
+#    k         = "1";
+#  };
+
+  DirectCoulomb { };
+
+  GaussianCharges {
+    elements  = "C";
+    cutoff    = "10";
+  };
+
+
+  #
+  # Temperature control
+  #
+
+  BerendsenT {
+    T    = "300";
+    tau  = "100.";
+  };
+
+
+#  Parallel3D {
+#    decomposition  = "2, 2, 2";
+#  };
+
+};

@@ -8,6 +8,21 @@ TODO
 Change log
 ==========
 
+v0.9.2
+------
+
+- OpenMP parallelization of the grid portion of PME
+
+v0.9.1
+------
+
+- OpenMP parallelization of LJCut
+
+v0.9.0
+------
+
+- Variable charge model
+
 v0.8.0
 ------
 

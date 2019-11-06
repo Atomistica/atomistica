@@ -2,8 +2,8 @@
 !! Atomistica - Interatomic potential library and molecular dynamics code
 !! https://github.com/Atomistica/atomistica
 !!
-!! Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
-!! See the AUTHORS file in the top-level Atomistica directory.
+!! Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+!! and others. See the AUTHORS file in the top-level Atomistica directory.
 !!
 !! This program is free software: you can redistribute it and/or modify
 !! it under the terms of the GNU General Public License as published by
@@ -327,16 +327,16 @@ contains
 
 #undef BIND_TO
 
-    if (coulomb_is_enabled(coul)) then
-       call coulomb_bind_to(coul, p, nl, ierror=ierror)
-       PASS_ERROR(ierror)
-    endif
-
 #define BIND_TO_WITH_COUL(x)  if (allocated(this%x)) then ; do i = lbound(this%x, 1), ubound(this%x, 1) ; call bind_to_with_coul(this%x(i), p, nl, coul, ierror=ierror) ; PASS_ERROR(ierror) ; enddo ; endif
 
     BIND_TO_WITH_COUL({classname})
 
 #undef BIND_TO_WITH_COUL
+
+    if (coulomb_is_enabled(coul)) then
+       call coulomb_bind_to(coul, p, nl, ierror=ierror)
+       PASS_ERROR(ierror)
+    endif
 
   endsubroutine potentials_bind_to
 

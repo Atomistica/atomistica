@@ -2,8 +2,8 @@
 !! Atomistica - Interatomic potential library and molecular dynamics code
 !! https://github.com/Atomistica/atomistica
 !!
-!! Copyright (2005-2015) Lars Pastewka <lars.pastewka@kit.edu> and others
-!! See the AUTHORS file in the top-level Atomistica directory.
+!! Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+!! and others. See the AUTHORS file in the top-level Atomistica directory.
 !!
 !! This program is free software: you can redistribute it and/or modify
 !! it under the terms of the GNU General Public License as published by
@@ -232,11 +232,13 @@ contains
 
     l_max_dr_sq  = 0.0_DP
 
+#ifndef __GFORTRAN__
     !$omp  parallel do default(none) &
     !$omp& shared(f, p, this, v) &
     !$omp& firstprivate(c0, c1, c2, dt, d2t, gamdt, hlp, T_au) &
     !$omp& private(covrv, dr, etar, etav, j, sigmar, sigmav) &
     !$omp& reduction(max:l_max_dr_sq)
+#endif
     do i = 1, p%natloc
 
        if (p%g(i) > 0 .and. IS_EL(this%els, p, i)) then

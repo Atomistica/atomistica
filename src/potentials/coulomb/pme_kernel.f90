@@ -1,10 +1,9 @@
 !! ======================================================================
-!! Atomistica - Interatomic potential library
-!! https://github.com/pastewka/atomistica
-!! Lars Pastewka, lars.pastewka@iwm.fraunhofer.de, and others.
-!! See the AUTHORS file in the top-level Atomistica directory.
+!! Atomistica - Interatomic potential library and molecular dynamics code
+!! https://github.com/Atomistica/atomistica
 !!
-!! Copyright (2005-2013) Fraunhofer IWM
+!! Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+!! and others. See the AUTHORS file in the top-level Atomistica directory.
 !!
 !! This program is free software: you can redistribute it and/or modify
 !! it under the terms of the GNU General Public License as published by
@@ -376,6 +375,10 @@ contains
 
     ! ---
 
+    !$omp  parallel do default(none) &
+    !$omp& shared(x, y, z, fr1, fr2, fr3) &
+    !$omp& firstprivate(recip, nfft1, nfft2, nfft3, numatoms) &
+    !$omp& private(w)
     do n = 1,numatoms
        w = x(n)*recip(1,1)+y(n)*recip(2,1)+z(n)*recip(3,1)
        fr1(n) = nfft1*(w - anint(w) + 0.5d0)
@@ -554,6 +557,11 @@ contains
     real(DP)  :: w
     integer   :: n
 
+    !$omp  parallel do default(none) &
+    !$omp& shared(fr1, fr2, fr3) &
+    !$omp& shared(theta1, dtheta1, theta2, dtheta2, theta3, dtheta3) &
+    !$omp& firstprivate(order, numatoms) &
+    !$omp& private(w)
     do n = 1,numatoms
        w = fr1(n)-int(fr1(n))
        call fill_bspline(w,order,theta1(1,n),dtheta1(1,n))
@@ -772,6 +780,12 @@ contains
 !      pi = 3.14159265358979323846d0
 
     fac = 1.0_DP/(pi*volume)
+    !$omp  parallel do default(none) &
+    !$omp& shared(fr1, fr2, fr3, phi, Ex, Ey, Ez, Q) &
+    !$omp& shared(theta1, dtheta1, theta2, dtheta2, theta3, dtheta3) &
+    !$omp& firstprivate(fac, nfft1, nfft2, nfft3, order, recip, numatoms) &
+    !$omp& private(n, ith1, ith2, ith3, i0, j0, k0, i, j, k) &
+    !$omp& private(f0, f1, f2, f3, term)
     do n = 1,numatoms
        f0 = 0.d0
        f1 = 0.d0
@@ -837,6 +851,12 @@ contains
     ! ---
 
     fac = 1.0_DP/(pi*volume)
+    !$omp  parallel do default(none) &
+    !$omp& shared(fr1, fr2, fr3, phi, Q) &
+    !$omp& shared(theta1, theta2, theta3) &
+    !$omp& firstprivate(fac, nfft1, nfft2, nfft3, order, numatoms) &
+    !$omp& private(n, ith1, ith2, ith3, i0, j0, k0, i, j, k) &
+    !$omp& private(f0, term)
     do n = 1,numatoms
        f0 = 0.d0
        k0 = int(fr3(n)) - order

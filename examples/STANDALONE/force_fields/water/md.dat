@@ -1,0 +1,95 @@
+Simulation {
+
+  #
+  # eV/A units
+  #
+
+  system_of_units  = "eV/A";
+
+
+  #
+  # 10 ps run, 1 fs time step
+  #
+ 
+  dt        = "0.01";
+  max_time  = "100.";
+
+
+  #
+  # Print every 100 time steps on screen and every ten thousand to a file
+  #
+
+  scr_freq         = "100";
+  file_freq        = "10000";
+
+  #output_pair_potentials  = "yes";
+
+  #
+  # Average number of neighbors (for neighbor list)
+  #
+
+  avgn             = "1000";
+
+
+  #
+  # Output energies to 'ener.out'
+  #
+
+  OutputEnergy { };
+
+
+  #
+  # Trajectory output (every 10fs) to .NC file
+  #
+
+  OutputNC {
+    freq = "10.0";
+  };
+
+
+  #
+  # Temperature control
+  #
+
+#  BerendsenT {
+#    T    = "300";
+#    tau  = "100.";
+#  };
+
+
+  #
+  # SPC/E Water
+  #
+
+  SETTLE { };
+
+  # O-O
+  LJCut {
+    el1       = "O";
+    el2       = "O";
+
+    epsilon   = "0.00673853";
+    sigma     = "3.16556";
+
+    cutoff    = "8";
+  };
+
+
+  #
+  # Coulomb interaction
+  #
+
+#  Standard Ewald summation
+#
+#  Ewald {
+#    weight         = "1e-2";
+#    accuracy_goal  = "9";
+#  };
+
+#  Particle-mesh Ewald
+
+   PME {
+     grid = "16, 16, 16";
+   };  
+
+};

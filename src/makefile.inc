@@ -35,15 +35,16 @@ VPATH = \
 	$(SRCDIR)/potentials/bop/juslin \
 	$(SRCDIR)/potentials/bop/kumagai \
 	$(SRCDIR)/potentials/bop/tersoff \
-	$(SRCDIR)/potentials/pair_potentials \
 	$(SRCDIR)/potentials/bop/rebo2 \
+	$(SRCDIR)/potentials/coulomb \
+	$(SRCDIR)/potentials/eam \
+	$(SRCDIR)/potentials/non_newtonian \
+	$(SRCDIR)/potentials/pair_potentials \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2x \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2sich \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2coh \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2chx \
-	$(SRCDIR)/potentials/coulomb \
 	$(SRCDIR)/potentials_nonfree/coulomb \
-	$(SRCDIR)/potentials/eam \
 	$(SRCDIR)/qeq \
 	$(SRCDIR)/special \
 	$(SRCDIR)/standalone \
