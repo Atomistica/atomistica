@@ -262,16 +262,20 @@ contains
           !
           ! The random part (Langevin)
           !
-          
-          if (hlp > 0.0) then
-             sigmar = sqrt(T_au/p%m(i)*d2t/gamdt*hlp)
-             sigmav = sqrt(T_au/p%m(i)*(1.d0-c0**2))
-             covrv  = T_au/p%m(i)*dt/gamdt*(1.d0-c0)**2
+   
+          if (p%g(i) /= p%top) then
+        
+             if (hlp > 0.0) then
+                sigmar = sqrt(T_au/p%m(i)*d2t/gamdt*hlp)
+                sigmav = sqrt(T_au/p%m(i)*(1.d0-c0**2))
+                covrv  = T_au/p%m(i)*dt/gamdt*(1.d0-c0)**2
+             
+                call gaucorr(etar, etav, sigmar, sigmav, covrv)
+                dr(this%d)             = dr(this%d) + etar
+                VEC(v, i, this%d) = VEC(v, i, this%d) + etav
+             endif
 
-             call gaucorr(etar, etav, sigmar, sigmav, covrv)
-             dr(this%d)             = dr(this%d) + etar
-             VEC(v, i, this%d) = VEC(v, i, this%d) + etav
-          endif
+          endif 
 
 #ifndef IMPLICIT_R
           POS3(p, i) = POS3(p, i) + dr(:)
