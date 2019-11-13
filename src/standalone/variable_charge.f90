@@ -1013,10 +1013,12 @@ contains
     ! ---
 
     real(DP), allocatable  :: g(:), h(:), xi(:), dq(:), phi1(:), phi2(:), r(:)
-    real(DP)               :: lambda, gg, dgg, gamma, E, tot_q
+    real(DP)               :: lambda, gg, dgg, gamma, E, previous_E, tot_q
     real(DP)               :: dmu, f, df
 
     integer                :: i, nit, naux, eli
+
+    character(1)           :: updown_str
 
     ! ---
 
@@ -1063,17 +1065,46 @@ contains
 
     dq  = 0.0_DP
 
+    write (*, *)  q
+
     ! Get electrostatic potential phi1 and steepest descent direction dq
     phi1(1:p%natloc)  = 0.0_DP
     call coulomb_potential(coul, p, nl, q, phi1, ierror)
     PASS_ERROR(ierror)
     call add_X(this, p, phi1)
+
     do i = 1, p%natloc
        if (IS_EL(this%f, p, i)) then
           eli = p%el(i)
           dq(i) = phi1(i) + dE_V(q(i), this%V(eli), this%Vp(eli))
        endif
     enddo
+
+    ! Some debug output
+    if (this%trace) then
+       E = 0.0_DP
+       do i = 1, p%natloc
+          if (IS_EL(this%f, p, i)) then
+             eli = p%el(i)
+             E = E + q(i)*phi1(i) + 2*E_V(q(i), this%V(eli), this%Vp(eli))
+          else
+             E = E + q(i)*phi1(i)
+          endif
+       enddo
+       E = E/2
+       previous_E = E
+
+       tot_q = sum(q(1:p%natloc))
+#ifdef _MP
+       call sum_in_place(mod_parallel_3d%mpi, E)
+       call sum_in_place(mod_parallel_3d%mpi, tot_q)
+#endif
+
+       write (ilog, '(5X,I5,A2,4ES20.10)')  &
+            nit, '-', E, dmu, maxval(abs(dq)), tot_q
+       write (*, '(5X,I5,A2,4ES20.10)')  &
+            nit, '-', E, dmu, maxval(abs(dq)), tot_q
+    endif
 
     ! Transform the gradient to the plane in which sum q_i = 0 (sum xi_i = 0)
     call dq2aux(p, this%f, dq, naux, xi)
@@ -1088,6 +1119,10 @@ contains
     gg   = 1.0_DP
     do while (dmu > this%dE_crit .and. gg /= 0.0_DP)
 
+       !**
+       !* BEGIN LINE SEARCH IN DIRECTION xi (dq)
+       !**
+
        ! Compute the pseudo electrostatic potential for the gradient dq E
        ! Back transformation -> sum(dq) = 0
        call aux2q(p, this%f, this%q0, naux, xi, dq)
@@ -1100,6 +1135,54 @@ contains
 #ifdef _MP
        dmu = max(mod_parallel_3d%mpi, dmu)
 #endif
+
+#if 0
+          ! Nonlinear line search in direction phi1 (Newton's method)
+          call f_and_df(p, dq, phi1, phi2, lambda, f, df)
+   !       call print("Begin lambda iteration...")
+          lambda = 0.0_DP ! Precondition?
+   !       write (*, '(6ES20.10)')  lambda, f, df, maxval(abs(dq)), dot_product(dq, dq), dot_product(xi(1:naux), xi(1:naux))
+          do while (abs(f) > 1d-12)
+             if (df == 0.0_DP) then
+                ! Some heuristics if the second derivative becomes zero
+                lambda = 0.9*lambda
+             else
+                lambda = lambda - f/df
+             endif
+             call f_and_df(p, dq, phi1, phi2, lambda, f, df)
+   !          write (*, '(3ES20.10)')  lambda, f, df
+          enddo
+       endif
+#endif
+
+       lambda = - sum(phi1*dq)/sum(phi2*dq)
+
+       ! Update charges
+       q(1:p%natloc)  = q(1:p%natloc) + lambda*dq(1:p%natloc)
+       call I_changed_other(p)
+
+       write (*, *)  q
+
+       !**
+       !* END LINE SEARCH
+       !**
+
+       ! Get electrostatic potential phi1 and new steepest descent direction dq
+       phi1  = 0.0_DP
+       call coulomb_potential(coul, p, nl, q, phi1, ierror)
+       PASS_ERROR(ierror)
+       call add_X(this, p, phi1)
+
+!      This should be equal to 0
+!       call f_and_df(p, dq, phi1, phi2, 0.0_DP, f, df)
+!       write (*, '(ES20.10)')  f
+
+       do i = 1, p%natloc
+          if (IS_EL(this%f, p, i)) then
+             eli = p%el(i)
+             dq(i) = phi1(i) + dE_V(q(i), this%V(eli), this%Vp(eli))
+          endif
+       enddo
 
        ! Some debug output
        if (this%trace) then
@@ -1120,46 +1203,19 @@ contains
           call sum_in_place(mod_parallel_3d%mpi, tot_q)
 #endif
 
-          write (ilog, '(5X,I5,4ES20.10)')  &
-               nit, E, dmu, maxval(abs(dq)), tot_q
-       endif
-
-       ! Line search in direction phi1 (Newton's method)
-       call f_and_df(p, dq, phi1, phi2, lambda, f, df)
-!       call print("Begin lambda iteration...")
-       lambda = 0.0_DP ! Precondition?
-!       write (*, '(6ES20.10)')  lambda, f, df, maxval(abs(dq)), dot_product(dq, dq), dot_product(xi(1:naux), xi(1:naux))
-       do while (abs(f) > 1d-12)
-          if (df == 0.0_DP) then
-             ! Some heuristics if the second derivative becomes zero
-             lambda = 0.9*lambda
+          if (E < previous_E) then
+             updown_str = 'v'
           else
-             lambda = lambda - f/df
+             updown_str = '^'
           endif
-          call f_and_df(p, dq, phi1, phi2, lambda, f, df)
-!          write (*, '(3ES20.10)')  lambda, f, df
-       enddo
 
-       ! Update charges
-       q(1:p%natloc)  = q(1:p%natloc) + lambda*dq(1:p%natloc)
-       call I_changed_other(p)
+          write (ilog, '(5X,I5,A2,4ES20.10)')  &
+               nit, updown_str, E, dmu, maxval(abs(dq)), tot_q
+          write (*, '(5X,I5,A2,4ES20.10)')  &
+               nit, updown_str, E, dmu, maxval(abs(dq)), tot_q
 
-       ! Get electrostatic potential phi1 and new steepest descent direction dq
-       phi1  = 0.0_DP
-       call coulomb_potential(coul, p, nl, q, phi1, ierror)
-       PASS_ERROR(ierror)
-       call add_X(this, p, phi1)
-
-!      This should be equal to 0
-!       call f_and_df(p, dq, phi1, phi2, 0.0_DP, f, df)
-!       write (*, '(ES20.10)')  f
-
-       do i = 1, p%natloc
-          if (IS_EL(this%f, p, i)) then
-             eli = p%el(i)
-             dq(i) = phi1(i) + dE_V(q(i), this%V(eli), this%Vp(eli))
-          endif
-       enddo
+          previous_E = E
+       endif
 
        ! Transform to the plane in which sum q_i = 0
        call dq2aux(p, this%f, dq, naux, xi)
@@ -1269,7 +1325,7 @@ contains
 
     ! ---
 
-    real(DP)  :: max_dmu, max_dq, lambda, E, last_E, tot_q, beta, f, df
+    real(DP)  :: max_dmu, max_dq, lambda, E, previous_E, tot_q, beta, f, df
 
     integer   :: i, n, naux, nlambda
     integer   :: nit
@@ -1383,7 +1439,7 @@ contains
     call filter_pack(this%f, p, q, this%r_in)
 
     E        = 1.0_DP
-    last_E   = 0.0_DP                                  ! energy of previous step
+    previous_E   = 0.0_DP                                  ! energy of previous step
     beta     = this%beta                               ! starting value for beta
 #ifdef _MP
     lambda   = -filter_average(this%f, p, this%phi, &
@@ -1422,7 +1478,7 @@ contains
              write (ilog, '(5X,I5,F6.3,2X,ES20.10,20X,2ES20.10)')  &
                   nit, beta, E, max_dmu, tot_q
           else
-             if (E > last_E) then
+             if (E > previous_E) then
                 write (ilog, '(5X,I5,F6.3,A2,4ES20.10,I12)')  &
                      nit, beta, '^', E, max_dmu, max_dq, tot_q, nlambda
              else
@@ -1431,7 +1487,7 @@ contains
              endif
           endif
 
-          last_E  = E
+          previous_E  = E
 
           flush(ilog)
        endif
