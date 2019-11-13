@@ -40,6 +40,7 @@ VPATH = \
 	$(SRCDIR)/potentials/eam \
 	$(SRCDIR)/potentials/non_newtonian \
 	$(SRCDIR)/potentials/pair_potentials \
+	$(SRCDIR)/potentials/dispersion \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2x \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2sich \
 	$(SRCDIR)/potentials_nonfree/bop/rebo2coh \

@@ -77,6 +77,20 @@ HAVE_FFTW3 = 0
 #
 EXTRA_LIB += -llapack -lblas
 
+#
+## DFT-D3 library
+#
+#
+
+HAVE_DFTD3 = 0
+
+ifneq ($(HAVE_DFTD3),0)
+EXTRA_FLAGS += -DHAVE_DFTD3
+DFTD3_PATH = # Please specify the path to dftd3-lib
+EXTRA_LIB += -L$(DFTD3_PATH) -ldftd3
+EXTRA_INCLUDE += -I$(DFTD3_PATH)
+endif
+
 
 #
 # *** Other settings that rarely need to be touched
@@ -107,6 +121,8 @@ OPTFLAGS = -g -O3 -funroll-loops -fbacktrace
 #                              upon SIGTERM, i.e. if wallclock time is reached)
 #   -DHAVE_CUDA                CUDA is available on the system. Compile code to
 #                              use CUDA GPU hardware.
+#   -DHAVE_DFTD3               DFT-D3 library
+#
 # 
 DEFINES  = \
 	-DNO_BIND_C_OPTIONAL
