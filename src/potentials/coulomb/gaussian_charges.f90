@@ -617,9 +617,9 @@ contains
          c_loc11(this%db%el), 2, GAUSSIAN_CHARGES_MAX_EL, c_loc(this%db%nel), &
          CSTR("el"), CSTR("List of element symbols."))
 
-    call ptrdict_register_list_property(m, &
-         c_loc1(this%db%U), GAUSSIAN_CHARGES_MAX_EL, c_loc(this%db%nU), &
-         CSTR("U"), CSTR("Hubbard U."))
+    !call ptrdict_register_list_property(m, &
+    !     c_loc1(this%db%U), GAUSSIAN_CHARGES_MAX_EL, c_loc(this%db%nU), &
+    !     CSTR("U"), CSTR("Hubbard U."))
 
   endsubroutine gaussian_charges_register
 
