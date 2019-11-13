@@ -79,9 +79,10 @@ EXTRA_LIB += -mkl=parallel
 # DFT-D3 library 
 # 
 
-HAVE_DFTD3 = 1
+HAVE_DFTD3 = 0
 
 ifneq ($(HAVE_DFTD3),0)
+EXTRA_FLAGS += -DHAVE_DFTD3
 DFTD3_PATH = # Please specify the path to dftd3-lib
 EXTRA_LIB += -L$(DFTD3_PATH) -ldftd3
 EXTRA_INCLUDE += -I$(DFTD3_PATH)
