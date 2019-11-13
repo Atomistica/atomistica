@@ -155,7 +155,7 @@ module variable_charge
      ! For the Anderson solver
      !
 
-     real(DP)               :: dE_crit          = 0.001_DP      !< Anderson: converge the charge equilibration up to this point
+     real(DP)               :: convergence      = 0.001_DP      !< Anderson: converge the charge equilibration up to this point
      real(DP)               :: freq             = -1.0_DP       !< Anderson: charge update frequency
      integer                :: anderson_memory  = 3             !< Anderson: history of mixer
      real(DP)               :: beta             = 0.5           !< Anderson: mixing parameter
@@ -290,7 +290,7 @@ contains
   !! Constructor
   !<
   subroutine variable_charge_init(this, &
-       elements, at, solver_type, total_charge, dE_crit, &
+       elements, at, solver_type, total_charge, convergence, &
        anderson_memory, beta, beta_max, beta_mul, &
        mq, gamma, dE_max, fail_max, &
        max_iterations, &
@@ -303,7 +303,7 @@ contains
     type(ct_element_t), intent(in), optional     :: at(:)
     integer, intent(in), optional                :: solver_type
     real(DP), intent(in), optional               :: total_charge
-    real(DP), intent(in), optional               :: dE_crit
+    real(DP), intent(in), optional               :: convergence
     integer, intent(in), optional                :: anderson_memory
     real(DP), intent(in), optional               :: beta
     real(DP), intent(in), optional               :: beta_max
@@ -321,7 +321,7 @@ contains
     ASSIGN_PROPERTY(elements)
     ASSIGN_PROPERTY(solver_type)
     ASSIGN_PROPERTY(total_charge)
-    ASSIGN_PROPERTY(dE_crit)
+    ASSIGN_PROPERTY(convergence)
     ASSIGN_PROPERTY(anderson_memory)
     ASSIGN_PROPERTY(beta)
     ASSIGN_PROPERTY(beta_max)
@@ -419,7 +419,7 @@ contains
 
     ! ---
 
-    call prlog("- variable_charge_internal_init -")
+    call prlog("- variable_charge_bind_to_with_coul -")
 
     this%f = filter_from_string(this%elements, p, ierror=ierror)
     PASS_ERROR(ierror)
@@ -489,7 +489,7 @@ contains
           enddo  ! end of loop over parameters
 
           if(.not. (gotU .and. gotX .and. gotV .and. gotVp)) then
-             RAISE_ERROR("variable_charge_internal_init: Did not find all of X, U, V, p for atom " // this%at(i)%name // ", group " // this %at(i)%group, ierror)
+             RAISE_ERROR("Did not find all of X, U, V, p for atom " // this%at(i)%name // ", group " // this %at(i)%group, ierror)
           end if
 
        enddo  ! end of loop over elements
@@ -684,7 +684,7 @@ contains
 
     this%ti  = this%ti + 1.0_DP
 
-    if (this%ti > this%freq .and. this%dE_crit > 0) then
+    if (this%ti > this%freq .and. this%convergence > 0) then
 
        if (this%trace) then
           call prlog("- variable_charge_energy_and_forces -")
@@ -1049,8 +1049,8 @@ contains
     call q2aux(p, this%f, this%q0, q, naux, r)
 
     if (this%trace) then
-       write (ilog, '(5X,A5,4A20)')  &
-            "it", "E", "d(mu)", "d(q)", "sum(q)"
+       write (ilog, '(5X,A5,A2,5A20)')  &
+            "it", " ", "E", "d(mu)", "d(q)", "sum(q)", "d(E)"
     endif
 
     tot_q = sum(q(1:p%natloc))
@@ -1064,8 +1064,6 @@ contains
     call I_changed_other(p)
 
     dq  = 0.0_DP
-
-    write (*, *)  q
 
     ! Get electrostatic potential phi1 and steepest descent direction dq
     phi1(1:p%natloc)  = 0.0_DP
@@ -1100,10 +1098,8 @@ contains
        call sum_in_place(mod_parallel_3d%mpi, tot_q)
 #endif
 
-       write (ilog, '(5X,I5,A2,4ES20.10)')  &
-            nit, '-', E, dmu, maxval(abs(dq)), tot_q
-       write (*, '(5X,I5,A2,4ES20.10)')  &
-            nit, '-', E, dmu, maxval(abs(dq)), tot_q
+       write (ilog, '(10X,A2,4ES20.10)')  &
+            '-', E, dmu, maxval(abs(dq)), tot_q
     endif
 
     ! Transform the gradient to the plane in which sum q_i = 0 (sum xi_i = 0)
@@ -1115,9 +1111,9 @@ contains
     ! Initialize variables
     nit     = 1
 
-    dmu  = this%dE_crit + 1.0_DP
+    dmu  = this%convergence + 1.0_DP
     gg   = 1.0_DP
-    do while (dmu > this%dE_crit .and. gg /= 0.0_DP)
+    do while (dmu > this%convergence .and. gg /= 0.0_DP)
 
        !**
        !* BEGIN LINE SEARCH IN DIRECTION xi (dq)
@@ -1160,8 +1156,6 @@ contains
        ! Update charges
        q(1:p%natloc)  = q(1:p%natloc) + lambda*dq(1:p%natloc)
        call I_changed_other(p)
-
-       write (*, *)  q
 
        !**
        !* END LINE SEARCH
@@ -1206,13 +1200,15 @@ contains
           if (E < previous_E) then
              updown_str = 'v'
           else
-             updown_str = '^'
+             if (E > previous_E) then
+                updown_str = '^'
+             else
+                updown_str = '='
+             endif
           endif
 
-          write (ilog, '(5X,I5,A2,4ES20.10)')  &
-               nit, updown_str, E, dmu, maxval(abs(dq)), tot_q
-          write (*, '(5X,I5,A2,4ES20.10)')  &
-               nit, updown_str, E, dmu, maxval(abs(dq)), tot_q
+          write (ilog, '(5X,I5,A2,5ES20.10)')  &
+               nit, updown_str, E, dmu, maxval(abs(dq)), tot_q, E - previous_E
 
           previous_E = E
        endif
@@ -1450,7 +1446,7 @@ contains
     nlambda  = 0
     nit      = 0                                       ! current iteration
     max_dq   = 0.0_DP
-    do while (abs(max_dmu) > this%dE_crit .and. nit < this%max_iterations)
+    do while (abs(max_dmu) > this%convergence .and. nit < this%max_iterations)
        nit = nit+1
 
        ! Output energy and other stuff
@@ -1895,8 +1891,8 @@ contains
          CSTR("total_charge"), &
          CSTR("Total charge on the system for which to enable charge transfer."))
          
-    call ptrdict_register_real_property(m, c_loc(this%dE_crit), &
-         CSTR("dE_crit"), &
+    call ptrdict_register_real_property(m, c_loc(this%convergence), &
+         CSTR("convergence"), &
          CSTR("Convergence criterium (on the maximum chemical potential, i.e. the gradient of the total energy)."))
 
     call ptrdict_register_real_property(m, c_loc(this%freq), CSTR("freq"), &
