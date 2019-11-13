@@ -1060,7 +1060,7 @@ contains
 
     ! Back transformation, now sum(q) = this%q0
     call aux2q(p, this%f, this%q0, naux, r, q)
-    ASSERT(sum(q(1:p%natloc)) == 0, "sum(q(1:p%natloc)) == 0", ierror)
+    !ASSERT(sum(q(1:p%natloc)) == 0, "sum(q(1:p%natloc)) == 0", ierror)
     call I_changed_other(p)
 
     dq  = 0.0_DP
