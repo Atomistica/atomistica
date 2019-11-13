@@ -1098,8 +1098,8 @@ contains
        call sum_in_place(mod_parallel_3d%mpi, tot_q)
 #endif
 
-       write (ilog, '(10X,A2,4ES20.10)')  &
-            '-', E, dmu, maxval(abs(dq)), tot_q
+       write (ilog, '(12X,ES20.10,20X,2ES20.10)')  &
+            E, maxval(abs(dq)), tot_q
     endif
 
     ! Transform the gradient to the plane in which sum q_i = 0 (sum xi_i = 0)
