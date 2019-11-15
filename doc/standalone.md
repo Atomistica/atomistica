@@ -14,7 +14,8 @@ requires three calls of the executable.
 Input and output files
 ----------------------
 
-MDCORE takes no arguments and always reads the files `md.dat` and `atoms.dat`.
+MDCORE takes no command line arguments and always reads the files `md.dat`
+and `atoms.dat`.
 * `md.dat`:    controls the simulation
 * `atoms.dat`: contains the initial configuration, including velocities, charges
                and other quantities that characterize the state of the
