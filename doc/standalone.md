@@ -99,6 +99,21 @@ that belong to a certain molecule.
 
 Note that `atomic mass` and `next` are overriden by some MDCORE modules.
 
+Self-documentation
+------------------
+
+The code is self-documented. If you misspell a keyword in `md.dat`, then you
+will be given a list of all possible keywords with an explanation. If, for
+example, you do not know the parameters that the `Langevin` thermostat (see
+below) takes, just create a section
+
+    Langevin {
+      dummy = "";
+    };
+
+and run the code. It will spit out all possible options for the `Langevin`
+section.
+
 Simulation flow
 ---------------
 
@@ -167,3 +182,33 @@ and how much real time is required to simulate a ns in simulation time.
 Note that the file names cannot be changed. Trajectories are typically written
 in a file named `traj.nc`. (The extension depends on the file type.) Energies
 are written to the file `ener.out`.
+
+## Integrators, thermostats and barostats
+
+The simulation carries out by default a NVE run with a Velocity-Verlet
+integrator. You can explicitly specify
+
+    Verlet { };
+
+in the input file, but this corresponds to the default setting. (You should
+see this section in the output file `md.out` if no integrator is specified
+in the input file.)
+
+The only other integrators available are Langevin integrators. There is
+`Langevin`, `Langevin1D`, `LocalLangevin` and `LocalLangevin1D`. The `1D`
+integrators thermalize only in one Cartesian direction. The `Local` integrators
+apply a different per atom temperature and dissipation, as specified in the
+`atoms.dat` file. The standard `Langevin` applies the same parameters (supplied
+in the simulation control file) to all atoms.
+
+Other thermostats that are implemented are:
+* `BerendsenT`: Berendsen thermostat
+* `PetersT`:    Peters thermostat that implements the DPD equations of motion
+* `SlidingT`:   A Langevin thermostat that removes the relative velocity of two
+                rigidly sliding boundaries. Has to be used in conjuction with
+                `SlidingP` (see below).
+
+In addition to thermostats, the following barostats exist:
+* `AndersenP`:  Andersen barostat
+* `BerendsenP`: Berendsen barostat
+* `SlidingP`:   Pressure control for sliding friction simulations
