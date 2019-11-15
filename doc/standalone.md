@@ -212,3 +212,17 @@ In addition to thermostats, the following barostats exist:
 * `AndersenP`:  Andersen barostat
 * `BerendsenP`: Berendsen barostat
 * `SlidingP`:   Pressure control for sliding friction simulations
+
+Structure optimization
+----------------------
+
+MDCORE presently only implements FIRE. The simulation control file syntax for
+structure optimization is
+
+    FIRE {
+      fmax = "0.01";
+    };
+
+where `fmax` is the convergence criterion that is a threshold on the maximum
+residual force. There are other parameters that let you fine tune FIRE's
+behavior but the default settings should be appropriate for most purposes.
