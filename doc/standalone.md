@@ -40,7 +40,8 @@ MDCORE always generates the files `md.out`, `atomsA.out`, `atomsB.out` and
 ### Structure of `md.dat`
 
 The simulation control file contains two type of elements: key-value pairs
-and section. The file always begins with the global section called `Simulation`.
+and sections. The file always begins with the global section called
+`Simulation`.
 
 A key-value pair is specified by
 
@@ -139,11 +140,11 @@ is written.
 
 MDCORE has a mechanism built-in that allows it to gracefully shut down when the
 code hits the wallclock time. In that case, the code _also_ writes the file
-`atoms.out`. The existance of the file `atoms.out` does _not_ mean the
+`atoms.out`. The existence of the file `atoms.out` does _not_ mean the
 simulation has finished. Check for the existence of the `DONE` file to test
 whether the simulation has actually hit the time limit.
 
-### Restart
+### Restart and time counters
 
 The simulation can be restarted simply by copying `atoms.out` to `atoms.dat`
 in a different directory. (All other simulation control files, such as `md.dat`
@@ -151,20 +152,25 @@ of course also need to be present in that directory.) Note that the `atoms.out`
 file contains the current time. Restarting the simulation then means that the
 simulation actually stops at a time `max_time`; `max_time` does _not_ mean the
 simulation will run for that duration after startup of the code. This has the
-consequence that simulation will not run if it has successfully completed and
+consequence that a simulation will not run if it has successfully completed and
 is restarted as is.
 
-You can get rid of the time counter by editing the `atoms.out` file and removing
-the `time` section. Note that there may be other `time` counters in the file
-that should also be removed. For example, output modules (see below) keep track
-of the time through their own counters.
+You can get rid of the time counter by editing the `atoms.out` file in a text
+editor and removing the `time` section. Note that there may be other `time`
+counters in the file that should also be removed. For example, output modules
+(see below) keep track of the time through their own counters.
+
+The idea of the time counters is to keep track of the actual simulation time
+through a series of restarts.
 
 ### Trajectories
 
 Trajectory information is not automatically dumped to a file. You need to
 specify an output module. Presently supported are XYZ, PDB, CFG and NC output.
 We strongly suggest to use the NC (NetCDF) output module. It creates a NetCDF
-file that follows the [AMBER NetCDF convention](http://ambermd.org/netcdf/nctraj.xhtml).
+file that follows the
+[AMBER NetCDF convention](http://ambermd.org/netcdf/nctraj.xhtml) and can
+be visualized with Ovito or VMD.
 
 The statement in the simulation control file that activates output via one of
 these modules is
@@ -197,8 +203,8 @@ are written to the file `ener.out`.
 
 ## Integrators, thermostats and barostats
 
-The simulation carries out by default a NVE run with a Velocity-Verlet
-integrator. You can explicitly specify
+MDCORE carries out by default an NVE run with a Velocity-Verlet integrator. You
+can explicitly specify
 
     Verlet { };
 
