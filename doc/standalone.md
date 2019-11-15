@@ -100,6 +100,17 @@ that belong to a certain molecule.
 
 Note that `atomic mass` and `next` are overriden by some MDCORE modules.
 
+Atomistica's Python interface has functions for writing these files. After
+installing the Python interface (e.g. via `python3 -m pip install atomistica`),
+you can import the `io` extension. For example, converting a LAMMPS data file
+would work as follows:
+
+    from ase.io import read
+    import atomistica.io as io
+    a = read('my_lammps_file.data')
+    io.write('atoms.dat', a)
+    
+
 Self-documentation
 ------------------
 
