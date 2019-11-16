@@ -148,49 +148,49 @@ contains
 
     ! --- Start
 
-    write (un,*), "# LAMMPS data written by MDCORE, write_lammps_data_un()"
-    write (un,*), ""
-    write (un,*), p%nat, "atoms"
-    write (un,*), ntypes, "atom types"
-    write (un,*), ""
-    write (un,*), 0.0, p%Abox(1,1), "xlo xhi"
-    write (un,*), 0.0, p%Abox(2,2), "ylo yhi"
-    write (un,*), 0.0, p%Abox(3,3), "zlo zhi"
-    write (un,*), ""
+    write (un,*) "# LAMMPS data written by MDCORE, write_lammps_data_un()"
+    write (un,*) ""
+    write (un,*) p%nat, "atoms"
+    write (un,*) ntypes, "atom types"
+    write (un,*) ""
+    write (un,*) 0.0, p%Abox(1,1), "xlo xhi"
+    write (un,*) 0.0, p%Abox(2,2), "ylo yhi"
+    write (un,*) 0.0, p%Abox(3,3), "zlo zhi"
+    write (un,*) ""
     if(mode==2) then
-       write (un,*), "1 bond types" ! XXX
-       write (un,*), "1 angle types" ! XXX
-       write (un,*), nbonds*2, "bonds"  ! XXX
-       write (un,*), nbonds, "angles"  ! XXX
-       write (un,*), ""
+       write (un,*) "1 bond types" ! XXX
+       write (un,*) "1 angle types" ! XXX
+       write (un,*) nbonds*2, "bonds"  ! XXX
+       write (un,*) nbonds, "angles"  ! XXX
+       write (un,*) ""
     end if
-    write (un,*), "Masses"
-    write (un,*), ""
+    write (un,*) "Masses"
+    write (un,*) ""
     do i = 1, ntypes
        if (types(i) > 0 .and. types(i) <= MAX_Z) then
-          write (un,*), outtypes(i), ElementMass(types(i))
+          write (un,*) outtypes(i), ElementMass(types(i))
        else
           RAISE_ERROR("Unknown atomic number " // types(i) // ".", ierror)
        endif
     end do
-    write (un,*), ""
-    write (un,*), "Atoms"
-    write (un,*), ""
+    write (un,*) ""
+    write (un,*) "Atoms"
+    write (un,*) ""
     do i = 1, p%nat
        if (mode == 0) then
-          write (un,'(2I10,3ES20.10)'), i, z_to_outtype(p%Z(i)), POS3(p, i)
+          write (un,'(2I10,3ES20.10)') i, z_to_outtype(p%Z(i)), POS3(p, i)
        else if(mode==1) then
-          write (un,'(2I10,4ES20.10)'), i, z_to_outtype(p%Z(i)), q(i), POS3(p, i)
+          write (un,'(2I10,4ES20.10)') i, z_to_outtype(p%Z(i)), q(i), POS3(p, i)
        else if(mode==2) then
-          write (un,'(3I10,4ES20.10)'), i, mol%imol(i), z_to_outtype(p%Z(i)), q(i), POS3(p, i)
+          write (un,'(3I10,4ES20.10)') i, mol%imol(i), z_to_outtype(p%Z(i)), q(i), POS3(p, i)
        end if
     end do
 
     ! --- XXX: H2O specific bonds
     if(mode==2) then
-       write (un,*), ""
-       write (un,*), "Bonds"
-       write (un,*), ""
+       write (un,*) ""
+       write (un,*) "Bonds"
+       write (un,*) ""
        nbonds = 0
        ! loop over molecules
        do i = 1, mol%n_molec
@@ -222,7 +222,7 @@ contains
                 if(l /= k) then
                    ! bonds from H to O, that's why O omitted
                    nbonds = nbonds + 1
-                   write (un,*), nbonds, 1, atmol(k), atmol(l)  ! XXX: bond type 1
+                   write (un,*) nbonds, 1, atmol(k), atmol(l)  ! XXX: bond type 1
                 end if
              end do
           end if
@@ -231,9 +231,9 @@ contains
 
     ! --- XXX: H2O specific angles
     if(mode==2) then
-       write (un,*), ""
-       write (un,*), "Angles"
-       write (un,*), ""
+       write (un,*) ""
+       write (un,*) "Angles"
+       write (un,*) ""
        nangles = 0
        ! loop over molecules
        do i = 1, mol%n_molec
@@ -263,11 +263,11 @@ contains
              ! angles
              nangles = nangles + 1
              if(k==1) then
-                write (un,*), nangles, 1, atmol(2), atmol(1), atmol(3)  ! XXX: bond type 1
+                write (un,*) nangles, 1, atmol(2), atmol(1), atmol(3)  ! XXX: bond type 1
              else if(k==2) then
-                write (un,*), nangles, 1, atmol(1), atmol(2), atmol(3)  ! XXX: bond type 1
+                write (un,*) nangles, 1, atmol(1), atmol(2), atmol(3)  ! XXX: bond type 1
              else
-                write (un,*), nangles, 1, atmol(1), atmol(3), atmol(2)  ! XXX: bond type 1
+                write (un,*) nangles, 1, atmol(1), atmol(3), atmol(2)  ! XXX: bond type 1
              end if
           end if
        end do  ! end of loop over molecules
