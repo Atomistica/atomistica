@@ -90,10 +90,11 @@
 module variable_charge
   use supplib
 
-  use anderson_mixer
-
   use particles
   use neighbors
+
+  use anderson_mixer
+  use extrapolation
 
   use filter
 
@@ -244,6 +245,13 @@ module variable_charge
      
      type(ct_element_t), allocatable  :: at(:)
 
+     !
+     ! Position and charge history
+     !
+
+     integer               :: extrapolation_memory = 3  !< Number of past steps to keep
+     type(extrapolation_t) :: extrapolation
+
   endtype variable_charge_t
   public :: variable_charge_t
 
@@ -291,30 +299,31 @@ contains
   !<
   subroutine variable_charge_init(this, &
        elements, at, solver_type, total_charge, convergence, &
-       anderson_memory, beta, beta_max, beta_mul, &
+       anderson_memory, extrapolation_memory, beta, beta_max, beta_mul, &
        mq, gamma, dE_max, fail_max, &
        max_iterations, &
        log, trace)
     implicit none
 
-    type(variable_charge_t), intent(inout)       :: this
+    type(variable_charge_t),      intent(inout) :: this
 
-    character(*), intent(in), optional           :: elements
-    type(ct_element_t), intent(in), optional     :: at(:)
-    integer, intent(in), optional                :: solver_type
-    real(DP), intent(in), optional               :: total_charge
-    real(DP), intent(in), optional               :: convergence
-    integer, intent(in), optional                :: anderson_memory
-    real(DP), intent(in), optional               :: beta
-    real(DP), intent(in), optional               :: beta_max
-    real(DP), intent(in), optional               :: beta_mul
-    real(DP), intent(in), optional               :: mq
-    real(DP), intent(in), optional               :: gamma
-    real(DP), intent(in), optional               :: dE_max
-    real(DP), intent(in), optional               :: fail_max
-    integer, intent(in), optional                :: max_iterations
-    logical, intent(in), optional                :: log
-    logical, intent(in), optional                :: trace
+    character(*),       optional, intent(in)    :: elements
+    type(ct_element_t), optional, intent(in)    :: at(:)
+    integer,            optional, intent(in)    :: solver_type
+    real(DP),           optional, intent(in)    :: total_charge
+    real(DP),           optional, intent(in)    :: convergence
+    integer,            optional, intent(in)    :: anderson_memory
+    integer,            optional, intent(in)    :: extrapolation_memory
+    real(DP),           optional, intent(in)    :: beta
+    real(DP),           optional, intent(in)    :: beta_max
+    real(DP),           optional, intent(in)    :: beta_mul
+    real(DP),           optional, intent(in)    :: mq
+    real(DP),           optional, intent(in)    :: gamma
+    real(DP),           optional, intent(in)    :: dE_max
+    real(DP),           optional, intent(in)    :: fail_max
+    integer,            optional, intent(in)    :: max_iterations
+    logical,            optional, intent(in)    :: log
+    logical,            optional, intent(in)    :: trace
 
     ! ---
 
@@ -323,6 +332,7 @@ contains
     ASSIGN_PROPERTY(total_charge)
     ASSIGN_PROPERTY(convergence)
     ASSIGN_PROPERTY(anderson_memory)
+    ASSIGN_PROPERTY(extrapolation_memory)
     ASSIGN_PROPERTY(beta)
     ASSIGN_PROPERTY(beta_max)
     ASSIGN_PROPERTY(beta_mul)
@@ -385,6 +395,7 @@ contains
     endif
 
     call del(this%mixer)
+    call del(this%extrapolation)
 
     if (this%dE_un > 0) then
        call fclose(this%dE_un)
@@ -566,10 +577,14 @@ contains
 #endif
     this%q0 = this%total_charge / k
 
-    write (ilog, '(5X,A,F20.10)')  "total_charge  = ", this%total_charge
-    write (ilog, '(5X,A,F20.10)')  "* q0          = ", this%q0
+    write (ilog, '(5X,A,F20.10)')  "total_charge         = ", this%total_charge
+    write (ilog, '(5X,A,F20.10)')  "* q0                 = ", this%q0
 
     call init(this%mixer, this%anderson_memory)
+
+    ! allocate extrapolation history
+    call prlog("extrapolation_memory = "//this%extrapolation_memory)
+    call init(this%extrapolation, p, this%extrapolation_memory)
 
     if (this%solver_type == ST_CAR_PARRINELLO) then
        call ptr_by_name(p%data, QV_STR, this%qv, ierror=ierror)
@@ -997,7 +1012,7 @@ contains
   !!
   !! Compute equilibrated charges using a conjugate-gradients algorithm
   !<
-  subroutine variable_charge_conjugate_gradients(this, p, nl, q, coul, epot, ierror)
+  subroutine variable_charge_conjugate_gradients(this, p, nl, q, coul, epot, error)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -1008,7 +1023,7 @@ contains
     real(DP),                intent(inout) :: q(p%maxnatloc)
     type(C_PTR),             intent(in)    :: coul
     real(DP),                intent(inout) :: epot
-    integer,       optional, intent(inout) :: ierror
+    integer,       optional, intent(inout) :: error
 
     ! ---
 
@@ -1027,6 +1042,13 @@ contains
     if (this%log) then
        write (ilog, '(A)')  "- variable_charge_conjugate_gradients -"
     endif
+
+    !
+    ! Extrapolate charges from previous time steps
+    !
+
+    call extrapolate(this%extrapolation, p, q, error=error)
+    PASS_ERROR(error)
 
     !
     ! FIXME!!! Memory leak... Deallocate again
@@ -1060,15 +1082,15 @@ contains
 
     ! Back transformation, now sum(q) = this%q0
     call aux2q(p, this%f, this%q0, naux, r, q)
-    !ASSERT(sum(q(1:p%natloc)) == 0, "sum(q(1:p%natloc)) == 0", ierror)
+    !ASSERT(sum(q(1:p%natloc)) == 0, "sum(q(1:p%natloc)) == 0", error)
     call I_changed_other(p)
 
     dq  = 0.0_DP
 
     ! Get electrostatic potential phi1 and steepest descent direction dq
     phi1(1:p%natloc)  = 0.0_DP
-    call coulomb_potential(coul, p, nl, q, phi1, ierror)
-    PASS_ERROR(ierror)
+    call coulomb_potential(coul, p, nl, q, phi1, error)
+    PASS_ERROR(error)
     call add_X(this, p, phi1)
 
     do i = 1, p%natloc
@@ -1124,8 +1146,8 @@ contains
        call aux2q(p, this%f, this%q0, naux, xi, dq)
        call I_changed_other(p)
        phi2(1:p%natloc)    = 0.0_DP
-       call coulomb_potential(coul, p, nl, dq, phi2, ierror)
-       PASS_ERROR(ierror)
+       call coulomb_potential(coul, p, nl, dq, phi2, error)
+       PASS_ERROR(error)
 
        dmu = maxval(abs(dq))
 #ifdef _MP
@@ -1163,8 +1185,8 @@ contains
 
        ! Get electrostatic potential phi1 and new steepest descent direction dq
        phi1  = 0.0_DP
-       call coulomb_potential(coul, p, nl, q, phi1, ierror)
-       PASS_ERROR(ierror)
+       call coulomb_potential(coul, p, nl, q, phi1, error)
+       PASS_ERROR(error)
        call add_X(this, p, phi1)
 
 !      This should be equal to 0
@@ -1306,7 +1328,7 @@ contains
   !! Compute equilibrated charges by a self-consistent loop with
   !! Anderson mixing.
   !<
-  subroutine variable_charge_anderson(this, p, nl, q, coul, epot, ierror)
+  subroutine variable_charge_anderson(this, p, nl, q, coul, epot, error)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -1317,7 +1339,7 @@ contains
     real(DP),                intent(inout) :: q(p%maxnatloc)   !< Charges
     type(C_PTR),             intent(in)    :: coul             !< Coulomb module
     real(DP),                intent(inout) :: epot           !< Potential energy
-    integer,       optional, intent(inout) :: ierror           !< Error signals
+    integer,       optional, intent(inout) :: error           !< Error signals
 
     ! ---
 
@@ -1422,8 +1444,8 @@ contains
     !
 
     this%phi(1:p%nat)  = 0.0_DP   ! Note: This needs to be 1:p%nat, NOT 1:p%natloc for the fast-multipole 
-    call coulomb_potential(coul, p, nl, q, this%phi, ierror)
-    PASS_ERROR(ierror)
+    call coulomb_potential(coul, p, nl, q, this%phi, error)
+    PASS_ERROR(error)
     call add_X(this, p, this%phi)
 
     !
@@ -1528,8 +1550,8 @@ contains
 
        ! Calculate new potential
        this%phi(1:p%nat)  = 0.0_DP   ! Note: This needs to be 1:p%nat, NOT 1:p%natloc for the fast-multipole solver
-       call coulomb_potential(coul, p, nl, q, this%phi, ierror)
-       PASS_ERROR(ierror)
+       call coulomb_potential(coul, p, nl, q, this%phi, error)
+       PASS_ERROR(error)
        call add_X(this, p, this%phi)
 
        ! Update beta
@@ -1692,7 +1714,7 @@ contains
   !!
   !! Propagate the charges using a Car-Parrinello type metadynamics
   !<
-  subroutine variable_charge_car_parrinello(this, p, nl, q, coul, epot, ierror)
+  subroutine variable_charge_car_parrinello(this, p, nl, q, coul, epot, error)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -1703,7 +1725,7 @@ contains
     real(DP),                intent(inout) :: q(p%maxnatloc)
     type(C_PTR),             intent(in)    :: coul
     real(DP),                intent(inout) :: epot
-    integer,       optional, intent(inout) :: ierror
+    integer,       optional, intent(inout) :: error
 
     ! ---
 
@@ -1718,12 +1740,12 @@ contains
 
     if (.not. associated(this%qa)) then
        ! XXX FIXME!! This does not work if *p* changes
-       call ptr_by_name(p%data, QA_STR, this%qa, ierror=ierror)
-       PASS_ERROR(ierror)
+       call ptr_by_name(p%data, QA_STR, this%qa, ierror=error)
+       PASS_ERROR(error)
     endif
 
-    call coulomb_potential(coul, p, nl, q, this%qa, ierror=ierror)
-    PASS_ERROR(ierror)
+    call coulomb_potential(coul, p, nl, q, this%qa, ierror=error)
+    PASS_ERROR(error)
     call add_X(this, p, this%qa)
 
     epot_ct  = 0.0_DP
@@ -1784,8 +1806,8 @@ contains
 
     if (this%n_fail >= this%fail_max) then
        ! Anderson mixing step if the criterion is exceeded
-       call variable_charge_anderson(this, p, nl, q, coul, epot, ierror)
-       PASS_ERROR(ierror)
+       call variable_charge_anderson(this, p, nl, q, coul, epot, error)
+       PASS_ERROR(error)
 
        this%qv      = 0.0_DP
        this%qa      = 0.0_DP
@@ -1894,6 +1916,10 @@ contains
     call ptrdict_register_real_property(m, c_loc(this%convergence), &
          CSTR("convergence"), &
          CSTR("Convergence criterium (on the maximum chemical potential, i.e. the gradient of the total energy)."))
+
+    call ptrdict_register_integer_property(m, c_loc(this%extrapolation_memory), &
+         CSTR("extrapolation_memory"), &
+         CSTR("Number of past time steps to consider for charge extrapolation (minimum of 2, extrapolation is disabled if less)."))
 
     call ptrdict_register_real_property(m, c_loc(this%freq), CSTR("freq"), &
          CSTR("Frequency of charge equilibration."))

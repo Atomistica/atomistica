@@ -564,10 +564,8 @@ contains
     ! Extrapolate charges
     !
 
-    if (this%extrapolation_memory >= 2) then
-       call extrapolate(this%extrapolation, p, q, error=error)
-       PASS_ERROR(error)
-    endif
+    call extrapolate(this%extrapolation, p, q, error=error)
+    PASS_ERROR(error)
 
     !
     ! Init
@@ -783,7 +781,7 @@ contains
 
     call ptrdict_register_integer_property(m, c_loc(this%extrapolation_memory), &
          CSTR("extrapolation_memory"), &
-         CSTR("Number of past time steps to consider for charge extrapolation (min 2, extrapolation disabled if less)."))
+         CSTR("Number of past time steps to consider for charge extrapolation (minimum of 2, extrapolation is disabled if less)."))
 
     ! for DFTB3
     call ptrdict_register_integer_property(m, c_loc(this%dftb3), &

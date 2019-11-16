@@ -145,6 +145,10 @@ contains
 
     INIT_ERROR(error)
 
+    if (this%extrapolation_memory < 2) then
+       return
+    endif
+
     q0 = q
 
     if (this%history_counter >= this%extrapolation_memory) then
