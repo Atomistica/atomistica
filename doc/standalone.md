@@ -130,13 +130,40 @@ section.
 Simulation flow
 ---------------
 
+### Minimal simulation control file
+
+In a minimal simulation control file, you will want to set the system of units,
+time step and frequency of writing to screen and to a restart file. The
+corresponding file would look like this:
+
+    Simulation {
+      system_of_units = "eV/A/fs";
+      dt = "1";
+      max_time = "100000";
+      scr_freq = "10";
+      file_freq = "1000";
+    };
+
+This file sets energy units to eV, length to A and time to fs. There are two
+other systems of units available: "eV/A" and "H/Bohr". In both cases, the time
+unit will be the natural time unit of that system of units, i.e. around 10.2 for
+eV/A. "eV/A/fs" should be appropriate for most cases.
+
+The keyword `dt` sets the time step (in time units), in this case to 1 fs.
+`scr_freq` and `file_freq` set the frequency of output to screen and to a 
+restart file- (Those are the files `atomsA.out` and `atomsB.out` described
+above.) Note that these number are integers and specify integration steps, not
+real time. This is _different_ for the trajectory output modules below, that
+also have a `freq` keyword but that refers to real time.
+
 ### Code shutdown
 
-The simulation stops at the _time_ specified by `max_time` (in the simulation
-control file). Note that this is _not_ the number of time steps, but the time
-in the system of units selected. This is particularly useful when using adaptive
-time stepping. At this point, the file `atoms.out` and an empty file `DONE`
-is written.
+The simulation stops at the _time_ specified by `max_time` in the simulation
+control file, i.e. 100 ps in the above example. Note that this is _not_ the
+number of time steps, but the time in the system of units selected. This is
+particularly useful when using adaptive time stepping and when restarting a
+simulation, see below. At the point where the simulation reaches `max_time`,
+the file `atoms.out` and an empty file `DONE` is written.
 
 MDCORE has a mechanism built-in that allows it to gracefully shut down when the
 code hits the wallclock time. In that case, the code _also_ writes the file
@@ -206,7 +233,7 @@ are written to the file `ener.out`.
 MDCORE carries out by default an NVE run with a Velocity-Verlet integrator. You
 can explicitly specify
 
-    Verlet { };
+#    Verlet { };
 
 in the input file, but this corresponds to the default setting. (You should
 see this section in the output file `md.out` if no integrator is specified
