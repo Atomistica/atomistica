@@ -197,8 +197,10 @@ contains
     !
 
     do i = 1, p%natloc
-       if (p%Z(i) == O_ .and. this%molecules%next(i) /= 0) then !p%Z(i+1) == H_ .and. p%Z(i+2) == H_) then
-          p%dof = p%dof - 3
+       if (p%Z(i) == O_) then
+          if (this%molecules%next(i) /= 0) then !p%Z(i+1) == H_ .and. p%Z(i+2) == H_) then
+             p%dof = p%dof - 3
+          endif
        endif
     enddo
 
@@ -320,13 +322,15 @@ contains
        if (IS_EL(this%els, p, i0)) then
 
           is_water = .false.
-          if (p%Z(i0) == O_ .and. this%molecules%next(i0) > 0) then
-             i1 = p%global2local(this%molecules%next(i0))
-             if (i1 > 0) then
-                if (this%molecules%next(i1) > 0) then
-                   i2 = p%global2local(this%molecules%next(i1))
-                   if (i2 > 0) then
-                      is_water = .true.
+          if (p%Z(i0) == O_) then
+             if (this%molecules%next(i0) > 0) then
+                i1 = p%global2local(this%molecules%next(i0))
+                if (i1 > 0) then
+                   if (this%molecules%next(i1) > 0) then
+                      i2 = p%global2local(this%molecules%next(i1))
+                      if (i2 > 0) then
+                         is_water = .true.
+                      endif
                    endif
                 endif
              endif
@@ -437,6 +441,10 @@ contains
              PNC3(p, i1)  = PNC3(p, i1) + dr1
              PNC3(p, i2)  = PNC3(p, i2) + dr2
 
+             PCN3(p, i0)  = PCN3(p, i0) + dr0
+             PCN3(p, i1)  = PCN3(p, i1) + dr1
+             PCN3(p, i2)  = PCN3(p, i2) + dr2
+
              VEC3(dyn%v, i0)  = q0 + dv0
              VEC3(dyn%v, i1)  = q1 + dv1
              VEC3(dyn%v, i2)  = q2 + dv2
@@ -493,6 +501,7 @@ contains
              POS3(p, i0)  = POS3(p, i0) + dr0
 #endif
              PNC3(p, i0)  = PNC3(p, i0) + dr0
+             PCN3(p, i0)  = PCN3(p, i0) + dr0
              VEC3(dyn%v, i0)  = VEC3(dyn%v, i0) + 0.5_DP * VEC3(dyn%f, i0) / p%m(i0) * dyn%dt
 
              l_max_dr_sq  = max(l_max_dr_sq, dot_product(dr0, dr0))
@@ -596,13 +605,15 @@ contains
        if (IS_EL(this%els, p, i0)) then
 
           is_water = .false.
-          if (p%Z(i0) == O_ .and. this%molecules%next(i0) > 0) then
-             i1 = p%global2local(this%molecules%next(i0))
-             if (i1 > 0) then
-                if (this%molecules%next(i1) > 0) then
-                   i2 = p%global2local(this%molecules%next(i1))
-                   if (i2 > 0) then
-                      is_water = .true.
+          if (p%Z(i0) == O_) then
+             if (this%molecules%next(i0) > 0) then
+                i1 = p%global2local(this%molecules%next(i0))
+                if (i1 > 0) then
+                   if (this%molecules%next(i1) > 0) then
+                      i2 = p%global2local(this%molecules%next(i1))
+                      if (i2 > 0) then
+                         is_water = .true.
+                      endif
                    endif
                 endif
              endif

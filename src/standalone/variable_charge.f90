@@ -90,10 +90,11 @@
 module variable_charge
   use supplib
 
-  use anderson_mixer
-
   use particles
   use neighbors
+
+  use anderson_mixer
+  use extrapolation
 
   use filter
 
@@ -155,7 +156,7 @@ module variable_charge
      ! For the Anderson solver
      !
 
-     real(DP)               :: dE_crit          = 0.001_DP      !< Anderson: converge the charge equilibration up to this point
+     real(DP)               :: convergence      = 0.001_DP      !< Anderson: converge the charge equilibration up to this point
      real(DP)               :: freq             = -1.0_DP       !< Anderson: charge update frequency
      integer                :: anderson_memory  = 3             !< Anderson: history of mixer
      real(DP)               :: beta             = 0.5           !< Anderson: mixing parameter
@@ -244,6 +245,13 @@ module variable_charge
      
      type(ct_element_t), allocatable  :: at(:)
 
+     !
+     ! Position and charge history
+     !
+
+     integer               :: extrapolation_memory = 0  !< Number of past steps to keep
+     type(extrapolation_t) :: extrapolation
+
   endtype variable_charge_t
   public :: variable_charge_t
 
@@ -290,39 +298,41 @@ contains
   !! Constructor
   !<
   subroutine variable_charge_init(this, &
-       elements, at, solver_type, total_charge, dE_crit, &
-       anderson_memory, beta, beta_max, beta_mul, &
+       elements, at, solver_type, total_charge, convergence, &
+       anderson_memory, extrapolation_memory, beta, beta_max, beta_mul, &
        mq, gamma, dE_max, fail_max, &
        max_iterations, &
        log, trace)
     implicit none
 
-    type(variable_charge_t), intent(inout)       :: this
+    type(variable_charge_t),      intent(inout) :: this
 
-    character(*), intent(in), optional           :: elements
-    type(ct_element_t), intent(in), optional     :: at(:)
-    integer, intent(in), optional                :: solver_type
-    real(DP), intent(in), optional               :: total_charge
-    real(DP), intent(in), optional               :: dE_crit
-    integer, intent(in), optional                :: anderson_memory
-    real(DP), intent(in), optional               :: beta
-    real(DP), intent(in), optional               :: beta_max
-    real(DP), intent(in), optional               :: beta_mul
-    real(DP), intent(in), optional               :: mq
-    real(DP), intent(in), optional               :: gamma
-    real(DP), intent(in), optional               :: dE_max
-    real(DP), intent(in), optional               :: fail_max
-    integer, intent(in), optional                :: max_iterations
-    logical, intent(in), optional                :: log
-    logical, intent(in), optional                :: trace
+    character(*),       optional, intent(in)    :: elements
+    type(ct_element_t), optional, intent(in)    :: at(:)
+    integer,            optional, intent(in)    :: solver_type
+    real(DP),           optional, intent(in)    :: total_charge
+    real(DP),           optional, intent(in)    :: convergence
+    integer,            optional, intent(in)    :: anderson_memory
+    integer,            optional, intent(in)    :: extrapolation_memory
+    real(DP),           optional, intent(in)    :: beta
+    real(DP),           optional, intent(in)    :: beta_max
+    real(DP),           optional, intent(in)    :: beta_mul
+    real(DP),           optional, intent(in)    :: mq
+    real(DP),           optional, intent(in)    :: gamma
+    real(DP),           optional, intent(in)    :: dE_max
+    real(DP),           optional, intent(in)    :: fail_max
+    integer,            optional, intent(in)    :: max_iterations
+    logical,            optional, intent(in)    :: log
+    logical,            optional, intent(in)    :: trace
 
     ! ---
 
     ASSIGN_PROPERTY(elements)
     ASSIGN_PROPERTY(solver_type)
     ASSIGN_PROPERTY(total_charge)
-    ASSIGN_PROPERTY(dE_crit)
+    ASSIGN_PROPERTY(convergence)
     ASSIGN_PROPERTY(anderson_memory)
+    ASSIGN_PROPERTY(extrapolation_memory)
     ASSIGN_PROPERTY(beta)
     ASSIGN_PROPERTY(beta_max)
     ASSIGN_PROPERTY(beta_mul)
@@ -385,6 +395,7 @@ contains
     endif
 
     call del(this%mixer)
+    call del(this%extrapolation)
 
     if (this%dE_un > 0) then
        call fclose(this%dE_un)
@@ -419,7 +430,7 @@ contains
 
     ! ---
 
-    call prlog("- variable_charge_internal_init -")
+    call prlog("- variable_charge_bind_to_with_coul -")
 
     this%f = filter_from_string(this%elements, p, ierror=ierror)
     PASS_ERROR(ierror)
@@ -489,7 +500,7 @@ contains
           enddo  ! end of loop over parameters
 
           if(.not. (gotU .and. gotX .and. gotV .and. gotVp)) then
-             RAISE_ERROR("variable_charge_internal_init: Did not find all of X, U, V, p for atom " // this%at(i)%name // ", group " // this %at(i)%group, ierror)
+             RAISE_ERROR("Did not find all of X, U, V, p for atom " // this%at(i)%name // ", group " // this %at(i)%group, ierror)
           end if
 
        enddo  ! end of loop over elements
@@ -566,10 +577,14 @@ contains
 #endif
     this%q0 = this%total_charge / k
 
-    write (ilog, '(5X,A,F20.10)')  "total_charge  = ", this%total_charge
-    write (ilog, '(5X,A,F20.10)')  "* q0          = ", this%q0
+    write (ilog, '(5X,A,F20.10)')  "total_charge         = ", this%total_charge
+    write (ilog, '(5X,A,F20.10)')  "* q0                 = ", this%q0
 
     call init(this%mixer, this%anderson_memory)
+
+    ! allocate extrapolation history
+    call prlog("extrapolation_memory = "//this%extrapolation_memory)
+    call init(this%extrapolation, p, this%extrapolation_memory)
 
     if (this%solver_type == ST_CAR_PARRINELLO) then
        call ptr_by_name(p%data, QV_STR, this%qv, ierror=ierror)
@@ -684,7 +699,7 @@ contains
 
     this%ti  = this%ti + 1.0_DP
 
-    if (this%ti > this%freq .and. this%dE_crit > 0) then
+    if (this%ti > this%freq .and. this%convergence > 0) then
 
        if (this%trace) then
           call prlog("- variable_charge_energy_and_forces -")
@@ -997,7 +1012,7 @@ contains
   !!
   !! Compute equilibrated charges using a conjugate-gradients algorithm
   !<
-  subroutine variable_charge_conjugate_gradients(this, p, nl, q, coul, epot, ierror)
+  subroutine variable_charge_conjugate_gradients(this, p, nl, q, coul, epot, error)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -1008,23 +1023,32 @@ contains
     real(DP),                intent(inout) :: q(p%maxnatloc)
     type(C_PTR),             intent(in)    :: coul
     real(DP),                intent(inout) :: epot
-    integer,       optional, intent(inout) :: ierror
+    integer,       optional, intent(inout) :: error
 
     ! ---
 
     real(DP), allocatable  :: g(:), h(:), xi(:), dq(:), phi1(:), phi2(:), r(:)
-    real(DP)               :: lambda, gg, dgg, gamma, E, tot_q
+    real(DP)               :: lambda, gg, dgg, gamma, E, previous_E, tot_q
     real(DP)               :: dmu, f, df
 
     integer                :: i, nit, naux, eli
+
+    character(1)           :: updown_str
 
     ! ---
 
     call timer_start("variable_charge_conjugate_gradients")
 
     if (this%log) then
-       write (ilog, '(A)')  "- variable_charge_conjugate_gradients -"
+       call prlog("- variable_charge_conjugate_gradients -")
     endif
+
+    !
+    ! Extrapolate charges from previous time steps
+    !
+
+    call extrapolate(this%extrapolation, p, q, error=error)
+    PASS_ERROR(error)
 
     !
     ! FIXME!!! Memory leak... Deallocate again
@@ -1047,8 +1071,8 @@ contains
     call q2aux(p, this%f, this%q0, q, naux, r)
 
     if (this%trace) then
-       write (ilog, '(5X,A5,4A20)')  &
-            "it", "E", "d(mu)", "d(q)", "sum(q)"
+       write (ilog, '(5X,A5,A2,5A20)')  &
+            "it", " ", "E", "d(mu)", "d(q)", "sum(q)", "d(E)"
     endif
 
     tot_q = sum(q(1:p%natloc))
@@ -1058,19 +1082,23 @@ contains
 
     ! Back transformation, now sum(q) = this%q0
     call aux2q(p, this%f, this%q0, naux, r, q)
-    ASSERT(sum(q(1:p%natloc)) == 0, "sum(q(1:p%natloc)) == 0", ierror)
+    !ASSERT(sum(q(1:p%natloc)) == 0, "sum(q(1:p%natloc)) == 0", error)
     call I_changed_other(p)
 
-    dq = 0.0_DP
+    dq  = 0.0_DP
 
     ! Get electrostatic potential phi1 and steepest descent direction dq
-    phi1(1:p%natloc) = 0.0_DP
-    call coulomb_potential(coul, p, nl, q, phi1, ierror)
-    PASS_ERROR(ierror)
+    phi1(1:p%natloc)  = 0.0_DP
+    call coulomb_potential(coul, p, nl, q, phi1, error)
+    PASS_ERROR(error)
     call add_X(this, p, phi1)
 
-    write (*, *) 'q', q
-    write (*, *) 'phi1', phi1
+    do i = 1, p%natloc
+       if (IS_EL(this%f, p, i)) then
+          eli = p%el(i)
+          dq(i) = phi1(i) + dE_V(q(i), this%V(eli), this%Vp(eli))
+       endif
+    enddo
 
     ! Some debug output
     if (this%trace) then
@@ -1084,6 +1112,7 @@ contains
           endif
        enddo
        E = E/2
+       previous_E = E
 
        tot_q = sum(q(1:p%natloc))
 #ifdef _MP
@@ -1091,93 +1120,85 @@ contains
        call sum_in_place(mod_parallel_3d%mpi, tot_q)
 #endif
 
-       write (ilog, '(5X,I5,4ES20.10)')  &
-            0, E, dmu, maxval(abs(dq)), tot_q
-       write (*, '(5X,I5,4ES20.10)')  &
-            0, E, dmu, maxval(abs(dq)), tot_q
+       write (ilog, '(12X,ES20.10,20X,2ES20.10)')  &
+            E, maxval(abs(dq)), tot_q
     endif
-
-    do i = 1, p%natloc
-       if (IS_EL(this%f, p, i)) then
-          eli = p%el(i)
-          dq(i) = phi1(i) + dE_V(q(i), this%V(eli), this%Vp(eli))
-       endif
-    enddo
 
     ! Transform the gradient to the plane in which sum q_i = 0 (sum xi_i = 0)
     call dq2aux(p, this%f, dq, naux, xi)
-    g(1:naux)  = -xi(1:naux)
-    h(1:naux)  = g(1:naux)
-    xi(1:naux) = h(1:naux)
+    g(1:naux)   = -xi(1:naux)
+    h(1:naux)   = g(1:naux)
+    xi(1:naux)  = h(1:naux)
 
     ! Initialize variables
     nit     = 1
 
-    dmu  = this%dE_crit + 1.0_DP
+    dmu  = this%convergence + 1.0_DP
     gg   = 1.0_DP
-    do while (dmu > this%dE_crit .and. gg /= 0.0_DP)
+    do while (dmu > this%convergence .and. gg /= 0.0_DP)
 
-       ! ***
-       ! BEGIN LINE SEARCH IN SEARCH DIRECTION xi
-       ! ***
+       !**
+       !* BEGIN LINE SEARCH IN DIRECTION xi (dq)
+       !**
 
        ! Compute the pseudo electrostatic potential for the gradient dq E
        ! Back transformation -> sum(dq) = 0
        call aux2q(p, this%f, this%q0, naux, xi, dq)
        call I_changed_other(p)
-       phi2(1:p%natloc) = 0.0_DP
-       call coulomb_potential(coul, p, nl, dq, phi2, ierror)
-       PASS_ERROR(ierror)
-
-       write (*, *) 'dq', dq
-       write (*, *) 'phi2', phi2
+       phi2(1:p%natloc)    = 0.0_DP
+       call coulomb_potential(coul, p, nl, dq, phi2, error)
+       PASS_ERROR(error)
 
        dmu = maxval(abs(dq))
 #ifdef _MP
        dmu = max(mod_parallel_3d%mpi, dmu)
 #endif
 
-! Nonlinear CG
-!
-!       ! Line search in direction phi1 (Newton's method)
-!       call f_and_df(p, dq, phi1, phi2, lambda, f, df)
-!!       call print("Begin lambda iteration...")
-!       lambda = 0.0_DP ! Precondition?
-!!       write (*, '(6ES20.10)')  lambda, f, df, maxval(abs(dq)), dot_product(dq, dq), dot_product(xi(1:naux), xi(1:naux))
-!       do while (abs(f) > 1d-12)
-!          if (df == 0.0_DP) then
-!             ! Some heuristics if the second derivative becomes zero
-!             lambda = 0.9*lambda
-!          else
-!             lambda = lambda - f/df
-!          endif
-!          call f_and_df(p, dq, phi1, phi2, lambda, f, df)
-!!          write (*, '(3ES20.10)')  lambda, f, df
-!       enddo
+#if 0
+          ! Nonlinear line search in direction phi1 (Newton's method)
+          call f_and_df(p, dq, phi1, phi2, lambda, f, df)
+   !       call print("Begin lambda iteration...")
+          lambda = 0.0_DP ! Precondition?
+   !       write (*, '(6ES20.10)')  lambda, f, df, maxval(abs(dq)), dot_product(dq, dq), dot_product(xi(1:naux), xi(1:naux))
+          do while (abs(f) > 1d-12)
+             if (df == 0.0_DP) then
+                ! Some heuristics if the second derivative becomes zero
+                lambda = 0.9*lambda
+             else
+                lambda = lambda - f/df
+             endif
+             call f_and_df(p, dq, phi1, phi2, lambda, f, df)
+   !          write (*, '(3ES20.10)')  lambda, f, df
+          enddo
+       endif
+#endif
 
-! Standard CG
-       ! This should not include external potential
-       lambda = - sum(phi1(1:p%natloc)*dq(1:p%natloc)) / &
-          sum(phi2(1:p%natloc)*dq(1:p%natloc))
+       lambda = - sum(phi1*dq)/sum(phi2*dq)
 
        ! Update charges
-       q(1:p%natloc) = q(1:p%natloc) + lambda*dq(1:p%natloc)
+       q(1:p%natloc)  = q(1:p%natloc) + lambda*dq(1:p%natloc)
        call I_changed_other(p)
 
-       ! ***
-       ! END LINE SEARCH: q HAS BEEN UPDATED
-       ! ***
-
-       !write (*, *)  sum(q)
+       !**
+       !* END LINE SEARCH
+       !**
 
        ! Get electrostatic potential phi1 and new steepest descent direction dq
-       phi1 = 0.0_DP
-       call coulomb_potential(coul, p, nl, q, phi1, ierror)
-       PASS_ERROR(ierror)
+       phi1  = 0.0_DP
+       call coulomb_potential(coul, p, nl, q, phi1, error)
+       PASS_ERROR(error)
        call add_X(this, p, phi1)
 
-       write (*, *) 'q', q
-       write (*, *) 'phi1', phi1
+!      This should be equal to 0
+!       call f_and_df(p, dq, phi1, phi2, 0.0_DP, f, df)
+!       write (*, '(ES20.10)')  f
+
+       do i = 1, p%natloc
+          if (IS_EL(this%f, p, i)) then
+             eli = p%el(i)
+             dq(i) = phi1(i) + dE_V(q(i), this%V(eli), this%Vp(eli))
+          endif
+       enddo
 
        ! Some debug output
        if (this%trace) then
@@ -1198,29 +1219,28 @@ contains
           call sum_in_place(mod_parallel_3d%mpi, tot_q)
 #endif
 
-          write (ilog, '(5X,I5,4ES20.10)')  &
-               nit, E, dmu, maxval(abs(dq)), tot_q
-          write (*, '(5X,I5,4ES20.10)')  &
-               nit, E, dmu, maxval(abs(dq)), tot_q
-       endif
-
-!      This should be equal to 0
-!       call f_and_df(p, dq, phi1, phi2, 0.0_DP, f, df)
-!       write (*, '(ES20.10)')  f
-
-       do i = 1, p%natloc
-          if (IS_EL(this%f, p, i)) then
-             eli = p%el(i)
-             dq(i) = phi1(i) + dE_V(q(i), this%V(eli), this%Vp(eli))
+          if (E < previous_E) then
+             updown_str = 'v'
+          else
+             if (E > previous_E) then
+                updown_str = '^'
+             else
+                updown_str = '='
+             endif
           endif
-       enddo
+
+          write (ilog, '(5X,I5,A2,5ES20.10)')  &
+               nit, updown_str, E, dmu, maxval(abs(dq)), tot_q, E - previous_E
+
+          previous_E = E
+       endif
 
        ! Transform to the plane in which sum q_i = 0
        call dq2aux(p, this%f, dq, naux, xi)
 
        ! Conjugate gradients
-       gg  = dot_product(g(1:naux), g(1:naux))
-       dgg = dot_product(xi(1:naux), xi(1:naux)) + dot_product(g(1:naux), xi(1:naux))  ! Polak-Ribiere
+       gg   = dot_product(g(1:naux), g(1:naux))
+       dgg  = dot_product(xi(1:naux), xi(1:naux)) + dot_product(g(1:naux), xi(1:naux))  ! Polak-Ribiere
 
 #ifdef _MP
        call sum_in_place(mod_parallel_3d%mpi, gg)
@@ -1232,10 +1252,10 @@ contains
           gamma = dgg/gg
 
           ! Get the gradient of the energy with respect to q
-          g(1:naux)  = -xi(1:naux)
-          h(1:naux)  = g(1:naux) + gamma*h(1:naux)   ! <--- conjugate gradients
-          !            h(1:naux)   = g(1:naux)  ! <--- steepest descent
-          xi(1:naux) = h(1:naux)
+          g(1:naux)   = -xi(1:naux)
+          h(1:naux)   = g(1:naux) + gamma*h(1:naux)   ! <--- conjugate gradients
+          !             h(1:naux)   = g(1:naux)  ! <--- steepest descent
+          xi(1:naux)  = h(1:naux)
 
        endif
 
@@ -1308,7 +1328,7 @@ contains
   !! Compute equilibrated charges by a self-consistent loop with
   !! Anderson mixing.
   !<
-  subroutine variable_charge_anderson(this, p, nl, q, coul, epot, ierror)
+  subroutine variable_charge_anderson(this, p, nl, q, coul, epot, error)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -1319,11 +1339,11 @@ contains
     real(DP),                intent(inout) :: q(p%maxnatloc)   !< Charges
     type(C_PTR),             intent(in)    :: coul             !< Coulomb module
     real(DP),                intent(inout) :: epot           !< Potential energy
-    integer,       optional, intent(inout) :: ierror           !< Error signals
+    integer,       optional, intent(inout) :: error           !< Error signals
 
     ! ---
 
-    real(DP)  :: max_dmu, max_dq, lambda, E, last_E, tot_q, beta, f, df
+    real(DP)  :: max_dmu, max_dq, lambda, E, previous_E, tot_q, beta, f, df
 
     integer   :: i, n, naux, nlambda
     integer   :: nit
@@ -1336,7 +1356,7 @@ contains
     call timer_start("variable_charge_anderson")
 
     if (this%log) then
-       write (ilog, '(A)')  "- variable_charge_anderson -"
+       call prlog("- variable_charge_anderson -")
     endif
 
     !
@@ -1424,8 +1444,8 @@ contains
     !
 
     this%phi(1:p%nat)  = 0.0_DP   ! Note: This needs to be 1:p%nat, NOT 1:p%natloc for the fast-multipole 
-    call coulomb_potential(coul, p, nl, q, this%phi, ierror)
-    PASS_ERROR(ierror)
+    call coulomb_potential(coul, p, nl, q, this%phi, error)
+    PASS_ERROR(error)
     call add_X(this, p, this%phi)
 
     !
@@ -1437,7 +1457,7 @@ contains
     call filter_pack(this%f, p, q, this%r_in)
 
     E        = 1.0_DP
-    last_E   = 0.0_DP                                  ! energy of previous step
+    previous_E   = 0.0_DP                                  ! energy of previous step
     beta     = this%beta                               ! starting value for beta
 #ifdef _MP
     lambda   = -filter_average(this%f, p, this%phi, &
@@ -1448,7 +1468,7 @@ contains
     nlambda  = 0
     nit      = 0                                       ! current iteration
     max_dq   = 0.0_DP
-    do while (abs(max_dmu) > this%dE_crit .and. nit < this%max_iterations)
+    do while (abs(max_dmu) > this%convergence .and. nit < this%max_iterations)
        nit = nit+1
 
        ! Output energy and other stuff
@@ -1476,7 +1496,7 @@ contains
              write (ilog, '(5X,I5,F6.3,2X,ES20.10,20X,2ES20.10)')  &
                   nit, beta, E, max_dmu, tot_q
           else
-             if (E > last_E) then
+             if (E > previous_E) then
                 write (ilog, '(5X,I5,F6.3,A2,4ES20.10,I12)')  &
                      nit, beta, '^', E, max_dmu, max_dq, tot_q, nlambda
              else
@@ -1485,7 +1505,7 @@ contains
              endif
           endif
 
-          last_E  = E
+          previous_E  = E
 
           flush(ilog)
        endif
@@ -1530,8 +1550,8 @@ contains
 
        ! Calculate new potential
        this%phi(1:p%nat)  = 0.0_DP   ! Note: This needs to be 1:p%nat, NOT 1:p%natloc for the fast-multipole solver
-       call coulomb_potential(coul, p, nl, q, this%phi, ierror)
-       PASS_ERROR(ierror)
+       call coulomb_potential(coul, p, nl, q, this%phi, error)
+       PASS_ERROR(error)
        call add_X(this, p, this%phi)
 
        ! Update beta
@@ -1694,7 +1714,7 @@ contains
   !!
   !! Propagate the charges using a Car-Parrinello type metadynamics
   !<
-  subroutine variable_charge_car_parrinello(this, p, nl, q, coul, epot, ierror)
+  subroutine variable_charge_car_parrinello(this, p, nl, q, coul, epot, error)
     use, intrinsic :: iso_c_binding
 
     implicit none
@@ -1705,7 +1725,7 @@ contains
     real(DP),                intent(inout) :: q(p%maxnatloc)
     type(C_PTR),             intent(in)    :: coul
     real(DP),                intent(inout) :: epot
-    integer,       optional, intent(inout) :: ierror
+    integer,       optional, intent(inout) :: error
 
     ! ---
 
@@ -1720,12 +1740,12 @@ contains
 
     if (.not. associated(this%qa)) then
        ! XXX FIXME!! This does not work if *p* changes
-       call ptr_by_name(p%data, QA_STR, this%qa, ierror=ierror)
-       PASS_ERROR(ierror)
+       call ptr_by_name(p%data, QA_STR, this%qa, ierror=error)
+       PASS_ERROR(error)
     endif
 
-    call coulomb_potential(coul, p, nl, q, this%qa, ierror=ierror)
-    PASS_ERROR(ierror)
+    call coulomb_potential(coul, p, nl, q, this%qa, ierror=error)
+    PASS_ERROR(error)
     call add_X(this, p, this%qa)
 
     epot_ct  = 0.0_DP
@@ -1786,8 +1806,8 @@ contains
 
     if (this%n_fail >= this%fail_max) then
        ! Anderson mixing step if the criterion is exceeded
-       call variable_charge_anderson(this, p, nl, q, coul, epot, ierror)
-       PASS_ERROR(ierror)
+       call variable_charge_anderson(this, p, nl, q, coul, epot, error)
+       PASS_ERROR(error)
 
        this%qv      = 0.0_DP
        this%qa      = 0.0_DP
@@ -1893,9 +1913,13 @@ contains
          CSTR("total_charge"), &
          CSTR("Total charge on the system for which to enable charge transfer."))
          
-    call ptrdict_register_real_property(m, c_loc(this%dE_crit), &
-         CSTR("dE_crit"), &
+    call ptrdict_register_real_property(m, c_loc(this%convergence), &
+         CSTR("convergence"), &
          CSTR("Convergence criterium (on the maximum chemical potential, i.e. the gradient of the total energy)."))
+
+    call ptrdict_register_integer_property(m, c_loc(this%extrapolation_memory), &
+         CSTR("extrapolation_memory"), &
+         CSTR("Number of past time steps to consider for charge extrapolation (minimum of 2, extrapolation is disabled if less)."))
 
     call ptrdict_register_real_property(m, c_loc(this%freq), CSTR("freq"), &
          CSTR("Frequency of charge equilibration."))
