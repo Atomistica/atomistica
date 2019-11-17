@@ -125,7 +125,7 @@ contains
   !!
   !! Count how many atoms that match this filter we have locally
   !<
-  function filter_count(f, p)
+  pure function filter_count(f, p)
     implicit none
 
     integer, intent(in)            :: f
