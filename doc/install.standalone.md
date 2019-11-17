@@ -1,3 +1,6 @@
+Installation instruction for the standalone code
+================================================
+
 IMPORTANT: The standalone code is as of now experimental and significantly
 less stable than either the Python or LAMMPS interface.
 
@@ -7,7 +10,7 @@ To compile the Atomistica standalone code (MDCORE) do the following:
    edit appropriately. Example makefiles for the Intel and GNU compilers are
    provided. Then type
 
-     make factories
+        make factories
 
    This will create a set of *_factory_* and *_dispatch.f90" files. These files
    are responsible for instantianting and calling instances of potentials,
@@ -17,4 +20,4 @@ To compile the Atomistica standalone code (MDCORE) do the following:
 
 2. Compile the code with
 
-     make mdcore
+        make mdcore
