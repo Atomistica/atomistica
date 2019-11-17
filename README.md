@@ -4,7 +4,7 @@ Atomistica is a library of interatomic potentials, including empirical potential
 It is designed to be plugged into different simulation environments. We currently support the
 [Atomic Simulation Environment (ASE)](https://wiki.fysik.dtu.dk/ase/) and
 the [Large-scale Atomic/Molecular Massively Parallel Simulator (LAMMPS)](http://lammps.sandia.gov/).
-A list of interatomic potentials can be found [here](POTENTIALS.md).
+A list of interatomic potentials can be found [here](doc/potentials.md).
 
 Build status
 ------------
@@ -22,19 +22,20 @@ Currently supported simulation environments are...
 
 1.  ...the Atomistic Simulation Environment   
     (ASE - see https://wiki.fysik.dtu.dk/ase/)
-    * Build instructions are in [README.PYTHON.md](README.PYTHON.md)
+    * Build instructions are in [doc/install.python.md](doc/install.python.md)
     * Examples are in [examples/ASE](examples/ASE)
     * Tests are in tests
     * Atomistica supports Python 2 and Python 3
 
 2.  ...the Large-scale Atomic/Molecular Massively Parallel Simulator   
     (LAMMPS - see https://lammps.sandia.gov/)
-    * Build instructions are in [README.LAMMPS.md](README.LAMMPS.md)
+    * Build instructions are in [doc/install.lammps.md](doc/install.lammps.md)
     * Examples are in [examples/LAMMPS](examples/LAMMPS)
 
 3.  ...MDCORE, the standalone molecular dynamics code of Atomistica.
     Note that there is _no documentation_ for the standalone version.
-    * Build instruction are in [README.STANDALONE.md](README.STANDALONE.md)
+    * Build instructions are in [doc/install.standalone.md](doc/install.standalone.md)
+    * A brief documentation is in [doc/standalone.md](doc/standalone.md)
     * Examples are in [examples/STANDALONE](examples/STANDALONE)
 
 You need the following packages:
