@@ -1,3 +1,6 @@
+Installation instructions for using Atomistica within LAMMPS
+============================================================
+
 _NOTE_: If you are using LAMMPS < 07Sep16, you will need to replace `list->ghost`
 by `list->ghostflag` in `pair_atomistica.cpp`.
 
