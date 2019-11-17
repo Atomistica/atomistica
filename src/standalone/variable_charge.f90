@@ -249,7 +249,7 @@ module variable_charge
      ! Position and charge history
      !
 
-     integer               :: extrapolation_memory = 3  !< Number of past steps to keep
+     integer               :: extrapolation_memory = 0  !< Number of past steps to keep
      type(extrapolation_t) :: extrapolation
 
   endtype variable_charge_t
@@ -1040,7 +1040,7 @@ contains
     call timer_start("variable_charge_conjugate_gradients")
 
     if (this%log) then
-       write (ilog, '(A)')  "- variable_charge_conjugate_gradients -"
+       call prlog("- variable_charge_conjugate_gradients -")
     endif
 
     !
@@ -1356,7 +1356,7 @@ contains
     call timer_start("variable_charge_anderson")
 
     if (this%log) then
-       write (ilog, '(A)')  "- variable_charge_anderson -"
+       call prlog("- variable_charge_anderson -")
     endif
 
     !
