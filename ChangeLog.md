@@ -8,6 +8,11 @@ TODO
 Change log
 ==========
 
+v0.10.1
+-------
+
+- Select elements in SlidingT
+
 v0.10.0
 -------
 
