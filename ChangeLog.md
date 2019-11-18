@@ -8,6 +8,12 @@ TODO
 Change log
 ==========
 
+v0.10.0
+-------
+
+- DFT-D3 dispersion correction
+- Variable-charge model
+
 v0.9.2
 ------
 
