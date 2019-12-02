@@ -92,7 +92,9 @@ module berendsen_p
      real(DP)  :: shear_sigma   = 0.0_DP
      
      integer   :: shear_d       = 1
-     
+
+     logical(BOOL)   :: cell_shape  = .false.
+ 
      !
      ! Else
      !
@@ -220,25 +222,39 @@ contains
 
     ! ---
 
-    integer   :: i
-    real(DP)  :: r, s(3), t(3, 3), Abox(3, 3)
+    integer   :: i, j
+    real(DP)  :: r, s(3, 3), t(3, 3), Abox(3, 3)
+    real(DP)  :: pext(3, 3)
 
     ! ---
 
     call timer_start("berendsen_p_adjust_pressure")
 
-    s  = 1.0_DP
+    s = 0.0_DP
+    do i = 1, 3
+      s(i, i) = 1.0_DP
+    enddo
     if (this%d == HYDROSTATIC) then
        s          = ( 1 + dt*this%beta*( tr(3, pressure)/3 - this%P(1) )/this%tau(1) )**(1.d0/3)
     else if (this%d == ALL_DIMS) then
-       s(1)       = ( 1 + dt*this%beta*( pressure(1, 1) - this%P(1) )/this%tau(1) )  !**(1.d0/3)
-       s(2)       = ( 1 + dt*this%beta*( pressure(2, 2) - this%P(2) )/this%tau(2) )  !**(1.d0/3)
-       s(3)       = ( 1 + dt*this%beta*( pressure(3, 3) - this%P(3) )/this%tau(3) )  !**(1.d0/3)
+       if (this%cell_shape) then
+          pext = 0.0_DP
+          do i = 1, 3 
+             pext(i, i) = this%P(i)
+             do j = 1, 3
+                s(i, j)    = ( 1 + dt*this%beta*( pressure(i, j) - pext(i, j) )/this%tau(i) )  !**(1.d0/3)
+             enddo
+          enddo
+       else
+          s(1, 1)       = ( 1 + dt*this%beta*( pressure(1, 1) - this%P(1) )/this%tau(1) )  !**(1.d0/3)
+          s(2, 2)       = ( 1 + dt*this%beta*( pressure(2, 2) - this%P(2) )/this%tau(2) )  !**(1.d0/3)
+          s(3, 3)       = ( 1 + dt*this%beta*( pressure(3, 3) - this%P(3) )/this%tau(3) )  !**(1.d0/3)
+       endif
     else if (this%d == DIMS_XY) then
-       s(1)       = ( 1 + dt*this%beta*( pressure(1, 1) - this%P(1) )/this%tau(1) )  !**(1.d0/3)
-       s(2)       = ( 1 + dt*this%beta*( pressure(2, 2) - this%P(2) )/this%tau(2) )  !**(1.d0/3)
+       s(1, 1)       = ( 1 + dt*this%beta*( pressure(1, 1) - this%P(1) )/this%tau(1) )  !**(1.d0/3)
+       s(2, 2)       = ( 1 + dt*this%beta*( pressure(2, 2) - this%P(2) )/this%tau(2) )  !**(1.d0/3)
     else if (this%d == 1 .or. this%d == 2 .or. this%d == 3) then
-       s(this%d)  = ( 1 + dt*this%beta*( pressure(this%d, this%d) - this%P(this%d) )/this%tau(this%d) )  !**(1.d0/3)
+       s(this%d, this%d)  = ( 1 + dt*this%beta*( pressure(this%d, this%d) - this%P(this%d) )/this%tau(this%d) )  !**(1.d0/3)
     else
        RAISE_ERROR("BerendsenP does not support '" // dim_strs(this%d+1) // "' mode.", ierror)
     endif
@@ -246,13 +262,30 @@ contains
     if (.not. this%shear_stress) then
 
        Abox  = 0.0_DP
-       do i = 1, 3
+
+       if (this%d == ALL_DIMS .and. this%cell_shape) then
+
+          do i = 1, p%nat
 #ifndef IMPLICIT_R
-          POS(p, :, i)  = POS(p, :, i) * s(i)
+             POS(p, :, i) = matmul(POS(p, :, i), s)
 #endif
-          PNC(p, :, i)  = PNC(p, :, i) * s(i)
-          Abox(i, i)    = p%Abox(i, i) * s(i)
-       enddo
+             PNC(p, :, i) = matmul(PNC(p, :, i), s)
+          enddo
+          Abox(:,:) = matmul(p%Abox, s)
+ 
+       else  
+  
+          do i = 1, 3
+#ifndef IMPLICIT_R
+             POS(p, :, i)  = POS(p, :, i) * s(i, i)
+#endif
+             PNC(p, :, i)  = PNC(p, :, i) * s(i, i)
+             do j = 1, 3
+                Abox(i, j)    = p%Abox(i, j) * s(i, i)
+             enddo
+          enddo
+
+       endif
 
        call set_cell(p, Abox, error=ierror)
        PASS_ERROR(ierror)
@@ -262,9 +295,9 @@ contains
        r  = dt*this%beta*( pressure(this%shear_d, 3) - this%shear_sigma )/this%tau(1)
 
        t                   = 0.0_DP
-       t(1, 1)             = s(1)
-       t(2, 2)             = s(2)
-       t(3, 3)             = s(3)
+       t(1, 1)             = s(1, 1)
+       t(2, 2)             = s(2, 2)
+       t(3, 3)             = s(3, 3)
        t(this%shear_d, 3)  = r
 
        do i = 1, p%nat
@@ -275,11 +308,11 @@ contains
        enddo
 
        Abox        = 0.0_DP
-       Abox(1, 1)  = s(1)*p%Abox(1, 1)
-       Abox(2, 2)  = s(2)*p%Abox(2, 2)
-       Abox(3, 3)  = s(3)*p%Abox(3, 3)
+       Abox(1, 1)  = s(1, 1)*p%Abox(1, 1)
+       Abox(2, 2)  = s(2, 2)*p%Abox(2, 2)
+       Abox(3, 3)  = s(3, 3)*p%Abox(3, 3)
 
-       p%shear_dx(this%shear_d)  = r*p%Abox(3, 3) + s(1)*p%shear_dx(this%shear_d)
+       p%shear_dx(this%shear_d)  = r*p%Abox(3, 3) + s(1, 1)*p%shear_dx(this%shear_d)
        call set_cell(p, Abox, error=ierror)
        PASS_ERROR(ierror)
 
@@ -377,6 +410,9 @@ contains
          3, len_dim_str, dim_strs, &
          CSTR("shear_d"), &
          CSTR("Shearing direction: 'x' or 'y'"))
+
+    call ptrdict_register_boolean_property(m, c_loc(this%cell_shape), CSTR("cell_shape"), &
+         CSTR("Anisotropic scaling factors for both cell size and shape variations."))
 
     call ptrdict_register_boolean_property(m, c_loc(this%log), CSTR("log"), &
          CSTR("Log cell size and volume of cell to 'berendsen_p.out'."))

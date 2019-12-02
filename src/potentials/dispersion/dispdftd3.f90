@@ -44,8 +44,8 @@ module dispdftd3
   use logging
   use timer
 
-  use neighbors
   use particles
+  use neighbors
   use filter
 
 #ifdef HAVE_DFTD3
@@ -257,6 +257,7 @@ contains
     allocate(coords(3, p%nat))
     allocate(grads(3, p%nat))
 
+#ifdef HAVE_DFTD3
     elem(1:p%nat) = p%Z(1:p%nat)
     coords(1:3, 1:p%nat) = POS3(p, 1:p%nat) * length_to_Bohr
     latvecs(1:3, 1:3) = p%Abox(1:3, 1:3) * length_to_Bohr
@@ -286,9 +287,7 @@ contains
     !> For periodic system
     !> 
 
-#ifdef HAVE_DFTD3
     call dftd3_pbc_dispersion(this%calculator, coords, elem, latvecs, edisp, grads, stress)
-#endif
 
     epot = epot + edisp * unit_energy
 
@@ -296,6 +295,7 @@ contains
 
     wpot = wpot - stress * unit_virial
 
+#endif
 
     deallocate(coords)
     deallocate(grads)
