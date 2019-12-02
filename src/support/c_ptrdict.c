@@ -76,8 +76,8 @@ section_t *ptrdict_register_group(section_t *self, int kind, char *name,
   }
   strcpy(new_section->description, description);
   new_section->callback = NULL;
-  new_section->tag = NULL;
-  new_section->tag2 = NULL;
+  new_section->tag = 0;
+  new_section->tag2 = 0;
   new_section->provided = FALSE;
   new_section->provided_notification = NULL;
 
@@ -173,6 +173,12 @@ property_t *ptrdict_register_property(section_t *self, int kind, void *ptr,
 
   new_property->parent = self;
   new_property->next = NULL;
+
+  new_property->tag = 0;
+  new_property->tag2 = 0;
+  new_property->tag3 = 0;
+  new_property->tag4 = NULL;
+  new_property->tag5 = NULL;
 
   new_property->provided = FALSE;
 

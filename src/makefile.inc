@@ -86,6 +86,7 @@ CORE_SUPPLIB = \
 LAMMPS_SUPPLIB = \
 	$(CORE_SUPPLIB) \
 	lammps_particles.f90 \
+	extrapolation.f90 \
 	lammps_neighbors.f90 \
 	lammps_filter.f90 \
 	coulomb_dispatch.f90 \
@@ -164,6 +165,7 @@ STANDALONE_ALL = \
 	r250.f \
 	rng.f90 \
 	particles.f90 \
+	extrapolation.f90 \
 	domain_decomposition.f90 \
 	neighbors.f90 \
 	filter.f90 \

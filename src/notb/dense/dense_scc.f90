@@ -47,11 +47,12 @@ module dense_scc
 
   use supplib
 
-  use anderson_mixer
-
   use particles
   use neighbors
   use filter
+
+  use anderson_mixer
+  use extrapolation
 
   use coulomb
 
@@ -103,9 +104,7 @@ module dense_scc
      !
 
      integer               :: extrapolation_memory = 3  !< Number of past steps to keep
-     integer               :: history_counter = 0
-     real(DP), allocatable :: r(:, :, :)
-     real(DP), allocatable :: q(:, :)
+     type(extrapolation_t) :: extrapolation
 
      !
      ! Statistics/diagnostic
@@ -169,10 +168,6 @@ module dense_scc
   public :: establish_self_consistency
   interface establish_self_consistency
      module procedure dense_scc_establish_self_consistency
-  endinterface
-
-  interface extrapolate_charges
-     module procedure dense_scc_extrapolate_charges
   endinterface
 
   public :: register
@@ -312,9 +307,9 @@ contains
        call prlog
     endif
 
+    call del(this%extrapolation)
+
     if (allocated(this%phi))  deallocate(this%phi)
-    if (allocated(this%r))    deallocate(this%r)
-    if (allocated(this%q))    deallocate(this%q)
 
     this%p   => NULL()
     this%tb  => NULL()
@@ -396,20 +391,10 @@ contains
     endif
     allocate(this%phi(p%maxnatloc))
 
-    ! allocate history
-    this%history_counter = 0
-    if (allocated(this%r)) then
-       deallocate(this%r)
-    endif
-    if (allocated(this%q)) then
-       deallocate(this%q)
-    endif
-    if (this%extrapolation_memory >= 2) then
-       allocate(this%r(3, p%maxnatloc, this%extrapolation_memory))
-       allocate(this%q(p%maxnatloc, this%extrapolation_memory))
-    endif
+    ! allocate extrapolation history
+    call init(this%extrapolation, p, this%extrapolation_memory)
 
-    this%tb    => tb
+    this%tb => tb
 
     call internal_init(this, error)
     PASS_ERROR(error)
@@ -579,10 +564,8 @@ contains
     ! Extrapolate charges
     !
 
-    if (this%extrapolation_memory >= 2) then
-       call extrapolate_charges(this, p, q, error=error)
-       PASS_ERROR(error)
-    endif
+    call extrapolate(this%extrapolation, p, q, error=error)
+    PASS_ERROR(error)
 
     !
     ! Init
@@ -748,78 +731,6 @@ contains
 
 
   !>
-  !! Extrapolate charges from past time steps
-  !<
-  subroutine dense_scc_extrapolate_charges(this, p, q, error)
-    implicit none
-
-    type(dense_scc_t), intent(inout) :: this      !< SCC object
-    type(particles_t), intent(in)    :: p         !< Particles
-    real(DP),          intent(inout) :: q(p%nat)  !< Charges
-    integer, optional, intent(out)   :: error     !< Error status
-
-    ! ---
-
-    integer :: i, k, l
-
-    real(DP) :: a(this%extrapolation_memory-1, this%extrapolation_memory-1)
-    real(DP) :: b(this%extrapolation_memory-1)
-    real(DP) :: alpha(this%extrapolation_memory-1)
-    real(DP) :: q0(p%nat)
-
-    real(DP) :: drk(3, p%natloc), drl(3, p%natloc)
-
-    ! ---
-
-    INIT_ERROR(error)
-
-    q0 = q
-
-    if (this%history_counter >= this%extrapolation_memory) then
-       do k = 1, this%extrapolation_memory-1
-          drk = this%r(1:3, 1:p%natloc, modulo(this%history_counter-k, this%extrapolation_memory)+1) - &
-                this%r(1:3, 1:p%natloc, modulo(this%history_counter-k-1, this%extrapolation_memory)+1)
-          do l = 1, this%extrapolation_memory-1
-             drl = this%r(1:3, 1:p%natloc, modulo(this%history_counter-l, this%extrapolation_memory)+1) - &
-                   this%r(1:3, 1:p%natloc, modulo(this%history_counter-l-1, this%extrapolation_memory)+1)
-             a(k, l) = dot_product(reshape(drk, [3*p%natloc]), reshape(drl, [3*p%natloc]))
-          enddo
-          b(k) = dot_product( &
-              reshape(PCN3(p, 1:p%natloc) - &
-                      this%r(1:3, 1:p%natloc, modulo(this%history_counter-1, this%extrapolation_memory)+1), &
-                      [3*p%natloc]), &
-              reshape(this%r(1:3, 1:p%natloc, modulo(this%history_counter-k, this%extrapolation_memory)+1) - &
-                      this%r(1:3, 1:p%natloc, modulo(this%history_counter-k-1, this%extrapolation_memory)+1), &
-                      [3*p%natloc]) &
-              )
-       enddo
-
-       alpha = matmul(inverse(a, error=error), b)
-       if (error == ERROR_NONE) then
-          !                q(t) - q(t-dt)
-          q = q0 + alpha(1)*(q0 - this%q(1:p%nat, modulo(this%history_counter-1, this%extrapolation_memory)+1))
-          do i = 2, this%extrapolation_memory-1
-             q = q + alpha(i)*(this%q(1:p%nat, modulo(this%history_counter-i+1, this%extrapolation_memory)+1) - &
-                               this%q(1:p%nat, modulo(this%history_counter-i, this%extrapolation_memory)+1))
-          enddo
-       else
-          call prlog("Warning: Unable to extrapolate charges. Resetting history.")
-          call clear_error(error)
-          this%history_counter = 0
-       endif
-    endif
-
-    this%history_counter = this%history_counter+1
-    i = modulo(this%history_counter-1, this%extrapolation_memory)+1
-    ! This is current r(t+dt)
-    this%r(1:3, 1:p%nat, i) = PCN3(p, 1:p%nat)
-    ! This is last q(t)
-    this%q(1:p%nat, i)      = q0(1:p%nat)
-    
-  endsubroutine dense_scc_extrapolate_charges
-
-
-  !>
   !! Register the SCC object
   !<
   subroutine dense_scc_register(this, cfg)
@@ -870,7 +781,7 @@ contains
 
     call ptrdict_register_integer_property(m, c_loc(this%extrapolation_memory), &
          CSTR("extrapolation_memory"), &
-         CSTR("Number of past time steps to consider for charge extrapolation (min 2, extrapolation disabled if less)."))
+         CSTR("Number of past time steps to consider for charge extrapolation (minimum of 2, extrapolation is disabled if less)."))
 
     ! for DFTB3
     call ptrdict_register_integer_property(m, c_loc(this%dftb3), &

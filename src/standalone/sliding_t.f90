@@ -56,14 +56,17 @@ module sliding_t
   public :: sliding_t_t
   type sliding_t_t
 
-     integer    :: bot = 2
-     integer    :: top = 3
+     character(MAX_EL_STR) :: elements = "*"
+     integer               :: els      = 0
 
-     real(DP)   :: T            = -1.0
-     real(DP)   :: dT           = 0.0
+     integer               :: bot = 2
+     integer               :: top = 3
 
-     real(DP)   :: dissipation  = 1.0
-     real(DP)   :: tau          = -1.0
+     real(DP)              :: T  = -1.0
+     real(DP)              :: dT = 0.0
+
+     real(DP)              :: dissipation = 1.0
+     real(DP)              :: tau         = -1.0
 
   endtype sliding_t_t
 
@@ -207,6 +210,10 @@ contains
 
     call timer_start("sliding_t_step1")
 
+    if (this%els == 0) then
+       this%els  = filter_from_string(this%elements, p)
+    endif
+
     T_au  = this%T * K_to_energy
 
     !
@@ -240,9 +247,9 @@ contains
 #endif
     do i = 1, p%natloc
 
-       if (p%g(i) > 0) then
+       if (p%g(i) > 0 .and. IS_EL(this%els, p, i)) then
 
-          if (p%g(i) == this%bot.or. p%g(i) == this%top) then
+          if (p%g(i) == this%bot .or. p%g(i) == this%top) then
 
              v0  = 0.0_DP
              if (p%g(i) == this%top) then
@@ -355,7 +362,7 @@ contains
     !$omp& firstprivate(c0, c1, c2, dt)
     do i = 1, p%natloc
 
-       if (p%g(i) > 0) then
+       if (p%g(i) > 0 .and. IS_EL(this%els, p, i)) then
 
           if (p%g(i) == this%bot.or. p%g(i) == this%top) then
 
@@ -393,6 +400,11 @@ contains
 
     m = ptrdict_register_section(cfg, CSTR("SlidingT"), &
          CSTR("Langevin thermostat for the outer borders of the system."))
+
+    call ptrdict_register_string_property(m, c_loc(this%elements(1:1)), &
+         MAX_EL_STR, &
+         CSTR("elements"), &
+         CSTR("Elements for which to enable this integrator."))
 
     call ptrdict_register_integer_property(m, c_loc(this%bot), CSTR("bot"), &
          CSTR("Group of the bottom thermostat atoms."))

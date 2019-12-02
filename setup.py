@@ -126,20 +126,21 @@ lib_srcs += [ ('%s/support/' % srcdir)+i for i in
                 ]
               ]
 
-lib_srcs += [ ('%s/special/' % srcdir)+i for i in
-              [ 'table2d.f90',
-                'table3d.f90',
-                'table4d.f90',
-                'anderson_mixer.f90',
-                ]
-              ]
-
 lib_srcs += [ ('%s/python/f90/' % srcdir)+i for i in
               [ 'python_particles.f90',
                 'python_neighbors.f90',
                 'particles_wrap.f90',
                 'neighbors_wrap.f90',
                 'python_helper.f90',
+                ]
+              ]
+
+lib_srcs += [ ('%s/special/' % srcdir)+i for i in
+              [ 'table2d.f90',
+                'table3d.f90',
+                'table4d.f90',
+                'anderson_mixer.f90',
+                'extrapolation.f90'
                 ]
               ]
 
