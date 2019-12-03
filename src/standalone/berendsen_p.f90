@@ -241,8 +241,10 @@ contains
           pext = 0.0_DP
           do i = 1, 3 
              pext(i, i) = this%P(i)
+          enddo
+          do i = 1, 3
              do j = 1, 3
-                s(i, j)    = ( 1 + dt*this%beta*( pressure(i, j) - pext(i, j) )/this%tau(i) )  !**(1.d0/3)
+                s(i, j)    = ( s(i,j) + dt*this%beta*( pressure(i, j) - pext(i, j) )/this%tau(i) )  !**(1.d0/3)
              enddo
           enddo
        else
@@ -259,6 +261,7 @@ contains
        RAISE_ERROR("BerendsenP does not support '" // dim_strs(this%d+1) // "' mode.", ierror)
     endif
 
+ 
     if (.not. this%shear_stress) then
 
        Abox  = 0.0_DP
@@ -267,10 +270,11 @@ contains
 
           do i = 1, p%nat
 #ifndef IMPLICIT_R
-             POS(p, :, i) = matmul(POS(p, :, i), s)
+             POS(p, i, 1:3) = matmul(POS(p, i, 1:3), s)
 #endif
-             PNC(p, :, i) = matmul(PNC(p, :, i), s)
+             PNC(p, i, 1:3) = matmul(PNC(p, i, 1:3), s)
           enddo
+      
           Abox(:,:) = matmul(p%Abox, s)
  
        else  
@@ -412,7 +416,7 @@ contains
          CSTR("Shearing direction: 'x' or 'y'"))
 
     call ptrdict_register_boolean_property(m, c_loc(this%cell_shape), CSTR("cell_shape"), &
-         CSTR("Anisotropic scaling factors for both cell size and shape variations."))
+         CSTR("Anisotropic cell shape variations (d = 'all' is required): 'true' or 'false'."))
 
     call ptrdict_register_boolean_property(m, c_loc(this%log), CSTR("log"), &
          CSTR("Log cell size and volume of cell to 'berendsen_p.out'."))
