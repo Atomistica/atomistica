@@ -57,13 +57,11 @@ _hardware_info = {
     "nemo": {
         "cores_per_node": 20,
         "loginnodes": [r"login1.nemo.privat"],
-        'modules': ['mpi/impi', 'numlib/mkl', 'devel/python/3.6.0'],
         'scheduler': moab,
     },
     "justus": {
         "cores_per_node": 16,
         "loginnodes": [r"login??"],
-        'modules': ['mpi/impi'],
         'scheduler': moab,
     }
 }
@@ -188,15 +186,16 @@ class ComputeCluster:
         if set['mail'] is not None:
             print(c + '--mail-user=' + set['mail'], file=f)
         print(c + d['mailtype'], file=f)
-        if 'modules' in self.data:
-            for module in self.data['modules']:
-                print('module load', module, file=f)
         print('cd', set['wd'], file=f)
+
+        # atomistica uses OMP for parallelization
         print('export OMP_NUM_THREADS=$PBS_NP', file=f)
-        print(('export LD_LIBRARY_PATH=' + env['LD_LIBRARY_PATH'] +
-               ':$LD_LIBRARY_PATH'), file=f)
-        print('export PYTHONPATH=' + env['PYTHONPATH'] + ':$PYTHONPATH',
-              file=f)
+
+        # copy current module environment
+        print('export MODULEPATH=' + env['MODULEPATH'], file=f)
+        for module in env['LOADEDMODULES'].split(':'):
+            print('module load', module, file=f)
+
         print('python', set['script'], end=' ', file=f)
         if 'parameters' in set:
             print(set['parameters'], end=' ', file=f)
