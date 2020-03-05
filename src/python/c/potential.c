@@ -282,18 +282,12 @@ potential_set_Coulomb(potential_t *self, PyObject *args)
   printf("[potential_set_Coulomb] self = %p\n", self);
 #endif
 
-  if (!self->f90class->set_Coulomb) {
-    char errstr[1024];
-    sprintf(errstr, "Potential %s does not require a Coulomb solver",
-            self->f90class->name);
-    PyErr_SetString(PyExc_RuntimeError, errstr);
-    return NULL;
-  }
-
   if (!PyArg_ParseTuple(args, "O", &coul))
     return NULL; 
 
-  self->f90class->set_Coulomb(self->f90obj, coul, &ierror);
+  if (self->f90class->set_Coulomb) {
+    self->f90class->set_Coulomb(self->f90obj, coul, &ierror);
+  }
 
   if (error_to_py(ierror))
     return NULL;
