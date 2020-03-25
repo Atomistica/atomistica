@@ -70,7 +70,6 @@ module dispdftd3
      real(DP)  :: cutoff   = 80.0_DP
      real(DP)  :: cutoffCN = 40.0_DP
 
-     logical :: dftd3        = .false.
      logical :: BeckeJohnson = .true.
      logical :: threebody    = .false.
                            
@@ -125,13 +124,9 @@ contains
 
     ! ---
    
-    if (.not.this%dftd3) return
-
 #ifdef HAVE_DFTD3
     allocate(this%calculator)
-#endif
 
-#ifdef HAVE_DFTD3
     input%threebody = this%threebody 
     input%numgrad = .false.
 
@@ -164,8 +159,6 @@ contains
 
     ! ---
 
-    if (.not.this%dftd3) return
-
 #ifdef HAVE_DFTD3
     deallocate(this%calculator)
 #endif
@@ -188,11 +181,12 @@ contains
 
     ! ---
 
-    if (.not.this%dftd3) return
+#ifndef HAVE_DFTD3
+    RAISE_ERROR("This version of Atomistica was not compiled with DFT-D3 support.", ierror)
+#endif
 
-    write (ilog, '(A)')  "- dftd3_init -"
+    write (ilog, '(A)')  "- dftd3_bind_to -"
 
-    write (ilog, '(5X,A,L)')      "dftd3        = ", this%dftd3
     write (ilog, '(5X,A,L)')      "BeckeJohnson = ", this%BeckeJohnson
     write (ilog, '(5X,A,L)')      "threebody    = ", this%threebody
 
@@ -223,7 +217,7 @@ contains
        epot_per_at, wpot_per_at, ierror)
     implicit none
 
-    type(dispdftd3_t),     intent(inout) :: this
+    type(dispdftd3_t),  intent(inout) :: this
     type(particles_t),  intent(in)    :: p
     type(neighbors_t),  intent(inout) :: nl
     real(DP),           intent(inout) :: epot
@@ -249,8 +243,6 @@ contains
     real(DP), allocatable :: coords(:,:), grads(:,:)
 
     ! ---
-
-    if (.not.this%dftd3) return
 
     call timer_start("dftd3_energy_and_forces")
 
@@ -310,18 +302,15 @@ contains
 
     implicit none
 
-    type(dispdftd3_t), target, intent(inout)     :: this
-    type(c_ptr), intent(in)                  :: cfg
-    type(c_ptr), intent(out)                 :: m
+    type(dispdftd3_t), target, intent(inout) :: this
+    type(c_ptr),               intent(in)    :: cfg
+    type(c_ptr),               intent(out)   :: m
 
     ! ---
 
     m = ptrdict_register_section(cfg, CSTR("DFTD3"), &
          CSTR("The DFT-D3 dispersion potential"))
 
-    call ptrdict_register_boolean_property(m, c_loc(this%dftd3), &
-         CSTR("dftd3"), &
-         CSTR("Enable DFT-D3 van der Waals potential."))
     call ptrdict_register_boolean_property(m, c_loc(this%BeckeJohnson), &
          CSTR("BeckeJohnson"), &
          CSTR("Enable Becke-Johnson damping in DFT-D3."))
