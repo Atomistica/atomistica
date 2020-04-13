@@ -256,7 +256,10 @@ contains
 
     vbox = volume(p)
 
+#if !defined(PYTHON) && !defined(LAMMPS)
+    ! system_of_units only exists for the standalone code, LAMMPS and Python are eV/A by default
     if (system_of_units == eV_A .or. system_of_units == eV_A_fs) then
+#endif
 
        ! Energy: a.u. -> eV
        unit_energy = Hartree
@@ -267,6 +270,7 @@ contains
        ! Pressure: a.u. -> eV/A^3*
        unit_virial = Hartree / Bohr**3 * vbox
 
+#if !defined(PYTHON) && !defined(LAMMPS)
     else 
 
        unit_energy = 1.0_DP
@@ -274,6 +278,7 @@ contains
        unit_virial = vbox
 
     endif  
+#endif
 
     !> 
     !> For periodic system
