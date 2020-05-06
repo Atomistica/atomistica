@@ -23,7 +23,7 @@
 # Python files #
 ################
 # setup.py working directory
-#build
+build
 # sphinx build directory
 doc/_build
 # setup.py dist directory
