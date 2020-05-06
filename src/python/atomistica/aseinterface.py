@@ -145,7 +145,7 @@ class Atomistica(Calculator):
     Atomistica ASE calculator.
     """
 
-    implemented_properties = ['energy', 'stress', 'forces', 'charges']
+    implemented_properties = ['energy', 'free_energy', 'stress', 'forces', 'charges']
     default_parameters = {}
 
     CELL_TOL = 1e-16
@@ -163,6 +163,7 @@ class Atomistica(Calculator):
         [ ( pot1, args1 ), ... ] in which case *pot1* is the name of the
         first potential and *args1* a dictionary containing its arguments.
         """
+        Calculator.__init__(self)
 
         # List of potential objects
         self.pots = [ ]
@@ -421,6 +422,8 @@ class Atomistica(Calculator):
             self.results['charges'] = self.charges
 
         self.results['energy'] = epot
+        self.results['free_energy'] = epot
+
         # Convert to Voigt
         volume = self.atoms.get_volume()
         self.results['stress'] = np.array([wpot[0,0], wpot[1,1], wpot[2,2],
