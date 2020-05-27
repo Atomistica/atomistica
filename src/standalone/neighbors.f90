@@ -676,7 +676,7 @@ contains
     !$omp do
     i_loop: do i = 1, p%nat
        ! Compute the 3-index of the current cell
-       cell = floor( matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border) + 1 )
+       cell = floor(matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border)) + 1
 
        this%seed(i) = cur
 
@@ -707,7 +707,7 @@ contains
           ! re-evaluate the cell index considering the boundary conditions
           if (lebc .and. c(3) /= 0) then
              ! Compute 3-index of the cell for the (Lees-Edwards) shifted grid:
-             cell2     = floor( matmul(this%rec_cell_size, PNC3(p, i) - c(3)*shear_dx - p%lower_with_border) + 1 )
+             cell2     = floor(matmul(this%rec_cell_size, PNC3(p, i) - c(3)*shear_dx - p%lower_with_border)) + 1
              cur_cell  = cell2 + this%d(1:3, x)
 
              c         = 0

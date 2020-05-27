@@ -638,7 +638,7 @@ contains
     !$omp do
     i_loop: do i = 1, p%nat
        ! Compute the 3-index of the cell of atom i
-       celli = floor(matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border) + 1)
+       celli = floor(matmul(this%rec_cell_size, PNC3(p, i) - p%lower_with_border)) + 1
        shift = 0
 
        ! Map current cell back to box and keep track of cell shift
@@ -685,7 +685,7 @@ contains
 
                 do while (j /= -1)
                    ! Compute the 3-index of the cell of atom j
-                   cellj = floor(matmul(this%rec_cell_size, PNC3(p, j) - p%lower_with_border) + 1)
+                   cellj = floor(matmul(this%rec_cell_size, PNC3(p, j) - p%lower_with_border)) + 1
 
                    ! Map current cell back to box and keep track of cell shift
                    shift2 = shift1
@@ -843,8 +843,8 @@ contains
     ny  = cv * ny / dot_product(ny, ny)
     nz  = cv * nz / dot_product(nz, nz)
 
-    ! Now dx, dy, dz needs to be adjusted such that a sphere of size cutoff
-    ! fits into the box spanned by (dx,dy,dz)*(nx,ny,nz)
+    ! Now dx, dy, dz needs to be adjusted such dx*|nx| > cutoff, dy*|ny| > cutoff
+    ! and dz*|nz| > cutoff.
     dx  = int(this%cutoff/sqrt(dot_product(nx, nx))) + 1
     dy  = int(this%cutoff/sqrt(dot_product(ny, ny))) + 1
     dz  = int(this%cutoff/sqrt(dot_product(nz, nz))) + 1
