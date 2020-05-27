@@ -324,14 +324,14 @@ contains
     integer  :: lwork
     integer  :: lrwork
     integer  :: liwork
-    WF_T(DP) :: opt_lwork
+    WF_T(DP) :: opt_lwork(1)
     real(DP) :: opt_lrwork
-    integer  :: opt_liwork
+    integer  :: opt_liwork(1)
 #else
     integer  :: lwork
     integer  :: liwork
-    WF_T(DP) :: opt_lwork
-    integer  :: opt_liwork
+    WF_T(DP) :: opt_lwork(1)
+    integer  :: opt_liwork(1)
 #endif
 
     ! ---
@@ -427,7 +427,7 @@ contains
 
 !          if (info /= 0)  stop "[solver_lapack_init] LAPACK workspace query failed."
 
-       lwork = int(opt_lwork)
+       lwork = int(opt_lwork(1))
        call resize(this%work, lwork)
 
     else if (this%solver_type == ST_DIVIDE_AND_CONQUER) then
@@ -444,9 +444,9 @@ contains
 
        if (info /= 0)  stop "[solver_lapack_init] LAPACK workspace query failed."
 
-       lwork = int(opt_lwork)
+       lwork = int(opt_lwork(1))
        lrwork = int(opt_lrwork)
-       liwork = int(opt_liwork)
+       liwork = int(opt_liwork(1))
        !            write (*, *)  "lwork, lrwork, liwork = ", lwork, lrwork, liwork
        call resize(this%work, lwork)
        call resize(this%rwork, lrwork)
@@ -491,7 +491,7 @@ contains
 
        if (info /= 0)  stop "[solver_lapack_init] LAPACK workspace query failed."            
 
-       lwork = int(opt_lwork)
+       lwork = int(opt_lwork(1))
        !            write (*, *)  "lwork = ", lwork
        call resize(this%work, lwork)
 
@@ -508,8 +508,8 @@ contains
 
        if (info /= 0)  stop "[solver_lapack_init] LAPACK workspace query failed."
 
-       lwork = int(opt_lwork)
-       liwork = int(opt_liwork)
+       lwork = int(opt_lwork(1))
+       liwork = int(opt_liwork(1))
        !            write (*, *)  "lwork, liwork = ", lwork, liwork
        call resize(this%work, lwork)
        call resize(this%iwork, liwork)

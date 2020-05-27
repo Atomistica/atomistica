@@ -75,7 +75,8 @@ c-----------------------------------------------------------
      $      nfftable,nffwork)
       implicit none
 
-      REAL*8 array(*),fftable(*),ffwork(*)
+      COMPLEX*16 array(*),ffwork(*)
+      REAL*8 fftable(*)
       integer nfft1,nfft2,nfft3,nfftdim1,nfftdim2,nfftdim3
 
       integer isign,inc1,inc2,inc3
@@ -109,7 +110,8 @@ c-----------------------------------------------------------
      $      nfftable,nffwork)
       implicit none
 
-      REAL*8 array(*),fftable(*),ffwork(*)
+      COMPLEX*16 array(*),ffwork(*)
+      REAL*8 fftable(*)
       integer nfft1,nfft2,nfft3,nfftdim1,nfftdim2,nfftdim3
       integer nfftable,nffwork,isys(4)
 
