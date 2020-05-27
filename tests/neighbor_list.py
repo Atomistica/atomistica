@@ -154,22 +154,24 @@ class NeighborListTest(unittest.TestCase):
 
     def test_floating_point_issue(self):
         calc = Tersoff()
-        a1 = Atoms('Si4C4', positions=np.array([[-4.41173839e-52,  0.00000000e+00,  0.00000000e+00],
-                                                [-4.41173839e-52,  2.26371743e+00,  2.26371743e+00],
-                                                [ 2.26371743e+00,  0.00000000e+00,  2.26371743e+00],
-                                                [ 2.26371743e+00,  2.26371743e+00,  0.00000000e+00],
-                                                [ 1.13185872e+00,  1.13185872e+00,  1.13185872e+00],
-                                                [ 1.13185872e+00,  3.39557615e+00,  3.39557615e+00],
-                                                [ 3.39557615e+00,  1.13185872e+00,  3.39557615e+00],
-                                                [ 3.39557615e+00,  3.39557615e+00,  1.13185872e+00]]),
+        a1 = ase.Atoms('Si4C4', positions=np.array([[-4.41173839e-52,  0.00000000e+00,  0.00000000e+00],
+                                                    [-4.41173839e-52,  2.26371743e+00,  2.26371743e+00],
+                                                    [ 2.26371743e+00,  0.00000000e+00,  2.26371743e+00],
+                                                    [ 2.26371743e+00,  2.26371743e+00,  0.00000000e+00],
+                                                    [ 1.13185872e+00,  1.13185872e+00,  1.13185872e+00],
+                                                    [ 1.13185872e+00,  3.39557615e+00,  3.39557615e+00],
+                                                    [ 3.39557615e+00,  1.13185872e+00,  3.39557615e+00],
+                                                    [ 3.39557615e+00,  3.39557615e+00,  1.13185872e+00]]),
                    cell=[4.527434867899659, 4.527434867899659, 4.527434867899659], pbc=True)
 
         a1.calc = calc
+        a1.get_potential_energy()
         self.assertTrue((calc.nl.get_coordination_numbers(calc.particles, 3.0) == 4).all())
 
         a2 = a1.copy()
         a2.calc = calc
         a2.set_scaled_positions(a2.get_scaled_positions())
+        a2.get_potential_energy()
         self.assertTrue((calc.nl.get_coordination_numbers(calc.particles, 3.0) == 4).all())
 
 ###
