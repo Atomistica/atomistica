@@ -5,6 +5,7 @@
 fcompiler=gfortran
 f90flags=-cpp -fPIC -ffree-form -ffree-line-length-none -x f95-cpp-input
 f77flags=-cpp -fPIC -x f77-cpp-input
+# For gcc-10, add this to f77flags: -fallow-argument-mismatch
 
 [build_ext]
 libraries=gfortran
