@@ -8,6 +8,12 @@ TODO
 Change log
 ==========
 
+v0.10.2
+-------
+- Update Python interface for recent changes in ASE
+- Bug fix: Wrong neighbor list construction for small negative positions (#30)
+- Bug fix: Default system of units in DFT-D3 when using Python or LAMMPS (#27)
+
 v0.10.1
 -------
 
