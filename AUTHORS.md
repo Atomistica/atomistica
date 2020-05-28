@@ -3,48 +3,35 @@ Authors and contributors
 
 * Keith Beardmore  
   Loughborough University  
-  Original bond-order potential code
+
+* Tom Daff
 
 * Tommi Järvi  
   Fraunhofer IWM  
-  Handling of molecules, many further enhancements and bug fixes
 
 * James Kermode  
   University of Warwick  
-  Debugging and bug fixes
 
 * Andreas Klemenz  
   Fraunhofer IWM  
-  Debugging and bug fixes
 
 * Pekka Koskinen  
   University of Jyvaskyla  
-  Non-orthogonal tight-binding code
 
 * Takuya Kuwahara
   Fraunhofer IWM
-  DFTB3
 
 * Tim Kunze  
   Technische Universitaet Dresden, Helmholtz-Zentrum Dresden Rossendorf  
-  LAMMPS interface
  
 * Julian von Lautz  
   Fraunhofer IWM  
-  Atomic strain analysis
 
 * Michael Moseler (michael.moseler@iwm.fraunhofer.de)  
   Fraunhofer IWM  
-  Initial serial MD code
 
 * Lars Pastewka (lars.pastewka@imtek.uni-freiburg.de)  
   University of Freiburg  
-  Maintainer
-
-Bug fixes from
---------------
-
-* Tom Daff
 
 * Thomas Reichenbach
 
