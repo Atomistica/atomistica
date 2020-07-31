@@ -295,5 +295,10 @@ setup(
             extra_link_args = extra_link_args,
             )
         ],
-    scripts = scripts
-    )
+    scripts = scripts,
+    setup_requires = [],
+    install_requires = [
+        'ase>=3.15.0',
+        'numpy>=1.11.0'
+    ]
+)
