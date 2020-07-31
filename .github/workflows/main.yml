@@ -15,6 +15,13 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - name: install_dependencies
+      run: |
+        sudo apt-get update -qy
+        sudo apt-get install -y gfortran libopenblas-dev liblapack-dev python-numpy
+        sudo pip3 install setuptools
+        sudo pip3 install -r requirements.txt
+
     - name: package_dist
       run: |
         sudo python3 setup.py sdist
