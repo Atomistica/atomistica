@@ -188,9 +188,9 @@ contains
 
     this%cutoff     = cutoff
 
-    call read(this%fF, f, nF, dF, dF)
-    call read(this%fZ, f, nr, dr, dr)
-    call read(this%frho, f, nr, dr, dr)
+    call read(this%fF, f, nF, 0.0_DP, dF)
+    call read(this%fZ, f, nr, 0.0_DP, dr)
+    call read(this%frho, f, nr, 0.0_DP, dr)
 
     call prlog("     cutoff(fZ)    = " // this%fZ%cut)
     call prlog("     cutoff(frho)  = " // this%frho%cut)
