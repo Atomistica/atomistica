@@ -220,11 +220,6 @@ class Atomistica(Calculator):
         return self.kwargs
 
 
-    def check_state(self, atoms):
-        # This is a hack to indicate ase.db that state has changed
-        return [1]
-
-
     def initialize(self, atoms):
         if self.mask is not None:
             if len(self.mask) != len(atoms):
