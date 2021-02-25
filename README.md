@@ -40,7 +40,7 @@ Currently supported simulation environments are...
 
 You need the following packages:
 
-* Python 2.6.0 or greater (Python is needed even if you do not compile the
+* Python 3.6.0 or greater (Python is needed even if you do not compile the
   Python interface to auto-generate parts of the source code)
 
 
