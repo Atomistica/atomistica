@@ -282,8 +282,9 @@ class Atomistica(Calculator):
 
 
     def set_mask(self, mask):
-        self.mask = mask
-        self.properties_changed += ['mask']
+        if np.any(self.mask != mask):
+            self.mask = mask
+            self.properties_changed += ['mask']
 
 
     def set_per_bond(self, epot=None, f=None, wpot=None):
