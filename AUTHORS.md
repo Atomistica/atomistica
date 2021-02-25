@@ -6,7 +6,7 @@ Authors and contributors
 
 * Tom Daff
 
-* Tommi Järvi  
+* Tommi JÃ¤rvi  
   Fraunhofer IWM  
 
 * James Kermode  
@@ -18,7 +18,7 @@ Authors and contributors
 * Pekka Koskinen  
   University of Jyvaskyla  
 
-* Takuya Kuwahara
+* Takuya Kuwahara  
   Fraunhofer IWM
 
 * Tim Kunze  
@@ -33,9 +33,13 @@ Authors and contributors
 * Lars Pastewka (lars.pastewka@imtek.uni-freiburg.de)  
   University of Freiburg  
 
-* Thomas Reichenbach
+* Thomas Reichenbach  
+  Fraunhofer IWM
 
 * Harry Turstall
+
+* Michael Walter  
+  University of Freiburg
 
 Parts of this code have been adopted from libAtoms.
 See http://www.libatoms.org/ for more information on contributors to
