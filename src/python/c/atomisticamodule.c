@@ -1,5 +1,5 @@
 /* ======================================================================
-   Atomistica - Interatomic potential library and molecular dynamics code
+   Atmistica - Interatomic potential library and molecular dynamics code
    https://github.com/Atomistica/atomistica
 
    Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
@@ -31,15 +31,6 @@
 #include "potentials_factory_c.h"
 
 #include <fenv.h>
-
-/*
-#include "forcomp.c"
-#include "pyf90obj.c"
-
-#include "particles.c"
-#include "neighbors.c"
-#include "potential.c"
-*/
 
 #define MAX_COULOMB_NAME 100
 #define MAX_POTENTIAL_NAME 100
@@ -111,34 +102,20 @@ static PyMethodDef module_methods[] = {
  * Module initialization
  */
 
-#ifndef PyMODINIT_FUNC  /* declarations for DLL import/export */
-#define PyMODINIT_FUNC void
-#endif
-
-/*
- * Module declaration
- */
-
-#if PY_MAJOR_VERSION >= 3
-    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
-    #define MOD_DEF(ob, name, methods, doc) \
-        static struct PyModuleDef moduledef = { \
-            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
-        ob = PyModule_Create(&moduledef);
-    #define MOD_RETURN_ERROR return NULL
-#else
-    #define MOD_INIT(name) PyMODINIT_FUNC init##name(void)
-    #define MOD_DEF(ob, name, methods, doc) \
-        ob = Py_InitModule3(name, methods, doc);
-    #define MOD_RETURN_ERROR return
-#endif
-
 static PyTypeObject
 coulomb_types[N_COULOMB_CLASSES];
 static PyTypeObject
 potential_types[N_POTENTIAL_CLASSES];
 
-MOD_INIT(_atomistica)
+static struct PyModuleDef moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "_atomistica",
+  "Interface to the Atomistica interatomic potential library.",
+  -1,
+  module_methods
+};
+
+PyMODINIT_FUNC PyInit__atomistica(void)
 {
     PyObject* m;
     int i;
@@ -152,15 +129,14 @@ MOD_INIT(_atomistica)
     import_array();
 
     if (PyType_Ready(&particles_type) < 0)
-      MOD_RETURN_ERROR;
+      return NULL;
 
     if (PyType_Ready(&neighbors_type) < 0)
-      MOD_RETURN_ERROR;
+      return NULL;
 
-    MOD_DEF(m, "_atomistica", module_methods,
-            "Interface to the Atomistica interatomic potential library.")
+    m = PyModule_Create(&moduledef);
     if (m == NULL)
-      MOD_RETURN_ERROR;
+      return NULL;
 
     Py_INCREF(&particles_type);
     PyModule_AddObject(m, "Particles", (PyObject *) &particles_type);
@@ -177,7 +153,7 @@ MOD_INIT(_atomistica)
               MAX_COULOMB_NAME);
 
       if (PyType_Ready(&coulomb_types[i]) < 0)
-        MOD_RETURN_ERROR;
+        return NULL;
 
       Py_INCREF(&coulomb_types[i]);
       PyModule_AddObject(m, coulomb_classes[i].name,
@@ -193,14 +169,12 @@ MOD_INIT(_atomistica)
 	      MAX_POTENTIAL_NAME);
 
       if (PyType_Ready(&potential_types[i]) < 0)
-        MOD_RETURN_ERROR;
+        return NULL;
 
       Py_INCREF(&potential_types[i]);
       PyModule_AddObject(m, potential_classes[i].name,
 			 (PyObject *) &potential_types[i]);
     }
 
-#if PY_MAJOR_VERSION >= 3
     return m;
-#endif
 }

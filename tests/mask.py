@@ -36,7 +36,7 @@ from atomistica import LJCut, TabulatedAlloyEAM, Tersoff, TersoffScr
 class MaskTest(unittest.TestCase):
 
     def random_mask_test(self, a):
-        c = a.get_calculator()
+        c = a.calc
         e = a.get_potential_energy()
         f = a.get_forces()
         w = a.get_stress()

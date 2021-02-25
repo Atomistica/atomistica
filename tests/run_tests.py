@@ -35,6 +35,7 @@ from mask import *
 from mio import *
 from dftb3 import *
 from dimers import *
+from test_io import IOTest
 
 ###
 

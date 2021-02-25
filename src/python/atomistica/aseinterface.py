@@ -38,7 +38,7 @@ try:
 except ImportError:
    # Current ase master
    from ase.symbols import string2symbols
-from ase.calculators.calculator import Calculator
+from ase.calculators.calculator import Calculator, all_changes
 from ase.data import atomic_numbers
 from ase.units import Hartree, Bohr
 
@@ -202,7 +202,7 @@ class Atomistica(Calculator):
 
         self.mask = None
 
-        self.force_update = True
+        self.properties_changed = []
 
         self.kwargs = kwargs
 
@@ -221,8 +221,7 @@ class Atomistica(Calculator):
 
 
     def check_state(self, atoms):
-        # This is a hack to indicate ase.db that state has changed
-        return [1]
+        return super().check_state(atoms) + self.properties_changed
 
 
     def initialize(self, atoms):
@@ -279,12 +278,13 @@ class Atomistica(Calculator):
 
         # Force re-computation of energies/forces the next time these are
         # requested
-        self.force_update = True
+        self.properties_changed = all_changes
 
 
     def set_mask(self, mask):
-        self.mask = mask
-        self.force_update = True
+        if np.any(self.mask != mask):
+            self.mask = mask
+            self.properties_changed += ['mask']
 
 
     def set_per_bond(self, epot=None, f=None, wpot=None):
@@ -294,10 +294,10 @@ class Atomistica(Calculator):
             self.compute_f_per_bond = f
         if wpot is not None:
             self.compute_wpot_per_bond = wpot
-        self.force_update = True
+        self.properties_changed += ['per_bond']
 
 
-    def update(self, atoms, force_update=False):
+    def update(self, atoms):
         if atoms is None:
             return
 
@@ -337,6 +337,7 @@ class Atomistica(Calculator):
     def get_stresses(self, atoms):
         self.calculate(atoms, ['stresses'], [])
         return self.results['stresses']
+
 
     def get_electrostatic_potential(self, atoms=None):
         self.phi = np.zeros(len(self.particles))
@@ -443,6 +444,9 @@ class Atomistica(Calculator):
                               (wpot_per_at[:,1,2]+wpot_per_at[:,2,1])/2,
                               (wpot_per_at[:,0,2]+wpot_per_at[:,2,0])/2,
                               (wpot_per_at[:,0,1]+wpot_per_at[:,1,0])/2])
+
+
+        self.properties_changed = []
 
 
     def get_atomic_stress(self):
