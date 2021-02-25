@@ -125,7 +125,7 @@ def test_potential(atoms, dq=1e-6):
     numerically from a finite differences approach.
     """
 
-    p0  = atoms.get_calculator().get_electrostatic_potential().copy()
+    p0  = atoms.calc.get_electrostatic_potential().copy()
     pfd = p0.copy()
 
     for a in atoms:
