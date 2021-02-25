@@ -1,10 +1,3 @@
-TODO
-====
-
-- Make TabulatedEAM work for alloys. Probably useful to rename TabulatedEAM
-  to FuncflEAM and TabulatedAlloyEAM to SetflEAM to distinguish by file
-  format.
-
 Change log
 ==========
 
