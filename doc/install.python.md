@@ -65,7 +65,7 @@ interface to Atomistica.
 
 3. Test if the Python interface imports with errors. Type
 
-     source <path-to-atomistica>/env.sh
+     source path-to-atomistica/env.sh
 
    which sets up the environment. To test if Atomistica can be imported into
    Python execute"
@@ -78,7 +78,7 @@ interface to Atomistica.
 
 4. Test if the Python interface gives correct results. Type
 
-     cd <path-to-atomistica>/tests
+     cd path-to-atomistica/tests
      python run_tests.py
 
    Each test can also be run directly. This will produce more diagnostic output:
