@@ -64,9 +64,9 @@ endif
 # FIXME!!! Implement FFTW check
 #
 #HAVE_FFTW3 = 0
-EXTRA_FLAGS += -DHAVE_FFTW3
-EXTRA_INCLUDE += 
-EXTRA_LIB += -lfftw3
+#EXTRA_FLAGS += -DHAVE_FFTW3
+#EXTRA_INCLUDE += 
+#EXTRA_LIB += -lfftw3
 
 #
 # *** LAPACK and BLAS link options here.
