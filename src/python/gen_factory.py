@@ -280,6 +280,7 @@ subroutine python_%s_energy_and_forces(this_cptr, p_cptr, nl_cptr, &
             """
         s += """
   error = ERROR_NONE
+  epot = 0.0_DP
   call c_f_pointer(this_cptr, this_fptr)
   call c_f_pointer(p_cptr, p)
   call c_f_pointer(nl_cptr, nl)
