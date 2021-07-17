@@ -34,8 +34,8 @@ EXTRA_LIB = -cxxlib
 #
 OPENMP ?= 0
 ifneq ($(OPENMP),0)
-OMP_FLAGS = -openmp -openmp-report2
-EXTRA_LIB += -openmp
+OMP_FLAGS = -qopenmp
+EXTRA_LIB += -qopenmp
 else
 OMP_FLAGS =
 endif
