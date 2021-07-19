@@ -1,6 +1,11 @@
 Change log
 ==========
 
+v1.0.2 (19Jul21)
+----------------
+
+- Fixed regression in makefile.inc
+
 v1.0.1 (19Jul21)
 ----------------
 
