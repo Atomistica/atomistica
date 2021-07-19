@@ -20,24 +20,29 @@ ENV LD_LIBRARY_PATH='/opt/intel/oneapi/mkl/2021.3.0/lib/intel64:/opt/intel/oneap
 ENV LIBRARY_PATH='/opt/intel/oneapi/mkl/2021.3.0/lib/intel64:/opt/intel/oneapi/compiler/2021.3.0/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/2021.3.0/linux/lib'
 ENV MKLROOT='/opt/intel/oneapi/mkl/2021.3.0'
 
+#
 # Numpy 1.19.5 and scipy 1.5.4 are last versions that support Ubuntu 18.04's Python 3.6
-ENV NUMPY_VERSION="1.19.5"
-ENV SCIPY_VERSION="1.5.4"
+#
 
+ENV NUMPY_VERSION="1.19.5"
 WORKDIR /tmp
 RUN python3 -m pip install "setuptools<49.2.0" "cython==0.29.21" \
 	&& curl -L https://github.com/numpy/numpy/archive/refs/tags/v${NUMPY_VERSION}.tar.gz | tar vxz
 WORKDIR /tmp/numpy-${NUMPY_VERSION}
 RUN python3 setup.py config --compiler=intelem build_clib --compiler=intelem build_ext --compiler=intelem install
 
+ENV SCIPY_VERSION="1.5.4"
 WORKDIR /tmp
 RUN curl -L https://github.com/scipy/scipy/archive/refs/tags/v${SCIPY_VERSION}.tar.gz | tar vxz
 WORKDIR /tmp/scipy-${SCIPY_VERSION}
 RUN python3 setup.py config --compiler=intelem --fcompiler=intelem build_clib --compiler=intelem --fcompiler=intelem build_ext --compiler=intelem --fcompiler=intelem install
 
+ENV ATOMISTICA_VERSION="1.0.2"
 WORKDIR /tmp
-RUN git clone https://github.com/Atomistica/atomistica.git
-WORKDIR /tmp/atomistica
+#RUN git clone https://github.com/Atomistica/atomistica.git
+#WORKDIR /tmp/atomistica
+RUN curl -L https://github.com/Atomistica/atomistica/archive/refs/tags/${ATOMISTICA_VERSION}.tar.gz | tar vxz
+WORKDIR /tmp/atomistica-${ATOMISTICA_VERSION}
 # Install Atomistica - Python module and standalone code
 RUN python3 -m pip install ase \
 	&& cp setup.cfg.intel_omp setup.cfg \

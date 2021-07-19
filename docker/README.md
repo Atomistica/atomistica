@@ -38,6 +38,6 @@ OMP_NUM_THREADS=4 singularity run --bind /run/shm:/run/shm atomistica.sif mdcore
 ## Running the Python interface
 
 The Python interface can run along the same lines:
-````bash
+```bash
 OMP_NUM_THREADS=4 singularity run --bind /run/shm:/run/shm atomistica.sif python3 my_python_script.py
 ```
