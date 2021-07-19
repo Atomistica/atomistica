@@ -2,7 +2,7 @@
 
 PYTHON="$1"
 if [ -z "$PYTHON" ]; then
-  PYTHON="python"
+  PYTHON="python3"
 fi
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

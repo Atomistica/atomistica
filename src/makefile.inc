@@ -249,26 +249,26 @@ lammps_factories:
 	echo "POTENTIALS_MOD =" > _Makefile.modules
 	echo "#ifndef __HAVE_INC" > have.inc
 	echo "#define __HAVE_INC" >> have.inc
-	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR)/potentials potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
-	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR)/potentials_nonfree potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)  
+	python3 $(SRCDIR)/../tools/listclasses.py $(SRCDIR)/potentials potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python3 $(SRCDIR)/../tools/listclasses.py $(SRCDIR)/potentials_nonfree potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)  
 	echo "#endif" >> have.inc
-	python $(SRCDIR)/lammps/gen_factory.py $(SRCDIR)/lammps $(FC) $(MACHINE) $(SYSTEM)
+	python3 $(SRCDIR)/lammps/gen_factory.py $(SRCDIR)/lammps $(FC) $(MACHINE) $(SYSTEM)
 
 factories:
 	rm -f _Makefile.modules callables.classes coulomb.classes integrators.classes potentials.classes
 	echo "#ifndef __HAVE_INC" > have.inc
 	echo "#define __HAVE_INC" >> have.inc
-	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR) callables callables.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
-	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR) coulomb coulomb.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
-	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR) integrators integrators.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
-	python $(SRCDIR)/../tools/listclasses.py $(SRCDIR) potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python3 $(SRCDIR)/../tools/listclasses.py $(SRCDIR) callables callables.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python3 $(SRCDIR)/../tools/listclasses.py $(SRCDIR) coulomb coulomb.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python3 $(SRCDIR)/../tools/listclasses.py $(SRCDIR) integrators integrators.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
+	python3 $(SRCDIR)/../tools/listclasses.py $(SRCDIR) potentials potentials.classes _Makefile.modules have.inc $(INCLUDEFLAGS)
 	echo "#endif" >> have.inc
 	awk -F ':' '{ print "use "$$1 }' integrators.classes > integrators.inc
 	awk -F ':' '{ print "use "$$1 }' callables.classes > callables.inc
 	awk -F ':' '{ print "use "$$1 }' coulomb.classes > coulomb.inc
 	awk -F ':' '{ print "use "$$1 }' potentials.classes > potentials.inc
-	python $(SRCDIR)/standalone/gen_factory.py $(SRCDIR)/standalone $(FC) $(MACHINE) $(SYSTEM)
-	python $(SRCDIR)/standalone/gen_dispatch.py
+	python3 $(SRCDIR)/standalone/gen_factory.py $(SRCDIR)/standalone $(FC) $(MACHINE) $(SYSTEM)
+	python3 $(SRCDIR)/standalone/gen_dispatch.py
 
 versioninfo:
 	bash $(SRCDIR)/gen_versioninfo.sh $(SRCDIR) $(BINDIR) $(FC) $(F90FLAGS)
@@ -277,7 +277,7 @@ atomistica: versioninfo $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
 
 mdcore: versioninfo $(STANDALONE_ALL_O) $(MAIN_O)
-	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-$(shell cd .. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_version())")_$(shell cd .. ; python -c "from __future__ import print_function; import versioneer; print(versioneer.get_versions()['date'])") $(LIBS)
+	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-$(shell cd .. ; python3 -c "from __future__ import print_function; import versioneer; print(versioneer.get_version())")_$(shell cd .. ; python3 -c "from __future__ import print_function; import versioneer; print(versioneer.get_versions()['date'])") $(LIBS)
 
 unittests: versioninfo $(UNITTESTS_O)
 	$(F90C) -o unittests $(UNITTESTS_O) $(LIBS)
