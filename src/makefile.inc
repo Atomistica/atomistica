@@ -277,7 +277,7 @@ atomistica: versioninfo $(LAMMPS_ALL_O)
 	$(LIBTOOL) libatomistica.a $(LAMMPS_ALL_O)
 
 mdcore: versioninfo $(STANDALONE_ALL_O) $(MAIN_O)
-	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-$(shell cd .. ; python3 -c "from __future__ import print_function; import versioneer; print(versioneer.get_version())")_$(shell cd .. ; python3 -c "from __future__ import print_function; import versioneer; print(versioneer.get_versions()['date'])") $(LIBS)
+	$(LD) $(LDFLAGS) $(STANDALONE_ALL_O) $(MAIN_O) -o $(BINDIR)/$@-$(shell cd .. ; python3 -c "from __future__ import print_function; import versioneer; print(versioneer.get_version())")") $(LIBS)
 
 unittests: versioninfo $(UNITTESTS_O)
 	$(F90C) -o unittests $(UNITTESTS_O) $(LIBS)

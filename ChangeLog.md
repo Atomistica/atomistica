@@ -1,6 +1,12 @@
 Change log
 ==========
 
+v1.0.1 (19Jul21)
+----------------
+
+- Minor fixes for the Intel compiler suite
+- Docker and Singularity containers
+
 v1.0.0 (25Feb21)
 -----------------
 
