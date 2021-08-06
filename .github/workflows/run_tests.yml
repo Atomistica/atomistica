@@ -46,7 +46,7 @@ jobs:
         make factories
         make mdcore
 
-        - name: Fetch Slater-Koster databases for tests
+    - name: Fetch Slater-Koster databases for tests
       run: |
         curl https://dftb.org/fileadmin/DFTB/public/slako/mio/mio-1-1.tar.xz | tar -JxC ..
         curl https://dftb.org/fileadmin/DFTB/public/slako/3ob/3ob-3-1.tar.xz | tar -JxC ..
