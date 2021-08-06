@@ -64,6 +64,7 @@ jobs:
     - name: Run standalone examples
       run: |
         for i in `ls -1 $GITHUB_WORKSPACE/examples/STANDALONE`; do
-          cd $i
+          echo "=== $i ==="
+          cd $GITHUB_WORKSPACE/examples/STANDALONE/$i
           $GITHUB_WORKSPACE/build_standalone/mdcore-*
         done
