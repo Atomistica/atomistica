@@ -38,8 +38,7 @@ jobs:
 
     - name: Compile and install Python bindings
       run: |
-        python3 setup.py sdist
-        python3 -m pip dist/*.tar.gz
+        python3 -m pip install .
     
     - name: Fetch Slater-Koster databases for tests
       run: |
