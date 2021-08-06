@@ -6,7 +6,7 @@ Simulation {
   # Screen/File output
   #
 
-  scr_freq   = "1";
+  scr_freq   = "100";
   file_freq  = "10000";
 
   OutputEnergy { };
@@ -24,12 +24,6 @@ Simulation {
   cutoff_add      = "1.0";
 
   pbc             = "0, 0, 0";
-
-
-#  ScalarVerlet {
-#    elements  = "C";
-#  };
-
 
   #
   # Force model
@@ -67,7 +61,7 @@ Simulation {
     mq                    = "10.0";
     dE_max                = "0.01";
  
-    dE_crit               = "0.001";
+    convergence           = "0.001";
 
     total_charge          = "0.0";
 
@@ -82,26 +76,12 @@ Simulation {
     trace                 = "yes";
   };
 
-
-  #
-  # Coulomb interaction
-  #
-
-#  BTFastMultipole {
-#    leaf_size = "200";
-#    n_level   = "4";
-#    l_max     = "5";
-#
-#    k         = "1";
-#  };
-
   DirectCoulomb { };
 
-  GaussianCharges {
+  SlaterCharges {
     elements  = "C";
     cutoff    = "10";
   };
-
 
   #
   # Temperature control
@@ -111,10 +91,5 @@ Simulation {
     T    = "300";
     tau  = "100.";
   };
-
-
-#  Parallel3D {
-#    decomposition  = "2, 2, 2";
-#  };
 
 };

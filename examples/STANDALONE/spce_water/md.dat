@@ -12,7 +12,7 @@ Simulation {
   #
  
   dt        = "0.01";
-  max_time  = "100.";
+  max_time  = "10.";
 
 
   #
