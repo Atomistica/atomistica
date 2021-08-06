@@ -18,7 +18,7 @@ Simulation {
   #
 
   dt              = "0.1";
-  max_time        = "1000.";
+  max_time        = "100.";
   avgn            = "500";
 
   cutoff_add      = "1.0";
