@@ -64,7 +64,9 @@ jobs:
     - name: Run standalone examples
       run: |
         for i in `ls -1 $GITHUB_WORKSPACE/examples/STANDALONE`; do
-          echo "=== $i ==="
-          cd $GITHUB_WORKSPACE/examples/STANDALONE/$i
-          TBPARAM=$GITHUB_WORKSPACE/mio-1-1 $GITHUB_WORKSPACE/build_standalone/mdcore-*
+          if [ -d "$GITHUB_WORKSPACE/examples/STANDALONE/$i" ]; then
+            echo "=== $i ==="
+            cd $GITHUB_WORKSPACE/examples/STANDALONE/$i
+            TBPARAM=$GITHUB_WORKSPACE/mio-1-1 $GITHUB_WORKSPACE/build_standalone/mdcore-*
+          fi
         done
