@@ -35,6 +35,12 @@ jobs:
         cp Makefile.gnu Makefile
         make factories
         make mdcore
+    
+    - name: Compile Fortran unit tests
+      run: |
+        cd build_unittests
+        cp Makefile.gnu Makefile
+        make unittests
 
     - name: Compile and install Python bindings
       run: |
@@ -45,7 +51,12 @@ jobs:
         curl https://dftb.org/fileadmin/DFTB/public/slako/mio/mio-1-1.tar.xz | tar -JxC ..
         curl https://dftb.org/fileadmin/DFTB/public/slako/3ob/3ob-3-1.tar.xz | tar -JxC ..
 
-    - name: Run tests
+    - name: Run Fortran unit tests
+      run: |
+        cd build_unittests
+        ./unittests
+
+    - name: Run Python binding tests
       run: |
         cd tests
         MIO='../../mio-1-1' DFTB3='../../3ob-3-1' python run_tests.py
