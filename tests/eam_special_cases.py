@@ -49,7 +49,7 @@ class TestEAMSpecialCases(unittest.TestCase):
 
     def test_crash1(self):
         a = io.read('eam_crash1.poscar')
-        a.set_calculator(TabulatedAlloyEAM(fn='Cu_mishin1.eam.alloy'))
+        a.calc = TabulatedAlloyEAM(fn='Cu_mishin1.eam.alloy')
         a.get_potential_energy()
 
     def test_dense_forces(self):
@@ -58,7 +58,7 @@ class TestEAMSpecialCases(unittest.TestCase):
         for fac in [0.2, 0.3, 0.4, 0.5]:
             a = orig_a.copy()
             a.set_cell(fac*a.cell, scale_atoms=True)
-            a.set_calculator(c)
+            a.calc = c
             ffd, f0, maxdf = test_forces(a, dx=dx)
             if maxdf > tol:
                 nfail += 1

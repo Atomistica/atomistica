@@ -73,7 +73,7 @@ a = read(infn)
 print '{0} atoms.'.format(len(a))
 
 potclass = getattr(atomistica, potstr)
-a.set_calculator(potclass())
+a.calc = potclass()
 
 FIRE(a).run(fmax=fmax)
 

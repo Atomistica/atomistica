@@ -255,7 +255,7 @@ def run_forces_and_virial_test(test=None):
             if test is None:
                 print("Material:  ", name)
             a.translate([0.1,0.1,0.1])
-            a.set_calculator(c)
+            a.calc = c
 
             masks = [None]
             if mask:

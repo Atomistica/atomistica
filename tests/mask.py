@@ -67,19 +67,19 @@ class MaskTest(unittest.TestCase):
         a = io.read('aC.cfg')
         for pot in [Tersoff, TersoffScr]:
             c = Tersoff()
-            a.set_calculator(c)
+            a.calc = c
             self.random_mask_test(a)
 
     def test_mask_decomposition_lj_cut(self):
         a = FaceCenteredCubic('Au', size=[2,2,2])
         c = LJCut(el1='Au', el2='Au', epsilon=1.0, sigma=1.0, cutoff=6.0)
-        a.set_calculator(c)
+        a.calc = c
         self.random_mask_test(a)
 
     def test_mask_decomposition_tabulated_alloy_eam(self):
         a = FaceCenteredCubic('Au', size=[2,2,2])
         c = TabulatedAlloyEAM(fn='Au-Grochola-JCP05.eam.alloy')
-        a.set_calculator(c)
+        a.calc = c
         self.random_mask_test(a)
 
 ###

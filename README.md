@@ -9,7 +9,7 @@ A list of interatomic potentials can be found [here](doc/potentials.md).
 Build status
 ------------
 
-[![Build Status](https://www.travis-ci.org/Atomistica/atomistica.svg?branch=master)](https://www.travis-ci.org/Atomistica/atomistica)
+[![Build Status](https://github.com/Atomistica/atomistica/actions/workflows/run_tests.yml/badge.svg)](https://github.com/Atomistica/atomistica/actions)
 
 Usage
 -----

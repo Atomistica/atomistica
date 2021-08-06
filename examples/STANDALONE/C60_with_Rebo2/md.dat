@@ -6,7 +6,7 @@ Simulation {
   # Screen/File output
   #
 
-  scr_freq   = "10";
+  scr_freq   = "100";
   file_freq  = "100";
 
   per_atom_virial = "yes";
@@ -20,7 +20,7 @@ Simulation {
   #
 
   dt        = "0.025";
-  max_time  = "100.0";
+  max_time  = "50.0";
 
   PetersT {
     T       = "300.";

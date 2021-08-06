@@ -322,7 +322,7 @@ def test_cubic_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
 
         a.translate([0.1, 0.1, 0.1])
         a.set_scaled_positions(a.get_scaled_positions())
-        a.set_calculator(c)
+        a.calc = c
 
         FIRE(
             ase.constraints.StrainFilter(a, mask=[1,1,1,0,0,0]),
@@ -555,7 +555,7 @@ def test_hexagonal_elastic_constants(mats, pot, par=None, sx=1, dev_thres=5,
                 t_c0 = None
         a.translate([0.1, 0.1, 0.1])
         a.set_scaled_positions(a.get_scaled_positions()%1.0)
-        a.set_calculator(c)
+        a.calc = c
 
         FIRE(
             ase.constraints.StrainFilter(a, mask=[1,1,0,0,0,0]),
@@ -639,11 +639,11 @@ def test_surface_energies(mats, pot, par=None, sx=1, vacuum=10.0, find_a0=True,
             bulk, a = a
             bulk.translate([0.1, 0.1, 0.1])
             bulk.set_scaled_positions(bulk.get_scaled_positions())
-            bulk.set_calculator(c)
+            bulk.calc = c
 
         a.translate([0.1, 0.1, 0.1])
         a.set_scaled_positions(a.get_scaled_positions())
-        a.set_calculator(c)
+        a.calc = c
 
         if bulk is None:
             bulk = a

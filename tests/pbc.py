@@ -42,7 +42,7 @@ class PBCTest(unittest.TestCase):
     def test_pbc(self):
         a = Diamond('Si', latticeconstant=5.432, size=[2,2,2])
         sx, sy, sz = a.get_cell().diagonal()
-        a.set_calculator(Tersoff())
+        a.calc = Tersoff()
         e1 = a.get_potential_energy()
 
         a.set_pbc([True,True,False])

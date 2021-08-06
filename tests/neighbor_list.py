@@ -105,7 +105,7 @@ class NeighborListTest(unittest.TestCase):
 
     def test_pbc_shift_by_multiple_cells(self):
         a = io.read('aC.cfg')
-        a.set_calculator(Tersoff())
+        a.calc = Tersoff()
         e1 = a.get_potential_energy()
         i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)
         a[100].position += 3*a.cell[0]
@@ -123,7 +123,7 @@ class NeighborListTest(unittest.TestCase):
 
     def test_no_pbc_small_cell(self):
         a = io.read('aC.cfg')
-        a.set_calculator(Tersoff())
+        a.calc = Tersoff()
         a.set_pbc(False)
         e1 = a.get_potential_energy()
         i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)
@@ -139,7 +139,7 @@ class NeighborListTest(unittest.TestCase):
     def test_partial_pbc_small_cell(self):
         a = io.read('aC.cfg')
         a.set_cell(a.cell.diagonal(), scale_atoms=True)
-        a.set_calculator(Tersoff())
+        a.calc = Tersoff()
         a.set_pbc([True, False, False])
         e1 = a.get_potential_energy()
         i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)

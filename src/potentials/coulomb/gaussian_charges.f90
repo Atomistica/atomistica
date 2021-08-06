@@ -58,7 +58,7 @@ module gaussian_charges
 
   private
 
-  integer, parameter  :: GAUSSIAN_CHARGES_MAX_EL  = 3
+  integer, parameter  :: GAUSSIAN_CHARGES_MAX_EL  = 16
 
   !
   ! The module for the computation of energies/potentials

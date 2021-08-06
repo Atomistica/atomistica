@@ -8,7 +8,7 @@ Simulation {
 
 
   #
-  # 100 ps run, 0.2 fs time step
+  # 50 ps run, 0.2 fs time step
   #
  
   dt        = "0.2";
