@@ -37,7 +37,7 @@ contains
 
   subroutine test_gauss
     real(DP), parameter :: tol = 1e-6
-    real(DP) :: A(3, 4), B(3, 4), x(3), y(3), C(3, 3), z(3, 1)
+    real(DP) :: A(3, 4), x(3), y(3), C(3, 3), z(3, 1)
     A = 0.0_DP
     A(1, 1) = 1.0_DP
     A(2, 2) = 1.0_DP
@@ -49,19 +49,20 @@ contains
     A(1, 4) = 1.0_DP
     A(2, 4) = 1.0_DP
     A(3, 4) = 2.0_DP
-    B = A
-    call gauss(3, A, x)
-    y = matmul(B(:, :3), x)-B(:, 4)
-    call assert_equals(y(1), 0.0_DP, tol, "gauss")
-    call assert_equals(y(2), 0.0_DP, tol, "gauss")
-    call assert_equals(y(3), 0.0_DP, tol, "gauss")
-    C = B(1:3, 1:3)
-    z(1:3, 1) = B(1:3, 4)
+    C = A(1:3, 1:3)
+    x = A(1:3, 4)
+    call gauss1(3, C, x)
+    y = matmul(A(:, :3), x)-A(:, 4)
+    call assert_equals(0.0_DP, y(1), tol, "gauss1")
+    call assert_equals(0.0_DP, y(2), tol, "gauss1")
+    call assert_equals(0.0_DP, y(3), tol, "gauss1")
+    C = A(1:3, 1:3)
+    z(1:3, 1) = A(1:3, 4)
     call gaussn(3, C, 1, z)
-    y = matmul(B(:, :3), Z(1:3, 1))-B(:, 4)    
-    call assert_equals(y(1), 0.0_DP, tol, "gauss")
-    call assert_equals(y(2), 0.0_DP, tol, "gauss")
-    call assert_equals(y(3), 0.0_DP, tol, "gauss")
+    y = matmul(A(:, :3), Z(1:3, 1))-A(:, 4)
+    call assert_equals(0.0_DP, y(1), tol, "gaussn")
+    call assert_equals(0.0_DP, y(2), tol, "gaussn")
+    call assert_equals(0.0_DP, y(3), tol, "gaussn")
   endsubroutine test_gauss
 
   subroutine test_gauss_inverse
