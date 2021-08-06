@@ -67,7 +67,7 @@ module gaussian_charges
   type gaussian_charges_db_t
 
      integer   :: nel = -1
-     integer   :: nU
+     integer   :: nU = -1
 
      character :: el(2, GAUSSIAN_CHARGES_MAX_EL)   !< Atom type
 

@@ -76,7 +76,7 @@ module slater_charges
   type slater_charges_db_t
 
      integer   :: nel = -1
-     integer   :: nU, nZ
+     integer   :: nU = -1, nZ = -1
 
      character :: el(2, SLATER_CHARGES_MAX_EL)   !< Atom type
 

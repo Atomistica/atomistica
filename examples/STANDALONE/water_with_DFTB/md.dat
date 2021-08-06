@@ -100,7 +100,7 @@ Simulation {
   # Slater-type charges
   #
 
-  SlaterCharges {
+  GaussianCharges {
     cutoff = "10.0";
   };
 
