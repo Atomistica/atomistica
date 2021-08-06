@@ -46,7 +46,7 @@ class DimerTest(unittest.TestCase):
         distances = np.linspace(dist_min, dist_max, 1000)
 
         for potential in [Rebo2(), Rebo2Scr()]:
-            a.set_calculator(potential)
+            a.calc = potential
             energies = []
             forces = []
             for dist in distances:
@@ -70,7 +70,7 @@ class DimerTest(unittest.TestCase):
         distances = np.linspace(dist_min, dist_max, 1000)
 
         for potential in [Rebo2(), Rebo2Scr()]:
-            a.set_calculator(potential)
+            a.calc = potential
             energies = []
             forces = []
             for dist in distances:
@@ -95,7 +95,7 @@ class DimerTest(unittest.TestCase):
         distances = np.linspace(dist_min, dist_max, 1000)
 
         for potential in [Rebo2(), Rebo2Scr()]:
-            a.set_calculator(potential)
+            a.calc = potential
             energies = []
             forces = []
             for dist in distances:
@@ -119,7 +119,7 @@ class DimerTest(unittest.TestCase):
         distances = np.linspace(dist_min, dist_max, 1000)
 
         for potential in [Kumagai(), KumagaiScr()]:
-            a.set_calculator(potential)
+            a.calc = potential
             energies = []
             forces = []
             for dist in distances:

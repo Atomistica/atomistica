@@ -141,7 +141,7 @@ def check_db(c, db, test=None):
             a.set_pbc(False)
             a.set_initial_charges(np.zeros(len(a)))
 
-            a.set_calculator(c)
+            a.calc = c
             FIRE(a, logfile=None).run(fmax=0.001)
 
             for name, ( ( i1, i2 ), refvalue ) in values.items():

@@ -84,12 +84,12 @@ for density in densities:
 
     # Relax with the unscreened potential
     print 'Relax with quick potential...'
-    a.set_calculator(quick_calc)
+    a.calc = quick_calc
     FIRE(a).run(fmax=fmax, steps=10000)
 
     # Relax with the screened potential
     print 'Relax with proper potential...'
-    a.set_calculator(calc)
+    a.calc = calc
     FIRE(a).run(fmax=fmax, steps=10000)
 
     # Langevin quench to T1

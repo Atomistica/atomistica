@@ -201,23 +201,23 @@ def run_dftb3_test(test=None, tol=0.05):
                 a = molecule(structure)
 
             a.center(vacuum=10.0)
-            a.set_calculator(dftb2_calc)
+            a.calc = dftb2_calc
             FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB2 += a.get_potential_energy()
 
-            a.set_calculator(dftb2_XH_calc)
+            a.calc = dftb2_XH_calc
             FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB2_XH += a.get_potential_energy()
 
-            a.set_calculator(dftb3_calc)
+            a.calc = dftb3_calc
             FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB3 += a.get_potential_energy()
 
-            a.set_calculator(dftb3_XH_calc)
+            a.calc = dftb3_XH_calc
             FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB3_XH += a.get_potential_energy()
 
-            a.set_calculator(dftb3_XH_3ob_calc)
+            a.calc = dftb3_XH_3ob_calc
             FIRE(a, logfile=None).run(fmax=0.001)
             e0_DFTB3_3ob_XH += a.get_potential_energy()
 
@@ -230,31 +230,31 @@ def run_dftb3_test(test=None, tol=0.05):
 
         a = read(data['structure'])
         a.center(vacuum=10.0)
-        a.set_calculator(dftb2_calc)
+        a.calc = dftb2_calc
         FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB2 = a.get_potential_energy()
 
         e_DFTB2 = (e_DFTB2 - e0_DFTB2)/(ase.units.kcal/ase.units.mol)
 
-        a.set_calculator(dftb2_XH_calc)
+        a.calc = dftb2_XH_calc
         FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB2_XH = a.get_potential_energy()
 
         e_DFTB2_XH = (e_DFTB2_XH - e0_DFTB2_XH)/(ase.units.kcal/ase.units.mol)
 
-        a.set_calculator(dftb3_calc)
+        a.calc = dftb3_calc
         FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB3 = a.get_potential_energy()
 
         e_DFTB3 = (e_DFTB3 - e0_DFTB3)/(ase.units.kcal/ase.units.mol)
 
-        a.set_calculator(dftb3_XH_calc)
+        a.calc = dftb3_XH_calc
         FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB3_XH = a.get_potential_energy()
 
         e_DFTB3_XH = (e_DFTB3_XH - e0_DFTB3_XH)/(ase.units.kcal/ase.units.mol)
 
-        a.set_calculator(dftb3_XH_3ob_calc)
+        a.calc = dftb3_XH_3ob_calc
         FIRE(a, logfile=None).run(fmax=0.001)
         e_DFTB3_3ob_XH = a.get_potential_energy()
 

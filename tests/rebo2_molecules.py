@@ -135,7 +135,7 @@ def run_rebo2_molecules_test(test=None):
             a = molecule(mol)
             a.center(vacuum=5.0)
 
-            a.set_calculator(c)
+            a.calc = c
             a.rattle(0.05)
             ase.optimize.QuasiNewton(a, logfile='QuasiNewton.log') \
                 .run(fmax=0.001)

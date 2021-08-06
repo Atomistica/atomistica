@@ -42,7 +42,7 @@ class CoulombTest(unittest.TestCase):
         a.set_initial_charges(np.zeros(len(a)))
 
         c = DirectCoulomb()
-        a.set_calculator(c)
+        a.calc = c
 
         assert a.get_potential_energy() == 0
         assert (np.abs(c.get_electrostatic_potential()) < 1e-9).all()
@@ -50,7 +50,7 @@ class CoulombTest(unittest.TestCase):
         a.set_initial_charges([-1,1])
 
         c = DirectCoulomb()
-        a.set_calculator(c)
+        a.calc = c
 
         assert abs(a.get_potential_energy()+Hartree*Bohr/2) < 1e-9
         assert (np.abs(c.get_electrostatic_potential()-Hartree*Bohr/2*np.array([1,-1])) < 1e-9).all()

@@ -36,7 +36,7 @@ calc = Atomistica(
     avgn = 1000
     )
 
-a.set_calculator(calc)
+a.calc = calc
 print('{}, potential energy: {} eV'.format(molstr, a.get_potential_energy()))
 
 ### Extract electronic structure and print some properties
