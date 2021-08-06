@@ -61,11 +61,9 @@ jobs:
         cd tests
         MIO='../../mio-1-1' DFTB3='../../3ob-3-1' python run_tests.py
 
-    - name: Run standalone example
+    - name: Run standalone examples
       run: |
-        echo $GITHUB_WORKSPACE
-        ls $GITHUB_WORKSPACE
-        for i in `ls -1 $GITHUB_WORKSPACE/examples/standalone`; do
+        for i in `ls -1 $GITHUB_WORKSPACE/examples/STANDALONE`; do
           cd $i
           $GITHUB_WORKSPACE/build_standalone/mdcore-*
         done
