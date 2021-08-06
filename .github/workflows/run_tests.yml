@@ -28,14 +28,7 @@ jobs:
 #        cp Makefile.gnu Makefile
 #        make lammps_factories
 #        make atomistica
-
-    - name: Compile standalone code
-      run: |
-        cd build_standalone
-        cp Makefile.gnu Makefile
-        make factories
-        make mdcore
-    
+  
     - name: Compile Fortran unit tests
       run: |
         cd build_unittests
@@ -46,7 +39,14 @@ jobs:
       run: |
         python3 -m pip install .
     
-    - name: Fetch Slater-Koster databases for tests
+    - name: Compile standalone code
+      run: |
+        cd build_standalone
+        cp Makefile.gnu Makefile
+        make factories
+        make mdcore
+
+        - name: Fetch Slater-Koster databases for tests
       run: |
         curl https://dftb.org/fileadmin/DFTB/public/slako/mio/mio-1-1.tar.xz | tar -JxC ..
         curl https://dftb.org/fileadmin/DFTB/public/slako/3ob/3ob-3-1.tar.xz | tar -JxC ..
@@ -60,3 +60,11 @@ jobs:
       run: |
         cd tests
         MIO='../../mio-1-1' DFTB3='../../3ob-3-1' python run_tests.py
+
+    - name: Run standalone example
+      run: |
+        cd examples/standalone
+        for i in `ls -1 $GITHUB_WORKSPACE/examples/standalone`; do
+          cd $i
+          $GITHUB_WORKSPACE/build_standalone/mdcore-*
+        done
