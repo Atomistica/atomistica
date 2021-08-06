@@ -48,8 +48,8 @@ jobs:
 
     - name: Fetch Slater-Koster databases for tests
       run: |
-        curl https://dftb.org/fileadmin/DFTB/public/slako/mio/mio-1-1.tar.xz | tar -JxC ..
-        curl https://dftb.org/fileadmin/DFTB/public/slako/3ob/3ob-3-1.tar.xz | tar -JxC ..
+        curl https://dftb.org/fileadmin/DFTB/public/slako/mio/mio-1-1.tar.xz | tar -Jx
+        curl https://dftb.org/fileadmin/DFTB/public/slako/3ob/3ob-3-1.tar.xz | tar -Jx
 
     - name: Run Fortran unit tests
       run: |
@@ -59,12 +59,12 @@ jobs:
     - name: Run Python binding tests
       run: |
         cd tests
-        MIO='../../mio-1-1' DFTB3='../../3ob-3-1' python run_tests.py
+        MIO='../mio-1-1' DFTB3='../3ob-3-1' python run_tests.py
 
     - name: Run standalone examples
       run: |
         for i in `ls -1 $GITHUB_WORKSPACE/examples/STANDALONE`; do
           echo "=== $i ==="
           cd $GITHUB_WORKSPACE/examples/STANDALONE/$i
-          $GITHUB_WORKSPACE/build_standalone/mdcore-*
+          TBPARAM=$GITHUB_WORKSPACE/mio-1-1 $GITHUB_WORKSPACE/build_standalone/mdcore-*
         done
