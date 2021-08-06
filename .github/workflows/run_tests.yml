@@ -63,7 +63,8 @@ jobs:
 
     - name: Run standalone example
       run: |
-        cd examples/standalone
+        echo $GITHUB_WORKSPACE
+        ls $GITHUB_WORKSPACE
         for i in `ls -1 $GITHUB_WORKSPACE/examples/standalone`; do
           cd $i
           $GITHUB_WORKSPACE/build_standalone/mdcore-*
