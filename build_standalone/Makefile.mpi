@@ -101,8 +101,6 @@ OPTFLAGS = -g -O0 -fbacktrace -fbounds-check
 #
 # * Defines
 #
-#   -DMDCORE_PYTHON            Compile Python specific stuff
-#
 #   -DHAVE_NETCDF              Compile with NetCDF output module
 #   -DHAVE_FFTW3               Compile PME module using FFTW3
 #   -DHAVE_MKL                 LAPACK implementation is the MKL

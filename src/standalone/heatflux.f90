@@ -221,8 +221,6 @@ contains
   endsubroutine heatflux_invoke
 
 
-#ifdef MDCORE_MONOLITHIC
-
   !****************************************************************
   ! Initialize the property list
   !****************************************************************
@@ -252,7 +250,5 @@ contains
          CSTR("Interval in which to output the amount of energy transfered to 'heatflux.out'."))
 
   endsubroutine heatflux_register
-
-#endif
 
 endmodule heatflux

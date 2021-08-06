@@ -15,7 +15,7 @@ n = 2
 a = FaceCenteredCubic('Au', size=[n, n, n])
 x0 = a.cell[0, 0]/n
 c = TabulatedAlloyEAM(fn='Au-Grochola-JCP05.eam.alloy')
-a.set_calculator(c)
+a.calc = c
 
 # Vary volume and fit minimum
 def en(a, x):
