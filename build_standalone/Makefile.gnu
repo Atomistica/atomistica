@@ -30,7 +30,7 @@ MPI_FLAGS =
 #
 # -cxxlib links to the C++ runtime
 #
-HAVE_NETCDF = 0
+HAVE_NETCDF = 1
 EXTRA_FLAGS =
 EXTRA_INCLUDE =
 EXTRA_LIB = -lstdc++
@@ -109,8 +109,6 @@ OPTFLAGS = -g -O3 -funroll-loops -fbacktrace
 
 #
 # * Defines
-#
-#   -DMDCORE_PYTHON            Compile Python specific stuff
 #
 #   -DHAVE_NETCDF              Compile with NetCDF output module
 #   -DHAVE_FFTW3               Compile PME module using FFTW3

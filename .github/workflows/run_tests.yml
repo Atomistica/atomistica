@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update -qy
-        sudo apt-get install -y gfortran libopenblas-dev liblapack-dev python-numpy libopenmpi-dev
+        sudo apt-get install -y gfortran libopenmpi-dev libopenblas-dev liblapack-dev libnetcdff-dev python-numpy
         python3 -m pip install setuptools
         python3 -m pip install -r requirements.txt
     

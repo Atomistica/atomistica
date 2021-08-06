@@ -48,13 +48,7 @@ OPTFLAGS = -O3 -funroll-loops
 #
 # * Defines
 #
-#   -DMDCORE_MONOLITHIC        Compile modules that work only in the standalone
-#                              version of MDCORE (i.e. HarmonicHook, etc.)
-#   -DMDCORE_PYTHON            Compile Python specific stuff
-#   -DLAMMPS                   Compute LAMMPS specific stuff
-#
-#   MDCORE_MONOLITHIC, MDCORE_PYTHON, and LAMMPS are (should be) mutually exclusive
-#
+#   -DLAMMPS                   Compile LAMMPS specific stuff
 #   -DHAVE_NETCDF              Compile with NetCDF output module
 #   -DHAVE_FFTW3               Compile PME module using FFTW3
 #   -DHAVE_MKL                 LAPACK implementation is the MKL
