@@ -1,6 +1,12 @@
 Change log
 ==========
 
+v1.0.3 (06Aug21)
+----------------
+
+- Bug fix: SlaterCharges and GaussianCharges could case segmentation fault
+  because of uninitialized value
+
 v1.0.2 (19Jul21)
 ----------------
 
