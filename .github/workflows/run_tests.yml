@@ -48,4 +48,4 @@ jobs:
     - name: Run tests
       run: |
         cd tests
-        MIO='../../mio-1-1' DFTB3='../../3ob-3-1' python run_tests.py"
+        MIO='../../mio-1-1' DFTB3='../../3ob-3-1' python run_tests.py
