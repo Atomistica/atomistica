@@ -1,12 +1,12 @@
 #! /bin/bash
 
 if [ ! -e $1/../setup.cfg ]; then
-  if [[ "$(gcc --version | awk '/gcc/ {print $4} {print "10.0.0"}' | sort -V | head -n 1)" == "10.0.0" ]]; then
-    echo "Copying default setup.cfg... GCC-10"
-    cp $1/../setup.cfg.gnu10 $1/../setup.cfg
-  else
+  if [[ "$(gcc --version | awk '/gcc/ {print $4} {print "10.0.0"}' | sort -V | tail -n 1)" == "10.0.0" ]]; then
     echo "Copying default setup.cfg..."
     cp $1/../setup.cfg.gnu $1/../setup.cfg
+  else
+    echo "Copying default setup.cfg... GCC-10"
+    cp $1/../setup.cfg.gnu10 $1/../setup.cfg
   fi
 
 fi
