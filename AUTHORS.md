@@ -41,6 +41,8 @@ Authors and contributors
 * Michael Walter  
   University of Freiburg
 
+* Tamas K Stenczel, University of Cambridge
+
 Parts of this code have been adopted from libAtoms.
 See http://www.libatoms.org/ for more information on contributors to
 libAtoms.
