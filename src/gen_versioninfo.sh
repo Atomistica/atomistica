@@ -2,7 +2,7 @@
 
 if [ ! -e $1/../setup.cfg ]; then
   echo "Copying default setup.cfg..."
-  cp $1/../setup.cfg.gnu $1/../setup.cfg
+  cp $1/../setup.cfg.gnu10 $1/../setup.cfg
 fi
 
 atomistica_revision=$( cd $1/.. ; python3 -c "import versioneer; print(versioneer.get_version())")
