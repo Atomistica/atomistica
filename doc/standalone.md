@@ -233,7 +233,7 @@ are written to the file `ener.out`.
 MDCORE carries out by default an NVE run with a Velocity-Verlet integrator. You
 can explicitly specify
 
-#    Verlet { };
+    Verlet { };
 
 in the input file, but this corresponds to the default setting. (You should
 see this section in the output file `md.out` if no integrator is specified
