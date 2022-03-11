@@ -377,7 +377,7 @@ contains
        do i = 1, p%nel
           Z = p%el2Z(i)
           this%U(i)  = this%db%U(i) / (Hartree*Bohr)
-          this%dU(i) = this%db%dU(Z) / (Bohr)
+          this%dU(i) = this%db%dU(Z) / (Hartree*Bohr)
           this%Z(i)  = this%db%Z(i)
           if (this%dftb3) then
              write (ilog, '(5X,A7,11X,F12.3,F8.3,12X,F12.3,F8.3,F15.3)') ElementName(Z), this%db%U(i), this%U(i), this%db%dU(Z), this%dU(i), this%db%Z(i)
