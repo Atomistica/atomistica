@@ -1,6 +1,11 @@
 Change log
 ==========
 
+v1.0.4 (24Apr22)
+----------------
+
+- Automatically use correct GCC switches for legacy Fortran code
+
 v1.0.3 (06Aug21)
 ----------------
 
