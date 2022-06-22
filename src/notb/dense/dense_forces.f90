@@ -50,21 +50,23 @@ contains
   !**********************************************************************
   ! Force calculation including k-space summation
   !**********************************************************************
-  subroutine forces(p, nl, tb, db, f, wpot, wpot_per_bond, error)
+  subroutine forces(p, nl, tb, db, f, wpot, wpot_per_at, wpot_per_bond, error)
     implicit none
 
-    type(particles_t), intent(inout)   :: p
-    type(neighbors_t), intent(in)      :: nl
-    type(dense_hamiltonian_t), intent(in)  :: tb
-    type(materials_t), intent(in)      :: db
-    real(DP), intent(inout)            :: f(3, p%maxnatloc)
-    real(DP), intent(inout)            :: wpot(3, 3)
+    type(particles_t),         intent(inout) :: p
+    type(neighbors_t),         intent(in)    :: nl
+    type(dense_hamiltonian_t), intent(in)    :: tb
+    type(materials_t),         intent(in)    :: db
+    real(DP),                  intent(inout) :: f(3, p%maxnatloc)
+    real(DP),                  intent(inout) :: wpot(3, 3)
 #ifdef LAMMPS
-    real(DP), intent(inout), optional  :: wpot_per_bond(6, nl%neighbors_size)
+    real(DP),        optional, intent(inout) :: wpot_per_at(6, p%maxnatloc)
+    real(DP),        optional, intent(inout) :: wpot_per_bond(6, nl%neighbors_size)
 #else
-    real(DP), intent(inout), optional  :: wpot_per_bond(3, 3, nl%neighbors_size)
+    real(DP),        optional, intent(inout) :: wpot_per_at(3, 3, p%maxnatloc)
+    real(DP),        optional, intent(inout) :: wpot_per_bond(3, 3, nl%neighbors_size)
 #endif
-    integer, intent(inout), optional   :: error
+    integer,         optional, intent(inout) :: error
 
     ! ---
 
@@ -108,9 +110,9 @@ contains
     list(0:7,  8) = [7,  1,  2,  3,  4,  5,  6,  7             ] ! pd
     list(0:10, 9) = [10, 1,  2,  3,  4,  5,  6,  7,  8,  9,  10] ! spd
 
-    lo     = (/0,1,1,1,2,2,2,2,2/)
+    lo = (/0,1,1,1,2,2,2,2,2/)
 
-    w      = 0.0_DP
+    w = 0.0_DP
 
     error_loc  = ERROR_NONE
 
@@ -120,7 +122,7 @@ contains
     !$omp& private(I, Imu, mu, J, Jnu, nu, kk, l, m, ni) &
     !$omp& private(noI, noJ, nr, q, rho_ImuJnu, rIJ) &
     !$omp& private(Sdiff_ij, Sdiff_ji, wij) &
-    !$omp& shared(db, f, list, lo, nl, p, tb, wpot_per_bond) &
+    !$omp& shared(db, f, list, lo, nl, p, tb, wpot_per_at, wpot_per_bond) &
     !$omp& shared(tb_at, tb_rho, tb_e) &
     !$omp& reduction(+:w) reduction(+:error_loc)
 
@@ -261,6 +263,11 @@ contains
 
                    if (present(wpot_per_bond)) then
                       SUM_VIRIAL(wpot_per_bond, ni, wij)
+                   endif
+                   if (present(wpot_per_at)) then
+                      wij = wij/2
+                      SUM_VIRIAL(wpot_per_at, I, wij)
+                      SUM_VIRIAL(wpot_per_at, J, wij)
                    endif
 
                 endif I_lt_J
