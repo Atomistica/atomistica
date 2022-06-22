@@ -18,7 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-#! /usr/bin/env python
 
 
 """Check energies against the databases published in
@@ -111,7 +110,7 @@ def molecule(mol):
 
 ###
 
-def run_rebo2_molecules_test(test=None):
+def test_rebo2_molecules(test=None):
     for potname, c, reference_database in [ 
         ( 'Rebo2', atomistica.Rebo2(),
           Brenner_et_al_CH ),
@@ -126,9 +125,9 @@ def run_rebo2_molecules_test(test=None):
         nfailed = 0
     
         for mol, edft, de in reference_database:
-            if len(sys.argv) > 1:
-                if mol not in sys.argv[1:]:
-                    continue
+            #if len(sys.argv) > 1:
+            #    if mol not in sys.argv[1:]:
+            #        continue
 
             eref = edft-de
 
@@ -160,15 +159,3 @@ def run_rebo2_molecules_test(test=None):
         if test is None:
             print('{0} molecule tests ok, {1} molecule tests failed.' \
                 .format(nok, nfailed))
-
-###
-
-class TestREBO2Molecules(unittest.TestCase):
-
-    def test_rebo2_molecules(self):
-        run_rebo2_molecules_test(self)
-
-###
-
-if __name__ == '__main__':
-    run_rebo2_molecules_test()

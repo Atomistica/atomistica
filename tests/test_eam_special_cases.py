@@ -36,7 +36,7 @@ import numpy as np
 import ase.io as io
 
 from atomistica import TabulatedAlloyEAM
-from atomistica.tests import test_forces
+from atomistica.tests import test_forces as forces
 
 ###
 
@@ -59,7 +59,7 @@ class TestEAMSpecialCases(unittest.TestCase):
             a = orig_a.copy()
             a.set_cell(fac*a.cell, scale_atoms=True)
             a.calc = c
-            ffd, f0, maxdf = test_forces(a, dx=dx)
+            ffd, f0, maxdf = forces(a, dx=dx)
             if maxdf > tol:
                 nfail += 1
                 print("forces .failed.")

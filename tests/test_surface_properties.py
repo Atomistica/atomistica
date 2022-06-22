@@ -304,21 +304,21 @@ class TestSurfaceEnergies(unittest.TestCase):
 
 if __name__ == '__main__':
     for pot, par, mats in tests:
-        if len(sys.argv) > 1:
-            found = False
-            if par is not None:
-                for keyword in sys.argv[1:]:
-                    if '__ref__' in par:
-                        if par['__ref__'].lower().find(keyword.lower()) != -1:
-                            found = True
-            try:
-                potname = pot.__name__
-            except:
-                potname = pot.__class__.__name__
-            for keyword in sys.argv[1:]:
-                if potname.lower().find(keyword.lower()) != -1:
-                    found = True
-            if not found:
-                continue
+        #if len(sys.argv) > 1:
+        #    found = False
+        #    if par is not None:
+        #        for keyword in sys.argv[1:]:
+        #            if '__ref__' in par:
+        #                if par['__ref__'].lower().find(keyword.lower()) != -1:
+        #                    found = True
+        #    try:
+        #        potname = pot.__name__
+        #    except:
+        #        potname = pot.__class__.__name__
+        #    for keyword in sys.argv[1:]:
+        #        if potname.lower().find(keyword.lower()) != -1:
+        #            found = True
+        #    if not found:
+        #        continue
 
         test_surface_energies(mats, pot, par, nx, vacuum, dump=True)

@@ -40,7 +40,7 @@ import ase.constraints
 from ase.units import GPa
 
 from atomistica import *
-from atomistica.tests import test_cubic_elastic_constants
+from atomistica.tests import test_cubic_elastic_constants as cubic_elastic_constants
 
 from ase.lattice.cubic import Diamond, BodyCenteredCubic
 from ase.lattice.cubic import FaceCenteredCubic, SimpleCubic
@@ -183,8 +183,8 @@ class TestElasticConstants(unittest.TestCase):
 
     def test_elastic_constants(self):
         for pot, par, mats in tests:
-             test_cubic_elastic_constants(mats, pot, par, sx, dev_thres,
-                                         test=self)
+             cubic_elastic_constants(mats, pot, par, sx, dev_thres,
+                                     test=self)
 
 ###
 
@@ -192,24 +192,24 @@ if __name__ == '__main__':
     nok = 0
     nfail = 0
     for pot, par, mats in tests:
-        if len(sys.argv) > 1:
-            found = False
-            if par is not None:
-                for keyword in sys.argv[1:]:
-                    if '__ref__' in par:
-                        if par['__ref__'].lower().find(keyword.lower()) != -1:
-                            found = True
-            try:
-                potname = pot.__name__
-            except:
-                potname = pot.__class__.__name__
-            for keyword in sys.argv[1:]:
-                if potname.lower().find(keyword.lower()) != -1:
-                    found = True
-            if not found:
-                continue
+        #if len(sys.argv) > 1:
+        #    found = False
+        #    if par is not None:
+        #        for keyword in sys.argv[1:]:
+        #            if '__ref__' in par:
+        #                if par['__ref__'].lower().find(keyword.lower()) != -1:
+        #                    found = True
+        #    try:
+        #        potname = pot.__name__
+        #    except:
+        #        potname = pot.__class__.__name__
+        #    for keyword in sys.argv[1:]:
+        #        if potname.lower().find(keyword.lower()) != -1:
+        #            found = True
+        #    if not found:
+        #        continue
 
-        _nok, _nfail = test_cubic_elastic_constants(mats, pot, par, sx, dev_thres)
+        _nok, _nfail = cubic_elastic_constants(mats, pot, par, sx, dev_thres)
         nok += _nok
         nfail += _nfail
     print('{0} tests passed, {1} tests failed.'.format(nok, nfail))

@@ -25,8 +25,6 @@
 Test the DFTB3 parametrizations.
 """
 
-from __future__ import print_function
-
 import os
 import sys
 import unittest
@@ -97,7 +95,7 @@ table5_data = {
 
 ###
 
-def run_dftb3_test(test=None, tol=0.05):
+def test_dftb3(test=None, tol=0.05):
     mio_database_folder = os.getenv('MIO')
     if mio_database_folder is None:
         raise RuntimeError('Please use environment variable MIO to specify path to mio Slater-Koster tables.')
@@ -281,20 +279,3 @@ def run_dftb3_test(test=None, tol=0.05):
             test.assertTrue(success_DFTB3)
             test.assertTrue(success_DFTB3_XH)
             test.assertTrue(success_DFTB3_3ob_XH)
-
-###
-
-class TestMIO(unittest.TestCase):
-
-   def test_dftb3(self):
-
-       if os.getenv('MIO') is None:
-           print('Skipping DFTB3 test. Specify path to mio Slater-Koster ' \
-                 'tables in MIO environment variable if you want to run it.')
-       else:
-           run_dftb3_test(self)
-
-###
-
-if __name__ == '__main__':
-    run_dftb3_test()
