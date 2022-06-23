@@ -18,10 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-#! /usr/bin/env python
-
-
-from __future__ import print_function
 
 import math
 import sys
@@ -40,9 +36,9 @@ from ase.lattice.compounds import B1, B2, B3, L1_2, NaCl
 
 import atomistica.native as native
 from atomistica import *
-from atomistica.tests import test_forces, test_potential, test_virial
-
-# import ase_ext_io as io
+from atomistica.tests import test_forces as forces
+from atomistica.tests import test_potential as potential
+from atomistica.tests import test_virial as virial
 
 ###
 
@@ -206,26 +202,26 @@ tests += [
 
 ###
 
-def run_forces_and_virial_test(test=None):
+def test_forces_and_virial(test=None):
     nok = 0
     nfail = 0
     for pot, par, mats in tests:
-        if len(sys.argv) > 1:
-            found = False
-            if par is not None:
-                for keyword in sys.argv[1:]:
-                    if '__ref__' in par:
-                        if par['__ref__'].lower().find(keyword.lower()) != -1:
-                            found = True
-            try:
-                potname = pot.__name__
-            except:
-                potname = pot.__class__.__name__
-            for keyword in sys.argv[1:]:
-                if potname.lower().find(keyword.lower()) != -1:
-                    found = True
-            if not found:
-                continue
+        #if len(sys.argv) > 1:
+        #    found = False
+        #    if par is not None:
+        #        for keyword in sys.argv[1:]:
+        #            if '__ref__' in par:
+        #                if par['__ref__'].lower().find(keyword.lower()) != -1:
+        #                    found = True
+        #    try:
+        #        potname = pot.__name__
+        #    except:
+        #        potname = pot.__class__.__name__
+        #    for keyword in sys.argv[1:]:
+        #        if potname.lower().find(keyword.lower()) != -1:
+        #            found = True
+        #    if not found:
+        #        continue
 
         try:
             potname = pot.__name__
@@ -279,7 +275,7 @@ def run_forces_and_virial_test(test=None):
                         print('--- using random mask ---')
                     c.set_mask(mask)
 
-                    ffd, f0, maxdf = test_forces(a, dx=dx)
+                    ffd, f0, maxdf = forces(a, dx=dx)
         
                     if test is None:
                         if abs(maxdf) < tol:
@@ -305,7 +301,7 @@ def run_forces_and_virial_test(test=None):
                       test.assertTrue(abs(maxdf) < tol,
                                         msg=errmsg+'; forces')
 
-                    sfd, s0, maxds = test_virial(a, de=dx)
+                    sfd, s0, maxds = virial(a, de=dx)
 
                     if test is None:
                         if abs(maxds) < tol:
@@ -328,7 +324,7 @@ def run_forces_and_virial_test(test=None):
                         test.assertTrue(abs(maxds) < tol,
                                         msg=errmsg+'; virial')
 
-                    pfd, p0, maxdp = test_potential(a, dq=dx)
+                    pfd, p0, maxdp = potential(a, dq=dx)
 
                     if test is None:
                         if abs(maxdp) < tol:
@@ -355,14 +351,3 @@ def run_forces_and_virial_test(test=None):
     if test is None:
         print('{0} tests passed, {1} tests failed.'.format(nok, nfail))
 
-###
-
-class TestForcesAndVirial(unittest.TestCase):
-
-    def test_forces_and_virial(self):
-        run_forces_and_virial_test(self)
-
-###
-
-if __name__ == '__main__':
-    run_forces_and_virial_test()

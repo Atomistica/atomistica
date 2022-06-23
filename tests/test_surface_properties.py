@@ -41,7 +41,7 @@ except:
     from ase.atoms import string2symbols
 
 from atomistica import *
-from atomistica.tests import test_surface_energies
+from atomistica.tests import test_surface_energies as surface_energies
 
 from ase.lattice.cubic import Diamond, FaceCenteredCubic
 from ase.lattice.compounds import B1, B2, B3, L1_2
@@ -294,31 +294,6 @@ tests = [
 
 ###
 
-class TestSurfaceEnergies(unittest.TestCase):
-
-    def test_surface_energies(self):
-        for pot, par, mats in tests:
-            test_surface_energies(mats, pot, par, nx, vacuum, test=self)
-
-###
-
-if __name__ == '__main__':
+def test_surface_energies():
     for pot, par, mats in tests:
-        if len(sys.argv) > 1:
-            found = False
-            if par is not None:
-                for keyword in sys.argv[1:]:
-                    if '__ref__' in par:
-                        if par['__ref__'].lower().find(keyword.lower()) != -1:
-                            found = True
-            try:
-                potname = pot.__name__
-            except:
-                potname = pot.__class__.__name__
-            for keyword in sys.argv[1:]:
-                if potname.lower().find(keyword.lower()) != -1:
-                    found = True
-            if not found:
-                continue
-
-        test_surface_energies(mats, pot, par, nx, vacuum, dump=True)
+        surface_energies(mats, pot, par, nx, vacuum)

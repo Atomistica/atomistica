@@ -18,26 +18,46 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-#! /usr/bin/env python
 
+"""
+Test computation of stresses from tight binding.
+"""
 
+import os
+import sys
 import unittest
 
-from coulomb import *
-from eam_special_cases import *
-from neighbor_list import *
-from pbc import *
-from bulk_properties import *
-from surface_properties import *
-from forces_and_virial import *
-from rebo2_molecules import *
-from mask import *
-from mio import *
-from dftb3 import *
-from dimers import *
-from test_io import IOTest
+import numpy as np
 
-###
+import ase.io as io
+from ase.build import molecule
+from ase.optimize import FIRE
 
-unittest.main()
+import atomistica.native as native
+from atomistica import Atomistica
+from atomistica.tests import test_virial as virial
+
+def test_stresses(test=None, de=1e-6):
+    database_folder = os.getenv('MIO')
+    if database_folder is None:
+        raise RuntimeError('Please use environment variable MIO to specify path to mio Slater-Koster tables.')
+
+    calc = Atomistica(
+        [ native.TightBinding(
+        database_folder = database_folder,
+        SolverLAPACK = dict(electronic_T=0.001),
+        ) ],
+        avgn = 1000
+        )
+
+    a = io.read('aC_small.cfg')
+    a.calc = calc
+    s = a.get_stress() * a.get_volume()
+    s_at = a.get_stresses()
+
+    np.testing.assert_array_almost_equal(s, s_at.sum(axis=0))
+
+    sfd, s0, maxds = virial(a, de=de)
+    np.testing.assert_array_almost_equal(s0, sfd)
+
 

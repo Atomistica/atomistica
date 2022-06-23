@@ -23,6 +23,7 @@
 !   shared:directory
 !   dependencies:../materials.f90,dense_hamiltonian_type.f90,dense_hamiltonian.f90,c_dense_hamiltonian.cpp,dense_forces.f90,dense_hs.f90,dense_repulsion.f90,solver/dense_occupation.f90,solver/dense_solver_lapack.f90,solver/dense_solver_cp.f90,solver/dense_solver_dispatch.f90,dense_scc.f90,analysis/dense_bonds.f90
 !   classtype:dense_notb_t classname:TightBinding interface:potentials
+!   features:per_at,per_bond
 ! @endmeta
 
 #include "macros.inc"
@@ -627,7 +628,7 @@ contains
     !   e_bs     = Band-structure energy
     !   e_rep    = Repulsive energy
     !   e_atomic = Energy of the individual charge neutral atoms
-    call forces(p, nl, this%tb, this%mat, f, wpot, wpot_per_bond, error=ierror)
+    call forces(p, nl, this%tb, this%mat, f, wpot, wpot_per_at, wpot_per_bond, error=ierror)
     PASS_ERROR_AND_STOP_TIMER("dense_notb_energy_and_forces", ierror)
     epot  = epot + e_bs(this%solver, this%tb) + &
          e_rep(this%tb, this%mat, p, nl) - e_atomic(this%tb, p) 
