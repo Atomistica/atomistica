@@ -1,8 +1,8 @@
 Change log
 ==========
 
-v1.1.0 (not yet release)
-------------------------
+v1.1.0 (23Jun22)
+----------------
 
 - ENH: Per atom virial for NOTB
 
