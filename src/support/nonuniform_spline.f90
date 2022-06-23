@@ -459,6 +459,10 @@ contains
 
     ! ---
 
+    if (this%n < 0) then
+      RAISE_ERROR("Spline not initialized.", ierror)
+    endif
+
     !
     ! if x out of interpolation region
     !

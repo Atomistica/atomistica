@@ -505,9 +505,9 @@ contains
     m  = max(noi, noj)
     nr = list(0, m)                    ! number of non-vanishing matrix elements
     a  = interval(db%HS(eli, elj), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
-    PASS_ERROR(error)
+    PASS_ERROR_WITH_INFO("eli = " // eli // ", elj = " // elj, error)
     b  = interval(db%HS(elj, eli), my_r_ij, error)  ! determine the interval dr can be found in (within xs)
-    PASS_ERROR(error)
+    PASS_ERROR_WITH_INFO("elj = " // elj // ", eli = " // eli, error)
     do q = 1, nr
        bo = list(q, m)   ! bond order
        if (bo <= 0) then
