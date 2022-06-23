@@ -35,8 +35,9 @@ from ase.optimize import FIRE
 
 import atomistica.native as native
 from atomistica import Atomistica
+from atomistica.tests import test_virial as virial
 
-def test_stresses(test=None):
+def test_stresses(test=None, de=1e-6):
     database_folder = os.getenv('MIO')
     if database_folder is None:
         raise RuntimeError('Please use environment variable MIO to specify path to mio Slater-Koster tables.')
@@ -45,14 +46,7 @@ def test_stresses(test=None):
         [ native.TightBinding(
         database_folder = database_folder,
         SolverLAPACK = dict(electronic_T=0.001),
-        SCC = dict(dq_crit = 1e-4,
-                   mixing = 0.2, # 0.2
-                   andersen_memory = 3, # 3
-                   maximum_iterations = 100,
-                   log = True)
-        ),
-          native.DirectCoulomb(),
-          native.SlaterCharges(cutoff=10.0) ],
+        ) ],
         avgn = 1000
         )
 
@@ -63,7 +57,7 @@ def test_stresses(test=None):
 
     np.testing.assert_array_almost_equal(s, s_at.sum(axis=0))
 
-###
+    sfd, s0, maxds = virial(a, de=de)
+    np.testing.assert_array_almost_equal(s0, sfd)
 
-if __name__ == '__main__':
-    test_stresses()
+
