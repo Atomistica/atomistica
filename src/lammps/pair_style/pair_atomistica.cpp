@@ -51,7 +51,6 @@
 #include "comm.h"
 #include "neighbor.h"
 #include "neigh_list.h"
-#include "neigh_request.h"
 #include "memory.h"
 #include "error.h"
 #include "update.h"
@@ -308,10 +307,7 @@ void PairAtomistica::init_style()
 
   // need a full neighbor list
 
-  int irequest = neighbor->request(this);
-  neighbor->requests[irequest]->half = 0;
-  neighbor->requests[irequest]->full = 1;
-  neighbor->requests[irequest]->ghost = 1;
+  neighbor->add_request(this,NeighConst::REQ_FULL|NeighConst::REQ_GHOST);
 
   // find potential class in Atomistica potential database
 
