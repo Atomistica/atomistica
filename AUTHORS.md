@@ -36,7 +36,7 @@ Authors and contributors
 * Thomas Reichenbach  
   Fraunhofer IWM
 
-* Harry Turstall
+* Harry Tunstall
 
 * Michael Walter  
   University of Freiburg
