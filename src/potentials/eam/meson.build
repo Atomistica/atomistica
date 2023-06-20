@@ -13,3 +13,5 @@ potentials_eam = static_library(
     dependencies: atomistica_dependencies,
     install: true  # needed, otherwise it is not copied to wheel
 )
+
+potentials_sources += eam_sources

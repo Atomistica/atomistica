@@ -5,8 +5,6 @@
 # and scan metadata.
 #
 
-from __future__ import print_function
-
 import getopt
 import io
 import os
@@ -147,17 +145,18 @@ if __name__ == '__main__':
                                   ['exclude=', 'has_finterface='])
 
     if len(args) < 5:
-        raise RuntimeError('Syntax: listclasses.py <path> <interface> '
+        raise RuntimeError('Syntax: listclasses.py <interface> '
                            '<definition-file> <makefile> <config-file> '
+                           '<source-file-1> <source-file-2> ... '
                            '[-I<include directory>] '
                            '[--exclude=<exclude list>] '
                            '[--has_finterface=<interface list>]')
 
-    path = args[0]
-    interface = args[1]
-    deffn = args[2]
-    mkfn = args[3]
-    cfgfn = args[4]
+    #interface = args[0]
+    #deffn = args[1]
+    #mkfn = args[2]
+    #cfgfn = args[3]
+    path = args[0:]
 
     exclude_list = []
     finterface_list = []
@@ -178,7 +177,7 @@ if __name__ == '__main__':
     print('Scanning metadata of all source files...')
     metadata = scanallmeta(path)
    
-    print("Dumping information for classes that implement '{0}' interface..." \
-        .format(interface))
-    write_interface_info(metadata, interface, finterface_list, exclude_list,
-                         include_list, deffn, mkfn, cfgfn)
+    #print("Dumping information for classes that implement '{0}' interface..." \
+    #    .format(interface))
+    #write_interface_info(metadata, interface, finterface_list, exclude_list,
+    #                     include_list, deffn, mkfn, cfgfn)

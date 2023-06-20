@@ -2336,7 +2336,7 @@
                                                                    this%sfacbo(i1:i2) = this%sfacbo(i1:i2) + dffac
                                                                 endif
 
-#endif SCREENING
+#endif ! SCREENING
 
                                                              endif jl2_within_cutoff
 

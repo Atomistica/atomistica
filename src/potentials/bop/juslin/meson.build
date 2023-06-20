@@ -3,7 +3,7 @@ juslin_sources = [
     'juslin_scr.f90'
 ]
 
-incdirs = include_directories('../..', '../../support')
+incdirs = include_directories('../../..', '../../../support')
 
 potentials_juslin = static_library(
     'juslin',
@@ -13,3 +13,5 @@ potentials_juslin = static_library(
     dependencies: atomistica_dependencies,
     install: true  # needed, otherwise it is not copied to wheel
 )
+
+all_potentials_sources += juslin_sources

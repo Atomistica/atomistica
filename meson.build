@@ -16,7 +16,9 @@ atomistica_target = 'standalone'
 
 #add_global_arguments('-ffree-form', language: 'fortran')
 
-# Store global configuration to dictionary
+#
+# Configure atomistica and compiler
+#
 atomistica_date = run_command(python, '-c', '"import versioneer; print(versioneer.get_versions()[\'date\'])"').stdout().strip()
 if git.found()
     atomistica_url = run_command(git, 'config', '--get', 'remote.origin.url').stdout().strip()
@@ -33,6 +35,11 @@ if fortran_compiler.get_id() == 'gcc'
     add_project_arguments('-DNO_BIND_C_OPTIONAL', language: 'fortran')  # Only gfortran
     # Disable some warnings
     add_project_arguments('-Wno-unused-dummy-argument', language: 'fortran')
+    add_project_arguments('-Wno-character-truncation', language: 'fortran')
+    add_project_arguments('-Wno-conversion', language: 'fortran')
+    add_project_arguments('-Wno-tabs', language: 'fortran')
+    add_project_arguments('-Wno-unused-function', language: 'fortran')
+    add_project_arguments('-Wno-unused-variable', language: 'fortran')
 endif
 
 atomistica_configuration = configuration_data({
@@ -44,6 +51,11 @@ atomistica_configuration = configuration_data({
     'compileroptions': fortran_compiler.get_id(),
     'compilerversion': fortran_compiler.version()
 })
+
+
+#
+# Find dependencies
+#
 
 fftw3 = dependency('fftw3', required: false)
 if fftw3.found()
@@ -64,7 +76,6 @@ else
     atomistica_with_netcdf = false
     message('Atomistica netCDF: no')
 endif
-
 
 atomistica_dependencies = [fftw3, netcdf]
 

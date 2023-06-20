@@ -20,9 +20,11 @@ incdirs = include_directories('../..', '../../support')
 
 potentials_coulomb = static_library(
     'coulomb',
-    pair_sources,
+    coulomb_sources,
     include_directories: incdirs,
     link_with: [atomistica_supplib, atomistica_corelib],
     dependencies: atomistica_dependencies,
     install: true  # needed, otherwise it is not copied to wheel
 )
+
+all_potentials_sources += coulomb_sources
