@@ -1,4 +1,4 @@
-standalone_sources = [
+corelib_sources = [
 	'signal_handler.f90',
 	'r250.f',
 	'rng.f90',
@@ -10,13 +10,10 @@ standalone_sources = [
 	'dynamics.f90',
 	'cyclic.f90',
 	'symmetry.f90',
-	'versioninfo.f90',
-#	'atomistica.f90',
 	'native_io.f90',
 	'cfg.f90',
 	'pdb.f90',
 	'vtk.f90',
-	'nc.f90',
 	'xyz_f90.f90',
 	'lammps_data.f90',
 	'input_trajectory.f90',
@@ -25,13 +22,17 @@ standalone_sources = [
 	'interpolation_kernels_dispatch.f90'
 ]
 
-incdirs = include_directories('..')
+if atomistica_with_netcdf
+	corelib_sources += ['nc.f90']
+endif
 
-standalone = static_library(
-    'standalone',
-    standalone_sources,
+incdirs = include_directories('../..', '../../support')
+
+atomistica_corelib = static_library(
+    'corelib',
+    corelib_sources,
     include_directories: incdirs,
-    link_with: supplib,
+    link_with: atomistica_supplib,
     dependencies: atomistica_dependencies,
     install: true  # needed, otherwise it is not copied to wheel
 )

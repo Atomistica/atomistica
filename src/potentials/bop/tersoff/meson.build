@@ -1,13 +1,13 @@
-eam_sources = [
-    'tabulated_eam.f90',
-    'tabulated_alloy_eam.f90'
+tersoff_sources = [
+    'tersoff.f90',
+    'tersoff_scr.f90'
 ]
 
 incdirs = include_directories('../..', '../../support')
 
-potentials_eam = static_library(
-    'eam',
-    eam_sources,
+potentials_tersoff = static_library(
+    'tersoff',
+    juslin_sources,
     include_directories: incdirs,
     link_with: [atomistica_supplib, atomistica_corelib],
     dependencies: atomistica_dependencies,

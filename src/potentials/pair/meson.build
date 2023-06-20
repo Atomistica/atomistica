@@ -1,13 +1,16 @@
-eam_sources = [
-    'tabulated_eam.f90',
-    'tabulated_alloy_eam.f90'
+pair_sources = [
+    'born_mayer.f90',
+    'double_harmonic.f90',
+    'harmonic.f90',
+    'lj_cut.f90',
+    'r6.f90',
 ]
 
 incdirs = include_directories('../..', '../../support')
 
-potentials_eam = static_library(
-    'eam',
-    eam_sources,
+potentials_pair = static_library(
+    'pair',
+    pair_sources,
     include_directories: incdirs,
     link_with: [atomistica_supplib, atomistica_corelib],
     dependencies: atomistica_dependencies,

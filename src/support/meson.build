@@ -1,3 +1,9 @@
+versioninfo = configure_file(
+    input: 'versioninfo.f90.in',
+    output: 'versioninfo.f90',
+    configuration: atomistica_configuration
+)
+
 supplib_sources = [
     'c_f.f90',
     'error.f90',
@@ -20,12 +26,17 @@ supplib_sources = [
     'nonuniform_spline.f90',
     'cutoff.f90',
     'histogram1d.f90',
-    'supplib.f90'
+    'supplib.f90',
+    versioninfo,
+    'anderson_mixer.f90',
+    'table2d.f90',
+    'table3d.f90',
+    'table4d.f90'
 ]
 
 incdirs = include_directories('..')
 
-supplib = static_library(
+atomistica_supplib = static_library(
     'supplib',
     supplib_sources,
     include_directories: incdirs,

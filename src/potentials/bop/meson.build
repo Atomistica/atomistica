@@ -1,0 +1,5 @@
+subdir('brenner')
+subdir('juslin')
+subdir('kumagai')
+subdir('rebo2')
+subdir('tersoff')

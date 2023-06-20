@@ -41,8 +41,6 @@
 !! functionality.
 !<
 
-#ifdef HAVE_NETCDF
-
 module nc
   use supplib
 
@@ -2123,4 +2121,3 @@ contains
   endsubroutine nc_write_field
 
 endmodule nc
-#endif
