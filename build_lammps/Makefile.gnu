@@ -104,7 +104,7 @@ GFFLAGS  = \
 #
 # GNU
 #
-GFFLAGS += -fPIC
+GFFLAGS += -fPIC -fallow-argument-mismatch
 FFLAGS   = $(GFFLAGS) -x f77-cpp-input
 F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE) \
 	-ffree-form -ffree-line-length-none -x f95-cpp-input
