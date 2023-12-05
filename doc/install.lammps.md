@@ -148,7 +148,7 @@ If, during LAMMPS compilation, you get an error which looks like this:
 ...
 
 ```
-It is possible that you have linked the libraries in an incorrect order. As of 05/12/2023, for a build using ```make mpi``` with GCC, the following lines lead to correct compilation:
+It is possible that you have linked the libraries in an incorrect order. As of 05/12/2023, for a build using ```make mpi``` with GCC and mode = shared, the following lines lead to correct compilation:
 
 ```
 LMPLINK= -L. -llammps_$@ -L/path/to/atomistica/build_lammps -latomistica -L/path/to/OpenBLAS/0.3.18-GCC-11.2.0/lib/ -lgomp -lgfortran -lstdc++ -lopenblas -lmpi_mpifh
@@ -165,6 +165,3 @@ LIB = -L/path/to/atomistica/build_lammps -latomistica -L/path/to/OpenBLAS/0.3.18
 ```
 in makefile.mpi.
 
-## Building LAMMPS as a shared object
-
-If building LAMMPS as a shared object, ensure that libraries are also linked in the build step where the shared object is compiled.
