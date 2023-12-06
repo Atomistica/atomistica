@@ -133,3 +133,35 @@ In the LAMMPS control file use:
   ```  
 
 where "params.dat" is the above file.
+
+
+# Troubleshooting
+
+## Undefined symbols error:
+If, during LAMMPS compilation, you get an error which looks like this:
+```
+...
+./liblammps_mpi.so: error: undefined reference to 'atomistica_startup'
+./liblammps_mpi.so: error: undefined reference to 'particles_set_element'
+./liblammps_mpi.so: error: undefined reference to 'neighbors_set_pointers'
+./liblammps_mpi.so: error: undefined reference to 'ptrdict_read'
+...
+
+```
+It is possible that you have linked the libraries in an incorrect order. As of 05/12/2023, for a build using ```make mpi``` with GCC and mode = shared, the following lines lead to correct compilation:
+
+```
+LMPLINK= -L. -llammps_$@ -L/path/to/atomistica/build_lammps -latomistica -L/path/to/OpenBLAS/0.3.18-GCC-11.2.0/lib/ -lgomp -lgfortran -lstdc++ -lopenblas -lmpi_mpifh
+
+```
+in Makefile, and
+
+```
+CCFLAGS =	-g -O3 -std=c++11 -I/path/to/atomistica/src/support -I/path/to/atomistica/build_lammps
+
+```
+```
+LIB = -L/path/to/atomistica/build_lammps -latomistica -L/path/to/OpenBLAS/0.3.18-GCC-11.2.0/lib/ -lgomp -lgfortran -lstdc++ -lopenblas -lmpi_mpifh
+```
+in makefile.mpi.
+
