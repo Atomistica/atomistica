@@ -1,0 +1,152 @@
+#
+# *** Paths
+# 
+# MDCORE
+#
+SRCDIR   = ../src
+
+
+#
+# *** Compilers and parallelization
+#
+# Serial / OpenMP execution (Intel)
+#
+FC        = ifx
+F90C      = ifx
+CC        = icx
+CXX       = icpx
+NVCC      = nvcc
+LD        = ifx
+
+
+#
+# Initial EXTRA_INCLUDE and EXTRA_LIB
+#
+# -cxxlib links to the C++ runtime
+#
+HAVE_NETCDF = 0
+EXTRA_FLAGS =
+EXTRA_INCLUDE =
+EXTRA_LIB = -cxxlib
+
+#
+# OpenMP parallelization
+#
+OPENMP ?= 0
+ifneq ($(OPENMP),0)
+OMP_FLAGS = -fiopenmp
+EXTRA_LIB += -fiopenmp
+else
+OMP_FLAGS =
+endif
+
+
+#
+# *** Extra includes and libraries
+#
+# Check for NetCDF
+#
+ifneq ("$(shell which nf-config)","") 
+HAVE_NETCDF = 1
+EXTRA_FLAGS += -DHAVE_NETCDF
+EXTRA_INCLUDE += $(shell nf-config --fflags)
+EXTRA_LIB += $(shell nf-config --flibs)
+else
+ifneq ("$(shell which nc-config)","")
+HAVE_NETCDF = 1
+EXTRA_FLAGS += -DHAVE_NETCDF
+EXTRA_INCLUDE += $(shell nc-config --fflags)
+EXTRA_LIB += $(shell nc-config --flibs)
+endif
+endif
+
+#
+# FIXME!!! Implement FFTW check
+#
+#HAVE_FFTW3 = 0
+#EXTRA_FLAGS += -DHAVE_FFTW3
+#EXTRA_INCLUDE += 
+#EXTRA_LIB += -lfftw3
+
+#
+# *** LAPACK and BLAS link options here.
+#
+# Intel MKL
+#
+EXTRA_INCLUDE += -I$(MKLROOT)/include
+EXTRA_LIB += -qmkl=parallel -L$(MKLROOT)/lib
+
+#
+# DFT-D3 library 
+# 
+
+HAVE_DFTD3 = 0
+
+ifneq ($(HAVE_DFTD3),0)
+EXTRA_FLAGS += -DHAVE_DFTD3
+DFTD3_PATH = # Please specify the path to dftd3-lib
+EXTRA_LIB += -L$(DFTD3_PATH) -ldftd3
+EXTRA_INCLUDE += -I$(DFTD3_PATH)
+endif
+
+
+#
+# *** Other settings that rarely need to be touched
+#
+LIBTOOL = ar r
+
+#
+# * Optimization
+#
+ifneq ($(DEBUG),0)
+OPT_FLAGS = -g -O0 -check bounds -check arg_temp_created -check uninit -ftrapuv -implicitnone -warn all
+else
+OPT_FLAGS = -g -xHost -O3 -unroll -no-prec-div -fp-model fast
+endif
+
+#
+# * Defines
+#
+#   -DHAVE_NETCDF              Compile with NetCDF output module
+#   -DHAVE_FFTW3               Compile PME module using FFTW3
+#   -DHAVE_MKL                 LAPACK implementation is the MKL
+#                              (switches printing of MKL version information)
+#   -DHAVE_IFPORT              Compiler is Intel Fortran and the ifport module
+#                              is present (switches writing of a restart file
+#                              upon SIGTERM, i.e. if wallclock time is reached)
+#   -DHAVE_CUDA                CUDA is available on the system. Compile code to
+#                              use CUDA GPU hardware.
+#   -DHAVE_DFTD3               DFT-D3 library
+#
+#
+DEFINES  = \
+	-DNO_BIND_C_OPTIONAL \
+	-DHAVE_NETCDF \
+	-DHAVE_MKL \
+	-DHAVE_FFTW3 \
+	-DHAVE_IFPORT
+
+#
+# *** Compilation and linking flags
+#     (settings should be made mainly above, not here)
+#
+GFFLAGS  = \
+	$(DEFINES) \
+	$(OPT_FLAGS) \
+	$(OMP_FLAGS) \
+	$(EXTRA_FLAGS)
+
+GFFLAGS += -fpp -warn unused -fPIC -traceback
+FFLAGS   = $(GFFLAGS)
+F90FLAGS = $(GFFLAGS) $(EXTRA_INCLUDE)
+CFLAGS   = -O3 -fPIC $(DEFINES) $(EXTRA_INCLUDE) #-I/usr/site/cuda/include
+CUFLAGS  = -O3 -arch=sm_20 $(DEFINES)
+
+#
+# Use LDFLAGS = -static if you want a static binary
+#
+LDFLAGS  = 
+LIBS     = $(EXTRA_LIB) #-lcudart -lcublas
+
+include $(SRCDIR)/makefile.inc
+
