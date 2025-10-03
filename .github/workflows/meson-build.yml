@@ -43,21 +43,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install build meson-python meson ninja setuptools setuptools-scm 'numpy>=2.0.0' ase
 
+    - name: Check for build directory
+      run: |
+        ls -la | grep build || echo "No build directories found"
+
     - name: Build wheel
       run: |
-        # Build from /tmp to avoid build/ directory name clash
-        PROJECT_DIR="$(pwd)"
-        cd /tmp
-        python -m build --no-isolation -w -v "$PROJECT_DIR" 2>&1 | tee build.log
-        cd "$PROJECT_DIR"
+        python -m build --no-isolation -w -v
 
-    - name: Show build log on failure
-      if: failure()
+    - name: List dist directory
       run: |
-        if [ -f /tmp/build.log ]; then
-          echo "=== Last 100 lines of build log ==="
-          tail -100 /tmp/build.log
-        fi
+        ls -la dist/ || echo "No dist directory"
 
     - name: Install wheel
       run: |
