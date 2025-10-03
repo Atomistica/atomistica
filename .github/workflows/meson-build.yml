@@ -50,8 +50,6 @@ jobs:
       run: |
         # Find the gfortran installed by brew
         GCC_PREFIX=$(brew --prefix gcc)
-        echo "GCC prefix: ${GCC_PREFIX}"
-        ls -la ${GCC_PREFIX}/bin/ | grep gfortran || echo "No gfortran found"
         # Find the actual versioned gfortran (e.g., gfortran-14)
         GFORTRAN=$(ls ${GCC_PREFIX}/bin/gfortran-* 2>/dev/null | head -1)
         if [ -z "$GFORTRAN" ]; then
@@ -62,25 +60,12 @@ jobs:
           exit 1
         fi
         echo "FC=${GFORTRAN}" >> $GITHUB_ENV
-        echo "Fortran compiler: ${GFORTRAN}"
-        ${GFORTRAN} --version
-
-    - name: Verify compilers
-      run: |
-        which gfortran || which gfortran-13 || which gfortran-12 || echo "No gfortran found"
-        gfortran --version || gfortran-13 --version || gfortran-12 --version || echo "Cannot run gfortran"
-        which gcc
-        gcc --version
 
     - name: Install Python build dependencies
       run: |
         python -m pip install --upgrade pip
         pip install 'setuptools>=64' setuptools-scm
         pip install build meson-python meson ninja 'numpy>=2.0.0' ase
-
-    - name: Check for build directory
-      run: |
-        ls -la | grep build || echo "No build directories found"
 
     - name: Build wheel
       run: |
@@ -96,25 +81,13 @@ jobs:
         echo "=== Build log size ==="
         wc -l build.log
 
-    - name: List dist directory
-      run: |
-        echo "=== Checking dist directory ==="
-        ls -la dist/ || echo "No dist directory"
-        echo "=== Contents of current directory ==="
-        ls -la
-        echo "=== Find any .whl files ==="
-        find . -name "*.whl" -type f
-
     - name: Install wheel
       run: |
         WHEEL=$(find . -name "*.whl" -type f | head -1)
         if [ -n "$WHEEL" ]; then
-          echo "Installing wheel: $WHEEL"
           pip install "$WHEEL"
         else
           echo "ERROR: No wheel file found!"
-          echo "=== Current directory contents ==="
-          ls -laR
           exit 1
         fi
 
