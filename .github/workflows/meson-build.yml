@@ -67,11 +67,23 @@ jobs:
 
     - name: List dist directory
       run: |
+        echo "=== Checking dist directory ==="
         ls -la dist/ || echo "No dist directory"
+        echo "=== Contents of current directory ==="
+        ls -la
+        echo "=== Find any .whl files ==="
+        find . -name "*.whl" -type f
 
     - name: Install wheel
       run: |
-        pip install dist/*.whl
+        WHEEL=$(find dist -name "*.whl" -type f | head -1)
+        if [ -n "$WHEEL" ]; then
+          echo "Installing wheel: $WHEEL"
+          pip install "$WHEEL"
+        else
+          echo "ERROR: No wheel file found!"
+          exit 1
+        fi
 
     - name: Test import
       run: |
