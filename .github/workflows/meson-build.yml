@@ -48,9 +48,16 @@ jobs:
     - name: Set up Fortran compiler (macOS)
       if: runner.os == 'macOS'
       run: |
-        echo "FC=$(brew --prefix gcc)/bin/gfortran" >> $GITHUB_ENV
-        echo "CC=$(brew --prefix gcc)/bin/gcc" >> $GITHUB_ENV
-        echo "CXX=$(brew --prefix gcc)/bin/g++" >> $GITHUB_ENV
+        # Find the gfortran installed by brew
+        GCC_PREFIX=$(brew --prefix gcc)
+        # Find the actual versioned gfortran (e.g., gfortran-14)
+        GFORTRAN=$(find ${GCC_PREFIX}/bin -name 'gfortran-*' | head -1)
+        if [ -z "$GFORTRAN" ]; then
+          GFORTRAN=${GCC_PREFIX}/bin/gfortran
+        fi
+        echo "FC=${GFORTRAN}" >> $GITHUB_ENV
+        echo "Fortran compiler: ${GFORTRAN}"
+        ${GFORTRAN} --version
 
     - name: Verify compilers
       run: |
