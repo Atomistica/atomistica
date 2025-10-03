@@ -32,7 +32,7 @@ jobs:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686 *-win32"
           # Install system dependencies
-          CIBW_BEFORE_ALL_LINUX: "yum install -y lapack-devel || apt-get update && apt-get install -y gfortran liblapack-dev"
+          CIBW_BEFORE_ALL_LINUX: "yum install -y lapack-devel || (apt-get update && apt-get install -y gfortran liblapack-dev)"
           CIBW_BEFORE_ALL_MACOS: "brew install gcc lapack"
           # Set Fortran compiler on macOS - find versioned gfortran
           CIBW_ENVIRONMENT_MACOS: "FC=$(find $(brew --prefix gcc)/bin -name 'gfortran-*' | head -1)"
