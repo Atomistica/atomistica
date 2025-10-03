@@ -19,3 +19,6 @@ uv pip install dist/atomistica-*.whl --force-reinstall
 echo "✓ Successfully rebuilt and installed atomistica"
 echo ""
 echo "Test with: .venv/bin/python -c 'import atomistica; print(\"Success\")'"
+echo ""
+echo "Note: Don't use 'uv run' - it will auto-reinstall as editable!"
+echo "      Always use .venv/bin/python directly after this script."

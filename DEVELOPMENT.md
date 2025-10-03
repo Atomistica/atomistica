@@ -23,6 +23,27 @@ Both scripts will:
 
 Meson's editable install mode (`pip install -e .`) can have caching issues, especially with the factory code generation and Fortran module dependencies. The wheel rebuild workflow is more reliable for development.
 
+## Important Note for `uv` Users
+
+**Do not use `uv run python` after running `rebuild-uv.sh`!**
+
+`uv run` automatically syncs the project and will reinstall atomistica as an editable install (from source), which will fail due to stale build caches. Instead, always use `.venv/bin/python` directly:
+
+```bash
+# Wrong - will break
+uv run python -c "import atomistica"
+
+# Correct - uses the wheel install
+.venv/bin/python -c "import atomistica"
+```
+
+If you accidentally run `uv run`, clean up and rebuild:
+```bash
+uv pip uninstall atomistica
+rm -rf .venv/lib/python3.12/site-packages/__pycache__/_atomistica*
+./rebuild-uv.sh
+```
+
 ## Full Development Setup
 
 ```bash
