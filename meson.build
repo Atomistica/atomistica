@@ -61,6 +61,13 @@ add_project_arguments('-DHAVE_LAPACK', language: ['c', 'cpp'])
 add_project_arguments('-DNO_BIND_C_OPTIONAL', language: ['c', 'cpp', 'fortran'])
 add_project_arguments('-DPYTHON', language: ['c', 'cpp', 'fortran'])
 
+# Windows-specific: Allow implicit pointer conversions in NumPy API
+if host_machine.system() == 'windows'
+  if cc.has_argument('-Wno-incompatible-pointer-types')
+    add_project_arguments('-Wno-incompatible-pointer-types', language: 'c')
+  endif
+endif
+
 # Enable Fortran preprocessing for files with preprocessor directives
 add_project_arguments('-cpp', language: 'fortran')
 
