@@ -33,9 +33,11 @@ jobs:
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686 *-win32"
           # Install system dependencies
           CIBW_BEFORE_ALL_LINUX: "yum install -y lapack-devel || (apt-get update && apt-get install -y gfortran liblapack-dev)"
-          CIBW_BEFORE_ALL_MACOS: "brew install gcc lapack"
-          # Set Fortran compiler on macOS - find versioned gfortran
-          CIBW_ENVIRONMENT_MACOS: "FC=$(find $(brew --prefix gcc)/bin -name 'gfortran-*' | head -1)"
+          CIBW_BEFORE_ALL_MACOS: >
+            brew install gcc lapack &&
+            ln -sf $(brew --prefix gcc)/bin/gfortran-* /usr/local/bin/gfortran
+          # Use the symlinked gfortran
+          CIBW_ENVIRONMENT_MACOS: "FC=gfortran"
           # Build dependencies
           CIBW_BUILD_FRONTEND: "build"
 
