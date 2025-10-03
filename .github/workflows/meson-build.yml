@@ -50,10 +50,16 @@ jobs:
       run: |
         # Find the gfortran installed by brew
         GCC_PREFIX=$(brew --prefix gcc)
+        echo "GCC prefix: ${GCC_PREFIX}"
+        ls -la ${GCC_PREFIX}/bin/ | grep gfortran || echo "No gfortran found"
         # Find the actual versioned gfortran (e.g., gfortran-14)
-        GFORTRAN=$(find ${GCC_PREFIX}/bin -name 'gfortran-*' | head -1)
+        GFORTRAN=$(ls ${GCC_PREFIX}/bin/gfortran-* 2>/dev/null | head -1)
         if [ -z "$GFORTRAN" ]; then
-          GFORTRAN=${GCC_PREFIX}/bin/gfortran
+          GFORTRAN=$(which gfortran)
+        fi
+        if [ -z "$GFORTRAN" ]; then
+          echo "ERROR: Could not find gfortran"
+          exit 1
         fi
         echo "FC=${GFORTRAN}" >> $GITHUB_ENV
         echo "Fortran compiler: ${GFORTRAN}"
