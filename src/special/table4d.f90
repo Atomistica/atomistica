@@ -26,7 +26,7 @@
 #include "macros.inc"
 
 module table4d
-  use libAtoms_module
+  use supplib
 
   use logging, only: ilog
 

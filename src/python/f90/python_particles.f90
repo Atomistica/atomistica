@@ -30,7 +30,7 @@
 module particles
   use, intrinsic :: iso_c_binding
 
-  use libAtoms_module
+  use supplib
 
   use logging
   use misc

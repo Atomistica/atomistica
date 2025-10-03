@@ -33,7 +33,7 @@
 #include "filter.inc"
 
 module double_harmonic
-  use libAtoms_module
+  use supplib
 
   use ptrdict
 

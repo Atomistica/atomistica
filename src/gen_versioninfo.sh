@@ -39,6 +39,10 @@ done
 
 
 mkdir -p $2
+
+# Get current date and time
+builddate=$(date '+%b %d %Y %H:%M:%S')
+
 cat<<EOF > $2/versioninfo.f90
 module versioninfo
 implicit none
@@ -46,7 +50,7 @@ integer, private, parameter :: MAXSTRLEN = 1000
 character(MAXSTRLEN)  :: atomistica_revision  = "$atomistica_revision"
 character(MAXSTRLEN)  :: atomistica_date      = "$atomistica_date"
 character(MAXSTRLEN)  :: atomistica_url       = "$atomistica_url"
-character(MAXSTRLEN)  :: builddate            = __DATE__ // " " // __TIME__
+character(MAXSTRLEN)  :: builddate            = "$builddate"
 character(MAXSTRLEN)  :: buildhost            = "$h"
 character(MAXSTRLEN)  :: arch                 = "$m"
 character(MAXSTRLEN)  :: compileroptions      = "$fortopts"

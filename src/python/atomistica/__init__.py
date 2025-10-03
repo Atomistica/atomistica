@@ -24,7 +24,7 @@
 
 import atexit
 
-import _atomistica
+from . import _atomistica
 
 from atomistica.aseinterface import *
 
@@ -42,6 +42,8 @@ atexit.register(_atomistica.shutdown)
 
 
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+try:
+    from importlib.metadata import version
+    __version__ = version("atomistica")
+except Exception:
+    __version__ = "unknown"

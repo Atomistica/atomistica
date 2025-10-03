@@ -33,7 +33,7 @@
 #include "filter.inc"
 
 module born_mayer
-  use libAtoms_module
+  use supplib
 
   use ptrdict
 
