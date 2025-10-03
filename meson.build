@@ -18,10 +18,6 @@ cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 fc = meson.get_compiler('fortran')
 
-# Debug: print compiler info
-message('Fortran compiler ID: @0@'.format(fc.get_id()))
-message('Fortran compiler version: @0@'.format(fc.version()))
-
 # NumPy dependency - use Python to find it rather than pkg-config
 numpy_inc = run_command(py,
   ['-c', 'import numpy; print(numpy.get_include())'],
@@ -55,10 +51,8 @@ if fc.get_id() == 'gcc'
   add_project_arguments('-ffree-line-length-none', language: 'fortran')
   # Allow argument mismatches for optional arguments (needed for GCC 10+)
   add_project_arguments('-fallow-argument-mismatch', language: 'fortran')
-  message('Added GCC-specific Fortran flags: -ffree-line-length-none -fallow-argument-mismatch')
 elif fc.get_id() == 'intel' or fc.get_id() == 'intel-cl'
   add_project_arguments('-extend-source', language: 'fortran')
-  message('Added Intel-specific Fortran flags: -extend-source')
 endif
 
 # Include directories
