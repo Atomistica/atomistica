@@ -34,7 +34,15 @@ numpy_dep = declare_dependency(
 # Try pkg-config first, fall back to direct library search
 lapack_dep = dependency('lapack', required: false)
 if not lapack_dep.found()
-  lapack_dep = fc.find_library('lapack', required: true)
+  # On Windows/MinGW, LAPACK is often provided as liblapack
+  lapack_dep = fc.find_library('lapack', required: false)
+  if not lapack_dep.found()
+    # Try alternative names (libopenblas includes LAPACK on some systems)
+    lapack_dep = fc.find_library('openblas', required: false)
+  endif
+  if not lapack_dep.found()
+    error('LAPACK library not found. Please install LAPACK development files.')
+  endif
 endif
 
 # Add -fPIC for all compiled code
