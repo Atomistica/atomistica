@@ -17,4 +17,5 @@ pip install dist/atomistica-*.whl --force-reinstall
 
 echo "✓ Successfully rebuilt and installed atomistica"
 echo ""
-echo "Test with: python -c 'import atomistica; print(\"Success\")'"
+echo "Test with: .venv/bin/python -c 'import atomistica; print(\"Success\")'"
+echo "Or if using standard activation: python -c 'import atomistica; print(\"Success\")'"
