@@ -4,8 +4,13 @@
 
 set -e  # Exit on error
 
+echo "Ensuring build dependencies are installed..."
+pip install --quiet build meson-python meson ninja setuptools setuptools-scm
+
 echo "Building atomistica wheel..."
-python -m build --no-isolation -w
+# Use absolute path and run from /tmp to avoid import confusion with build/ directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+(cd /tmp && python -m build --no-isolation -w "$SCRIPT_DIR")
 
 echo "Installing atomistica..."
 pip install dist/atomistica-*.whl --force-reinstall
