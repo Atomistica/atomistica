@@ -56,14 +56,17 @@ jobs:
 
     - name: Build wheel
       run: |
+        set -o pipefail
         python -m build --no-isolation -w -v 2>&1 | tee build.log
-      continue-on-error: false
 
     - name: Show build log on failure
       if: failure()
       run: |
-        echo "=== Build failed. Last 200 lines of output ==="
-        tail -200 build.log
+        echo "=== Build failed. Full build log ==="
+        cat build.log
+        echo ""
+        echo "=== Build log size ==="
+        wc -l build.log
 
     - name: List dist directory
       run: |
