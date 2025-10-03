@@ -41,11 +41,23 @@ jobs:
     - name: Install Python build dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build meson-python meson ninja setuptools setuptools-scm numpy
+        pip install build meson-python meson ninja setuptools setuptools-scm 'numpy>=2.0.0' ase
 
     - name: Build wheel
       run: |
-        python -m build --no-isolation -w
+        # Build from /tmp to avoid build/ directory name clash
+        PROJECT_DIR="$(pwd)"
+        cd /tmp
+        python -m build --no-isolation -w -v "$PROJECT_DIR" 2>&1 | tee build.log
+        cd "$PROJECT_DIR"
+
+    - name: Show build log on failure
+      if: failure()
+      run: |
+        if [ -f /tmp/build.log ]; then
+          echo "=== Last 100 lines of build log ==="
+          tail -100 /tmp/build.log
+        fi
 
     - name: Install wheel
       run: |
