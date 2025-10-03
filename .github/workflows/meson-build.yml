@@ -76,12 +76,14 @@ jobs:
 
     - name: Install wheel
       run: |
-        WHEEL=$(find dist -name "*.whl" -type f | head -1)
+        WHEEL=$(find . -name "*.whl" -type f | head -1)
         if [ -n "$WHEEL" ]; then
           echo "Installing wheel: $WHEEL"
           pip install "$WHEEL"
         else
           echo "ERROR: No wheel file found!"
+          echo "=== Current directory contents ==="
+          ls -laR
           exit 1
         fi
 
