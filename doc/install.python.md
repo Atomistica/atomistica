@@ -140,6 +140,27 @@ If you previously built Atomistica with `setup.py`, note that:
 * You no longer need to run `python setup.py clean` between builds
 * OpenMP and other compiler flags are automatically configured by Meson
 
+## Development Workflow
+
+For active development, use the provided rebuild scripts to quickly rebuild and reinstall after making changes:
+
+Using standard pip:
+```bash
+./rebuild.sh
+```
+
+Using uv:
+```bash
+./rebuild-uv.sh
+```
+
+These scripts will:
+1. Build a new wheel
+2. Force-reinstall it
+3. Provide a test command to verify the installation
+
+**Note on editable installs:** Meson's editable install mode (`pip install -e .`) can have caching issues. We recommend using the wheel rebuild workflow for development instead.
+
 ## Advanced Build Options
 
 To pass additional Fortran flags:
