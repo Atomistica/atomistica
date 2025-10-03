@@ -40,7 +40,8 @@ jobs:
             ln -sf $GFORTRAN /usr/local/bin/gfortran &&
             gfortran --version
           # Use the symlinked gfortran and set pkg-config path for LAPACK
-          CIBW_ENVIRONMENT_MACOS: "FC=gfortran PKG_CONFIG_PATH=$(brew --prefix lapack)/lib/pkgconfig:$(brew --prefix openblas)/lib/pkgconfig"
+          # Set deployment target to match Homebrew libraries (macOS 14.0)
+          CIBW_ENVIRONMENT_MACOS: "FC=gfortran PKG_CONFIG_PATH=$(brew --prefix lapack)/lib/pkgconfig:$(brew --prefix openblas)/lib/pkgconfig MACOSX_DEPLOYMENT_TARGET=14.0"
           # Build dependencies
           CIBW_BUILD_FRONTEND: "build"
 
