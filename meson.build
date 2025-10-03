@@ -42,6 +42,13 @@ add_project_arguments('-DPYTHON', language: ['c', 'cpp', 'fortran'])
 # Enable Fortran preprocessing for files with preprocessor directives
 add_project_arguments('-cpp', language: 'fortran')
 
+# Allow free-form line length beyond 132 characters (GNU Fortran default)
+if fc.get_id() == 'gcc'
+  add_project_arguments('-ffree-line-length-none', language: 'fortran')
+elif fc.get_id() == 'intel' or fc.get_id() == 'intel-cl'
+  add_project_arguments('-extend-source', language: 'fortran')
+endif
+
 # Include directories
 inc_dirs = include_directories(
   'src',
