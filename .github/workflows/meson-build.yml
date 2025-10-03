@@ -45,6 +45,20 @@ jobs:
       run: |
         brew install gcc lapack ninja
 
+    - name: Set up Fortran compiler (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        echo "FC=$(brew --prefix gcc)/bin/gfortran" >> $GITHUB_ENV
+        echo "CC=$(brew --prefix gcc)/bin/gcc" >> $GITHUB_ENV
+        echo "CXX=$(brew --prefix gcc)/bin/g++" >> $GITHUB_ENV
+
+    - name: Verify compilers
+      run: |
+        which gfortran || which gfortran-13 || which gfortran-12 || echo "No gfortran found"
+        gfortran --version || gfortran-13 --version || gfortran-12 --version || echo "Cannot run gfortran"
+        which gcc
+        gcc --version
+
     - name: Install Python build dependencies
       run: |
         python -m pip install --upgrade pip
