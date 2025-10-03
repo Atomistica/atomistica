@@ -1447,7 +1447,7 @@ void ptrdict_read(section_t *root, char *fn)
 }
 
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(_WIN32) && !defined(__MINGW32__)
 /* Read ptrdict from a string. */
 void ptrdict_from_string(section_t *root, char *s)
 {

@@ -203,7 +203,7 @@ void ptrdict_from_stream(section_t *root, FILE *f);
 /* Read ptrdicturation from a file. */
 void ptrdict_read(section_t *root, char *fn);
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(_WIN32) && !defined(__MINGW32__)
 /* Read ptrdicturation from a string. */
 void ptrdict_from_string(section_t *root, char *s);
 #endif
