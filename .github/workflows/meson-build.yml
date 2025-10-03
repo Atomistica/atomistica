@@ -21,11 +21,18 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for setuptools-scm
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Verify git and checkout
+      run: |
+        git --version
+        git log --oneline -n 5 || echo "No git history"
 
     - name: Install system dependencies (Ubuntu)
       if: runner.os == 'Linux'
@@ -49,7 +56,14 @@ jobs:
 
     - name: Build wheel
       run: |
-        python -m build --no-isolation -w -v
+        python -m build --no-isolation -w -v 2>&1 | tee build.log
+      continue-on-error: false
+
+    - name: Show build log on failure
+      if: failure()
+      run: |
+        echo "=== Build failed. Last 200 lines of output ==="
+        tail -200 build.log
 
     - name: List dist directory
       run: |
