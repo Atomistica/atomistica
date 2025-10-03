@@ -34,11 +34,21 @@ numpy_dep = declare_dependency(
 # Try pkg-config first, fall back to direct library search
 lapack_dep = dependency('lapack', required: false)
 if not lapack_dep.found()
+  # Direct library search with explicit directories for Windows
+  lapack_dirs = []
+  if host_machine.system() == 'windows'
+    # Add MSYS2 MinGW library directory if it exists
+    msys2_lib = 'C:/msys64/mingw64/lib'
+    if fc.has_argument('-L' + msys2_lib)
+      lapack_dirs += [msys2_lib]
+    endif
+  endif
+
   # On Windows/MinGW, LAPACK is often provided as liblapack
-  lapack_dep = fc.find_library('lapack', required: false)
+  lapack_dep = fc.find_library('lapack', dirs: lapack_dirs, required: false)
   if not lapack_dep.found()
     # Try alternative names (libopenblas includes LAPACK on some systems)
-    lapack_dep = fc.find_library('openblas', required: false)
+    lapack_dep = fc.find_library('openblas', dirs: lapack_dirs, required: false)
   endif
   if not lapack_dep.found()
     error('LAPACK library not found. Please install LAPACK development files.')

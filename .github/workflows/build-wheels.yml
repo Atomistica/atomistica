@@ -43,15 +43,21 @@ jobs:
             gfortran --version
 
           # Install system dependencies - Windows (MSYS2 with MinGW-w64)
-          CIBW_BEFORE_ALL_WINDOWS: >
-            C:\\msys64\\usr\\bin\\bash -lc "pacman -S --noconfirm mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-openblas mingw-w64-x86_64-lapack" &&
-            echo "C:\\msys64\\mingw64\\bin" >> $GITHUB_PATH
+          CIBW_BEFORE_ALL_WINDOWS: >-
+            C:\\msys64\\usr\\bin\\bash -lc "pacman --noconfirm -Syu" &&
+            C:\\msys64\\usr\\bin\\bash -lc "pacman --noconfirm -S mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-openblas"
 
           # Environment - macOS
           CIBW_ENVIRONMENT_MACOS: "FC=gfortran PKG_CONFIG_PATH=$(brew --prefix lapack)/lib/pkgconfig:$(brew --prefix openblas)/lib/pkgconfig MACOSX_DEPLOYMENT_TARGET=14.0"
 
           # Environment - Windows
-          CIBW_ENVIRONMENT_WINDOWS: "FC=x86_64-w64-mingw32-gfortran PKG_CONFIG_PATH=C:\\msys64\\mingw64\\lib\\pkgconfig"
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            PATH="C:\\msys64\\mingw64\\bin;$PATH"
+            FC="C:\\msys64\\mingw64\\bin\\gfortran.exe"
+            CC="C:\\msys64\\mingw64\\bin\\gcc.exe"
+            CXX="C:\\msys64\\mingw64\\bin\\g++.exe"
+            LIBRARY_PATH="C:\\msys64\\mingw64\\lib"
+            PKG_CONFIG_PATH="C:\\msys64\\mingw64\\lib\\pkgconfig"
 
           # Build dependencies
           CIBW_BUILD_FRONTEND: "build"
