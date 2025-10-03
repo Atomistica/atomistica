@@ -30,14 +30,10 @@ numpy_dep = declare_dependency(
   compile_args: ['-I' + numpy_inc]
 )
 
-# LAPACK dependency - try multiple methods
+# LAPACK dependency
+# Try pkg-config first, fall back to direct library search
 lapack_dep = dependency('lapack', required: false)
 if not lapack_dep.found()
-  # Try CMake
-  lapack_dep = dependency('lapack', method: 'cmake', required: false)
-endif
-if not lapack_dep.found()
-  # Fall back to finding the library directly
   lapack_dep = fc.find_library('lapack', required: true)
 endif
 

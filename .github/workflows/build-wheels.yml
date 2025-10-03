@@ -38,8 +38,8 @@ jobs:
             GFORTRAN=$(ls $(brew --prefix gcc)/bin/gfortran-* | head -1) &&
             ln -sf $GFORTRAN /usr/local/bin/gfortran &&
             gfortran --version
-          # Use the symlinked gfortran
-          CIBW_ENVIRONMENT_MACOS: "FC=gfortran"
+          # Use the symlinked gfortran and set pkg-config path for LAPACK
+          CIBW_ENVIRONMENT_MACOS: "FC=gfortran PKG_CONFIG_PATH=$(brew --prefix lapack)/lib/pkgconfig:$(brew --prefix openblas)/lib/pkgconfig"
           # Build dependencies
           CIBW_BUILD_FRONTEND: "build"
 
