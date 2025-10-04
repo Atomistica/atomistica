@@ -99,7 +99,7 @@ jobs:
 
     - name: Run pytest tests
       run: |
-        pytest tests/test_tersoff.py -v
+        pytest tests/test_tersoff.py tests/test_io.py -v
 
     - name: Upload wheel as artifact
       uses: actions/upload-artifact@v4
