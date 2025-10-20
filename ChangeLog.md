@@ -1,6 +1,11 @@
 Change log
 ==========
 
+v1.2.0 (20Oct25)
+----------------
+
+- MAINT: Changed build system to Meson
+
 v1.1.0 (23Jun22)
 ----------------
 
