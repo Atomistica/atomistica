@@ -89,7 +89,7 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build
+          pip install build DiscoverVersion
 
       - name: Build sdist
         run: python -m build --sdist
