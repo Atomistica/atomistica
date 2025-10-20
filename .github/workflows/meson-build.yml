@@ -64,8 +64,7 @@ jobs:
     - name: Install Python build dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install 'setuptools>=64' setuptools-scm
-        pip install build meson-python meson ninja 'numpy>=2.0.0' ase pytest
+        pip install build meson-python meson ninja 'numpy>=2.0.0' ase pytest DiscoverVersion
 
     - name: Build wheel
       run: |
