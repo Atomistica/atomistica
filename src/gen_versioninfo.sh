@@ -1,12 +1,9 @@
 #! /bin/bash
 
+root=$(dirname $0)
+
 # Get version from setuptools_scm
-atomistica_revision=$( cd $1/.. ; python3 -c "try:
-    from setuptools_scm import get_version
-    print(get_version(root='..', relative_to=__file__))
-except:
-    print('0.0.0')
-" 2>/dev/null || echo "0.0.0" )
+atomistica_revision=$(python3 $root/../discover_version.py  2>/dev/null || echo "0.0.0" )
 
 # Get current date for atomistica_date
 atomistica_date=$(date '+%Y-%m-%d')

@@ -1,7 +1,7 @@
 project('atomistica',
   'c', 'cpp', 'fortran',
   # Version will be determined by setuptools-scm via pyproject.toml
-  version: '0.0.0',
+  version : run_command('python3', 'discover_version.py', check : true).stdout().strip(),
   license: 'GPL-2.0-or-later',
   meson_version: '>= 1.1.0',
   default_options: [

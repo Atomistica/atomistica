@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for setuptools-scm
+          fetch-depth: 0  # Fetch all history for DiscoverVersion
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21
