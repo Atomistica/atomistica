@@ -2,8 +2,8 @@
 
 # Get version from setuptools_scm
 atomistica_revision=$( cd $1/.. ; python3 -c "try:
-    from setuptools_scm import get_version
-    print(get_version(root='..', relative_to=__file__))
+    from DiscoverVersion import get_version
+    print(get_version('atomistica', '.'))
 except:
     print('0.0.0')
 " 2>/dev/null || echo "0.0.0" )
