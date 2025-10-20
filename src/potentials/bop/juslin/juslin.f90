@@ -36,7 +36,7 @@
 #include "macros.inc"
 
 module juslin
-  use libAtoms_module
+  use supplib
 
   use ptrdict
 

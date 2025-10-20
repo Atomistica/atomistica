@@ -376,7 +376,7 @@ pyobject_to_property(PyObject *value, property_t *p)
       *p->tag5 = 1;
       pystring_to_fstring(value, (char*) p->ptr, p->tag);
     } else {
-      arr = PyArray_FROMANY(value, NPY_STRING, 1, 1, NPY_DEFAULT);
+      arr = PyArray_FROMANY(value, NPY_STRING, 1, 1, NPY_ARRAY_ENSUREARRAY);
       if (!arr)
         return -1;
       *p->tag5 = PyArray_DIM(arr, 0);

@@ -34,7 +34,7 @@
 #include "filter.inc"
 
 module r6
-  use libAtoms_module
+  use supplib
 
   use ptrdict
 

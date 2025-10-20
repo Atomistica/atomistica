@@ -22,9 +22,12 @@ def get_finterfaces(fn, include_list=None, tmpfilename='_cpp.tmp'):
     include_str = ''
     if include_list is not None:
         include_str = reduce(lambda x,y: x+' -I'+y, include_list, '')
-    os.system('gfortran -x f95-cpp-input -E {0} {1} > {2}'.format(fn,
-                                                                  include_str,
-                                                                  tmpfilename))
+    # Use FC environment variable if set, otherwise default to gfortran
+    fortran_compiler = os.environ.get('FC', 'gfortran')
+    os.system('{0} -x f95-cpp-input -E {1} {2} > {3}'.format(fortran_compiler,
+                                                              fn,
+                                                              include_str,
+                                                              tmpfilename))
 
     iface = re.compile('^\ *interface\ ',re.IGNORECASE)
 

@@ -23,6 +23,7 @@
 #define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
 #include <numpy/arrayobject.h>
+#include "numpy_compat.h"
 
 #include "error.h"
 

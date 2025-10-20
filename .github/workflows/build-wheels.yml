@@ -1,0 +1,101 @@
+name: Build Wheels
+
+on:
+  push:
+    branches:
+      - master
+      - python312-meson-migration
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for setuptools-scm
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21
+        env:
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
+          CIBW_SKIP: "*-musllinux_* *-manylinux_i686 *-win32"
+
+          # Install system dependencies - Linux
+          CIBW_BEFORE_ALL_LINUX: "yum install -y lapack-devel || (apt-get update && apt-get install -y gfortran liblapack-dev)"
+
+          # Install system dependencies - macOS
+          CIBW_BEFORE_ALL_MACOS: >
+            brew install gcc lapack &&
+            GFORTRAN=$(ls $(brew --prefix gcc)/bin/gfortran-* | head -1) &&
+            ln -sf $GFORTRAN /usr/local/bin/gfortran &&
+            gfortran --version
+
+          # Install system dependencies - Windows (MSYS2 with MinGW-w64)
+          CIBW_BEFORE_ALL_WINDOWS: >-
+            C:\\msys64\\usr\\bin\\bash -lc "pacman --noconfirm -Syu" &&
+            C:\\msys64\\usr\\bin\\bash -lc "pacman --noconfirm -S mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-openblas"
+
+          # Environment - macOS
+          CIBW_ENVIRONMENT_MACOS: "FC=gfortran PKG_CONFIG_PATH=$(brew --prefix lapack)/lib/pkgconfig:$(brew --prefix openblas)/lib/pkgconfig MACOSX_DEPLOYMENT_TARGET=14.0"
+
+          # Environment - Windows
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            PATH="C:\\msys64\\mingw64\\bin;$PATH"
+            FC="C:\\msys64\\mingw64\\bin\\gfortran.exe"
+            CC="C:\\msys64\\mingw64\\bin\\gcc.exe"
+            CXX="C:\\msys64\\mingw64\\bin\\g++.exe"
+            LIBRARY_PATH="C:\\msys64\\mingw64\\lib"
+            PKG_CONFIG_PATH="C:\\msys64\\mingw64\\lib\\pkgconfig"
+
+          # Build dependencies
+          CIBW_BUILD_FRONTEND: "build"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+          if-no-files-found: error
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qy
+          sudo apt-get install -y gfortran liblapack-dev
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build sdist
+        run: python -m build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error

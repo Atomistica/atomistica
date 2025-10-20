@@ -23,6 +23,7 @@
 #define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
 #include <numpy/arrayobject.h>
+#include "numpy_compat.h"
 
 #include "atomisticamodule.h"
 
@@ -677,7 +678,7 @@ static PyMethodDef potential_methods[] = {
     "Set the object that handles Coulomb callbacks." },
   { "get_per_bond_property", (PyCFunction) potential_get_per_bond_property,
     METH_VARARGS, "Return a named property that is defined per bond." },
-  { "energy_and_forces", (PyCFunctionWithKeywords) potential_energy_and_forces,
+  { "energy_and_forces", (PyCFunction) potential_energy_and_forces,
     METH_VARARGS | METH_KEYWORDS,
     "Compute the forces and return the potential energy." },
   { NULL, NULL, 0, NULL }  /* Sentinel */

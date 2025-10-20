@@ -35,6 +35,10 @@
 #define MAX_COULOMB_NAME 100
 #define MAX_POTENTIAL_NAME 100
 
+/* Forward declarations of Fortran functions */
+extern void f_logging_start(const char *);
+extern void f_logging_shutdown(void);
+
 /* Global methods
  */
 

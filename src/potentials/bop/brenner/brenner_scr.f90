@@ -36,7 +36,7 @@
 #include "macros.inc"
 
 module brenner_scr
-  use libAtoms_module
+  use supplib
 
   use ptrdict
 

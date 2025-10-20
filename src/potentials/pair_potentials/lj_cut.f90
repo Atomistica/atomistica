@@ -35,7 +35,7 @@
 #include "filter.inc"
 
 module lj_cut
-  use libAtoms_module
+  use supplib
 
   use ptrdict
 

@@ -25,7 +25,7 @@
 !! Binning and neighbor list module
 !<
 module neighbors
-  use libAtoms_module
+  use supplib
 
   use logging
 

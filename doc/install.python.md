@@ -1,88 +1,180 @@
-The following instruction explain how to compile, use and test the Python
-interface to Atomistica.
+# Building Atomistica Python Interface
 
-1. Setup your compiler. Edit setup.cfg
+The following instructions explain how to compile, use and test the Python interface to Atomistica.
 
-   For GNU Fortran/C use:
+## Requirements
 
-     [config_fc]
-     fcompiler=gnu95
-     f90flags=-cpp -ffree-line-length-none [-fopenmp]
+* Python 3.8 or greater (Python 3.12+ recommended)
+* NumPy >= 1.21.0 (NumPy 2.x supported)
+* Meson >= 1.1.0
+* meson-python >= 0.15.0
+* A Fortran compiler (gfortran or ifort)
+* A C compiler
+* A C++ compiler
+* LAPACK library
 
-   For Intel Fortran/C (intel64) use:
+## Quick Start
 
-     [config_fc]
-     fcompiler=intelem
-     f90flags=-fpp [-openmp]
- 
-     [config_cc]
-     compiler=intel
+### 1. Install build dependencies
 
-   There may be error messages complaining about undefined symbols when loading
-   Atomistica in step 3 below. It is then necessary to force linking to the
-   respective libraries. Additional libraries can be specified in the build_ext
-   section:
+Using pip:
+```bash
+pip install meson-python meson ninja numpy ase
+```
 
-     [build_ext]
-     libraries=ifcore,ifport,iomp5,pthread
+Or using uv (recommended):
+```bash
+uv pip install meson-python meson ninja numpy ase
+```
 
-   This example is the link line typically required to compile with the Intel
-   compiler suite and OpenMP enabled. ifcore contains is the Intel Fortran
-   runtime and ifport additional portability functions. iomp5 is the Intel
-   OpenMP runtime which requires to additionally link to the posix pthread
-   library. The respective libraries for the GNU compiler are gfortran and
-   gomp.
+### 2. Build the package
 
-   You can get a list of available Fortran and C compilers by executing:
+To build a wheel:
+```bash
+python -m build --no-isolation -w
+```
 
-     python setup.py build --help-fcompiler
-     python setup.py build --help-compiler
+To build and install in development mode:
+```bash
+pip install -e . --no-build-isolation
+```
 
-   More information can be found here:
+### 3. Install the built wheel
 
-     http://docs.python.org/2/install/index.html
-     http://thread.gmane.org/gmane.comp.python.numeric.general/15793
+```bash
+pip install dist/atomistica-*.whl
+```
 
+### 4. Test the installation
 
-2. Compile the Python extension. Execute
+Import Atomistica to verify it works:
+```bash
+python -c "import atomistica; print('Successfully imported atomistica')"
+```
 
-     python setup.py build
+### 5. Run the test suite
 
-   This will build and link all Fortran and C sources required for the Python
-   interface. You may need to edit setup.py if the LAPACK libraries are not
-   automatically detected.
+```bash
+cd tests
+python run_tests.py
+```
 
-   Note: You will need to
+Each test can also be run directly for more diagnostic output:
+```bash
+python bulk_properties.py
+python forces_and_virial.py
+python rebo2_molecules.py
+```
 
-     python setup.py clean
-     - or -
-     python setup.py build --force
+## Build System Details
 
-   if the source has changed. Unfortunately, the current numpy distutils
-   won't relink the module even if the library has been recompiled without
-   --force present.
+Atomistica now uses the Meson build system (via meson-python) instead of the deprecated numpy.distutils. The build configuration is defined in:
 
+* `pyproject.toml` - Python package metadata and build backend configuration
+* `meson.build` - Meson build configuration
+* `build_helpers/generate_factories.py` - Factory code generation script
 
-3. Test if the Python interface imports with errors. Type
+## Compiler Configuration
 
-     source path-to-atomistica/env.sh
+The build system will automatically detect your compilers. If you need to specify particular compilers, you can set environment variables:
 
-   which sets up the environment. To test if Atomistica can be imported into
-   Python execute"
+For GNU compilers:
+```bash
+export CC=gcc
+export CXX=g++
+export FC=gfortran
+```
 
-     python -c "import atomistica"
+For Intel compilers:
+```bash
+export CC=icc
+export CXX=icpc
+export FC=ifort
+```
 
-   To resolve undefined symbol errors link to the relevant library.
-   (See step 1 above.)
+## LAPACK Library
 
+The build system automatically detects LAPACK using pkg-config. If LAPACK is not found automatically, you may need to install it or specify its location:
 
-4. Test if the Python interface gives correct results. Type
+On Ubuntu/Debian:
+```bash
+sudo apt-get install liblapack-dev
+```
 
-     cd path-to-atomistica/tests
-     python run_tests.py
+On macOS with Homebrew:
+```bash
+brew install lapack
+```
 
-   Each test can also be run directly. This will produce more diagnostic output:
+On Fedora/RHEL:
+```bash
+sudo dnf install lapack-devel
+```
 
-     python bulk_properties.py
-     python forces_and_virial.py
-     python rebo2_molecules.py
+## Troubleshooting
+
+### Build fails with "command not found: meson"
+
+Install Meson and ninja:
+```bash
+pip install meson ninja
+```
+
+### Import error: "symbol not found"
+
+This typically indicates a linking issue. Make sure all dependencies (LAPACK, compiler runtime libraries) are properly installed and accessible.
+
+### NumPy compatibility issues
+
+Atomistica supports both NumPy 1.x and 2.x through a compatibility layer. If you encounter NumPy-related errors, try upgrading to NumPy 2.x:
+```bash
+pip install 'numpy>=2.0'
+```
+
+## Migration from numpy.distutils
+
+If you previously built Atomistica with `setup.py`, note that:
+
+* `setup.cfg` is no longer used for compiler configuration
+* The build system now uses `pyproject.toml` and `meson.build`
+* You no longer need to run `python setup.py clean` between builds
+* OpenMP and other compiler flags are automatically configured by Meson
+
+## Development Workflow
+
+For active development, use the provided rebuild scripts to quickly rebuild and reinstall after making changes:
+
+Using standard pip:
+```bash
+./rebuild.sh
+```
+
+Using uv:
+```bash
+./rebuild-uv.sh
+```
+
+These scripts will:
+1. Build a new wheel
+2. Force-reinstall it
+3. Provide a test command to verify the installation
+
+**Note on editable installs:** Meson's editable install mode (`pip install -e .`) can have caching issues. We recommend using the wheel rebuild workflow for development instead.
+
+## Advanced Build Options
+
+To pass additional Fortran flags:
+```bash
+FFLAGS="-fopenmp" pip install -e . --no-build-isolation
+```
+
+To enable verbose build output:
+```bash
+python -m build --no-isolation -w -v
+```
+
+For development, you can use meson directly:
+```bash
+meson setup builddir
+meson compile -C builddir
+```

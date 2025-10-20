@@ -20,12 +20,12 @@ intructions below.)
 
 Currently supported simulation environments are...
 
-1.  ...the Atomistic Simulation Environment   
+1.  ...the Atomistic Simulation Environment
     (ASE - see https://wiki.fysik.dtu.dk/ase/)
     * Build instructions are in [doc/install.python.md](doc/install.python.md)
     * Examples are in [examples/ASE](examples/ASE)
     * Tests are in tests
-    * Atomistica supports Python 2 and Python 3
+    * Atomistica supports Python 3.8+ (Python 3.12+ with NumPy 2.x recommended)
 
 2.  ...the Large-scale Atomic/Molecular Massively Parallel Simulator   
     (LAMMPS - see https://lammps.sandia.gov/)
@@ -40,8 +40,11 @@ Currently supported simulation environments are...
 
 You need the following packages:
 
-* Python 3.6.0 or greater (Python is needed even if you do not compile the
-  Python interface to auto-generate parts of the source code)
+* Python 3.8.0 or greater (Python 3.12+ recommended with NumPy 2.x support)
+* Meson >= 1.1.0 and meson-python >= 0.15.0 (for Python interface)
+* NumPy >= 1.21.0 (NumPy 2.x supported)
+* LAPACK library
+* A Fortran compiler (gfortran or ifort), C compiler, and C++ compiler
 
 
 Contact

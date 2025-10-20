@@ -29,7 +29,7 @@ import copy
 import inspect
 from math import sqrt, log
 
-import _atomistica
+from . import _atomistica
 
 import numpy as np
 try:

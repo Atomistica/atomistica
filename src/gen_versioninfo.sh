@@ -1,12 +1,15 @@
 #! /bin/bash
 
-if [ ! -e $1/../setup.cfg ]; then
-  echo "Copying default setup.cfg..."
-  cp $1/../setup.cfg.gnu10 $1/../setup.cfg
-fi
+# Get version from setuptools_scm
+atomistica_revision=$( cd $1/.. ; python3 -c "try:
+    from setuptools_scm import get_version
+    print(get_version(root='..', relative_to=__file__))
+except:
+    print('0.0.0')
+" 2>/dev/null || echo "0.0.0" )
 
-atomistica_revision=$( cd $1/.. ; python3 -c "import versioneer; print(versioneer.get_version())")
-atomistica_date=$( cd $1/.. ; python3 -c "import versioneer; print(versioneer.get_versions()['date'])")
+# Get current date for atomistica_date
+atomistica_date=$(date '+%Y-%m-%d')
 atomistica_url=$( cd $1 ; git config --get remote.origin.url )
 if [ -z "$atomistica_url" ]; then
   atomistica_url="N/A"
@@ -19,11 +22,10 @@ if [ "$3" = "bgxlf_r" ]; then
     fortvers1=`$3 -qversion | head -n 1 | tail -n 1`
     fortvers2=`$3 -qversion | head -n 2 | tail -n 1`
     fortvers="$fortvers1; $fortvers2"
-else if [ "$3" = "Python" ]; then
-    fortvers="numpy-distutils"
+elif [ -z "$3" ] || [ "$3" = "Python" ]; then
+    fortvers="meson-python"
 else
-    fortvers=`$3 --version | head -n 1`
-fi
+    fortvers=`$3 --version | head -n 1 2>/dev/null || echo "unknown"`
 fi
 
 
@@ -39,6 +41,10 @@ done
 
 
 mkdir -p $2
+
+# Get current date and time
+builddate=$(date '+%b %d %Y %H:%M:%S')
+
 cat<<EOF > $2/versioninfo.f90
 module versioninfo
 implicit none
@@ -46,7 +52,7 @@ integer, private, parameter :: MAXSTRLEN = 1000
 character(MAXSTRLEN)  :: atomistica_revision  = "$atomistica_revision"
 character(MAXSTRLEN)  :: atomistica_date      = "$atomistica_date"
 character(MAXSTRLEN)  :: atomistica_url       = "$atomistica_url"
-character(MAXSTRLEN)  :: builddate            = __DATE__ // " " // __TIME__
+character(MAXSTRLEN)  :: builddate            = "$builddate"
 character(MAXSTRLEN)  :: buildhost            = "$h"
 character(MAXSTRLEN)  :: arch                 = "$m"
 character(MAXSTRLEN)  :: compileroptions      = "$fortopts"

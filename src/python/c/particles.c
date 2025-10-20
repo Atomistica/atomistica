@@ -23,6 +23,7 @@
 #define PY_ARRAY_UNIQUE_SYMBOL ATOMISTICA_ARRAY_API
 #define NO_IMPORT_ARRAY
 #include <numpy/arrayobject.h>
+#include "numpy_compat.h"
 
 #include "atomisticamodule.h"
 
@@ -181,7 +182,7 @@ data_array_by_name(particles_t *self, char *key)
       printf("[data_array_by_name] TYPE_REAL, dim = %i\n", dims[0]);
 #endif
       r  = PyArray_New(&PyArray_Type, 1, dims, NPY_DOUBLE, NULL, array, 0,
-           NPY_FARRAY, NULL);
+           NPY_ARRAY_WRITEABLE | NPY_FARRAY, NULL);
       break;
 
     case TYPE_INTEGER:
@@ -194,7 +195,7 @@ data_array_by_name(particles_t *self, char *key)
       printf("[data_array_by_name] TYPE_INTEGER, dim = %i\n", dims[0]);
 #endif
       r  = PyArray_New(&PyArray_Type, 1, dims, NPY_INT, NULL, array, 0,
-           NPY_FARRAY, NULL);
+           NPY_ARRAY_WRITEABLE | NPY_FARRAY, NULL);
       break;
 
     case TYPE_REAL3:
@@ -211,7 +212,7 @@ data_array_by_name(particles_t *self, char *key)
        dims[0], dims[1], strides[0], strides[1]);
 #endif
       r  = PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, strides, array, 0,
-           NPY_BEHAVED, NULL);
+           NPY_ARRAY_WRITEABLE | NPY_BEHAVED, NULL);
       break;
 
     case TYPE_REAL3x3:
@@ -230,7 +231,7 @@ data_array_by_name(particles_t *self, char *key)
        dims[1], dims[2]);
 #endif
       r  = PyArray_New(&PyArray_Type, 3, dims, NPY_DOUBLE, NULL, array, 0,
-           NPY_FARRAY, NULL);
+           NPY_ARRAY_WRITEABLE | NPY_FARRAY, NULL);
       break;
 
     case TYPE_REAL_ATTR:
@@ -254,7 +255,7 @@ data_array_by_name(particles_t *self, char *key)
       printf("[data_array_by_name] TYPE_REAL3_ATTR, dim = %i\n", dims[0]);
 #endif
       r  = PyArray_New(&PyArray_Type, 1, dims, NPY_DOUBLE, NULL, array, 0,
-           NPY_FARRAY, NULL);
+           NPY_ARRAY_WRITEABLE | NPY_FARRAY, NULL);
       break;
 
     case TYPE_REAL3x3_ATTR:
@@ -269,7 +270,7 @@ data_array_by_name(particles_t *self, char *key)
        dims[1]);
 #endif
       r  = PyArray_New(&PyArray_Type, 2, dims, NPY_DOUBLE, NULL, array, 0,
-           NPY_FARRAY, NULL);
+           NPY_ARRAY_WRITEABLE | NPY_FARRAY, NULL);
       break;
 
     case TYPE_INTEGER_ATTR:
@@ -297,7 +298,7 @@ data_array_by_name(particles_t *self, char *key)
       printf("[data_array_by_name] TYPE_INTEGER3_ATTR, dim = %i\n", dims[0]);
 #endif
       r  = PyArray_New(&PyArray_Type, 1, dims, NPY_INT, NULL, array, 0,
-                       NPY_FARRAY, NULL);
+                       NPY_ARRAY_WRITEABLE | NPY_FARRAY, NULL);
       break;
 
     default:

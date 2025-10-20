@@ -38,7 +38,7 @@
 #include "filter.inc"
 
 module dispdftd3
-  use libAtoms_module 
+  use supplib 
   use ptrdict
 
   use logging

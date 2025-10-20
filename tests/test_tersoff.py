@@ -18,32 +18,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-
-"""Main Atomistica module.
-"""
-
-import atexit
-
-from . import _atomistica
-
-from atomistica.aseinterface import *
-
-#
-# Enabled logging
-#
-
-_atomistica.startup()
-
-#
-# Close logfile upon exit
-#
-
-atexit.register(_atomistica.shutdown)
+#! /usr/bin/env python
 
 
+'''
+Basic test for Tersoff potential with ASE interface
+'''
 
-try:
-    from importlib.metadata import version
-    __version__ = version("atomistica")
-except Exception:
-    __version__ = "unknown"
+import unittest
+
+from ase.build import bulk
+
+from atomistica import Tersoff
+
+
+class TestTersoff(unittest.TestCase):
+    """Test Tersoff potential basic functionality"""
+
+    def test_tersoff_silicon(self):
+        """Test Tersoff potential energy calculation for silicon"""
+        si = bulk('Si')
+        t = Tersoff()
+        si.calc = t
+        energy = si.get_potential_energy()
+
+        # Check that energy is a finite number
+        self.assertTrue(abs(energy) < 1e10)
+
+        # Check that we can get forces (tests array writability)
+        forces = si.get_forces()
+        self.assertEqual(forces.shape, (len(si), 3))
+
+
+if __name__ == '__main__':
+    unittest.main()
