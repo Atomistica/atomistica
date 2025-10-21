@@ -74,9 +74,16 @@ jobs:
               echo ::set-output name=match::true
           fi
         shell: bash
-
+        
       - name: Deploy to PyPI
         if: steps.check-tag.outputs.match == 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          sudo apt install python3-venv
+          python3 -m venv ../venv
+          source ../venv/bin/activate
+          pip install twine
+          twine upload wheelhouse/*.whl
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        shell: bash
