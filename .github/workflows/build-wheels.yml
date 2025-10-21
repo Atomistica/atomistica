@@ -77,11 +77,6 @@ jobs:
 
       - name: Deploy to PyPI
         if: steps.check-tag.outputs.match == 'true'
-        run: |
-          source ../venv/bin/activate
-          pip install twine
-          twine upload wheelhouse/*.whl
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        shell: bash
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_PASSWORD }}
