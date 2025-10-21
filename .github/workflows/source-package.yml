@@ -60,7 +60,7 @@ jobs:
         run: |
           source ../venv/bin/activate
           pip install twine
-          twine upload wheelhouse/*.whl
+          twine upload dist/*.tar.gz
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}

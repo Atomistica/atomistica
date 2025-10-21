@@ -4,13 +4,8 @@ on:
   push:
     branches:
       - master
-      - python312-meson-migration
     tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - master
-  workflow_dispatch:
+      - '*'
 
 concurrency:
   group: wheels-${{ github.ref }}
