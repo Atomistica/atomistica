@@ -61,15 +61,22 @@ add_project_arguments('-DHAVE_LAPACK', language: ['c', 'cpp'])
 add_project_arguments('-DNO_BIND_C_OPTIONAL', language: ['c', 'cpp', 'fortran'])
 add_project_arguments('-DPYTHON', language: ['c', 'cpp', 'fortran'])
 
+# Allow implicit pointer conversions in NumPy API
+if cc.has_argument('-Wno-incompatible-pointer-types')
+  add_project_arguments('-Wno-incompatible-pointer-types', language: 'c')
+endif
+
 # Windows-specific compiler flags
 if host_machine.system() == 'windows'
-  # Allow implicit pointer conversions in NumPy API
-  if cc.has_argument('-Wno-incompatible-pointer-types')
-    add_project_arguments('-Wno-incompatible-pointer-types', language: 'c')
-  endif
   # Define M_PI and other math constants
   add_project_arguments('-D_USE_MATH_DEFINES', language: ['c', 'cpp'])
 endif
+
+# This is required for gcc 14 and upwards
+if cc.get_id() != 'msvc'
+  add_project_arguments('-D_GNU_SOURCE', language: ['c'])
+endif
+
 
 # Enable Fortran preprocessing for files with preprocessor directives
 add_project_arguments('-cpp', language: 'fortran')
