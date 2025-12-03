@@ -1,0 +1,68 @@
+project('atomistica-cpp', 'cpp',
+  version: '0.1.0',
+  license: 'GPL-2.0-or-later',
+  meson_version: '>= 1.1.0',
+  default_options: [
+    'cpp_std=c++17',
+    'warning_level=2',
+    'buildtype=debugoptimized',
+    'b_ndebug=if-release',
+  ],
+)
+
+# Dependencies from wrapdb
+eigen_dep = dependency('eigen3',
+  fallback: ['eigen', 'eigen_dep'],
+  required: true,
+)
+
+# Optional OpenMP
+openmp_dep = dependency('openmp', required: get_option('enable_openmp'))
+
+# Collect all dependencies
+atomistica_deps = [eigen_dep]
+if openmp_dep.found()
+  atomistica_deps += openmp_dep
+endif
+
+# Include directories
+inc = include_directories('include')
+
+# Core library sources
+core_sources = files(
+  'src/core/atomic_system.cpp',
+  'src/core/neighbor_list.cpp',
+  'src/math/spline.cpp',
+  'src/math/cutoff_functions.cpp',
+  'src/potentials/pair/lj.cpp',
+)
+
+# Build the core library
+atomistica_cpp_lib = library('atomistica_cpp',
+  core_sources,
+  include_directories: inc,
+  dependencies: atomistica_deps,
+  install: true,
+)
+
+# Declare dependency for consumers
+atomistica_cpp_dep = declare_dependency(
+  link_with: atomistica_cpp_lib,
+  include_directories: inc,
+  dependencies: atomistica_deps,
+)
+
+# Python bindings (optional)
+if get_option('enable_python')
+  subdir('python')
+endif
+
+# Tests
+if get_option('enable_tests')
+  subdir('tests')
+endif
+
+# Install headers
+install_subdir('include/atomistica',
+  install_dir: get_option('includedir'),
+)

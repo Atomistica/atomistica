@@ -2,7 +2,7 @@
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
 #
-# Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+# Copyright (2005-2024) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
 # and others. See the AUTHORS file in the top-level Atomistica directory.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,41 +20,33 @@
 # ======================================================================
 
 """
-Native MDCore interface.
+Atomistica C++ - Modern C++ implementation of interatomic potentials.
 """
 
-import numpy as np
+from ._atomistica_cpp import (
+    # Core classes
+    AtomicSystem,
+    NeighborList,
+    Neighbor,
+    PotentialResults,
+    # Potentials
+    LJCut,
+    LJCutShift,
+    # Math utilities
+    CubicSpline,
+    NonUniformSpline,
+)
 
-from ase.data import atomic_numbers
+from .ase_calculator import Atomistica
 
-from ._atomistica import *
-
-###
-
-def from_atoms(atoms):
-    pbc = np.array(atoms.get_pbc())
-    particles = Particles()
-    particles.allocate(len(atoms))
-    particles.set_cell(atoms.get_cell(), pbc)
-
-    Z  = particles.Z
-    for i, at in enumerate(atoms):
-        Z[i]   = atomic_numbers[at.symbol]
-
-    particles.coordinates[:, :]  = atoms.get_positions()[:, :]
-
-    # Notify the Particles object of a change
-    particles.I_changed_positions()
-
-    particles.update_elements()
-
-    return particles
-
-
-def neighbor_list(particles, cutoff, avgn=100):
-    neighbors = Neighbors(avgn)
-    neighbors.request_interaction_range(cutoff)
-    neighbors.update(particles)
-
-    return neighbors
-
+__all__ = [
+    'AtomicSystem',
+    'NeighborList',
+    'Neighbor',
+    'PotentialResults',
+    'LJCut',
+    'LJCutShift',
+    'CubicSpline',
+    'NonUniformSpline',
+    'Atomistica',
+]
