@@ -41,6 +41,9 @@
 // Bond-order potentials
 #include "potentials/bop/bop_base.hpp"
 #include "potentials/bop/tersoff.hpp"
+#include "potentials/bop/brenner.hpp"
+#include "potentials/bop/kumagai.hpp"
+#include "potentials/bop/rebo2.hpp"
 
 // Coulomb potentials
 #include "potentials/coulomb/coulomb.hpp"

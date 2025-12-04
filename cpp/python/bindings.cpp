@@ -319,6 +319,306 @@ PYBIND11_MODULE(_atomistica_cpp, m) {
     }, "List available built-in Tersoff parameter sets");
 
     // =========================================================================
+    // Brenner Potential
+    // =========================================================================
+
+    // BrennerElementParams (needed before Brenner class for default argument)
+    py::class_<BrennerElementParams>(m, "BrennerElementParams")
+        .def(py::init<>());
+
+    // BrennerPairParams
+    py::class_<BrennerPairParams>(m, "BrennerPairParams")
+        .def(py::init<>())
+        .def_readwrite("D0", &BrennerPairParams::D0)
+        .def_readwrite("r0", &BrennerPairParams::r0)
+        .def_readwrite("S", &BrennerPairParams::S)
+        .def_readwrite("beta", &BrennerPairParams::beta)
+        .def_readwrite("gamma", &BrennerPairParams::gamma)
+        .def_readwrite("c", &BrennerPairParams::c)
+        .def_readwrite("d", &BrennerPairParams::d)
+        .def_readwrite("h", &BrennerPairParams::h)
+        .def_readwrite("mu", &BrennerPairParams::mu)
+        .def_readwrite("n", &BrennerPairParams::n)
+        .def_readwrite("m", &BrennerPairParams::m)
+        .def_readwrite("r1", &BrennerPairParams::r1)
+        .def_readwrite("r2", &BrennerPairParams::r2)
+        .def("precompute", &BrennerPairParams::precompute);
+
+    // Brenner potential (non-screened)
+    py::class_<Brenner<false>>(m, "Brenner")
+        .def(py::init<>())
+        .def("add_element", &Brenner<false>::add_element,
+             py::arg("Z"), py::arg("params") = BrennerElementParams{},
+             "Add element with given atomic number")
+        .def("set_pair_params", &Brenner<false>::set_pair_params,
+             py::arg("Z1"), py::arg("Z2"), py::arg("params"),
+             "Set pair parameters for element pair")
+        .def("load_parameters", &Brenner<false>::load_parameters,
+             py::arg("name"),
+             "Load built-in parameter set by name")
+        .def("cutoff", &Brenner<false>::cutoff,
+             "Get maximum cutoff radius")
+        .def("num_elements", &Brenner<false>::num_elements,
+             "Get number of elements defined")
+        .def("element_index", &Brenner<false>::element_index,
+             py::arg("Z"),
+             "Get internal element index for atomic number Z (-1 if not found)")
+        .def("pair_type", &Brenner<false>::pair_type,
+             py::arg("eli"), py::arg("elj"),
+             "Get pair type index for element pair")
+        .def("compute", &Brenner<false>::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true,
+             py::arg("compute_virial") = true,
+             "Compute energy, forces, and virial")
+        // Expose internal functions for testing/analysis
+        .def("repulsive", [](const Brenner<false>& pot, int ptype, Scalar r) {
+            auto [V, dV] = pot.repulsive(ptype, r);
+            return std::make_pair(V, dV);
+        }, py::arg("ptype"), py::arg("r"))
+        .def("attractive", [](const Brenner<false>& pot, int ptype, Scalar r) {
+            auto [V, dV] = pot.attractive(ptype, r);
+            return std::make_pair(V, dV);
+        }, py::arg("ptype"), py::arg("r"))
+        .def("angular_function", [](const Brenner<false>& pot,
+                int eli, int elj, int elk, int ptype_ij, int ptype_ik, Scalar cos_theta) {
+            auto [g, dg] = pot.angular_function(eli, elj, elk, ptype_ij, ptype_ik, cos_theta);
+            return std::make_pair(g, dg);
+        }, py::arg("eli"), py::arg("elj"), py::arg("elk"),
+           py::arg("ptype_ij"), py::arg("ptype_ik"), py::arg("cos_theta"))
+        .def("bond_order", [](const Brenner<false>& pot, int eli, int ptype, Scalar z) {
+            auto [b, db] = pot.bond_order(eli, ptype, z);
+            return std::make_pair(b, db);
+        }, py::arg("eli"), py::arg("ptype"), py::arg("z"));
+
+    // Screened Brenner potential
+    py::class_<Brenner<true>>(m, "BrennerScr")
+        .def(py::init<>())
+        .def("add_element", &Brenner<true>::add_element,
+             py::arg("Z"), py::arg("params") = BrennerElementParams{},
+             "Add element with given atomic number")
+        .def("set_pair_params", &Brenner<true>::set_pair_params,
+             py::arg("Z1"), py::arg("Z2"), py::arg("params"),
+             "Set pair parameters for element pair")
+        .def("load_parameters", &Brenner<true>::load_parameters,
+             py::arg("name"),
+             "Load built-in parameter set by name")
+        .def("cutoff", &Brenner<true>::cutoff,
+             "Get maximum cutoff radius")
+        .def("num_elements", &Brenner<true>::num_elements,
+             "Get number of elements defined")
+        .def("element_index", &Brenner<true>::element_index,
+             py::arg("Z"),
+             "Get internal element index for atomic number Z (-1 if not found)")
+        .def("pair_type", &Brenner<true>::pair_type,
+             py::arg("eli"), py::arg("elj"),
+             "Get pair type index for element pair")
+        .def("compute", &Brenner<true>::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true,
+             py::arg("compute_virial") = true,
+             "Compute energy, forces, and virial")
+        .def("screening_params", &Brenner<true>::screening_params,
+             py::arg("ptype"),
+             "Get screening parameters for pair type",
+             py::return_value_policy::reference_internal);
+
+    // Available Brenner parameter sets
+    m.def("available_brenner_parameters", []() {
+        return std::vector<std::string>{
+            "Erhart_PRB_71_035211_SiC",
+            "Albe_PRB_65_195124_PtC",
+            "Henriksson_PRB_79_144107_FeC",
+            "Kioseoglou_PSSb_245_1118_AlN"
+        };
+    }, "List available built-in Brenner parameter sets");
+
+    // =========================================================================
+    // Kumagai Potential
+    // =========================================================================
+
+    // KumagaiElementParams (needed before Kumagai class for default argument)
+    py::class_<KumagaiElementParams>(m, "KumagaiElementParams")
+        .def(py::init<>())
+        .def_readwrite("c1", &KumagaiElementParams::c1)
+        .def_readwrite("c2", &KumagaiElementParams::c2)
+        .def_readwrite("c3", &KumagaiElementParams::c3)
+        .def_readwrite("c4", &KumagaiElementParams::c4)
+        .def_readwrite("c5", &KumagaiElementParams::c5)
+        .def_readwrite("h", &KumagaiElementParams::h)
+        .def_readwrite("eta", &KumagaiElementParams::eta)
+        .def_readwrite("delta", &KumagaiElementParams::delta)
+        .def("precompute", &KumagaiElementParams::precompute);
+
+    // KumagaiPairParams
+    py::class_<KumagaiPairParams>(m, "KumagaiPairParams")
+        .def(py::init<>())
+        .def_readwrite("A", &KumagaiPairParams::A)
+        .def_readwrite("B", &KumagaiPairParams::B)
+        .def_readwrite("lambda_", &KumagaiPairParams::lambda)
+        .def_readwrite("mu", &KumagaiPairParams::mu)
+        .def_readwrite("alpha", &KumagaiPairParams::alpha)
+        .def_readwrite("beta", &KumagaiPairParams::beta)
+        .def_readwrite("r1", &KumagaiPairParams::r1)
+        .def_readwrite("r2", &KumagaiPairParams::r2)
+        .def("precompute", &KumagaiPairParams::precompute);
+
+    // Kumagai potential (non-screened)
+    py::class_<Kumagai<false>>(m, "Kumagai")
+        .def(py::init<>())
+        .def("add_element", &Kumagai<false>::add_element,
+             py::arg("Z"), py::arg("params") = KumagaiElementParams{},
+             "Add element with given atomic number")
+        .def("set_pair_params", &Kumagai<false>::set_pair_params,
+             py::arg("Z1"), py::arg("Z2"), py::arg("params"),
+             "Set pair parameters for element pair")
+        .def("load_parameters", &Kumagai<false>::load_parameters,
+             py::arg("name"),
+             "Load built-in parameter set by name")
+        .def("cutoff", &Kumagai<false>::cutoff,
+             "Get maximum cutoff radius")
+        .def("num_elements", &Kumagai<false>::num_elements,
+             "Get number of elements defined")
+        .def("element_index", &Kumagai<false>::element_index,
+             py::arg("Z"),
+             "Get internal element index for atomic number Z (-1 if not found)")
+        .def("pair_type", &Kumagai<false>::pair_type,
+             py::arg("eli"), py::arg("elj"),
+             "Get pair type index for element pair")
+        .def("compute", &Kumagai<false>::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true,
+             py::arg("compute_virial") = true,
+             "Compute energy, forces, and virial")
+        // Expose internal functions for testing/analysis
+        .def("repulsive", [](const Kumagai<false>& pot, int ptype, Scalar r) {
+            auto [V, dV] = pot.repulsive(ptype, r);
+            return std::make_pair(V, dV);
+        }, py::arg("ptype"), py::arg("r"))
+        .def("attractive", [](const Kumagai<false>& pot, int ptype, Scalar r) {
+            auto [V, dV] = pot.attractive(ptype, r);
+            return std::make_pair(V, dV);
+        }, py::arg("ptype"), py::arg("r"))
+        .def("angular_function", [](const Kumagai<false>& pot,
+                int eli, int elj, int elk, int ptype_ij, int ptype_ik, Scalar cos_theta) {
+            auto [g, dg] = pot.angular_function(eli, elj, elk, ptype_ij, ptype_ik, cos_theta);
+            return std::make_pair(g, dg);
+        }, py::arg("eli"), py::arg("elj"), py::arg("elk"),
+           py::arg("ptype_ij"), py::arg("ptype_ik"), py::arg("cos_theta"))
+        .def("bond_order", [](const Kumagai<false>& pot, int eli, int ptype, Scalar z) {
+            auto [b, db] = pot.bond_order(eli, ptype, z);
+            return std::make_pair(b, db);
+        }, py::arg("eli"), py::arg("ptype"), py::arg("z"));
+
+    // Screened Kumagai potential
+    py::class_<Kumagai<true>>(m, "KumagaiScr")
+        .def(py::init<>())
+        .def("add_element", &Kumagai<true>::add_element,
+             py::arg("Z"), py::arg("params") = KumagaiElementParams{},
+             "Add element with given atomic number")
+        .def("set_pair_params", &Kumagai<true>::set_pair_params,
+             py::arg("Z1"), py::arg("Z2"), py::arg("params"),
+             "Set pair parameters for element pair")
+        .def("load_parameters", &Kumagai<true>::load_parameters,
+             py::arg("name"),
+             "Load built-in parameter set by name")
+        .def("cutoff", &Kumagai<true>::cutoff,
+             "Get maximum cutoff radius")
+        .def("num_elements", &Kumagai<true>::num_elements,
+             "Get number of elements defined")
+        .def("element_index", &Kumagai<true>::element_index,
+             py::arg("Z"),
+             "Get internal element index for atomic number Z (-1 if not found)")
+        .def("pair_type", &Kumagai<true>::pair_type,
+             py::arg("eli"), py::arg("elj"),
+             "Get pair type index for element pair")
+        .def("compute", &Kumagai<true>::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true,
+             py::arg("compute_virial") = true,
+             "Compute energy, forces, and virial")
+        .def("screening_params", &Kumagai<true>::screening_params,
+             py::arg("ptype"),
+             "Get screening parameters for pair type",
+             py::return_value_policy::reference_internal);
+
+    // Available Kumagai parameter sets
+    m.def("available_kumagai_parameters", []() {
+        return std::vector<std::string>{
+            "Kumagai_CompMaterSci_39_457_Si"
+        };
+    }, "List available built-in Kumagai parameter sets");
+
+    // =========================================================================
+    // REBO2 (2nd Generation Brenner Potential)
+    // =========================================================================
+
+    py::class_<REBO2>(m, "REBO2")
+        .def(py::init<>())
+        .def("load_default_parameters", &REBO2::load_default_parameters,
+             "Load default Brenner 2002 parameters")
+        .def("cutoff", &REBO2::cutoff,
+             "Get cutoff radius")
+        .def("element_type", &REBO2::element_type,
+             py::arg("Z"),
+             "Get internal element type from atomic number (1=C, 3=H, or -1 if unsupported)")
+        .def_static("pair_type", &REBO2::pair_type,
+             py::arg("eli"), py::arg("elj"),
+             "Get pair type from two element types")
+        .def("repulsive", [](const REBO2& pot, int ptype, Scalar r) {
+            auto [val, deriv] = pot.repulsive(ptype, r);
+            return std::make_pair(val, deriv);
+        }, py::arg("ptype"), py::arg("r"),
+           "Evaluate repulsive pair function V_R(r)")
+        .def("attractive", [](const REBO2& pot, int ptype, Scalar r) {
+            auto [val, deriv] = pot.attractive(ptype, r);
+            return std::make_pair(val, deriv);
+        }, py::arg("ptype"), py::arg("r"),
+           "Evaluate attractive pair function V_A(r)")
+        .def("angular_function", [](const REBO2& pot, int el_type, Scalar cos_theta, Scalar N) {
+            auto [g, dg_dcos, dg_dN] = pot.angular_function(el_type, cos_theta, N);
+            return std::make_tuple(g, dg_dcos, dg_dN);
+        }, py::arg("el_type"), py::arg("cos_theta"), py::arg("N"),
+           "Evaluate angular function g(cos_theta, N)")
+        .def("bond_order_func", [](const REBO2& pot, int el_type, Scalar z) {
+            auto [b, db] = pot.bond_order_func(el_type, z);
+            return std::make_pair(b, db);
+        }, py::arg("el_type"), py::arg("z"),
+           "Evaluate bond order function b(1+z)")
+        .def("compute", &REBO2::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true,
+             py::arg("compute_virial") = true,
+             "Compute energy, forces, and virial")
+        // Expose parameters for modification/inspection
+        .def_readwrite("cc_B1", &REBO2::cc_B1)
+        .def_readwrite("cc_B2", &REBO2::cc_B2)
+        .def_readwrite("cc_B3", &REBO2::cc_B3)
+        .def_readwrite("cc_beta1", &REBO2::cc_beta1)
+        .def_readwrite("cc_beta2", &REBO2::cc_beta2)
+        .def_readwrite("cc_beta3", &REBO2::cc_beta3)
+        .def_readwrite("cc_Q", &REBO2::cc_Q)
+        .def_readwrite("cc_A", &REBO2::cc_A)
+        .def_readwrite("cc_alpha", &REBO2::cc_alpha)
+        .def_readwrite("ch_B1", &REBO2::ch_B1)
+        .def_readwrite("ch_beta1", &REBO2::ch_beta1)
+        .def_readwrite("ch_Q", &REBO2::ch_Q)
+        .def_readwrite("ch_A", &REBO2::ch_A)
+        .def_readwrite("ch_alpha", &REBO2::ch_alpha)
+        .def_readwrite("hh_B1", &REBO2::hh_B1)
+        .def_readwrite("hh_beta1", &REBO2::hh_beta1)
+        .def_readwrite("hh_Q", &REBO2::hh_Q)
+        .def_readwrite("hh_A", &REBO2::hh_A)
+        .def_readwrite("hh_alpha", &REBO2::hh_alpha);
+
+    // REBO2 pair type constants
+    m.attr("REBO2_C_C") = REBO2_C_C;
+    m.attr("REBO2_C_H") = REBO2_C_H;
+    m.attr("REBO2_H_H") = REBO2_H_H;
+    m.attr("REBO2_C") = REBO2_C;
+    m.attr("REBO2_H") = REBO2_H;
+
+    // =========================================================================
     // EAM Potentials
     // =========================================================================
 
