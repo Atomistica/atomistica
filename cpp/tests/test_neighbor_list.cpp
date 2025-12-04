@@ -54,8 +54,8 @@ TEST_CASE("NeighborList two atoms", "[NeighborList]") {
             0.0, 0.0, 10.0;
     system.set_cell(cell);
 
-    system.position(0) << 0.0, 0.0, 0.0;
-    system.position(1) << 3.0, 0.0, 0.0;
+    system.positions().col(0) << 0.0, 0.0, 0.0;
+    system.positions().col(1) << 3.0, 0.0, 0.0;
 
     NeighborList nl;
 
@@ -88,8 +88,8 @@ TEST_CASE("NeighborList periodic boundary", "[NeighborList]") {
     system.set_cell(cell);
 
     // Atoms near opposite boundaries
-    system.position(0) << 0.5, 5.0, 5.0;
-    system.position(1) << 9.5, 5.0, 5.0;  // Distance is 1.0 through PBC
+    system.positions().col(0) << 0.5, 5.0, 5.0;
+    system.positions().col(1) << 9.5, 5.0, 5.0;  // Distance is 1.0 through PBC
 
     NeighborList nl;
     nl.set_cutoff(2.0);
@@ -138,9 +138,9 @@ TEST_CASE("NeighborList FCC lattice", "[NeighborList]") {
         for (int iy = 0; iy < 2; ++iy) {
             for (int ix = 0; ix < 2; ++ix) {
                 for (int b = 0; b < 4; ++b) {
-                    system.position(idx) << (ix + basis[b](0)) * a,
-                                            (iy + basis[b](1)) * a,
-                                            (iz + basis[b](2)) * a;
+                    system.positions().col(idx) << (ix + basis[b](0)) * a,
+                                                   (iy + basis[b](1)) * a,
+                                                   (iz + basis[b](2)) * a;
                     system.atomic_numbers()(idx) = 13;  // Aluminum
                     ++idx;
                 }
@@ -187,9 +187,9 @@ TEST_CASE("NeighborList symmetry", "[NeighborList]") {
     // Random positions
     srand(42);
     for (std::size_t i = 0; i < system.num_atoms(); ++i) {
-        system.position(i) << 10.0 * rand() / RAND_MAX,
-                              10.0 * rand() / RAND_MAX,
-                              10.0 * rand() / RAND_MAX;
+        system.positions().col(i) << 10.0 * rand() / RAND_MAX,
+                                     10.0 * rand() / RAND_MAX,
+                                     10.0 * rand() / RAND_MAX;
     }
 
     NeighborList nl;

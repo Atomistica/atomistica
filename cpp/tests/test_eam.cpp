@@ -130,8 +130,8 @@ TEST_CASE("TabulatedEAM dimer energy", "[eam]") {
         system.set_cell(cell);
         system.pbc() = {false, false, false};
 
-        system.position(0) << 10.0, 10.0, 10.0;
-        system.position(1) << 10.0 + d, 10.0, 10.0;
+        system.positions().col(0) << 10.0, 10.0, 10.0;
+        system.positions().col(1) << 10.0 + d, 10.0, 10.0;
         system.atomic_numbers()(0) = 79;  // Au
         system.atomic_numbers()(1) = 79;
 
@@ -172,9 +172,9 @@ TEST_CASE("TabulatedEAM numerical force test", "[eam]") {
     system.set_cell(cell);
     system.pbc() = {false, false, false};
 
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 12.8, 10.0, 10.0;
-    system.position(2) << 11.4, 12.4, 10.0;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 12.8, 10.0, 10.0;
+    system.positions().col(2) << 11.4, 12.4, 10.0;
     for (int i = 0; i < 3; ++i) {
         system.atomic_numbers()(i) = 79;
     }
@@ -194,19 +194,19 @@ TEST_CASE("TabulatedEAM numerical force test", "[eam]") {
     for (std::size_t i = 0; i < 3; ++i) {
         for (int d = 0; d < 3; ++d) {
             // Forward
-            system.position(i)(d) += dx;
+            system.positions()(d, i) += dx;
             system.positions_changed();
             nl.update(system);
             auto r_plus = eam.compute(system, nl, false, false);
 
             // Backward
-            system.position(i)(d) -= 2 * dx;
+            system.positions()(d, i) -= 2 * dx;
             system.positions_changed();
             nl.update(system);
             auto r_minus = eam.compute(system, nl, false, false);
 
             // Restore
-            system.position(i)(d) += dx;
+            system.positions()(d, i) += dx;
             system.positions_changed();
 
             // F = -dE/dr
@@ -262,8 +262,8 @@ TEST_CASE("TabulatedAlloyEAM dimer energy", "[eam][alloy]") {
     system.set_cell(cell);
     system.pbc() = {false, false, false};
 
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 12.5, 10.0, 10.0;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 12.5, 10.0, 10.0;
     system.atomic_numbers()(0) = 29;  // Cu
     system.atomic_numbers()(1) = 29;
 
@@ -299,9 +299,9 @@ TEST_CASE("TabulatedAlloyEAM numerical force test", "[eam][alloy]") {
     system.set_cell(cell);
     system.pbc() = {false, false, false};
 
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 12.5, 10.0, 10.0;
-    system.position(2) << 11.25, 12.2, 10.0;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 12.5, 10.0, 10.0;
+    system.positions().col(2) << 11.25, 12.2, 10.0;
     for (int i = 0; i < 3; ++i) {
         system.atomic_numbers()(i) = 29;  // Cu
     }
@@ -321,19 +321,19 @@ TEST_CASE("TabulatedAlloyEAM numerical force test", "[eam][alloy]") {
     for (std::size_t i = 0; i < 3; ++i) {
         for (int d = 0; d < 3; ++d) {
             // Forward
-            system.position(i)(d) += dx;
+            system.positions()(d, i) += dx;
             system.positions_changed();
             nl.update(system);
             auto r_plus = eam.compute(system, nl, false, false);
 
             // Backward
-            system.position(i)(d) -= 2 * dx;
+            system.positions()(d, i) -= 2 * dx;
             system.positions_changed();
             nl.update(system);
             auto r_minus = eam.compute(system, nl, false, false);
 
             // Restore
-            system.position(i)(d) += dx;
+            system.positions()(d, i) += dx;
             system.positions_changed();
 
             // F = -dE/dr
@@ -372,9 +372,9 @@ TEST_CASE("TabulatedEAM FCC bulk", "[eam]") {
         for (int iy = 0; iy < 2; ++iy) {
             for (int ix = 0; ix < 2; ++ix) {
                 for (int b = 0; b < 4; ++b) {
-                    system.position(idx) << (ix + basis[b](0)) * a,
-                                            (iy + basis[b](1)) * a,
-                                            (iz + basis[b](2)) * a;
+                    system.positions().col(idx) << (ix + basis[b](0)) * a,
+                                                   (iy + basis[b](1)) * a,
+                                                   (iz + basis[b](2)) * a;
                     system.atomic_numbers()(idx) = 79;
                     ++idx;
                 }

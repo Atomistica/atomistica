@@ -58,8 +58,8 @@ TEST_CASE("LJ dimer energy", "[LJ]") {
         // Equilibrium distance: r0 = 2^(1/6) * sigma
         Scalar r0 = std::pow(2.0, 1.0/6.0) * sigma;
 
-        system.position(0) << 10.0, 10.0, 10.0;
-        system.position(1) << 10.0 + r0, 10.0, 10.0;
+        system.positions().col(0) << 10.0, 10.0, 10.0;
+        system.positions().col(1) << 10.0 + r0, 10.0, 10.0;
 
         nl.update(system);
         system.zero_forces();
@@ -76,8 +76,8 @@ TEST_CASE("LJ dimer energy", "[LJ]") {
 
     SECTION("At sigma distance") {
         // At r = sigma: V = 0
-        system.position(0) << 10.0, 10.0, 10.0;
-        system.position(1) << 10.0 + sigma, 10.0, 10.0;
+        system.positions().col(0) << 10.0, 10.0, 10.0;
+        system.positions().col(1) << 10.0 + sigma, 10.0, 10.0;
 
         nl.update(system);
         system.zero_forces();
@@ -91,8 +91,8 @@ TEST_CASE("LJ dimer energy", "[LJ]") {
         // At distance less than r0: repulsive
         Scalar r = sigma * 0.9;
 
-        system.position(0) << 10.0, 10.0, 10.0;
-        system.position(1) << 10.0 + r, 10.0, 10.0;
+        system.positions().col(0) << 10.0, 10.0, 10.0;
+        system.positions().col(1) << 10.0 + r, 10.0, 10.0;
 
         nl.update(system);
         system.zero_forces();
@@ -106,8 +106,8 @@ TEST_CASE("LJ dimer energy", "[LJ]") {
     }
 
     SECTION("Newton's third law") {
-        system.position(0) << 10.0, 10.0, 10.0;
-        system.position(1) << 14.0, 10.0, 10.0;
+        system.positions().col(0) << 10.0, 10.0, 10.0;
+        system.positions().col(1) << 14.0, 10.0, 10.0;
 
         nl.update(system);
         system.zero_forces();
@@ -138,8 +138,8 @@ TEST_CASE("LJ numerical force test", "[LJ]") {
     system.atomic_numbers()(0) = 18;
     system.atomic_numbers()(1) = 18;
 
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 14.5, 10.3, 10.7;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 14.5, 10.3, 10.7;
 
     LJCut lj(18, epsilon, sigma, cutoff);
 
@@ -160,19 +160,19 @@ TEST_CASE("LJ numerical force test", "[LJ]") {
     for (int atom = 0; atom < 2; ++atom) {
         for (int dir = 0; dir < 3; ++dir) {
             // Forward
-            system.position(atom)(dir) += dx;
+            system.positions()(dir, atom) += dx;
             system.positions_changed();
             nl.update(system);
             auto r_plus = lj.compute(system, nl, false, false);
 
             // Backward
-            system.position(atom)(dir) -= 2 * dx;
+            system.positions()(dir, atom) -= 2 * dx;
             system.positions_changed();
             nl.update(system);
             auto r_minus = lj.compute(system, nl, false, false);
 
             // Restore
-            system.position(atom)(dir) += dx;
+            system.positions()(dir, atom) += dx;
             system.positions_changed();
 
             // F = -dE/dr
@@ -221,8 +221,8 @@ TEST_CASE("LJ shifted vs unshifted", "[LJ]") {
         bool first = true;
 
         for (Scalar r : distances) {
-            system.position(0) << 10.0, 10.0, 10.0;
-            system.position(1) << 10.0 + r, 10.0, 10.0;
+            system.positions().col(0) << 10.0, 10.0, 10.0;
+            system.positions().col(1) << 10.0 + r, 10.0, 10.0;
 
             nl.update(system);
 
@@ -242,8 +242,8 @@ TEST_CASE("LJ shifted vs unshifted", "[LJ]") {
 
     SECTION("Shifted energy goes to zero at cutoff") {
         // Just below cutoff
-        system.position(0) << 10.0, 10.0, 10.0;
-        system.position(1) << 10.0 + cutoff - 0.01, 10.0, 10.0;
+        system.positions().col(0) << 10.0, 10.0, 10.0;
+        system.positions().col(1) << 10.0 + cutoff - 0.01, 10.0, 10.0;
 
         nl.update(system);
         auto result = lj_shifted.compute(system, nl, false, false);
@@ -254,8 +254,8 @@ TEST_CASE("LJ shifted vs unshifted", "[LJ]") {
 
     SECTION("Forces are identical") {
         // Forces should be identical for shifted and unshifted
-        system.position(0) << 10.0, 10.0, 10.0;
-        system.position(1) << 14.0, 10.0, 10.0;
+        system.positions().col(0) << 10.0, 10.0, 10.0;
+        system.positions().col(1) << 14.0, 10.0, 10.0;
 
         nl.update(system);
 
@@ -298,9 +298,9 @@ TEST_CASE("LJ FCC bulk", "[LJ]") {
         for (int iy = 0; iy < 2; ++iy) {
             for (int ix = 0; ix < 2; ++ix) {
                 for (int b = 0; b < 4; ++b) {
-                    system.position(idx) << (ix + basis[b](0)) * a,
-                                            (iy + basis[b](1)) * a,
-                                            (iz + basis[b](2)) * a;
+                    system.positions().col(idx) << (ix + basis[b](0)) * a,
+                                                   (iy + basis[b](1)) * a,
+                                                   (iz + basis[b](2)) * a;
                     system.atomic_numbers()(idx) = 18;
                     ++idx;
                 }

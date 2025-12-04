@@ -142,11 +142,12 @@ public:
     }
 
     Scalar pair_cutoff(int ptype) const {
-        if constexpr (Screening) {
-            return pair_params_[ptype].screening.cut_out_h;
-        } else {
-            return pair_params_[ptype].r2;
-        }
+        return pair_params_[ptype].r2;
+    }
+
+    // For screened version: determines neighbor search radius
+    Scalar screened_cutoff(int ptype) const {
+        return pair_params_[ptype].screening.cut_out_h;
     }
 
     CutoffResult cutoff_function(int ptype, Scalar r) const {

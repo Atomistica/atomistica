@@ -113,8 +113,8 @@ TEST_CASE("Tersoff Si dimer", "[Tersoff]") {
     // Test at typical Si-Si bond length
     Scalar r_bond = 2.35;  // Angstrom
 
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 10.0 + r_bond, 10.0, 10.0;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 10.0 + r_bond, 10.0, 10.0;
 
     nl.update(system);
     system.zero_forces();
@@ -161,9 +161,9 @@ TEST_CASE("Tersoff Si3 trimer", "[Tersoff]") {
 
     // Equilateral triangle
     Scalar r = 2.35;
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 10.0 + r, 10.0, 10.0;
-    system.position(2) << 10.0 + 0.5*r, 10.0 + r*std::sqrt(3.0)/2.0, 10.0;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 10.0 + r, 10.0, 10.0;
+    system.positions().col(2) << 10.0 + 0.5*r, 10.0 + r*std::sqrt(3.0)/2.0, 10.0;
 
     nl.update(system);
     system.zero_forces();
@@ -207,9 +207,9 @@ TEST_CASE("Tersoff numerical force test", "[Tersoff]") {
     system.atomic_numbers()(2) = 14;
 
     // Asymmetric configuration
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 12.3, 10.1, 10.0;
-    system.position(2) << 10.5, 12.2, 10.2;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 12.3, 10.1, 10.0;
+    system.positions().col(2) << 10.5, 12.2, 10.2;
 
     Tersoff<false> pot;
     pot.load_parameters("Tersoff_PRB_39_5566_Si_C");
@@ -229,17 +229,17 @@ TEST_CASE("Tersoff numerical force test", "[Tersoff]") {
 
     for (int atom = 0; atom < 3; ++atom) {
         for (int dir = 0; dir < 3; ++dir) {
-            system.position(atom)(dir) += dx;
+            system.positions()(dir, atom) += dx;
             system.positions_changed();
             nl.update(system);
             auto r_plus = pot.compute(system, nl, false, false);
 
-            system.position(atom)(dir) -= 2 * dx;
+            system.positions()(dir, atom) -= 2 * dx;
             system.positions_changed();
             nl.update(system);
             auto r_minus = pot.compute(system, nl, false, false);
 
-            system.position(atom)(dir) += dx;
+            system.positions()(dir, atom) += dx;
             system.positions_changed();
 
             numerical_forces(dir, atom) = -(r_plus.energy - r_minus.energy) / (2 * dx);
@@ -283,8 +283,8 @@ TEST_CASE("Tersoff SiC heteroatomic", "[Tersoff]") {
     // Typical Si-C bond length
     Scalar r_bond = 1.89;  // Angstrom
 
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 10.0 + r_bond, 10.0, 10.0;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 10.0 + r_bond, 10.0, 10.0;
 
     nl.update(system);
     system.zero_forces();
@@ -345,8 +345,8 @@ TEST_CASE("Screened Tersoff Si dimer (unscreened region)", "[TersoffScr]") {
     // At short distance (well within inner cutoff), screening should not apply
     Scalar r_bond = 2.35;  // Angstrom
 
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 10.0 + r_bond, 10.0, 10.0;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 10.0 + r_bond, 10.0, 10.0;
 
     nl.update(system);
 
@@ -391,9 +391,9 @@ TEST_CASE("Screened Tersoff trimer screening", "[TersoffScr]") {
     // Linear arrangement: 0 -- 1 -- 2
     // Atom 1 should screen the 0-2 bond
     Scalar r = 2.5;
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 10.0 + r, 10.0, 10.0;  // Middle atom
-    system.position(2) << 10.0 + 2*r, 10.0, 10.0;  // r_02 = 2r = 5.0
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 10.0 + r, 10.0, 10.0;  // Middle atom
+    system.positions().col(2) << 10.0 + 2*r, 10.0, 10.0;  // r_02 = 2r = 5.0
 
     Tersoff<true> pot_scr;
     pot_scr.load_parameters("Tersoff_PRB_39_5566_Si_C");
@@ -438,9 +438,9 @@ TEST_CASE("Screened Tersoff numerical force test (unscreened config)", "[Tersoff
 
     // Equilateral triangle at short distance - minimal screening effect
     Scalar r = 2.35;
-    system.position(0) << 10.0, 10.0, 10.0;
-    system.position(1) << 10.0 + r, 10.0, 10.0;
-    system.position(2) << 10.0 + 0.5*r, 10.0 + r*std::sqrt(3.0)/2.0, 10.0;
+    system.positions().col(0) << 10.0, 10.0, 10.0;
+    system.positions().col(1) << 10.0 + r, 10.0, 10.0;
+    system.positions().col(2) << 10.0 + 0.5*r, 10.0 + r*std::sqrt(3.0)/2.0, 10.0;
 
     Tersoff<true> pot;
     pot.load_parameters("Tersoff_PRB_39_5566_Si_C");
@@ -460,17 +460,17 @@ TEST_CASE("Screened Tersoff numerical force test (unscreened config)", "[Tersoff
 
     for (int atom = 0; atom < 3; ++atom) {
         for (int dir = 0; dir < 3; ++dir) {
-            system.position(atom)(dir) += dx;
+            system.positions()(dir, atom) += dx;
             system.positions_changed();
             nl.update(system);
             auto r_plus = pot.compute(system, nl, false, false);
 
-            system.position(atom)(dir) -= 2 * dx;
+            system.positions()(dir, atom) -= 2 * dx;
             system.positions_changed();
             nl.update(system);
             auto r_minus = pot.compute(system, nl, false, false);
 
-            system.position(atom)(dir) += dx;
+            system.positions()(dir, atom) += dx;
             system.positions_changed();
 
             numerical_forces(dir, atom) = -(r_plus.energy - r_minus.energy) / (2 * dx);
@@ -478,6 +478,151 @@ TEST_CASE("Screened Tersoff numerical force test (unscreened config)", "[Tersoff
     }
 
     // Compare - this should match well for unscreened configurations
+    for (int atom = 0; atom < 3; ++atom) {
+        for (int dir = 0; dir < 3; ++dir) {
+            if (std::abs(numerical_forces(dir, atom)) > 1e-8) {
+                REQUIRE_THAT(analytical_forces(dir, atom),
+                            WithinRel(numerical_forces(dir, atom), 1e-4));
+            } else {
+                REQUIRE_THAT(analytical_forces(dir, atom),
+                            WithinAbs(numerical_forces(dir, atom), 1e-8));
+            }
+        }
+    }
+}
+
+TEST_CASE("Screened Tersoff numerical force test (linear config with screening)", "[TersoffScr]") {
+    // Test numerical forces in a linear configuration where screening is active
+    // The middle atom (1) screens the 0-2 bond
+    AtomicSystem system(3);
+
+    Mat3 cell;
+    cell << 30.0, 0.0, 0.0,
+            0.0, 30.0, 0.0,
+            0.0, 0.0, 30.0;
+    system.set_cell(cell);
+    system.pbc() = {false, false, false};
+
+    system.atomic_numbers()(0) = 14;
+    system.atomic_numbers()(1) = 14;
+    system.atomic_numbers()(2) = 14;
+
+    // Linear arrangement: 0 -- 1 -- 2
+    // Distances: r_01 = 2.5, r_12 = 2.5, r_02 = 5.0
+    // Atom 1 is exactly between 0 and 2, so it should provide maximum screening
+    Scalar r = 2.5;
+    system.positions().col(0) << 15.0, 15.0, 15.0;
+    system.positions().col(1) << 15.0 + r, 15.0, 15.0;  // Middle atom
+    system.positions().col(2) << 15.0 + 2*r, 15.0, 15.0;
+
+    Tersoff<true> pot;
+    pot.load_parameters("Tersoff_PRB_39_5566_Si_C");
+
+    NeighborList nl;
+    nl.set_cutoff(pot.cutoff());
+    nl.update(system);
+
+    // Analytical forces
+    system.zero_forces();
+    auto result = pot.compute(system, nl, true, false);
+    Array3X analytical_forces = system.forces();
+
+    // Numerical forces
+    const Scalar dx = 1e-6;
+    Array3X numerical_forces = Array3X::Zero(3, 3);
+
+    for (int atom = 0; atom < 3; ++atom) {
+        for (int dir = 0; dir < 3; ++dir) {
+            system.positions()(dir, atom) += dx;
+            system.positions_changed();
+            nl.update(system);
+            auto r_plus = pot.compute(system, nl, false, false);
+
+            system.positions()(dir, atom) -= 2 * dx;
+            system.positions_changed();
+            nl.update(system);
+            auto r_minus = pot.compute(system, nl, false, false);
+
+            system.positions()(dir, atom) += dx;
+            system.positions_changed();
+
+            numerical_forces(dir, atom) = -(r_plus.energy - r_minus.energy) / (2 * dx);
+        }
+    }
+
+    // Compare analytical and numerical forces
+    // This tests that screening force derivatives are correctly implemented
+    for (int atom = 0; atom < 3; ++atom) {
+        for (int dir = 0; dir < 3; ++dir) {
+            if (std::abs(numerical_forces(dir, atom)) > 1e-8) {
+                REQUIRE_THAT(analytical_forces(dir, atom),
+                            WithinRel(numerical_forces(dir, atom), 1e-4));
+            } else {
+                REQUIRE_THAT(analytical_forces(dir, atom),
+                            WithinAbs(numerical_forces(dir, atom), 1e-8));
+            }
+        }
+    }
+}
+
+TEST_CASE("Screened Tersoff numerical force test (off-axis screener)", "[TersoffScr]") {
+    // Test with a screener that's not exactly on the bond axis
+    // This provides a more thorough test of the screening derivatives
+    AtomicSystem system(3);
+
+    Mat3 cell;
+    cell << 30.0, 0.0, 0.0,
+            0.0, 30.0, 0.0,
+            0.0, 0.0, 30.0;
+    system.set_cell(cell);
+    system.pbc() = {false, false, false};
+
+    system.atomic_numbers()(0) = 14;
+    system.atomic_numbers()(1) = 14;
+    system.atomic_numbers()(2) = 14;
+
+    // Asymmetric configuration: atom 2 slightly off the 0-1 axis
+    // r_01 = 4.0, atom 2 is near the midpoint but offset in y
+    system.positions().col(0) << 15.0, 15.0, 15.0;
+    system.positions().col(1) << 19.0, 15.0, 15.0;  // r_01 = 4.0
+    system.positions().col(2) << 17.0, 15.5, 15.0;  // Near midpoint, offset by 0.5 in y
+
+    Tersoff<true> pot;
+    pot.load_parameters("Tersoff_PRB_39_5566_Si_C");
+
+    NeighborList nl;
+    nl.set_cutoff(pot.cutoff());
+    nl.update(system);
+
+    // Analytical forces
+    system.zero_forces();
+    auto result = pot.compute(system, nl, true, false);
+    Array3X analytical_forces = system.forces();
+
+    // Numerical forces
+    const Scalar dx = 1e-6;
+    Array3X numerical_forces = Array3X::Zero(3, 3);
+
+    for (int atom = 0; atom < 3; ++atom) {
+        for (int dir = 0; dir < 3; ++dir) {
+            system.positions()(dir, atom) += dx;
+            system.positions_changed();
+            nl.update(system);
+            auto r_plus = pot.compute(system, nl, false, false);
+
+            system.positions()(dir, atom) -= 2 * dx;
+            system.positions_changed();
+            nl.update(system);
+            auto r_minus = pot.compute(system, nl, false, false);
+
+            system.positions()(dir, atom) += dx;
+            system.positions_changed();
+
+            numerical_forces(dir, atom) = -(r_plus.energy - r_minus.energy) / (2 * dx);
+        }
+    }
+
+    // Compare analytical and numerical forces
     for (int atom = 0; atom < 3; ++atom) {
         for (int dir = 0; dir < 3; ++dir) {
             if (std::abs(numerical_forces(dir, atom)) > 1e-8) {
