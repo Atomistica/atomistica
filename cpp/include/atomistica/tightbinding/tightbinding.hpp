@@ -21,27 +21,22 @@
 
 #pragma once
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+/**
+ * @file tightbinding.hpp
+ * @brief Main header for tight-binding functionality
+ *
+ * This header includes all tight-binding components:
+ * - Types and data structures
+ * - Slater-Koster transformations
+ * - Materials database and SKF file reader
+ * - Hamiltonian construction
+ * - Eigenvalue solvers
+ * - DFTB potential implementation
+ */
 
-namespace atomistica {
-
-// Scalar type (can be changed for single precision if needed)
-using Scalar = double;
-
-// Vector and matrix types
-using Vec3 = Eigen::Matrix<Scalar, 3, 1>;
-using Mat3 = Eigen::Matrix<Scalar, 3, 3>;
-using VecX = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
-using MatX = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
-using MatX3 = Eigen::Matrix<Scalar, Eigen::Dynamic, 3>;  // N x 3 matrix for forces
-
-// Array types for per-atom data (row-major for cache efficiency when iterating atoms)
-using Array3X = Eigen::Array<Scalar, 3, Eigen::Dynamic>;
-using ArrayX = Eigen::Array<Scalar, Eigen::Dynamic, 1>;
-using ArrayXi = Eigen::Array<int, Eigen::Dynamic, 1>;
-
-// Constants
-constexpr Scalar PI = 3.14159265358979323846;
-
-} // namespace atomistica
+#include "types.hpp"
+#include "slater_koster.hpp"
+#include "materials.hpp"
+#include "hamiltonian.hpp"
+#include "solver.hpp"
+#include "dftb.hpp"

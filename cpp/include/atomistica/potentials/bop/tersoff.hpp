@@ -37,6 +37,9 @@ struct TersoffPairParams : public BOPPairParams {
     // Note: Tersoff uses A, lambda (repulsive), B, mu (attractive) from base
     // Additional mixing parameters
     Scalar chi = 1.0;     // Mixing parameter for heteroatomic bonds
+
+    // Screening parameters (only used when Screening=true)
+    ScreeningParams screening;
 };
 
 /**
@@ -139,11 +142,22 @@ public:
     }
 
     Scalar pair_cutoff(int ptype) const {
-        return pair_params_[ptype].r2;
+        if constexpr (Screening) {
+            return pair_params_[ptype].screening.cut_out_h;
+        } else {
+            return pair_params_[ptype].r2;
+        }
     }
 
     CutoffResult cutoff_function(int ptype, Scalar r) const {
         return pair_params_[ptype].cutoff(r);
+    }
+
+    /**
+     * @brief Get screening parameters for a pair type (only used when Screening=true)
+     */
+    const ScreeningParams& screening_params(int ptype) const {
+        return pair_params_[ptype].screening;
     }
 
     /**
@@ -265,8 +279,14 @@ private:
     void update_max_cutoff() {
         max_cutoff_ = 0.0;
         for (const auto& p : pair_params_) {
-            if (p.r2 > max_cutoff_) {
-                max_cutoff_ = p.r2;
+            Scalar cut;
+            if constexpr (Screening) {
+                cut = p.screening.cut_out_h;
+            } else {
+                cut = p.r2;
+            }
+            if (cut > max_cutoff_) {
+                max_cutoff_ = cut;
             }
         }
     }
@@ -283,8 +303,12 @@ private:
 
 /**
  * @brief Tersoff Si-C parameters from PRB 39, 5566 (1989)
+ *
+ * Templated to support both screened and non-screened versions.
+ * For screened version, adds screening parameters from Pastewka et al.
  */
-inline void load_tersoff_prb_39_5566_si_c(Tersoff<false>& pot) {
+template<bool Scr>
+inline void load_tersoff_prb_39_5566_si_c(Tersoff<Scr>& pot) {
     // Silicon parameters
     TersoffElementParams si;
     si.beta = 1.1e-6;
@@ -309,9 +333,25 @@ inline void load_tersoff_prb_39_5566_si_c(Tersoff<false>& pot) {
     si_si.B = 471.18;
     si_si.lambda = 2.4799;
     si_si.mu = 1.7322;
-    si_si.r1 = 2.7;
-    si_si.r2 = 3.0;
     si_si.chi = 1.0;
+
+    if constexpr (Scr) {
+        // Screened parameters from Fortran tersoff_params.f90
+        si_si.r1 = 2.50;
+        si_si.r2 = 2.50 * 1.2;  // 3.0
+        si_si.screening.cut_in_l = si_si.r1;
+        si_si.screening.cut_in_h = si_si.r2;
+        si_si.screening.cut_out_l = 3.0;
+        si_si.screening.cut_out_h = 3.0 * 2.0;  // 6.0
+        si_si.screening.cut_bo_l = 3.0;
+        si_si.screening.cut_bo_h = 3.0 * 2.0;
+        si_si.screening.Cmin = 1.0;
+        si_si.screening.Cmax = 3.0;
+        si_si.screening.precompute();
+    } else {
+        si_si.r1 = 2.7;
+        si_si.r2 = 3.0;
+    }
     pot.set_pair_params(14, 14, si_si);
 
     // C-C pair
@@ -320,9 +360,24 @@ inline void load_tersoff_prb_39_5566_si_c(Tersoff<false>& pot) {
     c_c.B = 346.74;
     c_c.lambda = 3.4879;
     c_c.mu = 2.2119;
-    c_c.r1 = 1.8;
-    c_c.r2 = 2.1;
     c_c.chi = 1.0;
+
+    if constexpr (Scr) {
+        c_c.r1 = 2.0;
+        c_c.r2 = 2.0 * 1.2;  // 2.4
+        c_c.screening.cut_in_l = c_c.r1;
+        c_c.screening.cut_in_h = c_c.r2;
+        c_c.screening.cut_out_l = 2.0;
+        c_c.screening.cut_out_h = 2.0 * 2.0;  // 4.0
+        c_c.screening.cut_bo_l = 2.0;
+        c_c.screening.cut_bo_h = 2.0 * 2.0;
+        c_c.screening.Cmin = 1.0;
+        c_c.screening.Cmax = 3.0;
+        c_c.screening.precompute();
+    } else {
+        c_c.r1 = 1.8;
+        c_c.r2 = 2.1;
+    }
     pot.set_pair_params(6, 6, c_c);
 
     // Si-C pair (mixed)
@@ -331,9 +386,24 @@ inline void load_tersoff_prb_39_5566_si_c(Tersoff<false>& pot) {
     si_c.B = std::sqrt(si_si.B * c_c.B);
     si_c.lambda = 0.5 * (si_si.lambda + c_c.lambda);
     si_c.mu = 0.5 * (si_si.mu + c_c.mu);
-    si_c.r1 = std::sqrt(si_si.r1 * c_c.r1);
-    si_c.r2 = std::sqrt(si_si.r2 * c_c.r2);
     si_c.chi = 0.9776;  // Mixing parameter
+
+    if constexpr (Scr) {
+        si_c.r1 = std::sqrt(2.50 * 2.0);
+        si_c.r2 = si_c.r1 * 1.2;
+        si_c.screening.cut_in_l = si_c.r1;
+        si_c.screening.cut_in_h = si_c.r2;
+        si_c.screening.cut_out_l = std::sqrt(3.0 * 2.0);
+        si_c.screening.cut_out_h = si_c.screening.cut_out_l * 2.0;
+        si_c.screening.cut_bo_l = si_c.screening.cut_out_l;
+        si_c.screening.cut_bo_h = si_c.screening.cut_out_h;
+        si_c.screening.Cmin = 1.0;
+        si_c.screening.Cmax = 3.0;
+        si_c.screening.precompute();
+    } else {
+        si_c.r1 = std::sqrt(si_si.r1 * c_c.r1);
+        si_c.r2 = std::sqrt(si_si.r2 * c_c.r2);
+    }
     pot.set_pair_params(14, 6, si_c);
 }
 

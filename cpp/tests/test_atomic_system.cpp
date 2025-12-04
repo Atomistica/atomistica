@@ -61,7 +61,7 @@ TEST_CASE("AtomicSystem basic operations", "[AtomicSystem]") {
     }
 
     SECTION("Set positions") {
-        system.position(0) << 1.0, 2.0, 3.0;
+        system.set_position(0, Vec3(1.0, 2.0, 3.0));
         REQUIRE_THAT(system.position(0)(0), WithinRel(1.0, 1e-10));
         REQUIRE_THAT(system.position(0)(1), WithinRel(2.0, 1e-10));
         REQUIRE_THAT(system.position(0)(2), WithinRel(3.0, 1e-10));

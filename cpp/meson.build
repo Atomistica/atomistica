@@ -19,10 +19,16 @@ eigen_dep = dependency('eigen3',
 # Optional OpenMP
 openmp_dep = dependency('openmp', required: get_option('enable_openmp'))
 
+# Optional LAPACK (for tight-binding solver)
+lapack_dep = dependency('lapack', required: false)
+
 # Collect all dependencies
 atomistica_deps = [eigen_dep]
 if openmp_dep.found()
   atomistica_deps += openmp_dep
+endif
+if lapack_dep.found()
+  atomistica_deps += lapack_dep
 endif
 
 # Include directories

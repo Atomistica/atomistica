@@ -96,13 +96,49 @@ public:
     Array3X& positions() { return positions_; }
     const Array3X& positions() const { return positions_; }
 
-    // Single atom position access
-    auto position(std::size_t i) { return positions_.col(i); }
-    auto position(std::size_t i) const { return positions_.col(i); }
+    // Single atom position access - always returns a Vec3 copy for type safety
+    // Use positions().col(i) for assignment or set_position() method
+    Vec3 position(std::size_t i) const { return positions_.col(i).matrix(); }
+
+    // Set single atom position
+    void set_position(std::size_t i, const Vec3& r) {
+        positions_.col(i) = r.array();
+        ++position_revision_;
+    }
 
     // Atomic numbers
     ArrayXi& atomic_numbers() { return atomic_numbers_; }
     const ArrayXi& atomic_numbers() const { return atomic_numbers_; }
+
+    // Single atom atomic number access
+    int atomic_number(std::size_t i) const { return atomic_numbers_[i]; }
+
+    // Masses
+    ArrayX& masses() { return masses_; }
+    const ArrayX& masses() const { return masses_; }
+
+    // Single atom mass access
+    Scalar mass(std::size_t i) const { return masses_[i]; }
+    void set_mass(std::size_t i, Scalar m) { masses_[i] = m; }
+
+    // Velocities
+    Array3X& velocities() { return velocities_; }
+    const Array3X& velocities() const { return velocities_; }
+
+    // Single atom velocity access - always returns a Vec3 copy for type safety
+    // Use velocities().col(i) for assignment or set_velocity() method
+    Vec3 velocity(std::size_t i) const { return velocities_.col(i).matrix(); }
+    void set_velocity(std::size_t i, const Vec3& v) { velocities_.col(i) = v.array(); }
+
+    // Add atom with position and mass
+    void add_atom(int Z, const Vec3& r, Scalar m = 1.0) {
+        std::size_t i = num_atoms_;
+        resize(num_atoms_ + 1);
+        positions_.col(i) = r.array();
+        atomic_numbers_[i] = Z;
+        masses_[i] = m;
+        velocities_.col(i).setZero();
+    }
 
     // Forces (accumulated by potentials)
     Array3X& forces() { return forces_; }
@@ -139,6 +175,8 @@ private:
 
     Array3X positions_;
     ArrayXi atomic_numbers_;
+    ArrayX masses_;
+    Array3X velocities_;
     Array3X forces_;
 
     PropertyMap properties_;

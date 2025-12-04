@@ -23,6 +23,7 @@
 
 #include <array>
 #include <cmath>
+#include <functional>
 #include <map>
 #include <tuple>
 #include <vector>
@@ -30,6 +31,7 @@
 #include "../../config.hpp"
 #include "../../math/cutoff_functions.hpp"
 #include "../potential_base.hpp"
+#include "screening.hpp"
 
 namespace atomistica {
 
@@ -130,9 +132,16 @@ struct BondData {
     Scalar r;                   // Distance
     Vec3 dr;                    // Distance vector (rj - ri)
     Vec3 unit;                  // Unit vector
-    Scalar fc;                  // Cutoff function value
+    Scalar fc;                  // Cutoff function value (pair/attractive)
     Scalar dfc;                 // Cutoff function derivative
+    Scalar fc_bo;               // Bond-order cutoff (may differ with screening)
+    Scalar dfc_bo;              // Bond-order cutoff derivative
     std::array<int, 3> shift;   // Periodic shift
+
+    // Screening data (only used when Screening=true)
+    Scalar S;                   // Screening factor
+    Scalar dS_drij;             // dS/dr_ij
+    std::vector<ScreeningNeighbor> screening_neighbors;  // Atoms contributing to screening
 };
 
 /**
@@ -200,6 +209,7 @@ protected:
             bonds.clear();
             auto [nb_begin, nb_end] = neighbors.neighbors(i);
 
+            // First pass: collect all potential bonds with basic data
             for (auto it = nb_begin; it != nb_end; ++it) {
                 const auto& neigh = *it;
                 std::size_t j = neigh.index;
@@ -233,9 +243,55 @@ protected:
                 bond.unit = dr / r;
                 bond.fc = fc;
                 bond.dfc = dfc;
+                bond.fc_bo = fc;    // Default: same as pair cutoff
+                bond.dfc_bo = dfc;
                 bond.shift = neigh.cell_shift;
+                bond.S = 1.0;
+                bond.dS_drij = 0.0;
 
                 bonds.push_back(bond);
+            }
+
+            // Second pass (screening only): compute screening factors
+            if constexpr (Screening) {
+                for (std::size_t b_ij = 0; b_ij < bonds.size(); ++b_ij) {
+                    auto& bond_ij = bonds[b_ij];
+
+                    // Get screening parameters for this pair type
+                    const auto& scr_params = derived().screening_params(bond_ij.pair_type);
+
+                    // Collect r_ik vectors for all potential screening atoms
+                    std::vector<Vec3> rik_vectors;
+                    rik_vectors.reserve(bonds.size());
+                    for (std::size_t b_ik = 0; b_ik < bonds.size(); ++b_ik) {
+                        if (b_ik != b_ij) {
+                            rik_vectors.push_back(bonds[b_ik].dr);
+                        }
+                    }
+
+                    // Compute screening (simple version without neighbor tracking for now)
+                    auto scr_result = compute_screening_simple(
+                        scr_params, bond_ij.dr, bond_ij.r * bond_ij.r, rik_vectors);
+
+                    bond_ij.S = scr_result.fully_screened ? 0.0 : std::exp(scr_result.S);
+                    bond_ij.dS_drij = scr_result.dS_drij * bond_ij.S;
+
+                    // Apply screening to cutoff functions
+                    // Following Fortran: cutfcnbo = (1-fCin)*S*fCbo + fCin
+                    // For simplicity, we use: fc_bo = S * fc
+                    bond_ij.fc_bo = bond_ij.S * bond_ij.fc;
+                    bond_ij.dfc_bo = bond_ij.S * bond_ij.dfc + bond_ij.dS_drij * bond_ij.fc / bond_ij.r;
+
+                    // Also apply to pair cutoff for energy
+                    bond_ij.fc = bond_ij.fc_bo;
+                    bond_ij.dfc = bond_ij.dfc_bo;
+
+                    // Skip fully screened bonds
+                    if (bond_ij.S < 1e-10) {
+                        bond_ij.fc = 0.0;
+                        bond_ij.fc_bo = 0.0;
+                    }
+                }
             }
 
             // Compute pair energies and bond orders
@@ -249,6 +305,7 @@ protected:
                 auto [VA, dVA] = derived().attractive(bond_ij.pair_type, bond_ij.r);
 
                 // Compute bond order z_ij = sum_k fc_ik * g(cos_jik) * h(...)
+                // Note: Use fc_bo (bond-order cutoff) which may be screened
                 Scalar zij = 0.0;
                 std::vector<Scalar> dz_dcos(bonds.size(), 0.0);
                 std::vector<Scalar> dz_drik(bonds.size(), 0.0);
@@ -272,14 +329,14 @@ protected:
                         eli, elj, elk, bond_ij.pair_type, bond_ik.pair_type,
                         bond_ij.r, bond_ik.r);
 
-                    // Contribution to z_ij
-                    Scalar contrib = bond_ik.fc * g_val * h_val;
+                    // Contribution to z_ij (using bond-order cutoff fc_bo)
+                    Scalar contrib = bond_ik.fc_bo * g_val * h_val;
                     zij += contrib;
 
-                    // Store derivatives for force calculation
-                    dz_dcos[b_ik] = bond_ik.fc * dg * h_val;
-                    dz_drik[b_ik] = bond_ik.dfc * g_val * h_val + bond_ik.fc * g_val * dh_drik;
-                    dz_drij_via_h[b_ik] = bond_ik.fc * g_val * dh_drij;
+                    // Store derivatives for force calculation (using dfc_bo)
+                    dz_dcos[b_ik] = bond_ik.fc_bo * dg * h_val;
+                    dz_drik[b_ik] = bond_ik.dfc_bo * g_val * h_val + bond_ik.fc_bo * g_val * dh_drik;
+                    dz_drij_via_h[b_ik] = bond_ik.fc_bo * g_val * dh_drij;
                 }
 
                 // Bond order function b(z)

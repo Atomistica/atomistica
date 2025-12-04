@@ -300,3 +300,193 @@ TEST_CASE("Tersoff SiC heteroatomic", "[Tersoff]") {
         REQUIRE_THAT(total_force.norm(), WithinAbs(0.0, 1e-10));
     }
 }
+
+// ============================================================================
+// Screened Tersoff Tests
+// ============================================================================
+
+TEST_CASE("Screened Tersoff parameter loading", "[TersoffScr]") {
+    Tersoff<true> pot;
+
+    SECTION("Load Si-C parameters") {
+        pot.load_parameters("Tersoff_PRB_39_5566_Si_C");
+
+        REQUIRE(pot.element_index(14) == 0);  // Si
+        REQUIRE(pot.element_index(6) == 1);   // C
+        REQUIRE(pot.num_elements() == 2);
+        // Screened cutoff should be larger than non-screened
+        REQUIRE(pot.cutoff() > 3.0);
+    }
+}
+
+TEST_CASE("Screened Tersoff Si dimer (unscreened region)", "[TersoffScr]") {
+    // Two Si atoms at short distance - should be unscreened
+    AtomicSystem system(2);
+
+    Mat3 cell;
+    cell << 20.0, 0.0, 0.0,
+            0.0, 20.0, 0.0,
+            0.0, 0.0, 20.0;
+    system.set_cell(cell);
+    system.pbc() = {false, false, false};
+
+    system.atomic_numbers()(0) = 14;  // Si
+    system.atomic_numbers()(1) = 14;  // Si
+
+    Tersoff<true> pot_scr;
+    pot_scr.load_parameters("Tersoff_PRB_39_5566_Si_C");
+
+    Tersoff<false> pot;
+    pot.load_parameters("Tersoff_PRB_39_5566_Si_C");
+
+    NeighborList nl;
+    nl.set_cutoff(pot_scr.cutoff());
+
+    // At short distance (well within inner cutoff), screening should not apply
+    Scalar r_bond = 2.35;  // Angstrom
+
+    system.position(0) << 10.0, 10.0, 10.0;
+    system.position(1) << 10.0 + r_bond, 10.0, 10.0;
+
+    nl.update(system);
+
+    // Compute with non-screened
+    system.zero_forces();
+    auto result = pot.compute(system, nl, true, true);
+
+    // Compute with screened (should give same result for isolated dimer)
+    system.zero_forces();
+    auto result_scr = pot_scr.compute(system, nl, true, true);
+
+    SECTION("Energy is negative") {
+        REQUIRE(result_scr.energy < 0.0);
+    }
+
+    SECTION("Dimer energy matches non-screened") {
+        // For an isolated dimer with no screening atoms, energies should match
+        REQUIRE_THAT(result_scr.energy, WithinRel(result.energy, 1e-6));
+    }
+
+    SECTION("Newton's third law") {
+        Vec3 total_force = system.forces().col(0).matrix() + system.forces().col(1).matrix();
+        REQUIRE_THAT(total_force.norm(), WithinAbs(0.0, 1e-10));
+    }
+}
+
+TEST_CASE("Screened Tersoff trimer screening", "[TersoffScr]") {
+    // Three Si atoms arranged linearly - middle atom should screen the bond
+    AtomicSystem system(3);
+
+    Mat3 cell;
+    cell << 20.0, 0.0, 0.0,
+            0.0, 20.0, 0.0,
+            0.0, 0.0, 20.0;
+    system.set_cell(cell);
+    system.pbc() = {false, false, false};
+
+    system.atomic_numbers()(0) = 14;
+    system.atomic_numbers()(1) = 14;
+    system.atomic_numbers()(2) = 14;
+
+    // Linear arrangement: 0 -- 1 -- 2
+    // Atom 1 should screen the 0-2 bond
+    Scalar r = 2.5;
+    system.position(0) << 10.0, 10.0, 10.0;
+    system.position(1) << 10.0 + r, 10.0, 10.0;  // Middle atom
+    system.position(2) << 10.0 + 2*r, 10.0, 10.0;  // r_02 = 2r = 5.0
+
+    Tersoff<true> pot_scr;
+    pot_scr.load_parameters("Tersoff_PRB_39_5566_Si_C");
+
+    Tersoff<false> pot;
+    pot.load_parameters("Tersoff_PRB_39_5566_Si_C");
+
+    NeighborList nl;
+    nl.set_cutoff(pot_scr.cutoff());
+    nl.update(system);
+
+    system.zero_forces();
+    auto result_scr = pot_scr.compute(system, nl, true, true);
+
+    SECTION("Energy is finite") {
+        REQUIRE(std::isfinite(result_scr.energy));
+    }
+
+    SECTION("Total force is zero") {
+        Vec3 total_force = system.forces().col(0).matrix() +
+                          system.forces().col(1).matrix() +
+                          system.forces().col(2).matrix();
+        REQUIRE_THAT(total_force.norm(), WithinAbs(0.0, 1e-10));
+    }
+}
+
+TEST_CASE("Screened Tersoff numerical force test (unscreened config)", "[TersoffScr]") {
+    // Test numerical forces in a configuration where screening is minimal
+    // Full screening derivative forces are not yet implemented
+    AtomicSystem system(3);
+
+    Mat3 cell;
+    cell << 20.0, 0.0, 0.0,
+            0.0, 20.0, 0.0,
+            0.0, 0.0, 20.0;
+    system.set_cell(cell);
+    system.pbc() = {false, false, false};
+
+    system.atomic_numbers()(0) = 14;
+    system.atomic_numbers()(1) = 14;
+    system.atomic_numbers()(2) = 14;
+
+    // Equilateral triangle at short distance - minimal screening effect
+    Scalar r = 2.35;
+    system.position(0) << 10.0, 10.0, 10.0;
+    system.position(1) << 10.0 + r, 10.0, 10.0;
+    system.position(2) << 10.0 + 0.5*r, 10.0 + r*std::sqrt(3.0)/2.0, 10.0;
+
+    Tersoff<true> pot;
+    pot.load_parameters("Tersoff_PRB_39_5566_Si_C");
+
+    NeighborList nl;
+    nl.set_cutoff(pot.cutoff());
+    nl.update(system);
+
+    // Analytical forces
+    system.zero_forces();
+    auto result = pot.compute(system, nl, true, false);
+    Array3X analytical_forces = system.forces();
+
+    // Numerical forces
+    const Scalar dx = 1e-6;
+    Array3X numerical_forces = Array3X::Zero(3, 3);
+
+    for (int atom = 0; atom < 3; ++atom) {
+        for (int dir = 0; dir < 3; ++dir) {
+            system.position(atom)(dir) += dx;
+            system.positions_changed();
+            nl.update(system);
+            auto r_plus = pot.compute(system, nl, false, false);
+
+            system.position(atom)(dir) -= 2 * dx;
+            system.positions_changed();
+            nl.update(system);
+            auto r_minus = pot.compute(system, nl, false, false);
+
+            system.position(atom)(dir) += dx;
+            system.positions_changed();
+
+            numerical_forces(dir, atom) = -(r_plus.energy - r_minus.energy) / (2 * dx);
+        }
+    }
+
+    // Compare - this should match well for unscreened configurations
+    for (int atom = 0; atom < 3; ++atom) {
+        for (int dir = 0; dir < 3; ++dir) {
+            if (std::abs(numerical_forces(dir, atom)) > 1e-8) {
+                REQUIRE_THAT(analytical_forces(dir, atom),
+                            WithinRel(numerical_forces(dir, atom), 1e-4));
+            } else {
+                REQUIRE_THAT(analytical_forces(dir, atom),
+                            WithinAbs(numerical_forces(dir, atom), 1e-8));
+            }
+        }
+    }
+}

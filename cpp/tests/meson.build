@@ -12,6 +12,10 @@ test_sources = files(
   'test_spline.cpp',
   'test_cutoff_functions.cpp',
   'test_tersoff.cpp',
+  'test_eam.cpp',
+  'test_coulomb.cpp',
+  'test_tightbinding.cpp',
+  'test_integrators.cpp',
 )
 
 test_exe = executable('atomistica_cpp_tests',

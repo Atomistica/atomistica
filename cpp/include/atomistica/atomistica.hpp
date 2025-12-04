@@ -41,3 +41,14 @@
 // Bond-order potentials
 #include "potentials/bop/bop_base.hpp"
 #include "potentials/bop/tersoff.hpp"
+
+// Coulomb potentials
+#include "potentials/coulomb/coulomb.hpp"
+#include "potentials/coulomb/pme.hpp"
+#include "potentials/coulomb/fmm.hpp"
+
+// Tight-binding
+#include "tightbinding/tightbinding.hpp"
+
+// Integrators
+#include "integrators/integrators.hpp"

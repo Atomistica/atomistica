@@ -56,13 +56,25 @@ AtomicSystem::AtomicSystem(std::size_t num_atoms) {
 }
 
 void AtomicSystem::resize(std::size_t num_atoms) {
+    std::size_t old_size = num_atoms_;
     num_atoms_ = num_atoms;
-    positions_.resize(3, num_atoms);
-    positions_.setZero();
-    atomic_numbers_.resize(num_atoms);
-    atomic_numbers_.setZero();
-    forces_.resize(3, num_atoms);
-    forces_.setZero();
+
+    // Use conservativeResize to preserve existing data when growing
+    positions_.conservativeResize(3, num_atoms);
+    atomic_numbers_.conservativeResize(num_atoms);
+    masses_.conservativeResize(num_atoms);
+    velocities_.conservativeResize(3, num_atoms);
+    forces_.conservativeResize(3, num_atoms);
+
+    // Initialize new elements to zero/one
+    for (std::size_t i = old_size; i < num_atoms; ++i) {
+        positions_.col(i).setZero();
+        atomic_numbers_[i] = 0;
+        masses_[i] = 1.0;  // Default mass = 1.0
+        velocities_.col(i).setZero();
+        forces_.col(i).setZero();
+    }
+
     properties_.resize(num_atoms);
 }
 
