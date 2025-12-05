@@ -25,6 +25,7 @@
 
 #include <atomistica/atomistica.hpp>
 #include <atomistica/potentials/eam/eam.hpp>
+#include <atomistica/tightbinding/tightbinding.hpp>
 
 namespace py = pybind11;
 using namespace atomistica;
@@ -874,4 +875,176 @@ PYBIND11_MODULE(_atomistica_cpp, m) {
              py::arg("compute_forces") = true,
              py::arg("compute_virial") = true,
              "Compute energy, forces, and virial using FMM");
+
+    // ========================================================================
+    // Tight-Binding / DFTB
+    // ========================================================================
+
+    // TBElementParams
+    py::class_<tb::TBElementParams>(m, "TBElementParams")
+        .def(py::init<>())
+        .def_readwrite("symbol", &tb::TBElementParams::symbol)
+        .def_readwrite("atomic_number", &tb::TBElementParams::atomic_number)
+        .def_readwrite("num_orbitals", &tb::TBElementParams::num_orbitals)
+        .def_readwrite("l_max", &tb::TBElementParams::l_max)
+        .def_readwrite("hubbard_U", &tb::TBElementParams::hubbard_U)
+        .def_readwrite("valence_electrons", &tb::TBElementParams::valence_electrons)
+        .def_property("onsite",
+            [](const tb::TBElementParams& e) {
+                std::vector<Scalar> v(e.onsite.begin(), e.onsite.begin() + e.num_orbitals);
+                return v;
+            },
+            [](tb::TBElementParams& e, const std::vector<Scalar>& v) {
+                for (size_t i = 0; i < v.size() && i < 9; ++i) {
+                    e.onsite[i] = v[i];
+                }
+            })
+        .def("is_s_only", &tb::TBElementParams::is_s_only)
+        .def("is_sp", &tb::TBElementParams::is_sp)
+        .def("is_spd", &tb::TBElementParams::is_spd);
+
+    // Predefined element parameters
+    m.def("carbon_mio", &tb::parameters::carbon_mio, "Carbon parameters for mio-1-1 DFTB");
+    m.def("hydrogen_mio", &tb::parameters::hydrogen_mio, "Hydrogen parameters for mio-1-1 DFTB");
+    m.def("oxygen_mio", &tb::parameters::oxygen_mio, "Oxygen parameters for mio-1-1 DFTB");
+    m.def("nitrogen_mio", &tb::parameters::nitrogen_mio, "Nitrogen parameters for mio-1-1 DFTB");
+
+    // SCCParams
+    py::class_<tb::SCCParams>(m, "SCCParams")
+        .def(py::init<>())
+        .def_readwrite("max_iterations", &tb::SCCParams::max_iterations)
+        .def_readwrite("convergence_threshold", &tb::SCCParams::convergence_threshold)
+        .def_readwrite("mixing_parameter", &tb::SCCParams::mixing_parameter)
+        .def_readwrite("anderson_memory", &tb::SCCParams::anderson_memory)
+        .def_readwrite("enable_dftb3", &tb::SCCParams::enable_dftb3)
+        .def_readwrite("zeta", &tb::SCCParams::zeta);
+
+    // SolverParams
+    py::class_<tb::SolverParams>(m, "SolverParams")
+        .def(py::init<>())
+        .def_readwrite("electronic_temperature", &tb::SolverParams::electronic_temperature)
+        .def_readwrite("use_divide_and_conquer", &tb::SolverParams::use_divide_and_conquer);
+
+    // DenseHamiltonian - for accessing internal data
+    py::class_<tb::DenseHamiltonian>(m, "DenseHamiltonian")
+        .def_readonly("num_atoms", &tb::DenseHamiltonian::num_atoms)
+        .def_readonly("num_orbitals", &tb::DenseHamiltonian::num_orbitals)
+        .def_property_readonly("H", [](const tb::DenseHamiltonian& h) { return h.H; })
+        .def_property_readonly("S", [](const tb::DenseHamiltonian& h) { return h.S; })
+        .def_property_readonly("rho", [](const tb::DenseHamiltonian& h) { return h.rho; })
+        .def_property_readonly("eigenvalues", [](const tb::DenseHamiltonian& h) { return h.eigenvalues; })
+        .def_property_readonly("eigenvectors", [](const tb::DenseHamiltonian& h) { return h.eigenvectors; })
+        .def_property_readonly("occupation", [](const tb::DenseHamiltonian& h) { return h.occupation; })
+        .def_property_readonly("charges", [](const tb::DenseHamiltonian& h) { return h.charges; })
+        .def_readonly("band_energy", &tb::DenseHamiltonian::band_energy)
+        .def_readonly("repulsive_energy", &tb::DenseHamiltonian::repulsive_energy)
+        .def_readonly("fermi_level", &tb::DenseHamiltonian::fermi_level);
+
+    // MaterialsDatabase
+    py::class_<tb::MaterialsDatabase>(m, "MaterialsDatabase")
+        .def(py::init<>())
+        .def("load_skf_directory", &tb::MaterialsDatabase::load_skf_directory,
+             py::arg("path"),
+             "Load SKF files from directory")
+        .def("add_element", &tb::MaterialsDatabase::add_element,
+             py::arg("elem"),
+             "Add element parameters manually")
+        .def("has_element", &tb::MaterialsDatabase::has_element,
+             py::arg("Z"),
+             "Check if element exists in database")
+        .def("get_element", &tb::MaterialsDatabase::get_element,
+             py::arg("Z"),
+             "Get element parameters by atomic number")
+        .def("load_pair", &tb::MaterialsDatabase::load_pair,
+             py::arg("Z1"), py::arg("Z2"),
+             "Load pair parameters from SKF file")
+        .def("get_cutoff", &tb::MaterialsDatabase::get_cutoff,
+             py::arg("Z1"), py::arg("Z2"),
+             "Get cutoff for pair")
+        .def("get_max_cutoff", &tb::MaterialsDatabase::get_max_cutoff,
+             "Get maximum cutoff across all loaded pairs");
+
+    // DFTB potential
+    py::class_<tb::DFTB>(m, "DFTB")
+        .def(py::init<const std::string&, bool>(),
+             py::arg("skf_path") = "",
+             py::arg("enable_scc") = false,
+             "Create DFTB potential with optional SKF path and SCC")
+        .def("name", &tb::DFTB::name,
+             "Get potential name")
+        .def("cutoff", &tb::DFTB::cutoff,
+             "Get cutoff distance")
+        .def("add_element", &tb::DFTB::add_element,
+             py::arg("elem"),
+             "Add element to materials database")
+        .def("load_pair", &tb::DFTB::load_pair,
+             py::arg("Z1"), py::arg("Z2"),
+             "Load pair parameters from SKF file")
+        .def("set_skf_path", &tb::DFTB::set_skf_path,
+             py::arg("path"),
+             "Set SKF directory path")
+        .def("set_scc", &tb::DFTB::set_scc,
+             py::arg("enable"),
+             "Enable/disable SCC")
+        .def("set_scc_params", &tb::DFTB::set_scc_params,
+             py::arg("params"),
+             "Set SCC parameters")
+        .def("set_solver_params", &tb::DFTB::set_solver_params,
+             py::arg("params"),
+             "Set solver parameters")
+        .def("init", &tb::DFTB::init,
+             py::arg("system"),
+             "Initialize potential for atomic system")
+        .def("compute_energy", &tb::DFTB::compute_energy,
+             py::arg("system"), py::arg("neighbors"),
+             "Compute energy only")
+        .def("compute", [](tb::DFTB& dftb, AtomicSystem& system, NeighborList& neighbors,
+                          bool compute_forces, bool compute_virial) {
+                 MatX3 forces;
+                 Scalar energy = dftb.compute(system, neighbors, forces);
+
+                 PotentialResults results;
+                 results.energy = energy;
+
+                 if (compute_forces) {
+                     // Copy forces to system
+                     for (std::size_t i = 0; i < static_cast<std::size_t>(system.num_atoms()); ++i) {
+                         system.forces().col(i) = forces.row(i).transpose();
+                     }
+                 }
+
+                 return results;
+             },
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true,
+             py::arg("compute_virial") = false,
+             "Compute energy and forces")
+        .def_property_readonly("hamiltonian",
+             [](tb::DFTB& dftb) -> const tb::DenseHamiltonian& { return dftb.hamiltonian(); },
+             py::return_value_policy::reference_internal,
+             "Get Hamiltonian data structure")
+        .def_property_readonly("eigenvalues", &tb::DFTB::eigenvalues,
+             "Get eigenvalues")
+        .def_property_readonly("fermi_level", &tb::DFTB::fermi_level,
+             "Get Fermi level")
+        .def_property_readonly("charges", &tb::DFTB::charges,
+             "Get Mulliken charges")
+        .def_property_readonly("band_energy", &tb::DFTB::band_energy,
+             "Get band energy")
+        .def_property_readonly("repulsive_energy", &tb::DFTB::repulsive_energy,
+             "Get repulsive energy")
+        .def_property_readonly("materials",
+             [](tb::DFTB& dftb) -> tb::MaterialsDatabase& { return dftb.materials(); },
+             py::return_value_policy::reference_internal,
+             "Get materials database");
+
+    // Slater-Koster transformation function (for testing/debugging)
+    m.def("sk_transform", &tb::transform_orb,
+          py::arg("a"), py::arg("b"), py::arg("c"), py::arg("sk"),
+          "Transform SK integrals to Cartesian matrix element");
+
+    m.def("sk_transform_derivative", &tb::transform_orb_derivative,
+          py::arg("a"), py::arg("b"), py::arg("c"), py::arg("r"),
+          py::arg("sk"), py::arg("dsk"),
+          "Compute derivative of SK-transformed matrix element");
 }

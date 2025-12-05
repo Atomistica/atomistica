@@ -32,6 +32,7 @@
  * - Hamiltonian construction
  * - Eigenvalue solvers
  * - DFTB potential implementation
+ * - Bond analysis (Loewdin, overlap population, covalent energy)
  */
 
 #include "types.hpp"
@@ -40,3 +41,4 @@
 #include "hamiltonian.hpp"
 #include "solver.hpp"
 #include "dftb.hpp"
+#include "bond_analysis.hpp"
