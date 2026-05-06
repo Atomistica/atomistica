@@ -283,7 +283,7 @@ public:
     // Enable dihedral terms
     bool with_dihedral = false;
 
-private:
+protected:
     void init_cutoffs();
     void init_angular_splines();
     void init_tables();
@@ -1342,5 +1342,297 @@ inline PotentialResults REBO2::compute(
 
     return results;
 }
+
+// =========================================================================
+// REBO2Scr: Screened 2nd-generation REBO potential
+// =========================================================================
+
+/**
+ * @brief Screened REBO2 potential (REBO2+S)
+ *
+ * Adds Pastewka-style bond screening to REBO2.
+ * C-C inner cutoff changes to (1.95, 2.25) Å.
+ * C-C outer (screening) cutoff: (2.179347, 2.819732) Å.
+ * Screening parameters: Cmin=1.0, Cmax=2.0.
+ *
+ * Reference: Pastewka, Pou, Perez, Gumbsch, Moseler, PRB 78, 161402(R) (2008)
+ */
+class REBO2Scr : public REBO2 {
+public:
+    REBO2Scr() = default;
+
+    void load_default_parameters() {
+        // Screened C-C inner cutoff (wider than unscreened)
+        cc_r1 = 1.95;
+        cc_r2 = 2.25;
+        REBO2::load_default_parameters();
+        cc_outer_cutoff_.init(cc_outer_r1_, cc_outer_r2_);
+        scr_initialized_ = true;
+    }
+
+    Scalar cutoff() const { return std::max({cc_outer_r2_, ch_r2, hh_r2}); }
+
+    PotentialResults compute(AtomicSystem& system, NeighborList& neighbors,
+                             bool compute_forces = true,
+                             bool compute_virial = true)
+    {
+        if (!scr_initialized_) load_default_parameters();
+
+        PotentialResults results;
+        const std::size_t n_atoms = system.num_atoms();
+        if (compute_forces) system.zero_forces();
+
+        std::vector<int> el_type(n_atoms);
+        for (std::size_t i = 0; i < n_atoms; ++i) {
+            el_type[i] = element_type(system.atomic_numbers()(i));
+            if (el_type[i] < 0)
+                throw std::runtime_error("REBO2Scr: unsupported element (only C and H)");
+        }
+
+        struct BondInfo {
+            std::size_t j;
+            int ptype;
+            Scalar r;
+            Vec3 dr, unit;
+            Scalar fc, dfc;
+        };
+
+        std::vector<std::vector<BondInfo>> atom_bonds(n_atoms);
+
+        // First pass: build inner-cutoff bonds and coordination numbers
+        std::vector<Scalar> N_C(n_atoms, 0.0), N_H(n_atoms, 0.0);
+
+        for (std::size_t i = 0; i < n_atoms; ++i) {
+            auto [begin, end] = neighbors.neighbors(i);
+            for (auto it = begin; it != end; ++it) {
+                std::size_t j = it->index;
+                Vec3 rij = system.minimum_image(
+                    system.positions().col(j) - system.positions().col(i));
+                Scalar r = rij.norm();
+                int ptype = pair_type(el_type[i], el_type[j]);
+
+                CutoffResult fc;
+                if (ptype == REBO2_C_C)      fc = cc_cutoff_(r);
+                else if (ptype == REBO2_C_H) fc = ch_cutoff_(r);
+                else                         fc = hh_cutoff_(r);
+
+                if (fc.fc > 0.0) {
+                    atom_bonds[i].push_back({j, ptype, r, rij, rij/r, fc.fc, fc.dfc});
+                    if (el_type[j] == REBO2_C) N_C[i] += fc.fc;
+                    else                        N_H[i] += fc.fc;
+                }
+            }
+        }
+
+        // Screening helper: compute S_ij and its derivatives for a bond
+        // Also modifies fc_ij and dfc_ij in-place
+        const Scalar C_dr_cut = Cmax_ * Cmax_ / (4.0 * (Cmax_ - 1.0));
+        const Scalar dC = Cmax_ - Cmin_;
+
+        struct ScreenK {
+            std::size_t k;
+            Scalar dS_drik; // d(S)/d(rik^2) * 2 / rij^2 * S, then * rik → force scale
+            Scalar dS_drjk;
+            Vec3 unit_ik, unit_jk;
+        };
+
+        auto compute_screening = [&](std::size_t i, const BondInfo& bond_ij,
+                                     std::vector<ScreenK>& screen_ks) -> Scalar
+        {
+            Scalar S_log = 0.0;
+            Scalar rij_sq = bond_ij.r * bond_ij.r;
+            bool fully = false;
+
+            // Lambda to check one potential screener k
+            auto check_k = [&](std::size_t k, Scalar r_ik, const Vec3& dr_ik, const Vec3& unit_ik) {
+                if (k == bond_ij.j) return;
+                Scalar rik_sq = r_ik * r_ik;
+                if (rik_sq >= C_dr_cut * rij_sq) return;
+
+                Vec3 dr_jk = dr_ik - bond_ij.dr;
+                Scalar rjk_sq = dr_jk.squaredNorm();
+
+                // Geometric check: k must lie between i and j
+                if (bond_ij.dr.dot(dr_ik) <= dot_threshold_) return;
+                if (bond_ij.dr.dot(dr_jk) >= -dot_threshold_) return;
+
+                Scalar xik = rik_sq / rij_sq;
+                Scalar xjk = rjk_sq / rij_sq;
+                Scalar xdiff = xik - xjk;
+                Scalar denom = 1.0 - xdiff * xdiff;
+                if (std::abs(denom) < 1e-15) return;
+
+                Scalar fac = 1.0 / denom;
+                Scalar C = (2.0 * (xik + xjk) - xdiff * xdiff - 1.0) * fac;
+
+                if (C <= Cmin_) { fully = true; return; }
+                if (C < Cmax_) {
+                    Scalar Cmax_C = Cmax_ - C;
+                    Scalar C_Cmin = C - Cmin_;
+                    Scalar ratio = Cmax_C / C_Cmin;
+                    S_log -= ratio * ratio;
+
+                    Scalar dCdxik = 4.0 * xik * fac * (1.0 + (C - 1.0) * xdiff);
+                    Scalar dCdxjk = 4.0 * xjk * fac * (1.0 - (C - 1.0) * xdiff);
+                    Scalar dSdC = 2.0 * Cmax_C / (dC * C_Cmin * C_Cmin);
+                    Scalar rjk = std::sqrt(rjk_sq);
+                    Vec3 unit_jk = rjk > 1e-10 ? Vec3(dr_jk / rjk) : Vec3::Zero();
+
+                    screen_ks.push_back({k,
+                        dSdC * dCdxik * 2.0 / rij_sq,
+                        dSdC * dCdxjk * 2.0 / rij_sq,
+                        unit_ik, unit_jk});
+                }
+            };
+
+            // Inner-cutoff neighbors screen this bond
+            for (const auto& b : atom_bonds[i]) check_k(b.j, b.r, b.dr, b.unit);
+            // Outer CC bonds (beyond inner cutoff but within screening range)
+            auto [nb_begin, nb_end] = neighbors.neighbors(i);
+            for (auto it = nb_begin; it != nb_end; ++it) {
+                std::size_t k = it->index;
+                if (pair_type(el_type[i], el_type[k]) != REBO2_C_C) continue;
+                Vec3 dr_ik = system.minimum_image(
+                    system.positions().col(k) - system.positions().col(i));
+                Scalar r_ik = dr_ik.norm();
+                if (r_ik < cc_cutoff_.cutoff() || r_ik >= cc_outer_r2_) continue;
+                check_k(k, r_ik, dr_ik, dr_ik / r_ik);
+                if (fully) break;
+            }
+
+            if (fully || S_log < screening_threshold_) return 0.0;
+
+            Scalar S = std::exp(S_log);
+            for (auto& sk : screen_ks) {
+                sk.dS_drik *= S;
+                sk.dS_drjk *= S;
+            }
+            return S;
+        };
+
+        // Second pass: energy and forces with screening
+        for (std::size_t i = 0; i < n_atoms; ++i) {
+            Scalar N_i = N_C[i] + N_H[i];
+
+            for (const auto& bond_ij : atom_bonds[i]) {
+                std::size_t j = bond_ij.j;
+                if (j <= i) continue;
+
+                Scalar r_ij = bond_ij.r;
+                int ptype_ij = bond_ij.ptype;
+                Scalar fc_ij = bond_ij.fc;
+                Scalar dfc_ij = bond_ij.dfc;
+                Scalar N_j = N_C[j] + N_H[j];
+
+                auto [VR, dVR] = repulsive(ptype_ij, r_ij);
+                auto [VA, dVA] = attractive(ptype_ij, r_ij);
+
+                // Bond order (same as REBO2)
+                Scalar z_ij = 0.0;
+                for (const auto& bond_ik : atom_bonds[i]) {
+                    if (bond_ik.j == j) continue;
+                    auto [g, dg_dcos, dg_dN] = angular_function(
+                        el_type[i], bond_ij.unit.dot(bond_ik.unit), N_i);
+                    auto [h, dh] = distance_weight(ptype_ij, bond_ik.ptype,
+                                                    r_ij - bond_ik.r);
+                    z_ij += bond_ik.fc * g * h;
+                }
+
+                Scalar z_ji = 0.0;
+                for (const auto& bond_jl : atom_bonds[j]) {
+                    if (bond_jl.j == i) continue;
+                    auto [g, dg_dcos, dg_dN] = angular_function(
+                        el_type[j], (-bond_ij.unit).dot(bond_jl.unit), N_j);
+                    auto [h, dh] = distance_weight(ptype_ij, bond_jl.ptype,
+                                                    r_ij - bond_jl.r);
+                    z_ji += bond_jl.fc * g * h;
+                }
+
+                auto [b_ij, db_ij] = bond_order_func(el_type[i], z_ij);
+                auto [b_ji, db_ji] = bond_order_func(el_type[j], z_ji);
+                Scalar b_avg = 0.5 * (b_ij + b_ji);
+
+                if (Pcc_.is_valid() && Pch_.is_valid()) {
+                    Scalar P_ij = 0.0, P_ji = 0.0;
+                    if (ptype_ij == REBO2_C_C) {
+                        auto [p,  dp1, dp2] = Pcc_.eval(N_C[i] - fc_ij, N_H[i]);
+                        auto [pj, dp3, dp4] = Pcc_.eval(N_C[j] - fc_ij, N_H[j]);
+                        P_ij = p; P_ji = pj;
+                    } else if (ptype_ij == REBO2_C_H) {
+                        if (el_type[i] == REBO2_C) {
+                            auto [p, dp1, dp2] = Pch_.eval(N_C[i], N_H[i] - fc_ij);
+                            P_ij = p;
+                        }
+                        if (el_type[j] == REBO2_C) {
+                            auto [p, dp1, dp2] = Pch_.eval(N_C[j], N_H[j] - fc_ij);
+                            P_ji = p;
+                        }
+                    }
+                    b_avg += 0.5 * (P_ij + P_ji);
+                }
+
+                // Compute screening
+                std::vector<ScreenK> screen_ks;
+                Scalar S_ij = compute_screening(i, bond_ij, screen_ks);
+
+                if (S_ij < 1e-15) continue;
+
+                Scalar E0_pair = fc_ij * (VR + b_avg * VA);
+                Scalar E_pair  = S_ij * E0_pair;
+                results.energy += E_pair;
+
+                if (compute_forces || compute_virial) {
+                    Scalar dE_dr = S_ij * (dfc_ij * (VR + b_avg * VA) +
+                                           fc_ij * (dVR + b_avg * dVA));
+
+                    Vec3 fij = dE_dr * bond_ij.unit;
+                    if (compute_forces) {
+                        system.forces().col(i) += fij.array();
+                        system.forces().col(j) -= fij.array();
+                    }
+                    if (compute_virial)
+                        results.virial += bond_ij.dr * fij.transpose();
+
+                    // Screening force contributions
+                    for (const auto& sk : screen_ks) {
+                        Scalar dS_drik = sk.dS_drik;
+                        Scalar dS_drjk = sk.dS_drjk;
+
+                        // Force from r_ik dependence
+                        Vec3 f_ik = E0_pair * dS_drik * sk.unit_ik;
+                        Vec3 f_jk = E0_pair * dS_drjk * sk.unit_jk;
+
+                        if (compute_forces) {
+                            system.forces().col(i)    -= f_ik.array();
+                            system.forces().col(sk.k) += f_ik.array();
+                            system.forces().col(j)    -= f_jk.array();
+                            system.forces().col(sk.k) += f_jk.array();
+                        }
+
+                        if (compute_virial) {
+                            results.virial += bond_ij.dr * f_jk.transpose();
+                        }
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+private:
+    bool scr_initialized_ = false;
+
+    // Outer C-C cutoff for screening
+    Scalar cc_outer_r1_ = 2.179347;
+    Scalar cc_outer_r2_ = 2.819732;
+    TrigOffCutoff cc_outer_cutoff_;
+
+    // Screening parameters
+    Scalar Cmin_ = 1.0;
+    Scalar Cmax_ = 2.0;
+    Scalar dot_threshold_ = 1e-10;
+    Scalar screening_threshold_ = std::log(1e-6);
+};
 
 } // namespace atomistica

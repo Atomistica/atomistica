@@ -37,12 +37,14 @@
 
 // Pair potentials
 #include "potentials/pair/lj.hpp"
+#include "potentials/pair/simple_pairs.hpp"
 
 // Bond-order potentials
 #include "potentials/bop/bop_base.hpp"
 #include "potentials/bop/tersoff.hpp"
 #include "potentials/bop/brenner.hpp"
 #include "potentials/bop/kumagai.hpp"
+#include "potentials/bop/juslin.hpp"
 #include "potentials/bop/rebo2.hpp"
 
 // Coulomb potentials

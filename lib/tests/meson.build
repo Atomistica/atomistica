@@ -14,11 +14,13 @@ test_sources = files(
   'test_tersoff.cpp',
   'test_brenner.cpp',
   'test_kumagai.cpp',
+  'test_juslin.cpp',
   'test_rebo2.cpp',
   'test_eam.cpp',
   'test_coulomb.cpp',
   'test_tightbinding.cpp',
   'test_integrators.cpp',
+  'test_simple_pairs.cpp',
 )
 
 test_exe = executable('atomistica_cpp_tests',

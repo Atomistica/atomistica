@@ -41,6 +41,12 @@ core_sources = files(
   'src/math/spline.cpp',
   'src/math/cutoff_functions.cpp',
   'src/potentials/pair/lj.cpp',
+  'src/tightbinding/anderson_mixer.cpp',
+  'src/tightbinding/bond_analysis.cpp',
+  'src/tightbinding/dftb.cpp',
+  'src/tightbinding/hamiltonian.cpp',
+  'src/tightbinding/materials.cpp',
+  'src/tightbinding/solver.cpp',
 )
 
 # Build the core library

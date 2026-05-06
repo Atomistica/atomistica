@@ -25,6 +25,8 @@
 
 #include <atomistica/atomistica.hpp>
 #include <atomistica/potentials/eam/eam.hpp>
+#include <atomistica/potentials/bop/juslin.hpp>
+#include <atomistica/potentials/pair/simple_pairs.hpp>
 #include <atomistica/tightbinding/tightbinding.hpp>
 
 namespace py = pybind11;
@@ -1047,4 +1049,145 @@ PYBIND11_MODULE(_atomistica_cpp, m) {
           py::arg("a"), py::arg("b"), py::arg("c"), py::arg("r"),
           py::arg("sk"), py::arg("dsk"),
           "Compute derivative of SK-transformed matrix element");
+
+    // =========================================================================
+    // Juslin Potential
+    // =========================================================================
+
+    // Juslin (non-screened)
+    py::class_<Juslin<false>>(m, "Juslin")
+        .def(py::init<>())
+        .def("add_element", &Juslin<false>::add_element,
+             py::arg("Z"), py::arg("params") = BrennerElementParams{})
+        .def("set_pair_params", &Juslin<false>::set_pair_params,
+             py::arg("Z1"), py::arg("Z2"), py::arg("params"))
+        .def("set_triplet_params", &Juslin<false>::set_triplet_params,
+             py::arg("eli"), py::arg("elj"), py::arg("elk"),
+             py::arg("alpha"), py::arg("omega"), py::arg("m"))
+        .def("load_parameters", &Juslin<false>::load_parameters,
+             py::arg("name"), "Load built-in parameter set by name")
+        .def("cutoff", &Juslin<false>::cutoff)
+        .def("num_elements", &Juslin<false>::num_elements)
+        .def("element_index", &Juslin<false>::element_index, py::arg("Z"))
+        .def("pair_type", &Juslin<false>::pair_type, py::arg("eli"), py::arg("elj"))
+        .def("compute", &Juslin<false>::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true, py::arg("compute_virial") = true);
+
+    // Screened Juslin
+    py::class_<Juslin<true>>(m, "JuslinScr")
+        .def(py::init<>())
+        .def("add_element", &Juslin<true>::add_element,
+             py::arg("Z"), py::arg("params") = BrennerElementParams{})
+        .def("set_pair_params", &Juslin<true>::set_pair_params,
+             py::arg("Z1"), py::arg("Z2"), py::arg("params"))
+        .def("set_triplet_params", &Juslin<true>::set_triplet_params,
+             py::arg("eli"), py::arg("elj"), py::arg("elk"),
+             py::arg("alpha"), py::arg("omega"), py::arg("m"))
+        .def("load_parameters", &Juslin<true>::load_parameters,
+             py::arg("name"), "Load built-in parameter set by name")
+        .def("cutoff", &Juslin<true>::cutoff)
+        .def("num_elements", &Juslin<true>::num_elements)
+        .def("element_index", &Juslin<true>::element_index, py::arg("Z"))
+        .def("pair_type", &Juslin<true>::pair_type, py::arg("eli"), py::arg("elj"))
+        .def("compute", &Juslin<true>::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true, py::arg("compute_virial") = true);
+
+    m.def("available_juslin_parameters", []() {
+        return std::vector<std::string>{"Juslin_JAP_98_123520_WCH"};
+    });
+
+    // =========================================================================
+    // REBO2Scr
+    // =========================================================================
+
+    py::class_<REBO2Scr>(m, "REBO2Scr")
+        .def(py::init<>())
+        .def("load_default_parameters", &REBO2Scr::load_default_parameters)
+        .def("cutoff", &REBO2Scr::cutoff)
+        .def("element_type", &REBO2Scr::element_type, py::arg("Z"))
+        .def_static("pair_type", &REBO2Scr::pair_type, py::arg("eli"), py::arg("elj"))
+        .def("repulsive", [](const REBO2Scr& pot, int ptype, Scalar r) {
+            auto [val, deriv] = pot.repulsive(ptype, r);
+            return std::make_pair(val, deriv);
+        }, py::arg("ptype"), py::arg("r"))
+        .def("attractive", [](const REBO2Scr& pot, int ptype, Scalar r) {
+            auto [val, deriv] = pot.attractive(ptype, r);
+            return std::make_pair(val, deriv);
+        }, py::arg("ptype"), py::arg("r"))
+        .def("compute", &REBO2Scr::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true, py::arg("compute_virial") = true);
+
+    // =========================================================================
+    // Simple pair potentials
+    // =========================================================================
+
+    py::class_<BornMayer>(m, "BornMayer")
+        .def(py::init<>())
+        .def(py::init<Scalar, Scalar, Scalar, int, int>(),
+             py::arg("A"), py::arg("rho"), py::arg("cutoff"),
+             py::arg("Z1") = 0, py::arg("Z2") = 0)
+        .def_readwrite("A", &BornMayer::A)
+        .def_readwrite("rho", &BornMayer::rho)
+        .def_readwrite("cutoff_radius", &BornMayer::cutoff_radius)
+        .def_readwrite("Z1", &BornMayer::Z1)
+        .def_readwrite("Z2", &BornMayer::Z2)
+        .def("cutoff", &BornMayer::cutoff)
+        .def("bind_to", &BornMayer::bind_to)
+        .def("compute", &BornMayer::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true, py::arg("compute_virial") = true);
+
+    py::class_<Harmonic>(m, "Harmonic")
+        .def(py::init<>())
+        .def(py::init<Scalar, Scalar, Scalar, bool, int, int>(),
+             py::arg("k"), py::arg("r0"), py::arg("cutoff"),
+             py::arg("shift") = false, py::arg("Z1") = 0, py::arg("Z2") = 0)
+        .def_readwrite("k", &Harmonic::k)
+        .def_readwrite("r0", &Harmonic::r0)
+        .def_readwrite("cutoff_radius", &Harmonic::cutoff_radius)
+        .def_readwrite("shift", &Harmonic::shift)
+        .def_readwrite("Z1", &Harmonic::Z1)
+        .def_readwrite("Z2", &Harmonic::Z2)
+        .def("cutoff", &Harmonic::cutoff)
+        .def("bind_to", &Harmonic::bind_to)
+        .def("compute", &Harmonic::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true, py::arg("compute_virial") = true);
+
+    py::class_<DoubleHarmonic>(m, "DoubleHarmonic")
+        .def(py::init<>())
+        .def(py::init<Scalar, Scalar, Scalar, Scalar, Scalar, int, int>(),
+             py::arg("k1"), py::arg("r1"), py::arg("k2"), py::arg("r2"),
+             py::arg("cutoff"), py::arg("Z1") = 0, py::arg("Z2") = 0)
+        .def_readwrite("k1", &DoubleHarmonic::k1)
+        .def_readwrite("r1", &DoubleHarmonic::r1)
+        .def_readwrite("k2", &DoubleHarmonic::k2)
+        .def_readwrite("r2", &DoubleHarmonic::r2)
+        .def_readwrite("cutoff_radius", &DoubleHarmonic::cutoff_radius)
+        .def_readwrite("Z1", &DoubleHarmonic::Z1)
+        .def_readwrite("Z2", &DoubleHarmonic::Z2)
+        .def("cutoff", &DoubleHarmonic::cutoff)
+        .def("bind_to", &DoubleHarmonic::bind_to)
+        .def("compute", &DoubleHarmonic::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true, py::arg("compute_virial") = true);
+
+    py::class_<R6>(m, "R6")
+        .def(py::init<>())
+        .def(py::init<Scalar, Scalar, Scalar, int, int>(),
+             py::arg("A"), py::arg("r0"), py::arg("cutoff"),
+             py::arg("Z1") = 0, py::arg("Z2") = 0)
+        .def_readwrite("A", &R6::A)
+        .def_readwrite("r0", &R6::r0)
+        .def_readwrite("cutoff_radius", &R6::cutoff_radius)
+        .def_readwrite("Z1", &R6::Z1)
+        .def_readwrite("Z2", &R6::Z2)
+        .def("cutoff", &R6::cutoff)
+        .def("bind_to", &R6::bind_to)
+        .def("compute", &R6::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true, py::arg("compute_virial") = true);
 }
