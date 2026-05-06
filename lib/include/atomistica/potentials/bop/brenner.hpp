@@ -822,6 +822,78 @@ inline void load_kioseoglou_pssb_245_1118_aln(Brenner<Scr>& pot) {
     pot.set_pair_params(13, 13, al_al);
 }
 
+// ============================================================================
+// Brenner original C potentials (PRB 42, 9458, 1990)
+// ============================================================================
+
+/**
+ * @brief Brenner original C potential, parameter set I
+ *
+ * D. Brenner, Phys. Rev. B 42, 9458 (1990) - potential I
+ * n = 1/(2*0.80469) ≈ 0.62135
+ */
+template<bool Scr>
+inline void load_brenner_prb_42_9458_c_i(Brenner<Scr>& pot) {
+    pot.add_element(6);  // C -> index 0
+
+    BrennerPairParams cc;
+    cc.D0    = 6.325;
+    cc.r0    = 1.315;
+    cc.S     = 1.29;
+    cc.beta  = 1.5;
+    cc.gamma = 0.011304;
+    cc.c     = 19.0;
+    cc.d     = 2.5;
+    cc.h     = 1.0;
+    cc.mu    = 0.0;
+    cc.n     = 1.0 / (2.0 * 0.80469);  // ≈ 0.62135
+    cc.m     = 1;
+    cc.r1    = 1.70;
+    cc.r2    = 2.00;
+    if constexpr (Scr) {
+        cc.screening.cut_in_l  = 1.70; cc.screening.cut_in_h  = 2.00;
+        cc.screening.cut_out_l = 1.70; cc.screening.cut_out_h = 4.00;
+        cc.screening.cut_bo_l  = 1.70; cc.screening.cut_bo_h  = 4.00;
+        cc.screening.Cmin = 1.0; cc.screening.Cmax = 3.0;
+        cc.screening.precompute();
+    }
+    pot.set_pair_params(6, 6, cc);
+}
+
+/**
+ * @brief Brenner original C potential, parameter set II
+ *
+ * D. Brenner, Phys. Rev. B 42, 9458 (1990) - potential II
+ * n = 1/(2*0.5) = 1.0  (same C-C as Erhart SiC C-C component)
+ */
+template<bool Scr>
+inline void load_brenner_prb_42_9458_c_ii(Brenner<Scr>& pot) {
+    pot.add_element(6);  // C -> index 0
+
+    BrennerPairParams cc;
+    cc.D0    = 6.0;
+    cc.r0    = 1.39;
+    cc.S     = 1.22;
+    cc.beta  = 2.1;
+    cc.gamma = 0.00020813;
+    cc.c     = 330.0;
+    cc.d     = 3.5;
+    cc.h     = 1.0;
+    cc.mu    = 0.0;
+    cc.n     = 1.0 / (2.0 * 0.5);  // = 1.0
+    cc.m     = 1;
+    cc.r1    = 1.70;
+    cc.r2    = 2.00;
+    if constexpr (Scr) {
+        cc.screening.cut_in_l  = 1.70; cc.screening.cut_in_h  = 2.00;
+        cc.screening.cut_out_l = 1.70; cc.screening.cut_out_h = 4.00;
+        cc.screening.cut_bo_l  = 1.70; cc.screening.cut_bo_h  = 4.00;
+        cc.screening.Cmin = 1.0; cc.screening.Cmax = 3.0;
+        cc.screening.precompute();
+    }
+    pot.set_pair_params(6, 6, cc);
+}
+
 template<bool Screening>
 void Brenner<Screening>::load_parameters(const std::string& name) {
     if (name == "Erhart_PRB_71_035211_SiC") {
@@ -832,6 +904,10 @@ void Brenner<Screening>::load_parameters(const std::string& name) {
         load_henriksson_prb_79_144107_fec(*this);
     } else if (name == "Kioseoglou_PSSb_245_1118_AlN") {
         load_kioseoglou_pssb_245_1118_aln(*this);
+    } else if (name == "Brenner_PRB_42_9458_C_I") {
+        load_brenner_prb_42_9458_c_i(*this);
+    } else if (name == "Brenner_PRB_42_9458_C_II") {
+        load_brenner_prb_42_9458_c_ii(*this);
     } else {
         throw std::runtime_error("Unknown parameter set: " + name);
     }

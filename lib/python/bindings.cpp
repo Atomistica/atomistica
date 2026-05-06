@@ -318,7 +318,12 @@ PYBIND11_MODULE(_atomistica_cpp, m) {
 
     // Available parameter sets
     m.def("available_tersoff_parameters", []() {
-        return std::vector<std::string>{"Tersoff_PRB_39_5566_Si_C"};
+        return std::vector<std::string>{
+            "Tersoff_PRB_39_5566_Si_C",
+            "Goumri_Said_ChemPhys_302_135_Al_N",
+            "Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N",
+            "Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr",
+        };
     }, "List available built-in Tersoff parameter sets");
 
     // =========================================================================
@@ -432,7 +437,9 @@ PYBIND11_MODULE(_atomistica_cpp, m) {
             "Erhart_PRB_71_035211_SiC",
             "Albe_PRB_65_195124_PtC",
             "Henriksson_PRB_79_144107_FeC",
-            "Kioseoglou_PSSb_245_1118_AlN"
+            "Kioseoglou_PSSb_245_1118_AlN",
+            "Brenner_PRB_42_9458_C_I",
+            "Brenner_PRB_42_9458_C_II",
         };
     }, "List available built-in Brenner parameter sets");
 

@@ -635,3 +635,123 @@ TEST_CASE("Screened Tersoff numerical force test (off-axis screener)", "[Tersoff
         }
     }
 }
+
+// ============================================================================
+// Phase 2: Goumri-Said and Matsunaga parameter set tests
+// ============================================================================
+
+TEST_CASE("Tersoff Phase 2 parameter loading", "[Tersoff][Phase2]") {
+    SECTION("Goumri-Said Al-N") {
+        Tersoff<false> pot;
+        pot.load_parameters("Goumri_Said_ChemPhys_302_135_Al_N");
+        REQUIRE(pot.element_index(13) == 0);  // Al
+        REQUIRE(pot.element_index(7) == 1);   // N
+        REQUIRE(pot.element_index(14) == -1); // Si not defined
+        REQUIRE(pot.num_elements() == 2);
+        REQUIRE(pot.cutoff() > 2.0);
+    }
+
+    SECTION("Matsunaga B-C-N") {
+        Tersoff<false> pot;
+        pot.load_parameters("Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N");
+        REQUIRE(pot.element_index(6) == 0);  // C
+        REQUIRE(pot.element_index(7) == 1);  // N
+        REQUIRE(pot.element_index(5) == 2);  // B
+        REQUIRE(pot.num_elements() == 3);
+        REQUIRE(pot.cutoff() > 1.5);
+    }
+
+    SECTION("Matsunaga B-C-N screened") {
+        Tersoff<true> pot;
+        pot.load_parameters("Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr");
+        REQUIRE(pot.element_index(6) == 0);
+        REQUIRE(pot.element_index(7) == 1);
+        REQUIRE(pot.element_index(5) == 2);
+        REQUIRE(pot.num_elements() == 3);
+    }
+
+    SECTION("Matsunaga__Scr on non-screened throws") {
+        Tersoff<false> pot;
+        REQUIRE_THROWS(pot.load_parameters(
+            "Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr"));
+    }
+}
+
+// Helper: build a heteroatom dimer
+static AtomicSystem make_hetero_dimer(int Z1, int Z2, Scalar r = 2.0) {
+    AtomicSystem sys(2);
+    Mat3 cell = Mat3::Identity() * 20.0;
+    sys.set_cell(cell);
+    sys.pbc() = {false, false, false};
+    sys.positions().col(0) << 10.0, 10.0, 10.0;
+    sys.positions().col(1) << 10.0 + r, 10.0, 10.0;
+    sys.atomic_numbers()(0) = Z1;
+    sys.atomic_numbers()(1) = Z2;
+    return sys;
+}
+
+TEST_CASE("Tersoff Phase 2 force-energy consistency", "[Tersoff][Phase2]") {
+    using Catch::Matchers::WithinRel;
+    using Catch::Matchers::WithinAbs;
+    const Scalar dx = 1e-5;
+    const Scalar tol = 1e-3;
+
+    auto test_dimer = [&](auto& pot, int Z1, int Z2, Scalar r) {
+        auto sys = make_hetero_dimer(Z1, Z2, r);
+        NeighborList nl;
+        nl.set_cutoff(pot.cutoff() + 0.5);
+        nl.update(sys);
+
+        auto res = pot.compute(sys, nl, true, false);
+        REQUIRE(std::isfinite(res.energy));
+        Scalar fx_ana = static_cast<Scalar>(sys.forces()(0, 0));
+
+        sys.positions()(0, 0) += dx; sys.positions_changed(); nl.update(sys);
+        Scalar Ep = pot.compute(sys, nl, false, false).energy;
+        sys.positions()(0, 0) -= 2*dx; sys.positions_changed(); nl.update(sys);
+        Scalar Em = pot.compute(sys, nl, false, false).energy;
+
+        Scalar fx_num = -(Ep - Em) / (2*dx);
+        if (std::abs(fx_num) > 1e-8) {
+            REQUIRE_THAT(fx_ana, WithinRel(fx_num, tol));
+        } else {
+            REQUIRE_THAT(fx_ana, WithinAbs(fx_num, 1e-8));
+        }
+    };
+
+    SECTION("Goumri-Said Al dimer") {
+        Tersoff<false> pot;
+        pot.load_parameters("Goumri_Said_ChemPhys_302_135_Al_N");
+        test_dimer(pot, 13, 13, 2.8);  // Al-Al at ~r1
+    }
+
+    SECTION("Goumri-Said Al-N dimer") {
+        Tersoff<false> pot;
+        pot.load_parameters("Goumri_Said_ChemPhys_302_135_Al_N");
+        test_dimer(pot, 13, 7, 2.0);  // Al-N
+    }
+
+    SECTION("Matsunaga C-C dimer") {
+        Tersoff<false> pot;
+        pot.load_parameters("Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N");
+        test_dimer(pot, 6, 6, 1.9);  // C-C
+    }
+
+    SECTION("Matsunaga C-N dimer") {
+        Tersoff<false> pot;
+        pot.load_parameters("Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N");
+        test_dimer(pot, 6, 7, 1.95);  // C-N
+    }
+
+    SECTION("Matsunaga C-B dimer") {
+        Tersoff<false> pot;
+        pot.load_parameters("Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N");
+        test_dimer(pot, 6, 5, 1.85);  // C-B
+    }
+
+    SECTION("Matsunaga Scr C-C dimer") {
+        Tersoff<true> pot;
+        pot.load_parameters("Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr");
+        test_dimer(pot, 6, 6, 2.2);  // C-C within inner cutoff
+    }
+}

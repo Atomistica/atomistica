@@ -644,3 +644,68 @@ TEST_CASE("Screened Brenner numerical force test (linear config with screening)"
         }
     }
 }
+
+// ============================================================================
+// Phase 2: Brenner_PRB_42 parameter set tests
+// ============================================================================
+
+TEST_CASE("Brenner PRB42 parameter loading", "[Brenner][Phase2]") {
+    SECTION("Load Brenner_PRB_42_9458_C_I") {
+        Brenner<false> pot;
+        pot.load_parameters("Brenner_PRB_42_9458_C_I");
+        REQUIRE(pot.element_index(6) == 0);  // C only
+        REQUIRE(pot.num_elements() == 1);
+        REQUIRE(pot.cutoff() > 1.5);
+    }
+
+    SECTION("Load Brenner_PRB_42_9458_C_II") {
+        Brenner<false> pot;
+        pot.load_parameters("Brenner_PRB_42_9458_C_II");
+        REQUIRE(pot.element_index(6) == 0);
+        REQUIRE(pot.num_elements() == 1);
+        REQUIRE(pot.cutoff() > 1.5);
+    }
+}
+
+TEST_CASE("Brenner PRB42 force-energy consistency", "[Brenner][Phase2]") {
+    const Scalar dx = 1e-5;
+    const Scalar tol = 1e-3;
+
+    auto test_pot = [&](const std::string& name) {
+        Brenner<false> pot;
+        pot.load_parameters(name);
+
+        // Build C dimer
+        AtomicSystem sys(2);
+        Mat3 cell = Mat3::Identity() * 20.0;
+        sys.set_cell(cell);
+        sys.pbc() = {false, false, false};
+        sys.positions().col(0) << 10.0, 10.0, 10.0;
+        sys.positions().col(1) << 11.5, 10.0, 10.0;
+        sys.atomic_numbers()(0) = 6;
+        sys.atomic_numbers()(1) = 6;
+
+        NeighborList nl;
+        nl.set_cutoff(pot.cutoff() + 0.5);
+        nl.update(sys);
+
+        auto res = pot.compute(sys, nl, true, false);
+        REQUIRE(std::isfinite(res.energy));
+        Scalar fx0_ana = static_cast<Scalar>(sys.forces()(0, 0));
+
+        // Numerical force on atom 0, direction x
+        sys.positions()(0, 0) += dx;
+        sys.positions_changed(); nl.update(sys);
+        Scalar Ep = pot.compute(sys, nl, false, false).energy;
+
+        sys.positions()(0, 0) -= 2*dx;
+        sys.positions_changed(); nl.update(sys);
+        Scalar Em = pot.compute(sys, nl, false, false).energy;
+
+        Scalar fx0_num = -(Ep - Em) / (2*dx);
+        REQUIRE_THAT(fx0_ana, WithinRel(fx0_num, tol));
+    };
+
+    SECTION("Brenner_PRB_42_9458_C_I") { test_pot("Brenner_PRB_42_9458_C_I"); }
+    SECTION("Brenner_PRB_42_9458_C_II") { test_pot("Brenner_PRB_42_9458_C_II"); }
+}
