@@ -187,7 +187,7 @@ public:
                     if (compute_virial) {
                         // Virial: W_ab = sum_{i,j} r_ij,a * f_i,b / 2
                         // Full neighbor list: halve contribution
-                        results.virial += 0.5 * dr * force.transpose();
+                        results.virial -= 0.5 * dr * force.transpose();
                     }
                 }
             }

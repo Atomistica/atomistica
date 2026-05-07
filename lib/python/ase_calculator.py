@@ -222,11 +222,14 @@ class Atomistica(Calculator):
             volume = atoms.get_volume()
             virial = np.array(results.virial)
             # Voigt notation: xx, yy, zz, yz, xz, xy
+            # stress = virial / volume
+            # Convention: BOPKernel stores virial = -W (W = standard r×F sum),
+            # so stress = virial/V = -W/V matches dE/d_eps / V.
             self.results['stress'] = np.array([
-                -virial[0, 0] / volume,
-                -virial[1, 1] / volume,
-                -virial[2, 2] / volume,
-                -virial[1, 2] / volume,
-                -virial[0, 2] / volume,
-                -virial[0, 1] / volume,
+                virial[0, 0] / volume,
+                virial[1, 1] / volume,
+                virial[2, 2] / volume,
+                virial[1, 2] / volume,
+                virial[0, 2] / volume,
+                virial[0, 1] / volume,
             ])

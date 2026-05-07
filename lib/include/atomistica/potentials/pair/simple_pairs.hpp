@@ -113,7 +113,7 @@ public:
                     }
 
                     if (compute_virial) {
-                        results.virial += dr * f.transpose();
+                        results.virial -= dr * f.transpose();
                     }
                 }
             }
@@ -196,7 +196,7 @@ public:
                     }
 
                     if (compute_virial) {
-                        results.virial += dr * f.transpose();
+                        results.virial -= dr * f.transpose();
                     }
                 }
             }
@@ -290,7 +290,7 @@ public:
                     }
 
                     if (compute_virial) {
-                        results.virial += dr * f.transpose();
+                        results.virial -= dr * f.transpose();
                     }
                 }
             }
@@ -371,7 +371,7 @@ public:
                     }
 
                     if (compute_virial) {
-                        results.virial += dr * f.transpose();
+                        results.virial -= dr * f.transpose();
                     }
                 }
             }

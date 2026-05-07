@@ -213,7 +213,11 @@ TEST_CASE("TabulatedEAM numerical force test", "[eam]") {
             Scalar force_num = -(r_plus.energy - r_minus.energy) / (2 * dx);
 
             // Compare with analytical
-            CHECK_THAT(analytical_forces(d, i), WithinRel(force_num, 1e-4));
+            if (std::abs(force_num) > 1e-6) {
+                CHECK_THAT(analytical_forces(d, i), WithinRel(force_num, 1e-4));
+            } else {
+                CHECK_THAT(analytical_forces(d, i), WithinAbs(force_num, 1e-6));
+            }
         }
     }
 }
@@ -340,7 +344,11 @@ TEST_CASE("TabulatedAlloyEAM numerical force test", "[eam][alloy]") {
             Scalar force_num = -(r_plus.energy - r_minus.energy) / (2 * dx);
 
             // Compare with analytical
-            CHECK_THAT(analytical_forces(d, i), WithinRel(force_num, 1e-4));
+            if (std::abs(force_num) > 1e-6) {
+                CHECK_THAT(analytical_forces(d, i), WithinRel(force_num, 1e-4));
+            } else {
+                CHECK_THAT(analytical_forces(d, i), WithinAbs(force_num, 1e-6));
+            }
         }
     }
 }

@@ -272,10 +272,12 @@ inline void TabulatedEAM::load(const std::string& filename) {
     embedding_.init(0.0, static_cast<Scalar>(nF - 1) * dF, F_values);
 
     // Read Z(r) values and apply scaling
-    // In Fortran: scale_y_axis(fZ, sqrt(0.5*Hartree*Bohr))
+    // The funcfl format stores Z(r) in sqrt(Hartree*Bohr) units.
+    // Pair potential: phi(r) = Z_i(r)*Z_j(r)/r in Hartree-Bohr units.
+    // Converting to eV/Å: phi_eV = Z_file^2 * Hartree * Bohr / r_Å
+    // So Z_scaled = Z_file * sqrt(Hartree * Bohr).
     // Hartree = 27.2114 eV, Bohr = 0.529177 Å
-    // sqrt(0.5 * 27.2114 * 0.529177) ≈ 2.68
-    const Scalar Z_scale = std::sqrt(0.5 * 27.2114 * 0.529177);
+    const Scalar Z_scale = std::sqrt(27.2114 * 0.529177);
     std::vector<Scalar> Z_values(nr);
     for (int i = 0; i < nr; ++i) {
         file >> Z_values[i];
@@ -404,7 +406,7 @@ inline PotentialResults TabulatedEAM::compute_impl(
 
                     if (compute_virial) {
                         // Halve virial because pairs are counted twice
-                        results.virial += 0.5 * dr * force.transpose();
+                        results.virial -= 0.5 * dr * force.transpose();
                     }
                 }
             }
@@ -648,7 +650,7 @@ inline PotentialResults TabulatedAlloyEAM::compute_impl(
 
                     if (compute_virial) {
                         // Halve virial because pairs are counted twice
-                        results.virial += 0.5 * dr * force.transpose();
+                        results.virial -= 0.5 * dr * force.transpose();
                     }
                 }
             }

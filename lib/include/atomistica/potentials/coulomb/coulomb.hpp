@@ -309,8 +309,8 @@ inline PotentialResults DirectCoulomb::compute_impl(
                 }
 
                 if (compute_virial) {
-                    // Virial: -r_ij * F_ij (outer product)
-                    results.virial -= dr * force.transpose();
+                    // Virial contribution: r_ij * F_i (consistent with BOPKernel sign)
+                    results.virial += dr * force.transpose();
                 }
             }
         }
@@ -365,9 +365,11 @@ inline PotentialResults CutoffCoulomb::compute_impl(
             results.energy += pair_energy;
 
             if (compute_forces || compute_virial) {
-                // Force: k_eff * qi * qj / r^2 * r_hat
-                // Full neighbor list: only add to atom i
-                Scalar force_over_r = -k_eff_ * qi * qj * inv_r * inv_r * inv_r;
+                // Force on i: -dV/dr_i = k_eff * qi * qj / r^3 * (rj - ri)
+                // force_over_r = k*qi*qj/r^3 (note: positive sign here,
+                // consistent with WolfCoulomb gradient convention so that
+                // forces(i) -= force gives F_i = -force = k*qi*qj/r^3 * dr)
+                Scalar force_over_r = k_eff_ * qi * qj * inv_r * inv_r * inv_r;
                 Vec3 force = force_over_r * dr;
 
                 if (compute_forces) {
@@ -375,7 +377,7 @@ inline PotentialResults CutoffCoulomb::compute_impl(
                 }
 
                 if (compute_virial) {
-                    results.virial += 0.5 * dr * force.transpose();
+                    results.virial -= 0.5 * dr * force.transpose();
                 }
             }
         }
@@ -490,7 +492,7 @@ inline PotentialResults WolfCoulomb::compute_impl(
                 }
 
                 if (compute_virial) {
-                    results.virial += 0.5 * dr * force.transpose();
+                    results.virial -= 0.5 * dr * force.transpose();
                 }
             }
         }
