@@ -17,5 +17,6 @@ py.extension_module('_atomistica_cpp',
 py.install_sources(
   '__init__.py',
   'ase_calculator.py',
+  'parameters.py',
   subdir: 'atomistica_cpp',
 )
