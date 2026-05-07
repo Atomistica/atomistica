@@ -35,18 +35,26 @@ import pytest
 # ---------------------------------------------------------------------------
 
 _HERE = Path(__file__).parent
-# Layout: atomistica/{atomistica_cpp,atomistica_fortran}
+# Test data lives in tests/ alongside tests_cpp/
+_TEST_DATA = _HERE.parent / 'tests'
+# Backward compat: also accept data from the sibling Fortran repo if present
 _FORTRAN_TESTS = _HERE.parent.parent / 'atomistica_fortran' / 'tests'
 
 def fortran_test_file(name):
-    """Return path to a test data file from the Fortran test directory.
+    """Return path to a test data file.
 
-    Raises pytest.skip if the file cannot be found.
+    Checks the local tests/ directory first, then the sibling Fortran repo.
+    Raises pytest.skip if the file cannot be found in either location.
     """
-    p = _FORTRAN_TESTS / name
-    if not p.exists():
-        pytest.skip(f'Test data file not found: {p}')
-    return str(p)
+    # Primary: local tests/ directory
+    p = _TEST_DATA / name
+    if p.exists():
+        return str(p)
+    # Fallback: sibling Fortran repo (multi-repo layout)
+    p2 = _FORTRAN_TESTS / name
+    if p2.exists():
+        return str(p2)
+    pytest.skip(f'Test data file not found: {name} (looked in {_TEST_DATA} and {_FORTRAN_TESTS})')
 
 
 # ---------------------------------------------------------------------------

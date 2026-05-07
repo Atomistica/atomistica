@@ -1197,4 +1197,38 @@ PYBIND11_MODULE(_atomistica_cpp, m) {
         .def("compute", &R6::compute,
              py::arg("system"), py::arg("neighbors"),
              py::arg("compute_forces") = true, py::arg("compute_virial") = true);
+
+    // =========================================================================
+    // DFT-D3 dispersion correction
+    // =========================================================================
+
+    py::class_<DFTD3Disp>(m, "DFTD3Disp")
+        .def(py::init<>())
+        .def_readwrite("s6",           &DFTD3Disp::s6)
+        .def_readwrite("s8",           &DFTD3Disp::s8)
+        .def_readwrite("a1",           &DFTD3Disp::a1)
+        .def_readwrite("a2",           &DFTD3Disp::a2)
+        .def_readwrite("sr6",          &DFTD3Disp::sr6)
+        .def_readwrite("sr8",          &DFTD3Disp::sr8)
+        .def_readwrite("alpha6",       &DFTD3Disp::alpha6)
+        .def_readwrite("cutoff_radius",&DFTD3Disp::cutoff_radius)
+        .def_readwrite("cutoff_cn",    &DFTD3Disp::cutoff_cn)
+        .def_readwrite("use_bj_damping",&DFTD3Disp::use_bj_damping)
+        .def("cutoff",  &DFTD3Disp::cutoff_impl,
+             "Interaction cutoff radius (Å)")
+        .def("bind_to", &DFTD3Disp::bind_to,
+             py::arg("system"), py::arg("neighbors"),
+             "Initialise the DFT-D3 calculator for the given system")
+        .def("compute", &DFTD3Disp::compute,
+             py::arg("system"), py::arg("neighbors"),
+             py::arg("compute_forces") = true,
+             py::arg("compute_virial") = true,
+             "Compute DFT-D3 dispersion energy, forces and virial")
+        .def_property_readonly("have_sdftd3", [](const DFTD3Disp&) {
+#ifdef HAVE_SDFTD3
+            return true;
+#else
+            return false;
+#endif
+        }, "True if the s-dftd3 library was found at build time");
 }

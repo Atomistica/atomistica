@@ -101,6 +101,9 @@ from ._atomistica_cpp import (
     PMECoulomb,
     FMMCoulomb,
 
+    # Dispersion
+    DFTD3Disp,
+
     # Tight-binding / DFTB
     TBElementParams,
     SCCParams,
@@ -164,6 +167,8 @@ __all__ = [
     # Coulomb
     'COULOMB_CONST', 'DirectCoulomb', 'CutoffCoulomb', 'WolfCoulomb',
     'PMECoulomb', 'FMMCoulomb',
+    # Dispersion
+    'DFTD3Disp',
     # TB/DFTB
     'TBElementParams', 'SCCParams', 'SolverParams',
     'DenseHamiltonian', 'MaterialsDatabase', 'DFTB',

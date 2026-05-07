@@ -52,6 +52,9 @@
 #include "potentials/coulomb/pme.hpp"
 #include "potentials/coulomb/fmm.hpp"
 
+// Dispersion
+#include "potentials/dispersion/dftd3.hpp"
+
 // Tight-binding
 #include "tightbinding/tightbinding.hpp"
 

@@ -22,6 +22,9 @@ openmp_dep = dependency('openmp', required: get_option('enable_openmp'))
 # Optional LAPACK (for tight-binding solver)
 lapack_dep = dependency('lapack', required: false)
 
+# Optional s-dftd3 (for DFT-D3 dispersion)
+sdftd3_dep = dependency('s-dftd3', required: false)
+
 # Collect all dependencies
 atomistica_deps = [eigen_dep]
 if openmp_dep.found()
@@ -29,6 +32,13 @@ if openmp_dep.found()
 endif
 if lapack_dep.found()
   atomistica_deps += lapack_dep
+endif
+if sdftd3_dep.found()
+  atomistica_deps += sdftd3_dep
+  add_project_arguments('-DHAVE_SDFTD3', language: 'cpp')
+  message('s-dftd3 found: DFT-D3 dispersion will be available')
+else
+  message('s-dftd3 not found: DFT-D3 dispersion will NOT be available (install s-dftd3 to enable)')
 endif
 
 # Include directories
