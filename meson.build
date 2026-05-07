@@ -327,3 +327,84 @@ py.install_sources(
   ],
   subdir: 'atomistica' / 'tools',
 )
+
+# ===========================================================================
+# atomistica_cpp: Modern C++17 implementation of interatomic potentials
+# ===========================================================================
+#
+# Optional; silently skipped if Eigen3 or pybind11 cannot be resolved.
+# Dependencies are fetched automatically via WrapDB if not system-installed.
+
+eigen_dep = dependency('eigen3',
+  fallback: 'eigen',
+  required: false,
+)
+
+pybind11_dep = dependency('pybind11',
+  fallback: ['pybind11', 'pybind11_dep'],
+  required: false,
+)
+
+if eigen_dep.found() and pybind11_dep.found()
+
+  # Collect all C++ library dependencies (reuse lapack_dep from above)
+  atomistica_cpp_deps = [eigen_dep]
+  if lapack_dep.found()
+    atomistica_cpp_deps += lapack_dep
+  endif
+
+  cpp_inc = include_directories('lib/include')
+
+  cpp_lib_sources = files(
+    'lib/src/core/atomic_system.cpp',
+    'lib/src/core/neighbor_list.cpp',
+    'lib/src/math/spline.cpp',
+    'lib/src/math/cutoff_functions.cpp',
+    'lib/src/potentials/pair/lj.cpp',
+    'lib/src/tightbinding/anderson_mixer.cpp',
+    'lib/src/tightbinding/bond_analysis.cpp',
+    'lib/src/tightbinding/dftb.cpp',
+    'lib/src/tightbinding/hamiltonian.cpp',
+    'lib/src/tightbinding/materials.cpp',
+    'lib/src/tightbinding/solver.cpp',
+  )
+
+  atomistica_cpp_lib = static_library('atomistica_cpp',
+    cpp_lib_sources,
+    include_directories: cpp_inc,
+    dependencies: atomistica_cpp_deps,
+    override_options: ['cpp_std=c++17'],
+    install: false,
+  )
+
+  atomistica_cpp_dep = declare_dependency(
+    link_with: atomistica_cpp_lib,
+    include_directories: cpp_inc,
+    dependencies: atomistica_cpp_deps,
+  )
+
+  # Python C++ extension module
+  py.extension_module('_atomistica_cpp',
+    'lib/python/bindings.cpp',
+    include_directories: cpp_inc,
+    dependencies: [py_dep, pybind11_dep, atomistica_cpp_dep],
+    override_options: ['cpp_std=c++17'],
+    install: true,
+    subdir: 'atomistica_cpp',
+  )
+
+  # Install Python package files for atomistica_cpp
+  py.install_sources(
+    [
+      'lib/python/__init__.py',
+      'lib/python/ase_calculator.py',
+      'lib/python/parameters.py',
+    ],
+    subdir: 'atomistica_cpp',
+  )
+
+  message('atomistica_cpp Python extension will be built')
+
+else
+  message('Eigen3 or pybind11 not found; atomistica_cpp Python extension will NOT be built')
+endif

@@ -5,7 +5,11 @@ build-backend = "mesonpy"
 [project]
 name = "atomistica"
 dynamic = ["version"]
-description = "Atomistica is a library of interatomic potentials that is compatible with ASE and LAMMPS"
+description = """Atomistica — interatomic potential library compatible with ASE and LAMMPS.
+Ships two Python packages:
+  • atomistica  — Fortran-based implementation (stable)
+  • atomistica_cpp — C++17 implementation (in development)
+"""
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
@@ -24,4 +28,5 @@ urls = {homepage = "https://github.com/Atomistica/atomistica"}
 # It will use git tags for versioning
 
 [tool.meson-python.args]
+# Release build; Eigen3 and pybind11 are fetched via WrapDB if not system-installed
 setup = ["-Dbuildtype=release"]

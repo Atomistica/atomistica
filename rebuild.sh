@@ -15,7 +15,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo "Installing atomistica..."
 pip install dist/atomistica-*.whl --force-reinstall
 
-echo "✓ Successfully rebuilt and installed atomistica"
+echo "✓ Successfully rebuilt and installed atomistica (Fortran) + atomistica_cpp (C++)"
 echo ""
-echo "Test with: .venv/bin/python -c 'import atomistica; print(\"Success\")'"
-echo "Or if using standard activation: python -c 'import atomistica; print(\"Success\")'"
+echo "Test Fortran:   python -c 'import atomistica; print(\"OK\")'"
+echo "Test C++:       python -c 'import atomistica_cpp; print(\"OK\")'"
+echo "Or with venv:   .venv/bin/python -c 'import atomistica; import atomistica_cpp; print(\"OK\")'"

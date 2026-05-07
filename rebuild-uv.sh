@@ -16,9 +16,10 @@ VENV_PYTHON="$SCRIPT_DIR/.venv/bin/python"
 echo "Installing atomistica with uv..."
 uv pip install dist/atomistica-*.whl --force-reinstall
 
-echo "✓ Successfully rebuilt and installed atomistica"
+echo "✓ Successfully rebuilt and installed atomistica (Fortran) + atomistica_cpp (C++)"
 echo ""
-echo "Test with: .venv/bin/python -c 'import atomistica; print(\"Success\")'"
+echo "Test Fortran:  .venv/bin/python -c 'import atomistica; print(\"OK\")'"
+echo "Test C++:      .venv/bin/python -c 'import atomistica_cpp; print(\"OK\")'"
 echo ""
 echo "Note: Don't use 'uv run' - it will auto-reinstall as editable!"
 echo "      Always use .venv/bin/python directly after this script."
