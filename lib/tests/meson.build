@@ -23,10 +23,10 @@ test_sources = files(
   'test_simple_pairs.cpp',
 )
 
-test_exe = executable('atomistica_cpp_tests',
+test_exe = executable('atomistica_tests',
   test_sources,
   include_directories: inc,
-  dependencies: [atomistica_cpp_dep, catch2_dep],
+  dependencies: [atomistica_dep, catch2_dep],
 )
 
-test('atomistica_cpp_tests', test_exe)
+test('atomistica_tests', test_exe)

@@ -16,7 +16,7 @@ ase = pytest.importorskip('ase')
 import ase.io
 from ase.lattice.cubic import FaceCenteredCubic, BodyCenteredCubic
 
-from atomistica_cpp import TabulatedEAM, TabulatedAlloyEAM, Atomistica
+from atomistica import TabulatedEAM, TabulatedAlloyEAM, Atomistica
 from conftest import assert_forces, assert_stress, fortran_test_file
 
 DX  = 1e-6

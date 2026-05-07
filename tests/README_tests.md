@@ -1,10 +1,10 @@
-# atomistica_cpp Python Tests
+# atomistica Python Tests
 
-Python-level tests for the `atomistica_cpp` package.  Tests run against
+Python-level tests for the `atomistica` package.  Tests run against
 the installed wheel, so build and install first:
 
 ```bash
-cd atomistica_cpp
+cd atomistica
 ./rebuild.sh            # or ./rebuild-uv.sh
 ```
 
@@ -20,7 +20,7 @@ pytest -k Tersoff       # filter by name
 
 ## Requirements
 
-- `atomistica_cpp` installed (from wheel)
+- `atomistica` installed (from wheel)
 - `ase >= 3.15`
 - `numpy >= 1.21`
 - Test data files from the Fortran test suite

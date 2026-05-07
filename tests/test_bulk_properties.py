@@ -26,7 +26,7 @@ from ase.units import GPa
 from ase.lattice.cubic import Diamond, FaceCenteredCubic, BodyCenteredCubic
 from ase.lattice.compounds import B3
 
-import atomistica_cpp as a
+import atomistica as a
 from conftest import make_calc
 
 # ---------------------------------------------------------------------------

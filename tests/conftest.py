@@ -20,10 +20,10 @@
 # ======================================================================
 
 """
-Shared fixtures and utilities for the atomistica_cpp Python test suite.
+Shared fixtures and utilities for the atomistica Python test suite.
 
 Run from the tests_cpp/ directory or with:
-    pytest atomistica_cpp/tests_cpp/
+    pytest atomistica/tests/
 """
 
 from pathlib import Path
@@ -35,9 +35,9 @@ import pytest
 # ---------------------------------------------------------------------------
 
 _HERE = Path(__file__).parent
-# Test data lives in tests/ alongside tests_cpp/
-_TEST_DATA = _HERE.parent / 'tests'
-# Backward compat: also accept data from the sibling Fortran repo if present
+# Test data lives alongside the test files in the same directory
+_TEST_DATA = _HERE
+# Fallback: sibling Fortran repo (legacy multi-repo layout)
 _FORTRAN_TESTS = _HERE.parent.parent / 'atomistica_fortran' / 'tests'
 
 def fortran_test_file(name):
@@ -150,7 +150,7 @@ def assert_stress(atoms, de=1e-6, tol=1e-2, msg=''):
 # ---------------------------------------------------------------------------
 
 def make_calc(PotClass, param=None):
-    """Create an atomistica_cpp.Atomistica calculator.
+    """Create an atomistica.Atomistica calculator.
 
     Parameters
     ----------
@@ -162,5 +162,5 @@ def make_calc(PotClass, param=None):
     -------
     Atomistica calculator
     """
-    from atomistica_cpp import Atomistica
+    from atomistica import Atomistica
     return Atomistica(PotClass, param)

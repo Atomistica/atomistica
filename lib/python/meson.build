@@ -5,12 +5,12 @@ pybind11_dep = dependency('pybind11',
 
 py = import('python').find_installation(pure: false)
 
-py.extension_module('_atomistica_cpp',
+py.extension_module('_atomistica',
   'bindings.cpp',
   include_directories: inc,
-  dependencies: [atomistica_cpp_dep, pybind11_dep],
+  dependencies: [atomistica_dep, pybind11_dep],
   install: true,
-  subdir: 'atomistica_cpp',
+  subdir: 'atomistica',
 )
 
 # Install Python package files
@@ -18,5 +18,5 @@ py.install_sources(
   '__init__.py',
   'ase_calculator.py',
   'parameters.py',
-  subdir: 'atomistica_cpp',
+  subdir: 'atomistica',
 )

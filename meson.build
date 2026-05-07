@@ -19,7 +19,7 @@ if not lapack_dep.found()
 endif
 
 # ===========================================================================
-# atomistica_cpp: Modern C++17 implementation of interatomic potentials
+# atomistica: Modern C++17 implementation of interatomic potentials
 # ===========================================================================
 
 eigen_dep = dependency('eigen3',
@@ -37,12 +37,12 @@ sdftd3_dep = dependency('s-dftd3', required: false)
 
 if eigen_dep.found() and pybind11_dep.found()
 
-  atomistica_cpp_deps = [eigen_dep]
+  atomistica_deps = [eigen_dep]
   if lapack_dep.found()
-    atomistica_cpp_deps += lapack_dep
+    atomistica_deps += lapack_dep
   endif
   if sdftd3_dep.found()
-    atomistica_cpp_deps += sdftd3_dep
+    atomistica_deps += sdftd3_dep
     add_project_arguments('-DHAVE_SDFTD3', language: 'cpp')
     message('s-dftd3 found: DFT-D3 dispersion will be available')
   else
@@ -65,28 +65,28 @@ if eigen_dep.found() and pybind11_dep.found()
     'lib/src/tightbinding/solver.cpp',
   )
 
-  atomistica_cpp_lib = static_library('atomistica_cpp',
+  atomistica_lib = static_library('atomistica',
     cpp_lib_sources,
     include_directories: cpp_inc,
-    dependencies: atomistica_cpp_deps,
+    dependencies: atomistica_deps,
     override_options: ['cpp_std=c++17'],
     install: false,
   )
 
-  atomistica_cpp_dep = declare_dependency(
-    link_with: atomistica_cpp_lib,
+  atomistica_dep = declare_dependency(
+    link_with: atomistica_lib,
     include_directories: cpp_inc,
-    dependencies: atomistica_cpp_deps,
+    dependencies: atomistica_deps,
   )
 
-  # Python extension: _atomistica_cpp (installed as atomistica_cpp package)
-  py.extension_module('_atomistica_cpp',
+  # Python extension: _atomistica (installed as atomistica package)
+  py.extension_module('_atomistica',
     'lib/python/bindings.cpp',
     include_directories: cpp_inc,
-    dependencies: [py_dep, pybind11_dep, atomistica_cpp_dep],
+    dependencies: [py_dep, pybind11_dep, atomistica_dep],
     override_options: ['cpp_std=c++17'],
     install: true,
-    subdir: 'atomistica_cpp',
+    subdir: 'atomistica',
   )
 
   py.install_sources(
@@ -95,17 +95,11 @@ if eigen_dep.found() and pybind11_dep.found()
       'lib/python/ase_calculator.py',
       'lib/python/parameters.py',
     ],
-    subdir: 'atomistica_cpp',
-  )
-
-  # Backward-compatibility shim: 'import atomistica' still works
-  py.install_sources(
-    ['lib/python/atomistica/__init__.py'],
     subdir: 'atomistica',
   )
 
-  message('atomistica_cpp Python extension will be built')
+  message('atomistica Python extension will be built')
 
 else
-  message('Eigen3 or pybind11 not found; skipping atomistica_cpp')
+  message('Eigen3 or pybind11 not found; skipping atomistica')
 endif

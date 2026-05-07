@@ -20,7 +20,7 @@
 # ======================================================================
 
 """
-Force and virial consistency tests for atomistica_cpp potentials.
+Force and virial consistency tests for atomistica potentials.
 
 Each test computes analytical forces/stress and compares them to numerical
 finite-difference values. The tolerance is 1% (tol=1e-2).
@@ -42,7 +42,7 @@ import ase.io
 from ase.lattice.cubic import Diamond, FaceCenteredCubic, BodyCenteredCubic
 from ase.lattice.compounds import B3
 
-import atomistica_cpp as a
+import atomistica as a
 from conftest import (assert_forces, assert_stress, fortran_test_file,
                       make_calc)
 
@@ -231,10 +231,10 @@ class TestJuslin:
 class TestEAM:
     def test_fcc_Au_funcfl(self):
         fn = fortran_test_file('Au_u3.eam')
-        from atomistica_cpp import TabulatedEAM
+        from atomistica import TabulatedEAM
         pot = TabulatedEAM()
         pot.load(fn)
-        from atomistica_cpp import Atomistica
+        from atomistica import Atomistica
         calc = Atomistica(pot)
         atoms = FaceCenteredCubic('Au', latticeconstant=4.08, size=[SX, SX, SX])
         atoms.rattle(0.1)
@@ -243,10 +243,10 @@ class TestEAM:
 
     def test_fcc_Au_alloy(self):
         fn = fortran_test_file('Au-Grochola-JCP05.eam.alloy')
-        from atomistica_cpp import TabulatedAlloyEAM
+        from atomistica import TabulatedAlloyEAM
         pot = TabulatedAlloyEAM()
         pot.load(fn)
-        from atomistica_cpp import Atomistica
+        from atomistica import Atomistica
         calc = Atomistica(pot)
         atoms = FaceCenteredCubic('Au', latticeconstant=4.08, size=[SX, SX, SX])
         atoms.rattle(0.1)
@@ -272,13 +272,13 @@ class TestCoulomb:
         atoms = self._nacl()
         atoms.pbc = False
         atoms.center(vacuum=5.0)
-        from atomistica_cpp import DirectCoulomb, Atomistica
+        from atomistica import DirectCoulomb, Atomistica
         atoms.calc = Atomistica(DirectCoulomb())
         assert_forces(atoms, dx=DX, tol=TOL, msg='DirectCoulomb forces ')
 
     def test_wolf_coulomb_forces(self):
         atoms = self._nacl()
-        from atomistica_cpp import WolfCoulomb, Atomistica
+        from atomistica import WolfCoulomb, Atomistica
         atoms.calc = Atomistica(WolfCoulomb(cutoff=8.0, alpha=0.3))
         assert_forces(atoms, dx=DX, tol=TOL, msg='WolfCoulomb forces ')
         assert_stress(atoms, de=DE, tol=TOL, msg='WolfCoulomb stress ')
@@ -299,14 +299,14 @@ class TestREBO2:
     def test_c_dimer_forces(self):
         """For a simple dimer, simplified forces == exact forces."""
         atoms = self._make_c_dimer()
-        from atomistica_cpp import REBO2, Atomistica
+        from atomistica import REBO2, Atomistica
         pot = REBO2(); pot.load_default_parameters()
         atoms.calc = Atomistica(pot)
         assert_forces(atoms, dx=1e-5, tol=1e-3, msg='REBO2 C-dimer forces ')
 
     def test_rebo2scr_c_dimer_forces(self):
         atoms = self._make_c_dimer()
-        from atomistica_cpp import REBO2Scr, Atomistica
+        from atomistica import REBO2Scr, Atomistica
         pot = REBO2Scr(); pot.load_default_parameters()
         atoms.calc = Atomistica(pot)
         assert_forces(atoms, dx=1e-5, tol=1e-3, msg='REBO2Scr C-dimer forces ')

@@ -28,7 +28,7 @@ class (e.g. ``TersoffScr``).
 
 Usage::
 
-    from atomistica_cpp import TersoffScr, Tersoff_PRB_39_5566_Si_C__Scr
+    from atomistica import TersoffScr, Tersoff_PRB_39_5566_Si_C__Scr
     calc = TersoffScr()
     calc.load_parameters(Tersoff_PRB_39_5566_Si_C__Scr)
 """

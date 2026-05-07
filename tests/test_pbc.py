@@ -18,7 +18,7 @@ ase = pytest.importorskip('ase')
 import ase
 from ase.lattice.cubic import Diamond, FaceCenteredCubic
 
-import atomistica_cpp as a
+import atomistica as a
 from conftest import make_calc, assert_forces, assert_stress
 
 DX  = 1e-6

@@ -32,7 +32,7 @@
 namespace py = pybind11;
 using namespace atomistica;
 
-PYBIND11_MODULE(_atomistica_cpp, m) {
+PYBIND11_MODULE(_atomistica, m) {
     m.doc() = "Atomistica C++ - Interatomic potentials library";
 
     // PotentialResults

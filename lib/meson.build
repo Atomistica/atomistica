@@ -60,7 +60,7 @@ core_sources = files(
 )
 
 # Build the core library
-atomistica_cpp_lib = library('atomistica_cpp',
+atomistica_lib = library('atomistica',
   core_sources,
   include_directories: inc,
   dependencies: atomistica_deps,
@@ -68,8 +68,8 @@ atomistica_cpp_lib = library('atomistica_cpp',
 )
 
 # Declare dependency for consumers
-atomistica_cpp_dep = declare_dependency(
-  link_with: atomistica_cpp_lib,
+atomistica_dep = declare_dependency(
+  link_with: atomistica_lib,
   include_directories: inc,
   dependencies: atomistica_deps,
 )

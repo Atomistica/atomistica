@@ -20,11 +20,11 @@
 # ======================================================================
 
 """
-Atomistica C++ — Modern C++ implementation of interatomic potentials.
+Atomistica — interatomic potential library (C++17 implementation).
 
 Quick start::
 
-    from atomistica_cpp import Tersoff, Tersoff_PRB_39_5566_Si_C
+    from atomistica import Tersoff, Tersoff_PRB_39_5566_Si_C
     from ase.lattice.cubic import Diamond
 
     atoms = Diamond('Si', latticeconstant=5.43)
@@ -33,7 +33,7 @@ Quick start::
     print(atoms.get_potential_energy())
 """
 
-from ._atomistica_cpp import (
+from ._atomistica import (
     # Core
     AtomicSystem,
     NeighborList,
@@ -123,6 +123,12 @@ try:
     from .ase_calculator import Atomistica
 except ImportError:
     pass  # ASE not available; Atomistica calculator not imported
+
+try:
+    from importlib.metadata import version as _version
+    __version__ = _version('atomistica')
+except Exception:
+    __version__ = 'unknown'
 
 from .parameters import (
     # Tersoff

@@ -16,7 +16,7 @@ import ase
 from ase.units import Hartree, Bohr
 from ase.lattice.compounds import NaCl
 
-from atomistica_cpp import DirectCoulomb, CutoffCoulomb, WolfCoulomb, Atomistica
+from atomistica import DirectCoulomb, CutoffCoulomb, WolfCoulomb, Atomistica
 from conftest import assert_forces, assert_stress
 
 DX  = 1e-6
@@ -76,7 +76,7 @@ class TestDirectCoulomb:
         atoms.set_array('charges', np.array([-1.0, 1.0]))
         atoms.calc = Atomistica(DirectCoulomb())
         E = atoms.get_potential_energy()
-        from atomistica_cpp import COULOMB_CONST
+        from atomistica import COULOMB_CONST
         E_ref = -COULOMB_CONST / d   # attractive: E < 0
         assert E == pytest.approx(E_ref, rel=1e-6)
 

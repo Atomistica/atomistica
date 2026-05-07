@@ -17,7 +17,7 @@ import ase
 import ase.io
 from ase.lattice.cubic import Diamond
 
-import atomistica_cpp as a
+import atomistica as a
 from conftest import fortran_test_file
 
 
@@ -241,7 +241,7 @@ class TestSelfImageBonds:
 
     def test_juslin_w_bcc_1x1x1(self):
         """BCC-W 1×1×1 cell (2 atoms) gives correct energy with self-image fix."""
-        import atomistica_cpp as ac
+        import atomistica as ac
         from ase.lattice.cubic import BodyCenteredCubic
 
         atoms = BodyCenteredCubic('W', latticeconstant=3.165, size=[1, 1, 1])

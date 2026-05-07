@@ -25,7 +25,7 @@ ASE Calculator interface for Atomistica C++ potentials.
 
 import numpy as np
 
-from ._atomistica_cpp import AtomicSystem, NeighborList
+from ._atomistica import AtomicSystem, NeighborList
 
 try:
     from ase.calculators.calculator import Calculator, all_changes
@@ -104,19 +104,19 @@ class Atomistica(Calculator):
     --------
     Instantiate with a pre-loaded potential::
 
-        from atomistica_cpp import Tersoff
+        from atomistica import Tersoff
         pot = Tersoff()
         pot.load_parameters("Tersoff_PRB_39_5566_Si_C")
         calc = Atomistica(pot)
 
     Instantiate using class + name constant::
 
-        from atomistica_cpp import Tersoff, Tersoff_PRB_39_5566_Si_C
+        from atomistica import Tersoff, Tersoff_PRB_39_5566_Si_C
         calc = Atomistica(Tersoff, Tersoff_PRB_39_5566_Si_C)
 
     DFTB::
 
-        from atomistica_cpp import DFTB
+        from atomistica import DFTB
         dftb = DFTB(skf_path='/path/to/skf', enable_scc=True)
         calc = Atomistica(dftb)
     """
