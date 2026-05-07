@@ -155,13 +155,12 @@ class TestJuslinBulk:
         _relax(atoms)
         Ec = atoms.get_potential_energy() / len(atoms)
         a0, C11, C12, C44, B = _elastic_cubic(atoms)
-        # Published (Juslin 2005): Ec=-8.89eV, a0=3.165Å, C11=542, C12=191, C44=162, B=308 GPa
-        # Note: C++ Juslin W-C-H equilibrium is a0≈3.054 Å, not 3.165 Å.
-        # Forces and virial are self-consistent (see test_cpp_forces_and_virial).
-        # Elastic constants differ from published values due to wrong a0.
-        assert Ec < -8.0, f'Juslin W: Ec={Ec:.2f} should be < -8 eV'
-        assert 2.9 < a0 < 3.2, f'Juslin W: a0={a0:.3f} out of plausible range'
-        assert C11/GPa > 100, f'Juslin W: C11={C11/GPa:.0f} GPa should be > 100'
+        # Published (Juslin 2005): Ec=-8.89 eV, a0=3.165 Å, C11=542, C12=191, B=308 GPa
+        _check_prop(Ec,      -8.89, 'Juslin W Ec (eV)')
+        _check_prop(a0,       3.165, 'Juslin W a0 (Å)', dev=1.0)
+        _check_prop(C11/GPa, 542.0, 'Juslin W C11 (GPa)')
+        _check_prop(C12/GPa, 191.0, 'Juslin W C12 (GPa)')
+        _check_prop(B/GPa,   308.0, 'Juslin W B (GPa)')
 
 
 class TestTersoffBulk:

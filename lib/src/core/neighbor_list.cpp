@@ -227,8 +227,18 @@ void NeighborList::build(const AtomicSystem& system) {
                     while (j >= 0) {
                         std::size_t ju = static_cast<std::size_t>(j);
 
-                        // Skip self (full neighbor list: store both i->j and j->i)
-                        if (ju != i) {
+                        // Skip exact self only (same atom, zero shift).
+                        // Self-image bonds (same atom index, non-zero cell shift)
+                        // ARE included: they represent atoms interacting with their
+                        // own periodic images, which is necessary for correct BOP
+                        // bond-order sums in small cells (e.g. BCC with 2 atoms
+                        // where the cutoff exceeds the cell size).
+                        bool is_exact_self = (ju == i) &&
+                                             (shift[0] == 0) &&
+                                             (shift[1] == 0) &&
+                                             (shift[2] == 0);
+
+                        if (!is_exact_self) {
                             // Compute distance with periodic shift
                             Vec3 rj = system.position(ju).matrix();
                             Vec3 dr = rj - ri;
@@ -240,7 +250,7 @@ void NeighborList::build(const AtomicSystem& system) {
 
                             Scalar dist_sq = dr.squaredNorm();
 
-                            if (dist_sq < cutoff_sq) {
+                            if (dist_sq < cutoff_sq && dist_sq > 0.0) {
                                 neighbors_.push_back(Neighbor{ju, shift});
                             }
                         }

@@ -187,3 +187,66 @@ class TestNeighborListUpdate:
         assert n1 == n0, (
             f'Neighbour count changed ({n0} → {n1}) with 0.001 Å rattle'
         )
+
+
+# ---------------------------------------------------------------------------
+# Self-image bond tests
+# ---------------------------------------------------------------------------
+
+class TestSelfImageBonds:
+    """Atoms must see their own periodic images when the cell is smaller than the cutoff."""
+
+    def test_single_atom_sees_self_images(self):
+        """A single atom in a small PBC cell should have self as neighbor."""
+        atoms = ase.Atoms('Si', positions=[[0,0,0]], cell=[5,5,5], pbc=True)
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(7.0)
+        nl.update(sys)
+
+        nbs = list(nl.neighbors(0))
+        # Must find self-images
+        self_images = [nb for nb in nbs if nb.index == 0]
+        assert len(self_images) > 0, 'No self-image bonds found for single-atom cell'
+        # 6 nearest self-images along ±x, ±y, ±z at distance 5 Å
+        assert len(self_images) >= 6
+
+    def test_bcc_2atom_cell_correct_coordination(self):
+        """2-atom BCC cell: atom 0 must find 8 1st NN (atom 1) + 6 2nd NN (self)."""
+        a_bcc = 3.165
+        atoms = ase.Atoms(
+            'WW',
+            positions=[[0,0,0], [a_bcc/2]*3],
+            cell=[[a_bcc,0,0],[0,a_bcc,0],[0,0,a_bcc]],
+            pbc=True
+        )
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(4.0)
+        nl.update(sys)
+
+        cell = np.array(atoms.cell)
+        count_1nn, count_2nn_self = 0, 0
+        for nb in nl.neighbors(0):
+            dr = atoms.positions[nb.index] - atoms.positions[0]
+            dr += nb.cell_shift[0]*cell[0] + nb.cell_shift[1]*cell[1] + nb.cell_shift[2]*cell[2]
+            r = np.linalg.norm(dr)
+            if nb.index == 1 and abs(r - a_bcc*3**0.5/2) < 0.01:
+                count_1nn += 1
+            elif nb.index == 0 and abs(r - a_bcc) < 0.01:
+                count_2nn_self += 1
+
+        assert count_1nn == 8, f'Expected 8 1st NN, got {count_1nn}'
+        assert count_2nn_self == 6, f'Expected 6 self-image 2nd NN, got {count_2nn_self}'
+
+    def test_juslin_w_bcc_1x1x1(self):
+        """BCC-W 1×1×1 cell (2 atoms) gives correct energy with self-image fix."""
+        import atomistica_cpp as ac
+        from ase.lattice.cubic import BodyCenteredCubic
+
+        atoms = BodyCenteredCubic('W', latticeconstant=3.165, size=[1, 1, 1])
+        atoms.calc = ac.Atomistica(ac.Juslin, ac.Juslin_JAP_98_123520_WCH)
+        E_per_atom = atoms.get_potential_energy() / len(atoms)
+        assert abs(E_per_atom - (-8.89)) < 0.05, (
+            f'Juslin BCC-W 1x1x1 Ec={E_per_atom:.3f} eV/atom, expected -8.89'
+        )
