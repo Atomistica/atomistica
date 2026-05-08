@@ -4,3 +4,5 @@ option('enable_openmp', type: 'boolean', value: true,
        description: 'Enable OpenMP parallelization')
 option('enable_tests', type: 'boolean', value: true,
        description: 'Build unit tests')
+option('enable_standalone', type: 'boolean', value: false,
+       description: 'Build standalone mdcore executable')

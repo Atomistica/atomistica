@@ -84,6 +84,11 @@ if get_option('enable_tests')
   subdir('tests')
 endif
 
+# Standalone mdcore executable (optional)
+if get_option('enable_standalone')
+  subdir('standalone')
+endif
+
 # Install headers
 install_subdir('include/atomistica',
   install_dir: get_option('includedir'),

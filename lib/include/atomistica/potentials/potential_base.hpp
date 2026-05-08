@@ -22,6 +22,7 @@
 #pragma once
 
 #include <optional>
+#include <type_traits>
 
 #include "../config.hpp"
 #include "../core/atomic_system.hpp"
@@ -112,6 +113,14 @@ public:
                                      bool compute_virial = true) = 0;
 };
 
+// Detection helper: does T have a bind_to(AtomicSystem&, NeighborList&) method?
+template<typename T, typename = void>
+struct has_bind_to : std::false_type {};
+template<typename T>
+struct has_bind_to<T, std::void_t<decltype(std::declval<T>().bind_to(
+    std::declval<AtomicSystem&>(), std::declval<NeighborList&>()))>>
+    : std::true_type {};
+
 /**
  * @brief Wrapper to use CRTP potentials with virtual interface
  */
@@ -127,7 +136,9 @@ public:
     }
 
     void bind_to(AtomicSystem& system, NeighborList& neighbors) override {
-        potential_.bind_to(system, neighbors);
+        if constexpr (has_bind_to<CRTPPotential>::value) {
+            potential_.bind_to(system, neighbors);
+        }
     }
 
     PotentialResults compute(AtomicSystem& system,
