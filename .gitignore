@@ -56,3 +56,15 @@ cpp/subprojects/packagecache
 cpp/subprojects/Catch2-*
 cpp/subprojects/eigen-*
 cpp/subprojects/pybind11-*
+lib/subprojects/packagecache
+lib/subprojects/Catch2-*
+lib/subprojects/eigen-*
+lib/subprojects/pybind11-*
+subprojects/packagecache
+subprojects/Catch2-*
+subprojects/eigen-*
+subprojects/pybind11-*
+
+# Simulation files
+DONE
+*.out

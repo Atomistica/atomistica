@@ -25,6 +25,9 @@ lapack_dep = dependency('lapack', required: false)
 # Optional s-dftd3 (for DFT-D3 dispersion)
 sdftd3_dep = dependency('s-dftd3', required: false)
 
+# Optional NetCDF (for trajectory output in standalone mdcore)
+netcdf_dep = dependency('netcdf', required: false)
+
 # Collect all dependencies
 atomistica_deps = [eigen_dep]
 if openmp_dep.found()
@@ -39,6 +42,12 @@ if sdftd3_dep.found()
   message('s-dftd3 found: DFT-D3 dispersion will be available')
 else
   message('s-dftd3 not found: DFT-D3 dispersion will NOT be available (install s-dftd3 to enable)')
+endif
+
+if netcdf_dep.found()
+  message('NetCDF found: NetCDF trajectory output will be available in standalone mdcore')
+else
+  message('NetCDF not found: NetCDF trajectory output will NOT be available (install netcdf-c to enable)')
 endif
 
 # Include directories
