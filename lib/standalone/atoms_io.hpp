@@ -145,6 +145,7 @@ inline AtomsData read_atoms_dat(const std::string& filename) {
 
     // temporary storage
     std::vector<int> Zs;
+    std::vector<int> groups;
     std::vector<std::array<double,3>> positions;
     std::vector<std::array<double,3>> velocities;
     Mat3 cell = Mat3::Identity();
@@ -176,6 +177,7 @@ inline AtomsData read_atoms_dat(const std::string& filename) {
                     if (!nl.empty() && nl.find("<---") == std::string::npos) {
                         nat = std::stoi(nl);
                         Zs.resize(nat);
+                        groups.resize(nat, 1);
                         positions.resize(nat);
                         velocities.resize(nat, {0.0, 0.0, 0.0});
                         break;
@@ -215,6 +217,10 @@ inline AtomsData read_atoms_dat(const std::string& filename) {
             int Z = symbol_to_Z(sym);
             Zs[pos_count] = Z;
             positions[pos_count] = {x, y, z};
+            // Optional group field (6th value after coordinates; default 1)
+            int grp = 1;
+            ss >> grp;  // silently ignored if not present
+            groups[pos_count] = grp;
 
             // Detect unit mode from first atom's mass
             if (!unit_detected) {
@@ -266,6 +272,13 @@ inline AtomsData read_atoms_dat(const std::string& filename) {
     double vel_scale = (data.unit_mode == AtomsData::UnitMode::eV_A_fs)
                        ? 1.0 / std::sqrt(AMU_AFSQ_PER_EV) : 1.0;
 
+    // Store group flags in per-atom property
+    if (!groups.empty()) {
+        data.system.properties().add<ArrayXi>("group", static_cast<size_t>(nat));
+        for (int i = 0; i < nat; ++i)
+            data.system.properties().get<ArrayXi>("group")[i] = groups[i];
+    }
+
     for (int i = 0; i < nat; ++i) {
         data.system.atomic_numbers()[i] = Zs[i];
         double m = standard_atomic_mass(Zs[i]) * mass_scale;
@@ -306,14 +319,18 @@ inline void write_atoms_dat(const std::string& filename,
     f << " \n";
     f << "<--- Element, atomic mass, coordinates, group, dissipation, temperature, (next)\n";
 
+    const ArrayXi* grp_arr = system.properties().has("group")
+        ? &system.properties().get<ArrayXi>("group") : nullptr;
+
     for (int i = 0; i < nat; ++i) {
         int Z = system.atomic_number(i);
         double m = standard_atomic_mass(Z) * mass_scale;
         Vec3 r = system.position(i);
+        int grp = grp_arr ? (*grp_arr)[i] : 1;
         char buf[256];
         std::snprintf(buf, sizeof(buf),
             " %-4s%20.10E%20.10E%20.10E%20.10E%5d%20.10E%20.10E\n",
-            Z_to_symbol(Z).c_str(), m, r[0], r[1], r[2], 1, 0.0, 0.0);
+            Z_to_symbol(Z).c_str(), m, r[0], r[1], r[2], grp, 0.0, 0.0);
         f << buf;
     }
 

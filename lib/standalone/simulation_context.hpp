@@ -75,6 +75,13 @@ struct SimulationContext {
     double time = 0.0;
     int    step = 0;
 
+    // Display-unit support: multiply time/pressure by these factors before printing.
+    // Set by mdcore.cpp based on system_of_units.
+    double      time_display_scale    = 1.0;
+    std::string time_unit_label       = "a.u.";
+    double      pressure_display_scale = 1.0;
+    std::string pressure_unit_label   = "eV/A^3";
+
     explicit SimulationContext(AtomicSystem& sys, NeighborList& nl_in)
         : system(sys), nl(nl_in) {}
 

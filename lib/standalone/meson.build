@@ -7,7 +7,7 @@ if netcdf_dep.found()
 endif
 
 executable('mdcore',
-  ['mdcore.cpp', 'registry.cpp'],
+  ['mdcore.cpp', 'registry.cpp', 'registrations.cpp'],
   include_directories: inc,
   dependencies: standalone_deps,
   cpp_args: standalone_cpp_args,
