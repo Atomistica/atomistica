@@ -166,4 +166,84 @@ public:
 
 REGISTER_HOOK("SETTLE", SETTLE)
 
+// ---------------------------------------------------------------------------
+// RATTLE: velocity constraint correction for rigid water (POST_STEP, prio 16)
+//
+// After the second half-kick of velocity Verlet, ensures relative velocities
+// along each constrained bond are zero:  r_ij · v_ij = 0
+//
+// Must be used together with SETTLE (which fixes the positions).
+// Both classes auto-detect water molecules independently in bind_to.
+// ---------------------------------------------------------------------------
+class RATTLE : public Hook {
+    double tol_      = 1e-6;
+    int    max_iter_ = 100;
+    std::vector<WaterMol> molecules_;
+
+public:
+    HookPoint   hook_point() const override { return HookPoint::POST_STEP; }
+    int         priority()   const override { return 16; }
+    std::string name()       const override { return "RATTLE"; }
+
+    explicit RATTLE(const Config& cfg)
+        : tol_     (cfg.get_or<double>("tol",      1e-6))
+        , max_iter_(cfg.get_or<int>   ("max_iter", 100))
+    {}
+
+    // Same molecule detection as SETTLE.
+    void bind_to(AtomicSystem& sys, NeighborList&) override {
+        molecules_.clear();
+        size_t n = sys.num_atoms();
+        double search_r2 = 1.2 * 1.2;
+        for (size_t i = 0; i < n; ++i) {
+            if (sys.atomic_number(i) != 8) continue;
+            Vec3 rO = sys.position(i);
+            int h1 = -1, h2 = -1;
+            double d1 = search_r2, d2 = search_r2;
+            for (size_t j = 0; j < n; ++j) {
+                if (sys.atomic_number(j) != 1) continue;
+                double d2j = sys.minimum_image(sys.position(j) - rO).squaredNorm();
+                if (d2j < d1) { d2=d1; h2=h1; d1=d2j; h1=static_cast<int>(j); }
+                else if (d2j < d2) { d2=d2j; h2=static_cast<int>(j); }
+            }
+            if (h1 >= 0 && h2 >= 0)
+                molecules_.push_back({static_cast<int>(i), h1, h2});
+        }
+    }
+
+    void invoke(SimulationContext& ctx) override {
+        for (const auto& mol : molecules_)
+            rattle(ctx.system, mol);
+    }
+
+private:
+    // Iterative RATTLE for one molecule (3 bond constraints).
+    void rattle(AtomicSystem& sys, const WaterMol& mol) const {
+        for (int iter = 0; iter < max_iter_; ++iter) {
+            double max_lam = 0.0;
+
+            auto apply_bond = [&](int a, int b) {
+                Vec3   r_ab = sys.position(a) - sys.position(b);
+                Vec3   v_ab = sys.velocity(a) - sys.velocity(b);
+                double proj = r_ab.dot(v_ab);
+                if (std::abs(proj) < tol_) return;
+                double r2  = r_ab.squaredNorm();
+                double ma  = sys.mass(a), mb = sys.mass(b);
+                double lam = proj / (r2 * (1.0/ma + 1.0/mb));
+                sys.set_velocity(a, sys.velocity(a) - static_cast<Scalar>(lam/ma) * r_ab);
+                sys.set_velocity(b, sys.velocity(b) + static_cast<Scalar>(lam/mb) * r_ab);
+                max_lam = std::max(max_lam, std::abs(lam));
+            };
+
+            apply_bond(mol.O,  mol.H1);
+            apply_bond(mol.O,  mol.H2);
+            apply_bond(mol.H1, mol.H2);
+
+            if (max_lam < tol_) break;
+        }
+    }
+};
+
+REGISTER_HOOK("RATTLE", RATTLE)
+
 } // namespace atomistica

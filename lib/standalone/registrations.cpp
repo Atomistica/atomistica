@@ -37,6 +37,7 @@
 #include "integrators/velocity_verlet.hpp"
 #include "integrators/fire.hpp"
 #include "integrators/no_integration.hpp"
+#include "integrators/andersen_p.hpp"
 
 // ---- Thermostats & barostats -----------------------------------------------
 #include "hooks/thermostats/berendsen_t.hpp"
@@ -65,8 +66,11 @@
 #include "hooks/deformation/confinement.hpp"
 
 // ---- Constraints -----------------------------------------------------------
-// settle.hpp also registers FreezeAtoms.
+// settle.hpp also registers FreezeAtoms and RATTLE.
 #include "hooks/constraints/settle.hpp"
+
+// ---- Charge equilibration --------------------------------------------------
+#include "hooks/charges/charge_equilibration.hpp"
 
 // ---------------------------------------------------------------------------
 // Explicit registrations for classes whose headers do not self-register.
@@ -94,6 +98,13 @@ const bool _reg_NoIntegration =
         "NoIntegration",
         [](const atomistica::Config& cfg) {
             return std::make_unique<atomistica::NoIntegration>(cfg);
+        });
+
+const bool _reg_AndersenP =
+    atomistica::Registry::instance().register_integrator(
+        "AndersenP",
+        [](const atomistica::Config& cfg) {
+            return std::make_unique<atomistica::AndersenP>(cfg);
         });
 
 // Thermostats & barostats (headers have no self-registration)
