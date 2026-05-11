@@ -119,13 +119,28 @@ struct SimulationContext {
     // Call bind_to() on every potential, Coulomb solver, and hook.
     // The neighbor list must already have its cutoff set and be up to date
     // before this is called.
+    // Bind only potentials and Coulomb — used for the first NL-sizing pass so
+    // that hooks (which may open files) are not triggered prematurely.
+    void bind_potentials_only() {
+        for (auto& p : potentials)
+            p->bind_to(system, nl);
+        if (coulomb)
+            coulomb->bind_to(system, nl);
+    }
+
+    // Full bind: potentials + Coulomb + hooks.  Call exactly once after the
+    // neighbor list has been set to its final cutoff.
     void bind_all() {
         for (auto& p : potentials)
             p->bind_to(system, nl);
         if (coulomb)
             coulomb->bind_to(system, nl);
-        for (auto& h : hooks)
+        // Give hooks the opportunity to use the potential cutoff as their default.
+        double pot_cutoff = max_cutoff();
+        for (auto& h : hooks) {
             h->bind_to(system, nl);
+            h->set_potential_cutoff(pot_cutoff);
+        }
     }
 
     // -----------------------------------------------------------------------

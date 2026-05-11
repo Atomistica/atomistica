@@ -97,6 +97,11 @@ public:
         return values_.find(key) != values_.end();
     }
 
+    // Programmatically set a key (used by mdcore to inject unit-conversion info).
+    void set(const std::string& key, const std::string& val) {
+        values_[key] = val;
+    }
+
     // -----------------------------------------------------------------------
     // Sub-section accessors
     // -----------------------------------------------------------------------

@@ -26,6 +26,13 @@
 
 #include "registry.hpp"
 
+// ---- Potentials (self-register via REGISTER_POTENTIAL / REGISTER_COULOMB) --
+#include "potentials/bop_wrappers.hpp"
+#include "potentials/dftb_wrapper.hpp"
+#include "potentials/eam_wrapper.hpp"
+#include "potentials/pair_wrappers.hpp"
+#include "potentials/coulomb_wrappers.hpp"
+
 // ---- Integrators ----------------------------------------------------------
 #include "integrators/velocity_verlet.hpp"
 #include "integrators/fire.hpp"

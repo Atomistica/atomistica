@@ -71,6 +71,15 @@ public:
 
     // Human-readable name for logging/error messages.
     virtual std::string name() const { return "Hook"; }
+
+    // Interaction cutoff reported to mdcore for NL sizing (default 0 = no requirement).
+    // Override in hooks that need a specific NL cutoff (e.g. PetersT).
+    virtual double cutoff() const { return 0.0; }
+
+    // Called by SimulationContext::bind_all() after all potentials are bound,
+    // passing the maximum potential cutoff.  Override to set default hook cutoff
+    // from the potential cutoff when the user did not specify one explicitly.
+    virtual void set_potential_cutoff(double /*pot_cutoff*/) {}
 };
 
 } // namespace atomistica

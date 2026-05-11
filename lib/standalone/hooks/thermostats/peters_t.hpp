@@ -27,6 +27,7 @@ class PetersT : public Hook {
     double       T_;
     double       gamma_;
     double       cutoff_;
+    bool         cutoff_explicit_;
     std::mt19937 rng_;
 
 public:
@@ -38,13 +39,20 @@ public:
         : T_(cfg.get_or<double>("T", 300.0))
         , gamma_(cfg.get_or<double>("gamma", 1.0))
         , cutoff_(cfg.get_or<double>("cutoff", 0.0))
+        , cutoff_explicit_(cfg.has_key("cutoff"))
         , rng_(static_cast<unsigned>(cfg.get_or<int>("seed", 12345)))
     {}
 
-    void bind_to(AtomicSystem& /*system*/, NeighborList& nl) override {
-        if (cutoff_ <= 0.0)
-            cutoff_ = nl.cutoff();
+    // Called by bind_all() after all potentials are bound; sets cutoff to the
+    // potential cutoff if the user did not provide an explicit value.
+    void set_potential_cutoff(double pot_cutoff) override {
+        if (!cutoff_explicit_ && pot_cutoff > 0.0)
+            cutoff_ = pot_cutoff;
     }
+
+    double cutoff() const override { return cutoff_; }
+
+    void bind_to(AtomicSystem& /*system*/, NeighborList& /*nl*/) override {}
 
     void invoke(SimulationContext& ctx) override {
         std::normal_distribution<double> normal(0.0, 1.0);
