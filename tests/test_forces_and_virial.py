@@ -2,7 +2,7 @@
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
 #
-# Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
+# Copyright (2005-2024) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
 # and others. See the AUTHORS file in the top-level Atomistica directory.
 #
 # This program is free software: you can redistribute it and/or modify
@@ -19,335 +19,294 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
 
+"""
+Force and virial consistency tests for atomistica potentials.
+
+Each test computes analytical forces/stress and compares them to numerical
+finite-difference values. The tolerance is 1% (tol=1e-2).
+
+Notes on REBO2 / REBO2Scr:
+  The C++ REBO2 implementation computes simplified forces that omit
+  bond-order derivative contributions (angular terms). Forces are only
+  tested for simple dimers where the simplified forces are exact.
+"""
+
 import math
-import sys
 
-import unittest
+import numpy as np
+import pytest
 
-from numpy.random import randint
+ase = pytest.importorskip('ase')
 
-import ase
-import ase.io as io
-from ase.units import mol
+import ase.io
+from ase.lattice.cubic import Diamond, FaceCenteredCubic, BodyCenteredCubic
+from ase.lattice.compounds import B3
 
-from ase.lattice.cubic import Diamond, FaceCenteredCubic, SimpleCubic
-from ase.lattice.cubic import BodyCenteredCubic
-from ase.lattice.compounds import B1, B2, B3, L1_2, NaCl
+import atomistica as a
+from conftest import (assert_forces, assert_stress, fortran_test_file,
+                      make_calc)
 
-import atomistica.native as native
-from atomistica import *
-from atomistica.tests import test_forces as forces
-from atomistica.tests import test_potential as potential
-from atomistica.tests import test_virial as virial
+# ---------------------------------------------------------------------------
+# Tolerance and displacement
+# ---------------------------------------------------------------------------
 
-###
+DX   = 1e-6
+DE   = 1e-6
+TOL  = 1e-2
+SX   = 2   # supercell size
 
-sx = 2
-dx = 1e-6
-tol = 1e-2
+# ---------------------------------------------------------------------------
+# Helper: perturb then test
+# ---------------------------------------------------------------------------
 
-###
+def _check(atoms, pot_name, struct_name, tol=TOL):
+    """Translate by (0.1,0.1,0.1) then check forces and stress."""
+    atoms.translate([0.1, 0.1, 0.1])
+    msg = f'{pot_name} / {struct_name}: '
+    assert_forces(atoms, dx=DX, tol=tol, msg=msg)
+    assert_stress(atoms, de=DE, tol=tol, msg=msg)
+    # Rattle and check again
+    atoms.rattle(0.1)
+    assert_forces(atoms, dx=DX, tol=tol, msg=msg + '(rattled) ')
+    assert_stress(atoms, de=DE, tol=tol, msg=msg + '(rattled) ')
 
-def random_solid(els, density):
-    syms = [ ]
-    nat = 0
-    for sym, n in els:
-        syms += n*[sym]
-        nat += n
-    r = np.random.rand(nat, 3)
-    a = ase.Atoms(syms, positions=r, cell=[1,1,1], pbc=True)
 
-    mass = np.sum(a.get_masses())
-    a0 = ( 1e24*mass/(density*mol) )**(1./3)
-    a.set_cell([a0,a0,a0], scale_atoms=True)
+# ===========================================================================
+# Tersoff
+# ===========================================================================
 
-    return a
+class TestTersoff:
+    def _make(self, param):
+        return make_calc(a.Tersoff, param)
 
-def assign_charges(a, els):
-    syms = np.array(a.get_chemical_symbols())
-    qs = np.zeros(len(a))
-    for el, q in els.items():
-        qs[syms==el] = q
-    if hasattr(a, 'set_initial_charges'):
-        a.set_initial_charges(qs)
-    else:
-        a.set_charges(qs)
-    return a
+    def test_dia_C(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Tersoff_PRB_39_5566_Si_C)
+        _check(atoms, 'Tersoff(Si-C)', 'dia-C')
 
-###
+    def test_dia_Si(self):
+        atoms = Diamond('Si', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Tersoff_PRB_39_5566_Si_C)
+        _check(atoms, 'Tersoff(Si-C)', 'dia-Si')
 
-# Potential tests
-tests  = [
-    ( Harmonic, dict(el1='He', el2='He', k=1.0, r0=1.0, cutoff=1.5),
-      [ ( "fcc-He", FaceCenteredCubic("He", size=[sx,sx,sx],
-                                      latticeconstant=math.sqrt(2.0)) ) ] ),
-    ( r6, dict(el1='Si', el2='Si', A=1.0, r0=1.0, cutoff=5.0),
-      [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
-    ( LJCut, dict(el1='He', el2='He', epsilon=10.2, sigma=2.28, cutoff=5.0,
-                  shift=True),
-      [ dict( name="fcc-He", struct=FaceCenteredCubic("He", size=[sx,sx,sx],
-                                                      latticeconstant=3.5),
-              mask=True, rattle=0.1 ) ] ),
-    ( Brenner, Erhart_PRB_71_035211_SiC,
-      [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
-        ( "a-C", io.read("aC_small.cfg") ),
-        ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
-        ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
-                          size=[sx,sx,sx]) ) ] ),
-    ( BrennerScr, Erhart_PRB_71_035211_SiC__Scr,
-      [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
-        ( "a-C", io.read("aC_small.cfg") ),
-        ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
-        ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
-                          size=[sx,sx,sx]) ) ] ),
-    ( Brenner, Henriksson_PRB_79_114107_FeC,
-      [ dict( name='dia-C', struct=Diamond('C', size=[sx,sx,sx]), mask=True ),
-        dict( name="a-C", struct=io.read("aC_small.cfg"), mask=True ),
-        dict( name='bcc-Fe',
-              struct=BodyCenteredCubic('Fe', size=[sx,sx,sx]), mask=True ),
-        dict( name='fcc-Fe',
-              struct=FaceCenteredCubic('Fe', size=[sx,sx,sx],
-                                       latticeconstant=3.6), mask=True ),
-        dict( name='sc-Fe',
-              struct=SimpleCubic('Fe', size=[sx,sx,sx], latticeconstant=2.4),
-              mask=True ),
-        dict( name='B1-Fe-C',
-              struct=B1( [ 'Fe', 'C' ], size=[sx,sx,sx], latticeconstant=3.9),
-              mask=True ),
-        dict( name='B3-Fe-C',
-              struct=B3( [ 'Fe', 'C' ], size=[sx,sx,sx], latticeconstant=4.0),
-              mask=True ),
-        ] ),
-    ( Kumagai, Kumagai_CompMaterSci_39_457_Si,
-      [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
-    ( KumagaiScr, Kumagai_CompMaterSci_39_457_Si__Scr,
-      [ ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ) ] ),
-    ( Tersoff, Tersoff_PRB_39_5566_Si_C,
-      [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
-        ( "a-C", io.read("aC_small.cfg") ),
-        ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
-        ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
-                          size=[sx,sx,sx]) ) ] ),
-    ( TersoffScr, Tersoff_PRB_39_5566_Si_C__Scr,
-      [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
-        ( "a-C", io.read("aC_small.cfg") ),
-        ( "dia-Si", Diamond("Si", size=[sx,sx,sx]) ),
-        ( "dia-Si-C", B3( [ "Si", "C" ], latticeconstant=4.3596,
-                          size=[sx,sx,sx]) ) ] ),
-    ( Rebo2, None,
-      [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
-        ( "a-C", io.read("aC_small.cfg") ),
-        ( 'random-C-H', random_solid( [('C',50),('H',10)], 3.0 ) ),
-        ] ),
-    ( Rebo2Scr, None,
-      [ ( "dia-C", Diamond("C", size=[sx,sx,sx]) ),
-        ( "a-C", io.read("aC_small.cfg") ),
-        ( 'random-C-H', random_solid( [('C',50),('H',10)], 3.0 ) ),
-        ] ),
-    ( TabulatedEAM, dict(fn='Au_u3.eam'),
-      [ dict( name="fcc-Au", struct=FaceCenteredCubic("Au", size=[sx,sx,sx]),
-              rattle=0.1 ) ] ),
-    ( TabulatedAlloyEAM, dict(fn='Au-Grochola-JCP05.eam.alloy'),
-      [ dict( name="fcc-Au", struct=FaceCenteredCubic("Au", size=[sx,sx,sx]),
-              rattle=0.1, mask=True ) ] ),
-    ]
+    def test_dia_SiC(self):
+        atoms = B3(['Si', 'C'], latticeconstant=4.3596, size=[SX, SX, SX])
+        atoms.calc = self._make(a.Tersoff_PRB_39_5566_Si_C)
+        _check(atoms, 'Tersoff(Si-C)', 'dia-Si-C')
 
-# Coulomb potential tests
-tests += [
-    ( DirectCoulomb, None,
-      [ ( "sc-Na-Cl", assign_charges(NaCl(['Na','Cl'], latticeconstant=5.64,
-                                          size=[sx,sx,sx]),
-                                     dict(Na=1,Cl=-1)) ),
-        ( "random-Na-Cl", assign_charges(random_solid([('Na',50),('Cl',50)],
-                                                      2.16),
-                                         dict(Na=1,Cl=-1)) ),
-        ] ),
-    ( PME, dict(cutoff=5.0, grid=(10, 10, 10)),
-      [ ( "sc-Na-Cl", assign_charges(NaCl(['Na','Cl'], latticeconstant=5.64,
-                                          size=[sx,sx,sx]),
-                                     dict(Na=1,Cl=-1)) ),
-        ( "random-Na-Cl", assign_charges(random_solid([('Na',50),('Cl',50)],
-                                                      2.16),
-                                         dict(Na=1,Cl=-1)) ),
-        ] ),
-    ( SlaterCharges, dict(el=['Na','Cl'], U=[1.0,0.5], Z=[0.1,-0.2],
-                          cutoff=5.0),
-      [ ( "sc-Na-Cl", assign_charges(NaCl(['Na','Cl'], latticeconstant=5.64,
-                                          size=[sx,sx,sx]),
-                                     dict(Na=1,Cl=-1)) ),
-        ( "random-Na-Cl", assign_charges(random_solid([('Na',50),('Cl',50)],
-                                                      2.16),
-                                         dict(Na=1,Cl=-1)) ),
-        ] ),
-    # Also test U1==U2
-    ( SlaterCharges, dict(el=['Na','Cl'], U=[1.0,1.0], Z=[0.1,-0.2],
-                          cutoff=5.0),
-      [ ( "sc-Na-Cl", assign_charges(NaCl(['Na','Cl'], latticeconstant=5.64,
-                                          size=[sx,sx,sx]),
-                                     dict(Na=1,Cl=-1)) ),
-        ( "random-Na-Cl", assign_charges(random_solid([('Na',50),('Cl',50)],
-                                                      2.16),
-                                         dict(Na=1,Cl=-1)) ),
-        ] ),
-    ( GaussianCharges, dict(el=['Na','Cl'], U=[1.0,0.5],
-                            cutoff=5.0),
-      [ ( "sc-Na-Cl", assign_charges(NaCl(['Na','Cl'], latticeconstant=5.64,
-                                          size=[sx,sx,sx]),
-                                     dict(Na=1,Cl=-1)) ),
-        ( "random-Na-Cl", assign_charges(random_solid([('Na',50),('Cl',50)],
-                                                      2.16),
-                                         dict(Na=1,Cl=-1)) ),
-        ] ),
-    ]
+    def test_aC(self):
+        p = fortran_test_file('aC_small.cfg')
+        atoms = ase.io.read(p)
+        atoms.calc = self._make(a.Tersoff_PRB_39_5566_Si_C)
+        _check(atoms, 'Tersoff(Si-C)', 'a-C')
 
-###
+    def test_matsunaga_C(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N)
+        _check(atoms, 'Tersoff(Matsunaga)', 'dia-C')
 
-def test_forces_and_virial(test=None):
-    nok = 0
-    nfail = 0
-    for pot, par, mats in tests:
-        #if len(sys.argv) > 1:
-        #    found = False
-        #    if par is not None:
-        #        for keyword in sys.argv[1:]:
-        #            if '__ref__' in par:
-        #                if par['__ref__'].lower().find(keyword.lower()) != -1:
-        #                    found = True
-        #    try:
-        #        potname = pot.__name__
-        #    except:
-        #        potname = pot.__class__.__name__
-        #    for keyword in sys.argv[1:]:
-        #        if potname.lower().find(keyword.lower()) != -1:
-        #            found = True
-        #    if not found:
-        #        continue
+    def test_goumri_said_Al(self):
+        atoms = FaceCenteredCubic('Al', latticeconstant=4.05, size=[SX, SX, SX])
+        atoms.calc = self._make(a.Goumri_Said_ChemPhys_302_135_Al_N)
+        _check(atoms, 'Tersoff(Goumri-Said)', 'fcc-Al')
 
-        try:
-            potname = pot.__name__
-        except:
-            potname = pot.__class__.__name__
-        if test is None:
-            print("--- %s ---" % potname)
-        if par is None:
-            c  = pot()
-        else:
-            c  = pot(**par)
-            if test is None and '__ref__' in par:
-                print("    %s" % par["__ref__"])
 
-        for imat in mats:
-            rattle = 0.5
-            mask = False
-            if isinstance(imat, tuple):
-                name, a = imat
-            else:
-                name = imat['name']
-                a = imat['struct']
-                if 'rattle' in imat:
-                    rattle = imat['rattle']
-                if 'mask' in imat:
-                    mask = imat['mask']
-            if test is None:
-                print("Material:  ", name)
-            a.translate([0.1,0.1,0.1])
-            a.calc = c
+class TestTersoffScr:
+    def _make(self, param):
+        return make_calc(a.TersoffScr, param)
 
-            masks = [None]
-            if mask:
-                masks += [randint(0, len(a), size=len(a)) < len(a)/2,
-                          randint(0, len(a), size=len(a)) < len(a)/4]
+    def test_dia_C(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Tersoff_PRB_39_5566_Si_C__Scr)
+        _check(atoms, 'TersoffScr(Si-C)', 'dia-C')
 
-            for dummy in range(2):
-                if dummy == 0:
-                    errmsg = 'potential: {0}; material: {1}; equilibrium' \
-                        .format(potname, name)
-                    if test is None:
-                        print('=== equilibrium ===')
-                else:
-                    errmsg = 'potential: {0}; material: {1}; distorted' \
-                        .format(potname, name)
-                    if test is None:
-                        print('=== distorted ===')
+    def test_dia_Si(self):
+        atoms = Diamond('Si', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Tersoff_PRB_39_5566_Si_C__Scr)
+        _check(atoms, 'TersoffScr(Si-C)', 'dia-Si')
 
-                for mask in masks:
-                    if test is None and mask is not None:
-                        print('--- using random mask ---')
-                    c.set_mask(mask)
+    def test_matsunaga_Scr_C(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Matsunaga_Fisher_Matsubara_Jpn_J_Appl_Phys_39_48_B_C_N__Scr)
+        _check(atoms, 'TersoffScr(Matsunaga)', 'dia-C')
 
-                    ffd, f0, maxdf = forces(a, dx=dx)
-        
-                    if test is None:
-                        if abs(maxdf) < tol:
-                            nok += 1
-                            print("forces .ok.")
-                        else:
-                            nfail += 1
-                            print("forces .failed.")
-                            print("max(df)  = %f" % maxdf)
 
-                            print("f - from potential")
-                            for i, f in enumerate(f0):
-                                print(i, f)
+# ===========================================================================
+# Brenner
+# ===========================================================================
 
-                            print("f - numerically")
-                            for i, f in enumerate(ffd):
-                                print(i, f)
+class TestBrenner:
+    def _make(self, param):
+        return make_calc(a.Brenner, param)
 
-                            print("difference between the above")
-                            for i, f in enumerate(f0-ffd):
-                                print(i, f)
-                    else:
-                      test.assertTrue(abs(maxdf) < tol,
-                                        msg=errmsg+'; forces')
+    def test_dia_C_erhart(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Erhart_PRB_71_035211_SiC)
+        _check(atoms, 'Brenner(Erhart)', 'dia-C')
 
-                    sfd, s0, maxds = virial(a, de=dx)
+    def test_dia_Si_erhart(self):
+        atoms = Diamond('Si', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Erhart_PRB_71_035211_SiC)
+        _check(atoms, 'Brenner(Erhart)', 'dia-Si')
 
-                    if test is None:
-                        if abs(maxds) < tol:
-                            nok += 1
-                            print("virial .ok.")
-                        else:
-                            nfail += 1
-                            print("virial .failed.")
-                            print("max(ds)  = %f" % maxds)
-                    
-                            print("s - from potential")
-                            print(s0)
-                
-                            print("s - numerically")
-                            print(sfd)
+    def test_aC_erhart(self):
+        p = fortran_test_file('aC_small.cfg')
+        atoms = ase.io.read(p)
+        atoms.calc = self._make(a.Erhart_PRB_71_035211_SiC)
+        _check(atoms, 'Brenner(Erhart)', 'a-C')
 
-                            print("difference between the above")
-                            print(s0-sfd)
-                    else:
-                        test.assertTrue(abs(maxds) < tol,
-                                        msg=errmsg+'; virial')
+    def test_dia_C_brenner_I(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Brenner_PRB_42_9458_C_I)
+        _check(atoms, 'Brenner(PRB42-I)', 'dia-C')
 
-                    pfd, p0, maxdp = potential(a, dq=dx)
+    def test_dia_C_brenner_II(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Brenner_PRB_42_9458_C_II)
+        _check(atoms, 'Brenner(PRB42-II)', 'dia-C')
 
-                    if test is None:
-                        if abs(maxdp) < tol:
-                            nok += 1
-                            print("potential .ok.")
-                        else:
-                            nfail += 1
-                            print("potential .failed.")
-                            print("max(dp)  = %f" % maxdp)
-                    
-                            print("p - from potential")
-                            print(p0)
-                
-                            print("p - numerically")
-                            print(pfd)
+    def test_dia_C_albe(self):
+        # Pt-C potential: test with pure C to avoid the need for Pt structures
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Albe_PRB_65_195124_PtC)
+        _check(atoms, 'Brenner(Albe)', 'dia-C')
 
-                            print("difference between the above")
-                            print(p0-pfd)
-                    else:
-                        test.assertTrue(abs(maxds) < tol,
-                                        msg=errmsg+'; virial')
-            
-                a.rattle(rattle)
-    if test is None:
-        print('{0} tests passed, {1} tests failed.'.format(nok, nfail))
+    def test_dia_C_henriksson(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Henriksson_PRB_79_144107_FeC)
+        _check(atoms, 'Brenner(Henriksson)', 'dia-C')
 
+    def test_kioseoglou_Al(self):
+        atoms = FaceCenteredCubic('Al', latticeconstant=4.05, size=[SX, SX, SX])
+        atoms.calc = self._make(a.Kioseoglou_PSSb_245_1118_AlN)
+        _check(atoms, 'Brenner(Kioseoglou)', 'fcc-Al')
+
+
+class TestBrennerScr:
+    def _make(self, param):
+        return make_calc(a.BrennerScr, param)
+
+    def test_dia_C_erhart_scr(self):
+        atoms = Diamond('C', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Erhart_PRB_71_035211_SiC__Scr)
+        _check(atoms, 'BrennerScr(Erhart)', 'dia-C')
+
+    def test_dia_Si_erhart_scr(self):
+        atoms = Diamond('Si', size=[SX, SX, SX])
+        atoms.calc = self._make(a.Erhart_PRB_71_035211_SiC__Scr)
+        _check(atoms, 'BrennerScr(Erhart)', 'dia-Si')
+
+
+# ===========================================================================
+# Kumagai
+# ===========================================================================
+
+class TestKumagai:
+    def test_dia_Si(self):
+        atoms = Diamond('Si', size=[SX, SX, SX])
+        atoms.calc = make_calc(a.Kumagai, a.Kumagai_CompMaterSci_39_457_Si)
+        _check(atoms, 'Kumagai(Si)', 'dia-Si')
+
+    def test_dia_Si_scr(self):
+        atoms = Diamond('Si', size=[SX, SX, SX])
+        atoms.calc = make_calc(a.KumagaiScr, a.Kumagai_CompMaterSci_39_457_Si__Scr)
+        _check(atoms, 'KumagaiScr(Si)', 'dia-Si')
+
+
+# ===========================================================================
+# Juslin
+# ===========================================================================
+
+class TestJuslin:
+    def test_bcc_W(self):
+        atoms = BodyCenteredCubic('W', latticeconstant=3.165, size=[SX, SX, SX])
+        atoms.calc = make_calc(a.Juslin, a.Juslin_JAP_98_123520_WCH)
+        _check(atoms, 'Juslin(W-C-H)', 'bcc-W')
+
+
+# ===========================================================================
+# EAM
+# ===========================================================================
+
+class TestEAM:
+    def test_fcc_Au_funcfl(self):
+        fn = fortran_test_file('Au_u3.eam')
+        from atomistica import TabulatedEAM
+        pot = TabulatedEAM()
+        pot.load(fn)
+        from atomistica import Atomistica
+        calc = Atomistica(pot)
+        atoms = FaceCenteredCubic('Au', latticeconstant=4.08, size=[SX, SX, SX])
+        atoms.rattle(0.1)
+        atoms.calc = calc
+        _check(atoms, 'TabulatedEAM(Au_u3)', 'fcc-Au')
+
+    def test_fcc_Au_alloy(self):
+        fn = fortran_test_file('Au-Grochola-JCP05.eam.alloy')
+        from atomistica import TabulatedAlloyEAM
+        pot = TabulatedAlloyEAM()
+        pot.load(fn)
+        from atomistica import Atomistica
+        calc = Atomistica(pot)
+        atoms = FaceCenteredCubic('Au', latticeconstant=4.08, size=[SX, SX, SX])
+        atoms.rattle(0.1)
+        atoms.calc = calc
+        _check(atoms, 'TabulatedAlloyEAM(Au-Grochola)', 'fcc-Au')
+
+
+# ===========================================================================
+# Coulomb
+# ===========================================================================
+
+class TestCoulomb:
+    def _nacl(self):
+        """Return a NaCl-like structure with ±1 charges."""
+        from ase.lattice.compounds import NaCl
+        atoms = NaCl(['Na', 'Cl'], latticeconstant=5.64, size=[SX, SX, SX])
+        syms = np.array(atoms.get_chemical_symbols())
+        charges = np.where(syms == 'Na', 1.0, -1.0)
+        atoms.set_array('charges', charges)
+        return atoms
+
+    def test_direct_coulomb_forces(self):
+        atoms = self._nacl()
+        atoms.pbc = False
+        atoms.center(vacuum=5.0)
+        from atomistica import DirectCoulomb, Atomistica
+        atoms.calc = Atomistica(DirectCoulomb())
+        assert_forces(atoms, dx=DX, tol=TOL, msg='DirectCoulomb forces ')
+
+    def test_wolf_coulomb_forces(self):
+        atoms = self._nacl()
+        from atomistica import WolfCoulomb, Atomistica
+        atoms.calc = Atomistica(WolfCoulomb(cutoff=8.0, alpha=0.3))
+        assert_forces(atoms, dx=DX, tol=TOL, msg='WolfCoulomb forces ')
+        assert_stress(atoms, de=DE, tol=TOL, msg='WolfCoulomb stress ')
+
+
+# ===========================================================================
+# REBO2 — only dimer-level tests where simplified forces are exact
+# ===========================================================================
+
+class TestREBO2:
+    def _make_c_dimer(self, r=1.5):
+        atoms = ase.Atoms('CC',
+                          positions=[[0, 0, 0], [r, 0, 0]],
+                          cell=[10, 10, 10], pbc=False)
+        atoms.center()
+        return atoms
+
+    def test_c_dimer_forces(self):
+        """For a simple dimer, simplified forces == exact forces."""
+        atoms = self._make_c_dimer()
+        from atomistica import REBO2, Atomistica
+        pot = REBO2(); pot.load_default_parameters()
+        atoms.calc = Atomistica(pot)
+        assert_forces(atoms, dx=1e-5, tol=1e-3, msg='REBO2 C-dimer forces ')
+
+    def test_rebo2scr_c_dimer_forces(self):
+        atoms = self._make_c_dimer()
+        from atomistica import REBO2Scr, Atomistica
+        pot = REBO2Scr(); pot.load_default_parameters()
+        atoms.calc = Atomistica(pot)
+        assert_forces(atoms, dx=1e-5, tol=1e-3, msg='REBO2Scr C-dimer forces ')

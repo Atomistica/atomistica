@@ -36,4 +36,12 @@ Simulation {
 
   Rebo2 { };
 
+  #
+  # Trajectory output (every ps) to .NC file
+  #
+
+  OutputNC {
+    freq = "100.0";
+  };
+
 };

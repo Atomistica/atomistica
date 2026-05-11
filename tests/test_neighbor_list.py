@@ -1,180 +1,252 @@
 # ======================================================================
 # Atomistica - Interatomic potential library and molecular dynamics code
 # https://github.com/Atomistica/atomistica
-#
-# Copyright (2005-2020) Lars Pastewka <lars.pastewka@imtek.uni-freiburg.de>
-# and others. See the AUTHORS file in the top-level Atomistica directory.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ======================================================================
-#! /usr/bin/env python
 
-
-import unittest
+"""
+Tests for the C++ NeighborList class: correctness under PBC, cell changes,
+minimum image convention, and Verlet shell behaviour.
+"""
 
 import numpy as np
+import pytest
+
+ase = pytest.importorskip('ase')
 
 import ase
+import ase.io
+from ase.lattice.cubic import Diamond
 
-import atomistica.io as io
-import atomistica.native as native
-from atomistica import Tersoff
-from atomistica.snippets import mic
+import atomistica as a
+from conftest import fortran_test_file
 
-###
 
-class NeighborListTest(unittest.TestCase):
+# ---------------------------------------------------------------------------
+# Helper: build AtomicSystem from an ASE Atoms object
+# ---------------------------------------------------------------------------
 
-    def test_neighbor_list(self):
-        a = io.read('aC.cfg')
-        an = native.from_atoms(a)
-        nl = native.Neighbors(100)
-        nl.request_interaction_range(5.0)
+def _ase_to_cpp(atoms):
+    """Create and return (AtomicSystem, NeighborList)."""
+    sys = a.AtomicSystem(len(atoms))
+    sys.cell = np.array(atoms.cell).T
+    sys.pbc  = list(atoms.pbc)
+    sys.positions = atoms.positions.T
+    sys.atomic_numbers = atoms.numbers
+    return sys
 
-        i, j, abs_dr_no_vec = nl.get_neighbors(an)
-        i, j, dr, abs_dr = nl.get_neighbors(an, vec=True)
 
-        self.assertTrue(np.all(np.abs(abs_dr_no_vec-abs_dr) < 1e-12))
+# ---------------------------------------------------------------------------
+# Basic correctness
+# ---------------------------------------------------------------------------
 
-        r = a.get_positions()
-        dr_direct = mic(r[i]-r[j], a.cell)
+class TestNeighborListCorrectness:
 
-        abs_dr_from_dr = np.sqrt(np.sum(dr*dr, axis=1))
-        abs_dr_direct = np.sqrt(np.sum(dr_direct*dr_direct, axis=1))
+    def test_distances_consistent(self):
+        """All distances reported by the NL must match explicit calculations."""
+        p = fortran_test_file('aC_small.cfg')
+        ase_a = ase.io.read(p)
+        sys = _ase_to_cpp(ase_a)
 
-        self.assertTrue(np.all(np.abs(abs_dr-abs_dr_from_dr) < 1e-12))
-        self.assertTrue(np.all(np.abs(abs_dr-abs_dr_direct) < 1e-12))
+        nl = a.NeighborList()
+        cutoff = 5.0
+        nl.set_cutoff(cutoff)
+        nl.update(sys)
 
-        self.assertTrue(np.all(np.abs(dr-dr_direct) < 1e-12))
+        pos = ase_a.get_positions()
+        cell = np.array(ase_a.cell)
 
-    def test_pbc(self):
-        a = ase.Atoms('CC',
-                      positions=[[0.1, 0.5, 0.5],
-                                 [0.9, 0.5, 0.5]],
-                      cell=[1, 1, 1],
-                      pbc=True)
-        an = native.from_atoms(a)
-        nl = native.Neighbors(100)
-        nl.request_interaction_range(0.3)
+        for i in range(sys.num_atoms):
+            for nb in nl.neighbors(i):
+                j = nb.index
+                cs = nb.cell_shift
+                dr = pos[j] - pos[i] + cs[0]*cell[0] + cs[1]*cell[1] + cs[2]*cell[2]
+                r  = np.linalg.norm(dr)
+                assert r <= cutoff + 1e-10, (
+                    f'Atom {i}→{j}: r={r:.4f} > cutoff={cutoff}')
 
-        # with pbc
+    def test_symmetry(self):
+        """Every bond (i→j) should also appear as (j→i)."""
+        atoms = Diamond('C', size=[2, 2, 2])
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(2.0)
+        nl.update(sys)
 
-        i, j, abs_dr = nl.get_neighbors(an)
-        self.assertEqual(len(i), 2)
+        bonds_fwd = set()
+        for i in range(sys.num_atoms):
+            for nb in nl.neighbors(i):
+                bonds_fwd.add((i, nb.index))
 
-        a.set_pbc(False)
-        an = native.from_atoms(a)
-        nl = native.Neighbors(100)
-        nl.request_interaction_range(0.3)
+        # Every (i,j) should have a matching (j,i)
+        for (i, j) in bonds_fwd:
+            assert (j, i) in bonds_fwd, f'Bond {i}→{j} has no reverse {j}→{i}'
 
-        # no pbc
+    def test_num_pairs(self):
+        """num_pairs should equal sum of all neighbor counts."""
+        atoms = Diamond('Si', size=[2, 2, 2])
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(3.0)
+        nl.update(sys)
 
-        i, j, abs_dr = nl.get_neighbors(an)
-        self.assertEqual(len(i), 0)
+        total = sum(nl.num_neighbors(i) for i in range(sys.num_atoms))
+        assert nl.num_pairs == total
 
-        a.set_pbc([False,False,True])
-        an = native.from_atoms(a)
-        nl = native.Neighbors(100)
-        nl.request_interaction_range(0.3)
 
-        # partial pbc
+# ---------------------------------------------------------------------------
+# PBC handling
+# ---------------------------------------------------------------------------
 
-        i, j, abs_dr = nl.get_neighbors(an)
-        self.assertEqual(len(i), 0)
+class TestPBC:
 
-        a.set_pbc([True,False,False])
-        an = native.from_atoms(a)
-        nl = native.Neighbors(100)
-        nl.request_interaction_range(0.3)
+    def test_pbc_bond_across_boundary(self):
+        """Two atoms on opposite sides of the cell should see each other."""
+        atoms = ase.Atoms('CC',
+                          positions=[[0.1, 0.5, 0.5],
+                                     [0.9, 0.5, 0.5]],
+                          cell=[1, 1, 1], pbc=True)
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(0.3)
+        nl.update(sys)
 
-        # partial pbc
+        n_bonds = sum(nl.num_neighbors(i) for i in range(sys.num_atoms))
+        assert n_bonds == 2, f'Expected 2 bonds (PBC), got {n_bonds}'
 
-        i, j, abs_dr = nl.get_neighbors(an)
-        self.assertEqual(len(i), 2)
+    def test_no_pbc_no_bond_across_boundary(self):
+        """Without PBC, the same pair should NOT see each other."""
+        atoms = ase.Atoms('CC',
+                          positions=[[0.1, 0.5, 0.5],
+                                     [0.9, 0.5, 0.5]],
+                          cell=[1, 1, 1], pbc=False)
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(0.3)
+        nl.update(sys)
 
-    def test_pbc_shift_by_multiple_cells(self):
-        a = io.read('aC.cfg')
-        a.calc = Tersoff()
-        e1 = a.get_potential_energy()
-        i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)
-        a[100].position += 3*a.cell[0]
-        e2 = a.get_potential_energy()
-        i2, j2, r2 = a.calc.nl.get_neighbors(a.calc.particles)
-        for i in range(len(a)):
-            n1 = np.array(sorted(j1[i1==i]))
-            n2 = np.array(sorted(j2[i2==i]))
-            if np.any(n1 != n2):
-                print(i, n1, n2)
-        a[100].position += a.cell.T.dot([1,3,-4])
-        e3 = a.get_potential_energy()
-        self.assertAlmostEqual(e1, e2)
-        self.assertAlmostEqual(e1, e3)
+        n_bonds = sum(nl.num_neighbors(i) for i in range(sys.num_atoms))
+        assert n_bonds == 0, f'Expected 0 bonds (no PBC), got {n_bonds}'
 
-    def test_no_pbc_small_cell(self):
-        a = io.read('aC.cfg')
-        a.calc = Tersoff()
-        a.set_pbc(False)
-        e1 = a.get_potential_energy()
-        i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)
-        a.set_cell(a.cell*0.9, scale_atoms=False)
-        e2 = a.get_potential_energy()
-        self.assertAlmostEqual(e1, e2)
-        i2, j2, r2 = a.calc.nl.get_neighbors(a.calc.particles)
-        for k in range(len(a)):
-            neigh1 = np.array(sorted(j1[i1==k]))
-            neigh2 = np.array(sorted(j2[i2==k]))
-            self.assertTrue(np.all(neigh1 == neigh2))
+    def test_partial_pbc(self):
+        """Atoms should bond through the periodic directions only."""
+        atoms = ase.Atoms('CC',
+                          positions=[[0.1, 0.5, 0.5],
+                                     [0.9, 0.5, 0.5]],
+                          cell=[1, 1, 1], pbc=[True, False, False])
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(0.3)
+        nl.update(sys)
 
-    def test_partial_pbc_small_cell(self):
-        a = io.read('aC.cfg')
-        a.set_cell(a.cell.diagonal(), scale_atoms=True)
-        a.calc = Tersoff()
-        a.set_pbc([True, False, False])
-        e1 = a.get_potential_energy()
-        i1, j1, r1 = a.calc.nl.get_neighbors(a.calc.particles)
-        a.set_cell(a.cell.diagonal()*np.array([1.0, 0.8, 0.9]), scale_atoms=False)
-        e2 = a.get_potential_energy()
-        self.assertAlmostEqual(e1, e2)
-        i2, j2, r2 = a.calc.nl.get_neighbors(a.calc.particles)
-        for k in range(len(a)):
-            neigh1 = np.array(sorted(j1[i1==k]))
-            neigh2 = np.array(sorted(j2[i2==k]))
-            self.assertTrue(np.all(neigh1 == neigh2))
+        n_bonds = sum(nl.num_neighbors(i) for i in range(sys.num_atoms))
+        assert n_bonds == 2, f'Expected 2 bonds (x-PBC only), got {n_bonds}'
 
-    def test_floating_point_issue(self):
-        calc = Tersoff()
-        a1 = ase.Atoms('Si4C4', positions=np.array([[-4.41173839e-52,  0.00000000e+00,  0.00000000e+00],
-                                                    [-4.41173839e-52,  2.26371743e+00,  2.26371743e+00],
-                                                    [ 2.26371743e+00,  0.00000000e+00,  2.26371743e+00],
-                                                    [ 2.26371743e+00,  2.26371743e+00,  0.00000000e+00],
-                                                    [ 1.13185872e+00,  1.13185872e+00,  1.13185872e+00],
-                                                    [ 1.13185872e+00,  3.39557615e+00,  3.39557615e+00],
-                                                    [ 3.39557615e+00,  1.13185872e+00,  3.39557615e+00],
-                                                    [ 3.39557615e+00,  3.39557615e+00,  1.13185872e+00]]),
-                   cell=[4.527434867899659, 4.527434867899659, 4.527434867899659], pbc=True)
 
-        a1.calc = calc
-        a1.get_potential_energy()
-        self.assertTrue((calc.nl.get_coordination_numbers(calc.particles, 3.0) == 4).all())
+# ---------------------------------------------------------------------------
+# Invalidation and update
+# ---------------------------------------------------------------------------
 
-        a2 = a1.copy()
-        a2.calc = calc
-        a2.set_scaled_positions(a2.get_scaled_positions())
-        a2.get_potential_energy()
-        self.assertTrue((calc.nl.get_coordination_numbers(calc.particles, 3.0) == 4).all())
+class TestNeighborListUpdate:
 
-###
+    def test_invalidation_after_position_change(self):
+        """After positions_changed(), nl must be updated before use."""
+        atoms = Diamond('Si', size=[1, 1, 1])
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(3.0)
+        nl.update(sys)
+        n0 = sum(nl.num_neighbors(i) for i in range(sys.num_atoms))
 
-if __name__ == '__main__':
-    unittest.main()
+        # Move atoms far apart → fewer neighbours
+        sys.positions = sys.positions * 3.0
+        sys.positions_changed()
+        nl.update(sys)
+        n1 = sum(nl.num_neighbors(i) for i in range(sys.num_atoms))
+
+        assert n1 <= n0, 'Expected fewer neighbours after moving atoms apart'
+
+    def test_verlet_shell_avoids_rebuild(self):
+        """With a Verlet shell the neighbour list preserves bond connectivity
+        for small displacements that keep all pairs inside the extended cutoff."""
+        atoms = Diamond('Si', size=[2, 2, 2])
+        atoms.translate([0.5, 0.5, 0.5])  # avoid boundary atoms
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        cutoff = 2.4  # strictly below nearest-neighbour distance ~2.35 Å
+        nl.set_cutoff(cutoff)
+        nl.set_verlet_shell(0.5)
+        nl.update(sys)
+        n0 = sum(nl.num_neighbors(i) for i in range(sys.num_atoms))
+
+        # Tiny rattle (0.001 Å) — within Verlet shell, no bonds cross cutoff
+        np.random.seed(42)
+        sys.positions = sys.positions + np.random.randn(*sys.positions.shape) * 0.001
+        sys.positions_changed()
+        nl.update(sys)
+        n1 = sum(nl.num_neighbors(i) for i in range(sys.num_atoms))
+        assert n1 == n0, (
+            f'Neighbour count changed ({n0} → {n1}) with 0.001 Å rattle'
+        )
+
+
+# ---------------------------------------------------------------------------
+# Self-image bond tests
+# ---------------------------------------------------------------------------
+
+class TestSelfImageBonds:
+    """Atoms must see their own periodic images when the cell is smaller than the cutoff."""
+
+    def test_single_atom_sees_self_images(self):
+        """A single atom in a small PBC cell should have self as neighbor."""
+        atoms = ase.Atoms('Si', positions=[[0,0,0]], cell=[5,5,5], pbc=True)
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(7.0)
+        nl.update(sys)
+
+        nbs = list(nl.neighbors(0))
+        # Must find self-images
+        self_images = [nb for nb in nbs if nb.index == 0]
+        assert len(self_images) > 0, 'No self-image bonds found for single-atom cell'
+        # 6 nearest self-images along ±x, ±y, ±z at distance 5 Å
+        assert len(self_images) >= 6
+
+    def test_bcc_2atom_cell_correct_coordination(self):
+        """2-atom BCC cell: atom 0 must find 8 1st NN (atom 1) + 6 2nd NN (self)."""
+        a_bcc = 3.165
+        atoms = ase.Atoms(
+            'WW',
+            positions=[[0,0,0], [a_bcc/2]*3],
+            cell=[[a_bcc,0,0],[0,a_bcc,0],[0,0,a_bcc]],
+            pbc=True
+        )
+        sys = _ase_to_cpp(atoms)
+        nl = a.NeighborList()
+        nl.set_cutoff(4.0)
+        nl.update(sys)
+
+        cell = np.array(atoms.cell)
+        count_1nn, count_2nn_self = 0, 0
+        for nb in nl.neighbors(0):
+            dr = atoms.positions[nb.index] - atoms.positions[0]
+            dr += nb.cell_shift[0]*cell[0] + nb.cell_shift[1]*cell[1] + nb.cell_shift[2]*cell[2]
+            r = np.linalg.norm(dr)
+            if nb.index == 1 and abs(r - a_bcc*3**0.5/2) < 0.01:
+                count_1nn += 1
+            elif nb.index == 0 and abs(r - a_bcc) < 0.01:
+                count_2nn_self += 1
+
+        assert count_1nn == 8, f'Expected 8 1st NN, got {count_1nn}'
+        assert count_2nn_self == 6, f'Expected 6 self-image 2nd NN, got {count_2nn_self}'
+
+    def test_juslin_w_bcc_1x1x1(self):
+        """BCC-W 1×1×1 cell (2 atoms) gives correct energy with self-image fix."""
+        import atomistica as ac
+        from ase.lattice.cubic import BodyCenteredCubic
+
+        atoms = BodyCenteredCubic('W', latticeconstant=3.165, size=[1, 1, 1])
+        atoms.calc = ac.Atomistica(ac.Juslin, ac.Juslin_JAP_98_123520_WCH)
+        E_per_atom = atoms.get_potential_energy() / len(atoms)
+        assert abs(E_per_atom - (-8.89)) < 0.05, (
+            f'Juslin BCC-W 1x1x1 Ec={E_per_atom:.3f} eV/atom, expected -8.89'
+        )

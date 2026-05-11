@@ -1,17 +1,16 @@
 [build-system]
-requires = ["meson-python>=0.15.0", "numpy>=2.0.0"]
+requires = ["meson-python>=0.15.0"]
 build-backend = "mesonpy"
 
 [project]
 name = "atomistica"
 dynamic = ["version"]
-description = "Atomistica is a library of interatomic potentials that is compatible with ASE and LAMMPS"
+description = "Atomistica — interatomic potential library compatible with ASE and LAMMPS (C++17 implementation)"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.21.0",
     "ase>=3.15.0",
-    "pip>=25.2",
 ]
 license = {text = "GPL-2.0-or-later"}
 maintainers = [
@@ -20,8 +19,9 @@ maintainers = [
 urls = {homepage = "https://github.com/Atomistica/atomistica"}
 
 [tool.setuptools_scm]
-# Empty section enables setuptools_scm with default configuration
-# It will use git tags for versioning
+# Uses git tags for versioning
 
 [tool.meson-python.args]
+# Eigen3 and pybind11 are fetched automatically via WrapDB if not system-installed.
+# Optionally install s-dftd3 to enable DFT-D3 dispersion.
 setup = ["-Dbuildtype=release"]

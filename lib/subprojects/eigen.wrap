@@ -1,0 +1,13 @@
+[wrap-file]
+directory = eigen-5.0.1
+source_url = https://gitlab.com/libeigen/eigen/-/archive/5.0.1/eigen-5.0.1.tar.bz2
+source_filename = eigen-5.0.1.tar.bz2
+source_hash = e4de6b08f33fd8b8985d2f204381408c660bffa6170ac65b68ae1bd3cd575c0a
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/eigen_5.0.1-1/eigen-5.0.1.tar.bz2
+patch_filename = eigen_5.0.1-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/eigen_5.0.1-1/get_patch
+patch_hash = 23407632af9388f4585547028c4ed363ff54875872cbf3e89c2085a14397f555
+wrapdb_version = 5.0.1-1
+
+[provide]
+dependency_names = eigen3

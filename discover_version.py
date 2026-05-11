@@ -97,9 +97,19 @@ def get_version_from_git():
     # Make version PEP 440 compliant
     if dirty:
         version = version.replace('-dirty', '')
-    version = version.replace('-', '+', 1)
-    if dirty:
-        version += '-dirty'
+
+    # Check if there's a dash (indicating commits after tag, e.g., 1.2.7-5-gabcdef)
+    if '-' in version:
+        # Replace first '-' with '+' for local version separator
+        version = version.replace('-', '+', 1)
+        # Replace remaining '-' with '.' for PEP 440 compliance
+        version = version.replace('-', '.')
+        if dirty:
+            version += '.dirty'
+    else:
+        # No commits after tag (e.g., just 1.2.7), need to add local version segment
+        if dirty:
+            version += '+dirty'
 
     return dirty, version, git_hash
 

@@ -21,9 +21,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-13, macos-14]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for DiscoverVersion
+          fetch-depth: 0   # needed for setuptools-scm version detection
 
       - uses: actions/setup-python@v5
         with:
@@ -32,37 +32,31 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21
         env:
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686 *-win32"
 
-          # Install system dependencies - Linux
-          CIBW_BEFORE_ALL_LINUX: "yum install -y lapack-devel || (apt-get update && apt-get install -y gfortran liblapack-dev)"
+          # No Fortran needed — pure C++17 with Eigen/pybind11 via WrapDB
 
-          # Install system dependencies - macOS
-          CIBW_BEFORE_ALL_MACOS: >
-            brew install gcc lapack &&
-            GFORTRAN=$(ls $(brew --prefix gcc)/bin/gfortran-* | head -1) &&
-            ln -sf $GFORTRAN /usr/local/bin/gfortran &&
-            gfortran --version
+          # Linux: only needs ninja and a C++ compiler (provided by manylinux)
+          CIBW_BEFORE_ALL_LINUX: >
+            yum install -y ninja-build lapack-devel ||
+            (apt-get update && apt-get install -y ninja-build liblapack-dev)
 
-          # Install system dependencies - Windows (MSYS2 with MinGW-w64)
-          CIBW_BEFORE_ALL_WINDOWS: >-
-            C:\\msys64\\usr\\bin\\bash -lc "pacman --noconfirm -Syu" &&
-            C:\\msys64\\usr\\bin\\bash -lc "pacman --noconfirm -S mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-openblas"
+          # macOS: lapack for tight-binding eigensolver; ninja for meson
+          CIBW_BEFORE_ALL_MACOS: "brew install lapack ninja"
 
-          # Environment - macOS
-          CIBW_ENVIRONMENT_MACOS: "FC=gfortran PKG_CONFIG_PATH=$(brew --prefix lapack)/lib/pkgconfig:$(brew --prefix openblas)/lib/pkgconfig MACOSX_DEPLOYMENT_TARGET=14.0"
+          # Windows: uses MSVC + ninja (no Fortran or MinGW required)
+          CIBW_BEFORE_ALL_WINDOWS: "pip install ninja"
 
-          # Environment - Windows
-          CIBW_ENVIRONMENT_WINDOWS: >-
-            PATH="C:\\msys64\\mingw64\\bin;$PATH"
-            FC="C:\\msys64\\mingw64\\bin\\gfortran.exe"
-            CC="C:\\msys64\\mingw64\\bin\\gcc.exe"
-            CXX="C:\\msys64\\mingw64\\bin\\g++.exe"
-            LIBRARY_PATH="C:\\msys64\\mingw64\\lib"
-            PKG_CONFIG_PATH="C:\\msys64\\mingw64\\lib\\pkgconfig"
+          # macOS deployment target
+          CIBW_ENVIRONMENT_MACOS: >
+            PKG_CONFIG_PATH="$(brew --prefix lapack)/lib/pkgconfig:$(brew --prefix openblas)/lib/pkgconfig"
+            MACOSX_DEPLOYMENT_TARGET=13.0
 
-          # Build dependencies
+          # Test each wheel after building
+          CIBW_TEST_REQUIRES: "pytest ase"
+          CIBW_TEST_COMMAND: "pytest {project}/tests/ -x -q"
+
           CIBW_BUILD_FRONTEND: "build"
 
       - uses: actions/upload-artifact@v4
@@ -79,20 +73,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check tag
-        id: check-tag
-        run: |
-          if [[ ${{ github.ref }} =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo ::set-output name=match::true
-          fi
-        shell: bash
-        
       - name: Deploy to PyPI
-        if: steps.check-tag.outputs.match == 'true'
-        run: |
-          pip install twine
-          twine upload wheelhouse/*.whl
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        shell: bash
+        if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
+          password: ${{ secrets.PYPI_PASSWORD }}
